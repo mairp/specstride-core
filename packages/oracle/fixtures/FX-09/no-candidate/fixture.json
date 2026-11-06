@@ -1,0 +1,52 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-09/no-candidate",
+ "system": "specstride",
+ "entryPoint": {
+  "reference": "front-door",
+  "port": "run"
+ },
+ "command": {
+  "reference": [
+   "<IMPL>/specstride",
+   "run",
+   "-w",
+   "<WORK>"
+  ],
+  "port": [
+   "specstride",
+   "run",
+   "-w",
+   "<WORK>"
+  ]
+ },
+ "environment": {
+  "SPECSTRIDE_LIVE": "false",
+  "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+  "SPECSTRIDE_OTEL_ENABLED": "false",
+  "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+  "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+  "SPECSTRIDE_VERIFICATION": "off"
+ },
+ "stubs": {},
+ "workdirTemplate": "workdir",
+ "expectedExit": 3,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr",
+  "tree",
+  "state"
+ ],
+ "proves": [
+  "C-006"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "bash 4 or later, flock, setsid, GNU stat and date",
+  "python3 3.10 to 3.13",
+  "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+ ]
+}

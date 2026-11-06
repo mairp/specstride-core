@@ -1,0 +1,59 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-31/loki-payload",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "telemetry-shipper",
+    "port": "telemetry ship"
+  },
+  "command": {
+    "reference": [
+      "sh",
+      "-c",
+      "exec \"python3\" \"<IMPL>/lib/ralph_loki_ship.py\" \"stream\" \"--task\" \"work\" \"--backend\" \"prop:dsh/crit:claude\" \"--run-id\" \"20260101-000000-000001\" < events.jsonl"
+    ],
+    "port": [
+      "specstride",
+      "telemetry",
+      "ship",
+      "--sink",
+      "loki"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_FEATURE": "demo",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "true",
+    "SPECSTRIDE_OTEL_ENABLED": "true"
+  },
+  "stubs": {
+    "telemetry-sink": [
+      {
+        "verbs": [
+          "accept"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stderr",
+    "telemetry",
+    "state"
+  ],
+  "proves": [
+    "C-026"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "waivers": [
+    "DV-107"
+  ]
+}

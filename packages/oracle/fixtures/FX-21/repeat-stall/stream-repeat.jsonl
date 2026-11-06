@@ -1,0 +1,7 @@
+{"type": "system", "subtype": "init", "model": "stub", "tools": ["Bash"]}
+{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu-1", "name": "Bash", "input": {"command": "echo the same thing again"}}]}}
+{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu-2", "name": "Bash", "input": {"command": "echo the same thing again"}}]}}
+{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu-3", "name": "Bash", "input": {"command": "echo the same thing again"}}]}}
+{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu-4", "name": "Bash", "input": {"command": "echo the same thing again"}}]}}
+{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "toolu-5", "name": "Bash", "input": {"command": "echo the same thing again"}}]}}
+{"type": "result", "subtype": "success", "is_error": false, "duration_ms": 5, "num_turns": 5, "usage": {"output_tokens": 2}}

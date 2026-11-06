@@ -1,0 +1,84 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-26/generic-text",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "pass-loop",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:pass-loop>",
+      "--workdir",
+      "<WORK>",
+      "--evidence",
+      "<WORK>/gate.md",
+      "--prompt-file",
+      "<WORK>/prompt.txt",
+      "--sleep",
+      "0",
+      "--max-iter",
+      "2"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "generic-text",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PRIME_AGENT_BIN": "stub-harness",
+    "SPECSTRIDE_PROPOSER": "prime",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "text",
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "text": "wrote one.txt\n",
+          "path": "one.txt",
+          "content": "one\n",
+          "evidence": "gate.md"
+        }
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events",
+    "transcript"
+  ],
+  "proves": [
+    "C-108"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

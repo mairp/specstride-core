@@ -1,0 +1,17 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "reason": "a job of the scenario that ends at once; the yield is what is under test",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "exit 0"
+  ]
+ },
+ "resume_when": {
+  "kind": "exit_code_file"
+ },
+ "deadline_sec": 60,
+ "on_resume": "write the evidence of the phase"
+}

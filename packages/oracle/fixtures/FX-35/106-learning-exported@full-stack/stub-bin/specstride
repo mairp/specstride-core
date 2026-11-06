@@ -1,0 +1,4 @@
+#!/bin/sh
+# The real engine of a @full-stack scenario (F141-FR-016), reached under the as-is
+# engine command. A link would break the front door's own reading of its directory.
+exec "/tmp/oracle-reference-106-kRSNPq/ref/specstride/specstride" "$@"

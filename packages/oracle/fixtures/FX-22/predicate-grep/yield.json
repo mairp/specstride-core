@@ -1,0 +1,20 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "deadline_sec": 60,
+ "on_resume": "write the evidence of the phase",
+ "reason": "a job of the scenario that prints a line into its log",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "sleep 1; echo THE-JOB-IS-DONE"
+  ],
+  "log": "the-job.log"
+ },
+ "resume_when": {
+  "kind": "grep",
+  "path": "the-job.log",
+  "pattern": "THE-JOB-IS-DONE"
+ }
+}

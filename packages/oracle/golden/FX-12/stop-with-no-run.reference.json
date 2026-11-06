@@ -1,0 +1,122 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-12/stop-with-no-run",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "stop requested → <WORK>/.specstride/stop.flag\nthe run finishes its current pass, then exits 6 (clean stop).\nresume later with: specstride resume -w <WORK>   (or stop harder: specstride stop --now)\n"
+  },
+  "stderr": {
+   "text": "specstride stop: no run appears to be active on <WORK> (lock is free).\n             writing stop.flag anyway (a starting run will honor it).\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-with-no-run",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/stop.flag",
+     "type": "file",
+     "mode": "0644",
+     "content": "",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# `stop` with no run active\n\nThe front door is asked to stop and the lock is free. It says so and writes the request anyway, so that a run about to start honours it.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": [
+    {
+     "logicalName": "feature:<slug>:notebook",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "# Progress\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "events": {
+   "files": [],
+   "records": []
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 5,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 1,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

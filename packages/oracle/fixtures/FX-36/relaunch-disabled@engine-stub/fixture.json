@@ -1,0 +1,269 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-36/relaunch-disabled",
+  "variant": "@engine-stub",
+  "system": "mixture-of-loops",
+  "entryPoint": {
+    "reference": "supervisor-watch",
+    "port": "supervisor watch"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:supervisor>",
+      "watch"
+    ],
+    "port": [
+      "specstride",
+      "supervisor",
+      "watch"
+    ]
+  },
+  "steps": [
+    {
+      "name": "derive the launch contract",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/bootstrap_contract.py",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "derive",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ]
+      }
+    },
+    {
+      "name": "complete the draft deterministically",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ]
+      }
+    },
+    {
+      "name": "promote the contract to validated",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "validate",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ]
+      }
+    },
+    {
+      "name": "render the launcher and the launch bundle",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/render_launcher.py",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ],
+        "port": [
+          "specstride",
+          "launcher",
+          "render",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ]
+      }
+    },
+    {
+      "name": "launch the pipeline detached",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "launch",
+          "--launcher",
+          "<WORK>/launch.sh",
+          "--mode",
+          "run"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "launch",
+          "--launcher",
+          "<WORK>/launch.sh",
+          "--mode",
+          "run"
+        ]
+      }
+    },
+    {
+      "name": "wait for the launcher to end",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/await-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/await-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting"
+        ]
+      }
+    },
+    {
+      "name": "shape the records into transient",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/shape-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "transient"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/shape-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "transient"
+        ]
+      }
+    },
+    {
+      "name": "read the run (relaunch-disabled)",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "watch",
+          "--run-dir",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "--no-relaunch",
+          "--poll-seconds",
+          "1",
+          "--max-poll-seconds",
+          "1"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "watch",
+          "--run-dir",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "--no-relaunch",
+          "--poll-seconds",
+          "1",
+          "--max-poll-seconds",
+          "1"
+        ]
+      }
+    }
+  ],
+  "environment": {},
+  "stubs": {
+    "engine": [
+      {
+        "verbs": [
+          "succeed"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "assets": [
+    {
+      "path": "tests/fixtures/repos/greeting-ready/README.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/expectations/greeting-ready.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    }
+  ],
+  "expectedExit": 22,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "pipeline"
+  ],
+  "pipeline": {
+    "root": "<WORK>/.mixture-of-loops/runs/001-greeting",
+    "records": [
+      "state.json",
+      "harness-run.json"
+    ],
+    "logs": [
+      "launcher.log",
+      "harness-launch.log",
+      "harness-report.log"
+    ]
+  },
+  "proves": [
+    "C-123"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)",
+    "the engine stub on the search path under the as-is engine command (row 41 of the parity profile)"
+  ]
+}

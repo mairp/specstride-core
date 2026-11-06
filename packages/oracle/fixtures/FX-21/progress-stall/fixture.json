@@ -1,0 +1,114 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-21/progress-stall",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "progress-stall",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_PROPOSER_IDLE_TIMEOUT": "600",
+    "SPECSTRIDE_PROPOSER_MAX_ERRORS": "3",
+    "SPECSTRIDE_PROPOSER_PROGRESS_TIMEOUT": "3",
+    "SPECSTRIDE_PROPOSER_REPEAT_LIMIT": "0",
+    "SPECSTRIDE_PROPOSER_TIMEOUT": "600",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep",
+          "repeat",
+          "sleep"
+        ],
+        "args": {
+          "text": "still working\n",
+          "times": 200,
+          "ticks": 1
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "wrote something\n"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-014"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

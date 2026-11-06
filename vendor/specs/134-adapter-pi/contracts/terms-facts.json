@@ -1,0 +1,69 @@
+{
+  "$id": "specstride.terms-facts/1:pi",
+  "feature": "134-adapter-pi",
+  "harness": "pi",
+  "kind": "terms-facts",
+  "handedTo": "feature 147 (terms gate): task T005 of specs/147-terms-gate/tasks.md reads this file as `terms-facts.json` of feature 134 and carries the rows into packages/policy/src/terms/data/terms.json (F147-FR-011)",
+  "source": "docs/ecosystem/research/R8v-terms-verification.md, rows 37 to 40",
+  "pin": ">=0.80.6 <0.81",
+  "verifiedOn": "2026-09-29",
+  "accessDate": "2026-09-29",
+  "software": "ALLOWED-DOCUMENTED (API-key back ends)",
+  "frontHarness": true,
+  "rule": "pi has no row of its own (F147-FR-011): the decision is that of the row of the provider in use, which the terms gate evaluates for the provider and the model in use at launch, at role resolution and at every switch to a fallback (F134-FR-005). With no provider named, or no row for it, the terms are unknown: usable when the consumer names pi, with the unknown-terms warning, never a default and never picked automatically.",
+  "rowShape": "TermsRow of EP-11 specstride.terms/1 (annex C, §C.12); the extra fields rowNumber and applies are provenance of this handover and are not part of the row",
+  "rows": [
+    {
+      "rowNumber": 37,
+      "provider": "pi (any API-key provider)",
+      "authTier": 1,
+      "audience": "personal",
+      "status": "allowed",
+      "software": "ALLOWED-DOCUMENTED (API-key back ends)",
+      "source": "raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/README.md ; .../docs/providers.md",
+      "accessDate": "2026-09-29",
+      "quotedSentence": "For a built-in AI provider, run `/login` inside Pi to connect a subscription or API key.; `auth.json` can contain API keys and OAuth tokens. Keep it private and do not commit it.; licence line \"MIT\".",
+      "verifiedOn": "2026-09-29",
+      "applies": "pi with an API-key back end, personal audience; the row of the provider in use governs"
+    },
+    {
+      "rowNumber": 38,
+      "provider": "pi (any API-key provider)",
+      "authTier": 1,
+      "audience": "distributed",
+      "status": "allowed",
+      "software": "ALLOWED-DOCUMENTED (API-key back ends)",
+      "source": "raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/README.md ; .../docs/providers.md",
+      "accessDate": "2026-09-29",
+      "quotedSentence": "For a built-in AI provider, run `/login` inside Pi to connect a subscription or API key.; `auth.json` can contain API keys and OAuth tokens. Keep it private and do not commit it.; licence line \"MIT\".",
+      "verifiedOn": "2026-09-29",
+      "applies": "pi with an API-key back end, distributed audience; the row of the provider in use governs"
+    },
+    {
+      "rowNumber": 39,
+      "provider": "anthropic",
+      "authTier": 3,
+      "audience": "personal",
+      "status": "refused",
+      "software": "NOT-ALLOWED",
+      "source": "raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/README.md ; .../docs/providers.md",
+      "accessDate": "2026-09-29",
+      "quotedSentence": "pi's `/login` OAuth is R8's mechanism M3; it inherits rows 5, 11, 17.",
+      "verifiedOn": "2026-09-29",
+      "applies": "the OAuth login of pi for a Claude subscription, personal audience; tier 3 ships refused for every provider and both audiences (F134-FR-006; ruling 59)"
+    },
+    {
+      "rowNumber": 40,
+      "provider": "anthropic",
+      "authTier": 3,
+      "audience": "distributed",
+      "status": "refused",
+      "software": "NOT-ALLOWED",
+      "source": "raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/README.md ; .../docs/providers.md",
+      "accessDate": "2026-09-29",
+      "quotedSentence": "pi's `/login` OAuth is R8's mechanism M3; it inherits rows 5, 11, 17.",
+      "verifiedOn": "2026-09-29",
+      "applies": "the OAuth login of pi for a Claude subscription, distributed audience; tier 3 ships refused for every provider and both audiences (F134-FR-006; ruling 59)"
+    }
+  ]
+}

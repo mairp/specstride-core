@@ -1,0 +1,114 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-01/106-learning-tampered",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "106-learning-tampered",
+    "SPECSTRIDE_VERIFICATION": "off",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "3",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_LEARNING": "apply"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "one\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "state": "feature:<slug>:learning:decisions",
+          "content": "{\"schema\": \"specstride.learn.applied/2\", \"action\": \"apply\", \"run_id\": \"learn-000000000001\", \"knob\": \"proposer_timeout\", \"phase\": 1, \"shape\": \"660b41c42c59d1de\", \"value\": 900, \"previous\": 1800, \"samples\": 4, \"source_runs\": [\"20260101-000001-000001\", \"20260101-000001-000002\", \"20260101-000001-000003\", \"20260101-000001-000004\"], \"metric\": \"work_sec_p90\", \"applied_at\": \"2026-01-01 00:00:00Z\", \"baseline\": {\"backend\": \"dsh\", \"shape\": \"660b41c42c59d1de\", \"runs\": [], \"cost\": [], \"wall\": [], \"guardrails\": {\"reverted\": 0, \"quarantined\": 0, \"forced\": 0}}}\n{\"schema\": \"specstride.learn.applied/2\", \"action\": \"apply\", \"run_id\": \"learn-ffffffffffff\", \"knob\": \"proposer_timeout\", \"phase\": 1, \"shape\": \"660b41c42c59d1de\", \"value\": 1, \"previous\": 900, \"samples\": 1, \"source_runs\": [], \"metric\": \"work_sec_p90\", \"applied_at\": \"2026-01-01 00:00:00Z\", \"baseline\": {\"backend\": \"dsh\", \"shape\": \"660b41c42c59d1de\", \"runs\": [], \"cost\": [], \"wall\": [], \"guardrails\": {\"reverted\": 0, \"quarantined\": 0, \"forced\": 0}}}\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "three.txt",
+          "content": "three\n"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-012"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

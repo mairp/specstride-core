@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/conformance/EP-01/contract.test.ts",
+    "src/conformance/EP-01/targets.ts",
+    "src/conformance/EP-01/host-suite.ts",
+    "src/conformance/frame.ts",
+    "src/samples/EP-01/index.ts",
+    "src/static/amendments.ts",
+    "src/release/conditions.ts",
+    "src/release/attestation.ts"
+  ],
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": ".build/dist",
+    "rootDir": "src",
+    "rewriteRelativeImportExtensions": true,
+    "incremental": false,
+    "noEmitOnError": true
+  }
+}

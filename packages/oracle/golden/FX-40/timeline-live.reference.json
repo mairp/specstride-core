@@ -1,0 +1,58 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-40/timeline-live",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  ┏━━━━┿━━━━┿━━━━╸\n  ┃                   specstride\n  ┗━━━━┿━━━━┿━━━━┓    From specs to tested code.\n                 ┃    Every step, signed off.\n  ╺━━━━┿━━━━┿━━━━┛\n\n  ━━━━┿╍╍╍╍\n      • 1\n\n  feature  timeline-live\n  agents   proposer dsh, critic claude\n  log      <WORK>/.specstride/features/timeline-live/runs/<run-id-1>/run.log\n\n<time>  ┏ run start — 1 phases · dsh→claude · resume @ phase 1\n<time>  ◆ phase 1/1 — The only phase\n<time>  ✱ proposer working — phase 1, attempt 1, dsh\n<time>  ◇ evidence → GATE1-EVIDENCE.md  (1 iter)\n<time>  ┿ critic judging phase 1, claude\n<time>  ✓ APPROVED phase 1\n<time>  ◆ phase 1 done (attempt 1)\n          ━━━━┿━━━╸   1/1 approved · <duration>\n              ✓ 1\n<time>  ■ run complete — all_approved\n          ━━━━┿━━━╸   1/1 approved · <duration>\n              ✓ 1\n  Σ <duration>\n"
+  },
+  "stderr": {
+   "text": ""
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 2,
+  "N-02": 0,
+  "N-03": 2,
+  "N-04": 2,
+  "N-05": 2,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 1,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 0,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

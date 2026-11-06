@@ -1,0 +1,196 @@
+{
+  "descriptorVersion": 1,
+  "id": "pi",
+  "displayName": "pi",
+  "kind": "cli",
+  "provider": {
+    "id": "<from the provider in use at role resolution>",
+    "termsRef": "<the row of the provider, or null>"
+  },
+  "detect": {
+    "executable": "pi",
+    "version": {
+      "args": [
+        "--version"
+      ],
+      "expect": "0.80.6"
+    },
+    "helpMustContain": [
+      "--mode",
+      "--no-session",
+      "--session-id",
+      "--tools"
+    ],
+    "configHome": "<agent directory of pi; existence only>"
+  },
+  "auth": {
+    "tiers": [
+      1,
+      2
+    ],
+    "credential": "secret reference, named by the consumer",
+    "scheme": "none",
+    "preflight": {
+      "skipped": "no endpoint is called before a pass; the key reaches pi by environment only (research.md row 10)"
+    },
+    "note": "API key by environment from the provider's key variable; never an argument; no auth file read; no login"
+  },
+  "models": {
+    "default": null,
+    "listSource": "probed: the model list of pi, context column",
+    "contextWindow": {
+      "source": "probed or declared; the smaller wins",
+      "unknownModel": "no default"
+    },
+    "select": "model option of pi"
+  },
+  "roles": {
+    "proposer": {
+      "supported": true
+    },
+    "critic": {
+      "supported": true,
+      "toolless": "flag",
+      "readOnlyTools": "not supported",
+      "freshSession": true
+    }
+  },
+  "invoke": {
+    "proposer": {
+      "args": [
+        "-p",
+        "--mode",
+        "json",
+        "--tools",
+        "{toolAllowList}",
+        "--no-extensions",
+        "--no-skills",
+        "--no-context-files",
+        "--no-prompt-templates",
+        "--no-approve",
+        "--model",
+        "{model}"
+      ],
+      "withSession": [
+        "--session-id",
+        "{sessionId}",
+        "--session-dir",
+        "{sessionDir}"
+      ],
+      "withoutSession": [
+        "--no-session"
+      ],
+      "prompt": "stdin",
+      "workdir": "{workdir}",
+      "permission": "none: pi has no permission mode",
+      "status": "unverified"
+    },
+    "critic": {
+      "args": [
+        "-p",
+        "--mode",
+        "json",
+        "--no-tools",
+        "--no-skills",
+        "--no-context-files",
+        "--no-extensions",
+        "--no-prompt-templates",
+        "--no-session",
+        "--no-approve",
+        "--model",
+        "{model}"
+      ],
+      "prompt": "stdin",
+      "workdir": "{emptyTmp}",
+      "status": "unverified by run"
+    }
+  },
+  "stream": {
+    "format": "jsonl",
+    "dialect": "pi",
+    "tolerate": []
+  },
+  "continuation": {
+    "supported": true,
+    "provenance": "adapter",
+    "status": "unverified",
+    "how": "exact id by the session-id option; a session directory per phase attempt",
+    "ttlSeconds": 300
+  },
+  "session": {
+    "where": "a directory per phase attempt",
+    "redirect": {
+      "env": "PI_CODING_AGENT_SESSION_DIR",
+      "option": "--session-dir"
+    },
+    "removedAtEnd": "the phase attempt"
+  },
+  "tiers": [],
+  "failures": {
+    "agent_failure": "terminal record with stop reason error and no class matched",
+    "exitCodeOnProviderError": {
+      "value": 0,
+      "provenance": "CAP-1: loopback endpoint answering HTTP 500 with an OpenAI-style provider error body; pi 0.80.6, print mode, JSON output; three auto-retry record pairs, terminal assistant message stopReason error, process exit code 0",
+      "verifiedOn": "2026-10-28",
+      "pin": ">=0.80.6 <0.81",
+      "artifacts": "tests/characterization/134/fixtures/error-exit-code/"
+    },
+    "quota_window": "see classifier-entries.pi.json",
+    "auth": "see classifier-entries.pi.json",
+    "context_window_exceeded": "see classifier-entries.pi.json"
+  },
+  "cost": {
+    "class": "unknown",
+    "prices": null
+  },
+  "isolation": {
+    "envAllow": [
+      "PATH",
+      "LANG",
+      "LC_ALL",
+      "HOME",
+      "PI_CODING_AGENT_DIR",
+      "PI_CODING_AGENT_SESSION_DIR",
+      "PI_TELEMETRY",
+      "<the key variable of the provider in use>"
+    ],
+    "configHome": {
+      "vars": [
+        "PI_CODING_AGENT_DIR",
+        "PI_CODING_AGENT_SESSION_DIR"
+      ],
+      "seeds": [],
+      "scope": "attempt"
+    }
+  },
+  "containment": {
+    "ceiling": "C0",
+    "provenance": "adapter",
+    "status": "unverified"
+  },
+  "memory": {
+    "native": "unverified",
+    "off": "context files and extensions off; whether pi has memory beyond them is a capture-4 side check"
+  },
+  "telemetry": {
+    "off": {
+      "env": {
+        "PI_TELEMETRY": "0"
+      }
+    }
+  },
+  "concurrentSessions": null,
+  "spendLimit": null,
+  "transports": [
+    {
+      "id": "subprocess",
+      "authTier": [
+        1,
+        2
+      ]
+    }
+  ],
+  "versionRange": ">=0.80.6 <0.81",
+  "verifiedOn": "2026-09-29",
+  "x-provisional": true
+}

@@ -1,0 +1,53 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-30/lint-evidence-kind",
+ "system": "specstride",
+ "entryPoint": {
+  "reference": "reverse",
+  "port": "reverse lint"
+ },
+ "command": {
+  "reference": [
+   "python3",
+   "<IMPL>/lib/reverse.py",
+   "lint",
+   "<WORK>/specs/reverse-app",
+   "--src",
+   "<WORK>",
+   "--upto",
+   "5"
+  ],
+  "port": [
+   "specstride",
+   "reverse",
+   "--lint",
+   "<WORK>/specs/reverse-app",
+   "--src",
+   "<WORK>",
+   "--upto",
+   "5"
+  ]
+ },
+ "environment": {},
+ "stubs": {},
+ "workdirTemplate": "workdir",
+ "expectedExit": 3,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr",
+  "tree",
+  "state"
+ ],
+ "proves": [
+  "B-1653"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "bash 4 or later, flock, setsid, GNU stat and date",
+  "python3 3.10 to 3.13",
+  "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+ ]
+}

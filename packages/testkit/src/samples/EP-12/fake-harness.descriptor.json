@@ -1,0 +1,134 @@
+{
+  "descriptorVersion": 1,
+  "id": "fake-limit-harness",
+  "displayName": "The fake harness of user story 5, whose limit signal is declared as data",
+  "kind": "cli",
+  "provider": { "id": "a-fake-provider", "termsRef": null },
+  "origin": "user",
+  "detect": {
+    "vars": ["FAKE_LIMIT_HARNESS_HOME"],
+    "executable": "stub-harness",
+    "versionArgs": ["--version"]
+  },
+  "auth": { "tiers": [1, 2], "credential": null },
+  "models": { "default": "a-fake-model", "listIs": "declared", "contextWindow": 200000 },
+  "roles": {
+    "proposer": { "supported": true },
+    "critic": {
+      "supported": true,
+      "toolless": "flag",
+      "readOnlyTools": false,
+      "freshSession": true
+    }
+  },
+  "stream": { "format": "jsonl" },
+  "continuation": { "supported": false, "cacheTtlSec": 300 },
+  "failures": {
+    "quota_exhausted": {
+      "rules": [
+        {
+          "id": "FH-01",
+          "confidence": "structured",
+          "streamRecords": [{ "field": "type", "equals": "limit" }],
+          "refinesTo": "quota_window",
+          "resetsAtFrom": [
+            { "source": "structured", "from": "streamRecord", "field": "resetsAt" },
+            { "source": "header", "from": "statusHeader", "field": "retry-after" }
+          ]
+        },
+        {
+          "id": "FH-02",
+          "confidence": "status",
+          "statuses": [429],
+          "refinesTo": "quota_window",
+          "resetsAtFrom": [{ "source": "header", "from": "statusHeader", "field": "retry-after" }]
+        },
+        {
+          "id": "FH-03",
+          "confidence": "status",
+          "statuses": [402],
+          "refinesTo": "quota_credit"
+        },
+        {
+          "id": "FH-04",
+          "confidence": "text",
+          "bodyPatterns": ["session limit", "weekly limit", "usage limit reached"],
+          "refinesTo": "quota_window",
+          "resetsAtFrom": [
+            { "source": "header", "from": "statusHeader", "field": "retry-after" },
+            { "source": "parsed_text", "from": "errorText", "after": "resets at " }
+          ]
+        },
+        {
+          "id": "FH-05",
+          "confidence": "text",
+          "bodyPatterns": ["credit balance is too low", "insufficient_quota"],
+          "refinesTo": "quota_credit"
+        },
+        {
+          "id": "FH-06",
+          "confidence": "structured",
+          "exitCodes": [42],
+          "refinesTo": "quota_window"
+        }
+      ]
+    },
+    "authentication_failed": {
+      "rules": [
+        { "id": "FH-07", "confidence": "status", "statuses": [401, 403], "refinesTo": "auth" },
+        {
+          "id": "FH-08",
+          "confidence": "text",
+          "bodyPatterns": ["invalid credential", "not logged in"],
+          "refinesTo": "auth"
+        }
+      ]
+    },
+    "rate_limited": {
+      "rules": [
+        {
+          "id": "FH-09",
+          "confidence": "status",
+          "statuses": [529, 503],
+          "refinesTo": "overload"
+        },
+        {
+          "id": "FH-10",
+          "confidence": "text",
+          "bodyPatterns": ["server is busy", "overloaded"],
+          "refinesTo": "overload"
+        },
+        {
+          "id": "FH-11",
+          "confidence": "text",
+          "bodyPatterns": ["rate limit exceeded"],
+          "refinesTo": "rate_limit_transient"
+        }
+      ]
+    },
+    "context_window_exceeded": {
+      "rules": [
+        {
+          "id": "FH-12",
+          "confidence": "text",
+          "bodyPatterns": ["prompt is too long", "context window"],
+          "refinesTo": "context_window"
+        }
+      ]
+    },
+    "transport_failed": {
+      "rules": [
+        {
+          "id": "FH-13",
+          "confidence": "text",
+          "bodyPatterns": ["connection reset"],
+          "refinesTo": "agent_failure"
+        }
+      ]
+    }
+  },
+  "cost": { "class": "unknown", "prices": null },
+  "isolation": { "envAllow": ["PATH", "HOME"] },
+  "containment": { "ceiling": "C2 (declared)" },
+  "memory": { "native": false, "switchOff": {} }
+}

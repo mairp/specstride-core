@@ -1,0 +1,221 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-36/gate-unauthorized-root",
+  "variant": "@engine-stub",
+  "system": "mixture-of-loops",
+  "entryPoint": {
+    "reference": "supervisor-gate",
+    "port": "supervisor gate"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:supervisor>",
+      "gate"
+    ],
+    "port": [
+      "specstride",
+      "supervisor",
+      "gate"
+    ]
+  },
+  "steps": [
+    {
+      "name": "derive the launch contract",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/bootstrap_contract.py",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "derive",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ]
+      }
+    },
+    {
+      "name": "complete the draft deterministically",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ]
+      }
+    },
+    {
+      "name": "promote the contract to validated",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "validate",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ]
+      }
+    },
+    {
+      "name": "render the launcher and the launch bundle",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/render_launcher.py",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ],
+        "port": [
+          "specstride",
+          "launcher",
+          "render",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ]
+      }
+    },
+    {
+      "name": "change the published bundle: unauthorized-root",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/patch-bundle.py",
+          "<WORK>/launch.sh",
+          "unauthorized-root"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/patch-bundle.py",
+          "<WORK>/launch.sh",
+          "unauthorized-root"
+        ]
+      }
+    },
+    {
+      "name": "the launch gate",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "gate",
+          "--launcher",
+          "<WORK>/launch.sh"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "gate",
+          "--launcher",
+          "<WORK>/launch.sh"
+        ]
+      }
+    }
+  ],
+  "environment": {},
+  "stubs": {
+    "engine": [
+      {
+        "verbs": [
+          "succeed"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "assets": [
+    {
+      "path": "tests/fixtures/repos/greeting-ready/README.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/expectations/greeting-ready.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    }
+  ],
+  "expectedExit": 4,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "pipeline"
+  ],
+  "pipeline": {
+    "root": "<WORK>/.mixture-of-loops/runs/001-greeting",
+    "records": [
+      "state.json",
+      "harness-run.json"
+    ],
+    "logs": [
+      "launcher.log",
+      "harness-launch.log",
+      "harness-report.log"
+    ]
+  },
+  "proves": [
+    "C-123"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)",
+    "the engine stub on the search path under the as-is engine command (row 41 of the parity profile)"
+  ]
+}

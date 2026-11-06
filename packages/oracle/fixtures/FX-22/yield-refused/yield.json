@@ -1,0 +1,15 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "reason": "an artifact with no deadline at all",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "exit 0"
+  ]
+ },
+ "resume_when": {
+  "kind": "exit_code_file"
+ }
+}

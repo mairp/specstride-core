@@ -1,0 +1,103 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-39/populate-fails",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 1,
+   "perCommand": [
+    1
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": ""
+  },
+  "stderr": {
+   "text": "pass-loop: could not create overlay for backend 'codex' in <WORK>/not-a-directory: could not populate overlay for backend 'codex': [Errno 2] No such file or directory: '<WORK>/not-a-directory/specstride-overlay.json.tmp'\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Declared overlay of the configuration home\n\nOne phase. The harness runs inside a throwaway configuration home.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "prompt.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "Write one.txt and cite the gate.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [],
+   "records": []
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 3,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 1,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

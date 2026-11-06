@@ -1,0 +1,67 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-33/invalid-verification-commands",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "mixture-of-loops",
+ "commit": "9c88f86e1771efeabcfe3b4b1cb24384fff284e8",
+ "surfaces": {
+  "exit": {
+   "exitCode": 20,
+   "perCommand": [
+    0,
+    0,
+    0,
+    20
+   ],
+   "signals": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "stdout": {
+   "text": "the draft was edited by the scenario\n"
+  },
+  "stderr": {
+   "text": "note: <component:contract-derive> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\nnote: <component:contract-validate> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\ninvalid launch contract:\ncontract status must be validated\n"
+  },
+  "state": {
+   "entries": []
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 0,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 3,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 2,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

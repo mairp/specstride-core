@@ -1,0 +1,2 @@
+You are the PROPOSER of phase 1.
+Write the evidence of the phase to gate.md in the working directory.

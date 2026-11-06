@@ -1,0 +1,39 @@
+{
+  "comment": [
+    "The staged surface of @specstride/testkit is the subset a host needs (the split, phase 3): the EP-01 suite with its fixtures, the release-condition rule a host judges its own live-run entry row against, and the release-attestation check a host judges its own published versions by (phase 4).",
+    "exportsSubset keeps the eight rows of that surface; every other row (the suites of EP-02 to EP-19, the root index, the canary, the tables, the view suite, the EP-14 owner modules) stays repository-only.",
+    "modules is the closed set of built files the surface reaches by static import: the EP-01 trio, the frame, its two helpers (common, degrade), the runner frame (run, imported by the suite's casesAsTests), the built-in plain-shell sample, the amendments checks, and the two release rules (conditions, attestation; Node built-ins only).",
+    "fixtureFiles are the corpus files the staged surface reads at run time, copied at the same repository-relative spelling, so the frame's root resolves to the package root in an installed tree.",
+    "assetDirectories is empty on purpose: packages/testkit/data holds only the performance goals of the package's own tests, which a host does not run.",
+    "The owner modules of EP-14 stay out because they reach @specstride/kernel at run time (registerDoctorCheck, registeredDoctorChecks) and read the doctor tree, which core does not publish; a host supplies its rows as an input instead (the split, phase 2)."
+  ],
+  "exportsSubset": [
+    "./conformance/EP-01",
+    "./conformance/EP-01/targets",
+    "./conformance/EP-01/host-suite",
+    "./conformance/frame",
+    "./samples/EP-01",
+    "./static/amendments",
+    "./release/conditions",
+    "./release/attestation"
+  ],
+  "modules": [
+    "conformance/EP-01/contract.test",
+    "conformance/EP-01/targets",
+    "conformance/EP-01/host-suite",
+    "conformance/frame",
+    "conformance/common",
+    "conformance/degrade",
+    "conformance/run",
+    "samples/EP-01/index",
+    "static/amendments",
+    "release/conditions",
+    "release/attestation"
+  ],
+  "fixtureFiles": [
+    "specs/100-specstride/contracts/extension-points/index.json",
+    "specs/100-specstride/contracts/extension-points/EP-01.host.json"
+  ],
+  "assetDirectories": [],
+  "computedDependencies": true
+}

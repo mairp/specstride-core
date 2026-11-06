@@ -1,0 +1,115 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-06/cli-empty-output",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "dsh",
+    "SPECSTRIDE_CRITIC_MALFORMED_LIMIT": "3",
+    "SPECSTRIDE_FEATURE": "cli-empty-output",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "5",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 1\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 2\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 3\n"
+        }
+      }
+    ],
+    "critic-cli": [
+      {
+        "verbs": [
+          "empty"
+        ]
+      },
+      {
+        "verbs": [
+          "empty"
+        ]
+      },
+      {
+        "verbs": [
+          "empty"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 1,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-002"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

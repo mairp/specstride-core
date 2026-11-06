@@ -1,0 +1,147 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-33/valid",
+ "system": "mixture-of-loops",
+ "entryPoint": {
+  "reference": "contract-validate",
+  "port": "contract validate"
+ },
+ "command": {
+  "reference": [
+   "python3",
+   "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+   "<WORK>/launch-contract.json"
+  ],
+  "port": [
+   "specstride",
+   "contract",
+   "validate",
+   "<WORK>/launch-contract.json"
+  ]
+ },
+ "steps": [
+  {
+   "command": {
+    "reference": [
+     "python3",
+     "<IMPL>/skills/mixture-of-loops/scripts/bootstrap_contract.py",
+     "--repo",
+     "<WORK>",
+     "--feature",
+     "specs/001-greeting",
+     "--output",
+     "<WORK>/launch-contract.json"
+    ],
+    "port": [
+     "specstride",
+     "contract",
+     "derive",
+     "--repo",
+     "<WORK>",
+     "--feature",
+     "specs/001-greeting",
+     "--output",
+     "<WORK>/launch-contract.json"
+    ]
+   }
+  },
+  {
+   "command": {
+    "reference": [
+     "python3",
+     "<FIXTURE>/complete-contract.py",
+     "<WORK>/launch-contract.json"
+    ],
+    "port": [
+     "python3",
+     "<FIXTURE>/complete-contract.py",
+     "<WORK>/launch-contract.json"
+    ]
+   }
+  },
+  {
+   "command": {
+    "reference": [
+     "python3",
+     "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+     "<WORK>/launch-contract.json",
+     "--promote"
+    ],
+    "port": [
+     "specstride",
+     "contract",
+     "validate",
+     "<WORK>/launch-contract.json",
+     "--promote"
+    ]
+   }
+  },
+  {
+   "command": {
+    "reference": [
+     "python3",
+     "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+     "<WORK>/launch-contract.json"
+    ],
+    "port": [
+     "specstride",
+     "contract",
+     "validate",
+     "<WORK>/launch-contract.json"
+    ]
+   }
+  }
+ ],
+ "environment": {},
+ "stubs": {},
+ "workdirTemplate": "workdir",
+ "assets": [
+  {
+   "path": "tests/fixtures/repos/greeting-ready/README.md",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  },
+  {
+   "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  },
+  {
+   "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  },
+  {
+   "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  },
+  {
+   "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  },
+  {
+   "path": "tests/fixtures/expectations/greeting-ready.json",
+   "baseline": "mixture-of-loops@9c88f86",
+   "licence": "Apache-2.0"
+  }
+ ],
+ "expectedExit": 0,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr",
+  "state"
+ ],
+ "proves": [
+  "C-029"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "python3 3.10 to 3.13",
+  "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)"
+ ]
+}

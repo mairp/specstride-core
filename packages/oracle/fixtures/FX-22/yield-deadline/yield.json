@@ -1,0 +1,17 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "deadline_sec": 3,
+ "on_resume": "write the evidence of the phase",
+ "reason": "a job of the scenario that outlives the deadline of its own yield",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "sleep 30"
+  ]
+ },
+ "resume_when": {
+  "kind": "exit_code_file"
+ }
+}

@@ -1,0 +1,611 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-26/prime-v3-stock-success",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  · init prime-v3 session=fixture-session-stock-success\nInspecting the requested files.\n"
+  },
+  "stderr": {
+   "text": "----- proposer pass 1/2  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/gate.md).\n"
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"prime-v3-stock-success\",\"iter\":\"1\",\"max_iter\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"feature\":\"prime-v3-stock-success\",\"file\":\"gate.md\",\"iters\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "file",
+        "value": "gate.md",
+        "type": "string"
+       },
+       {
+        "key": "iters",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     }
+    ],
+    "proposer": [
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_observability\",\"run_id\":\"<run-id-1>\",\"feature\":\"prime-v3-stock-success\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-2>\",\"sequence\":1,\"mode\":\"structured\",\"reason\":\"Prime JSON schema v3 selected\",\"provider_format\":\"prime-v3\",\"supported_signals\":\"init,text,tool,evidence,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "init,text,tool,evidence,result",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"prime-v3-stock-success\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-2>\",\"sequence\":2,\"schema_version\":3,\"session_id\":\"fixture-session-stock-success\",\"cwd\":\"/work/project\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_init",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "schema_version",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "session_id",
+        "value": "fixture-session-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "cwd",
+        "value": "/work/project",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"prime-v3-stock-success\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-2>\",\"sequence\":3,\"schema_version\":3,\"session_id\":\"fixture-session-stock-success\",\"cwd\":\"/work/project\",\"model\":\"fixture-model\",\"provider\":\"fixture-provider\",\"update\":true}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_init",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "schema_version",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "session_id",
+        "value": "fixture-session-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "cwd",
+        "value": "/work/project",
+        "type": "string"
+       },
+       {
+        "key": "model",
+        "value": "fixture-model",
+        "type": "string"
+       },
+       {
+        "key": "provider",
+        "value": "fixture-provider",
+        "type": "string"
+       },
+       {
+        "key": "update",
+        "value": true,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_text\",\"run_id\":\"<run-id-1>\",\"feature\":\"prime-v3-stock-success\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-2>\",\"sequence\":4,\"message_key\":\"fixture-message-stock-1:0\",\"message_id\":\"fixture-message-stock-1\",\"content_index\":0,\"text\":\"Inspecting the requested files.\",\"final_fragment\":true,\"redacted\":false,\"truncated\":false,\"original_bytes\":31,\"retained_bytes\":31}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_text",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-v3-stock-success",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 4,
+        "type": "number"
+       },
+       {
+        "key": "message_key",
+        "value": "fixture-message-stock-1:0",
+        "type": "string"
+       },
+       {
+        "key": "message_id",
+        "value": "fixture-message-stock-1",
+        "type": "string"
+       },
+       {
+        "key": "content_index",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "text",
+        "value": "Inspecting the requested files.",
+        "type": "string"
+       },
+       {
+        "key": "final_fragment",
+        "value": true,
+        "type": "boolean"
+       },
+       {
+        "key": "redacted",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "truncated",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "original_bytes",
+        "value": 31,
+        "type": "number"
+       },
+       {
+        "key": "retained_bytes",
+        "value": 31,
+        "type": "number"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "proposer",
+    "harness": "prime",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_AGENT_STREAM",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PRIME_AGENT_BIN",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "Write one.txt and cite the gate.",
+    "given": {
+     "mode": "json"
+    },
+    "step": {
+     "verbs": [
+      "stream",
+      "evidence"
+     ]
+    },
+    "argv": [
+     "-p",
+     "--mode",
+     "json",
+     "--no-session",
+     "--cwd",
+     "<WORK>"
+    ]
+   }
+  ]
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 3,
+  "N-02": 0,
+  "N-03": 12,
+  "N-04": 20,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 6,
+  "N-14": 6,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 1,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 11,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

@@ -1,0 +1,304 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-36/relaunch-stale-sources",
+  "variant": "@full-stack",
+  "system": "mixture-of-loops",
+  "engineSystem": "specstride",
+  "entryPoint": {
+    "reference": "supervisor-observe",
+    "port": "supervisor observe"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:supervisor>",
+      "observe"
+    ],
+    "port": [
+      "specstride",
+      "supervisor",
+      "observe"
+    ]
+  },
+  "steps": [
+    {
+      "name": "derive the launch contract",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/bootstrap_contract.py",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "derive",
+          "--repo",
+          "<WORK>",
+          "--feature",
+          "specs/001-greeting",
+          "--output",
+          "<WORK>/launch-contract.json"
+        ]
+      }
+    },
+    {
+      "name": "complete the draft deterministically",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/complete-contract.py",
+          "<WORK>/launch-contract.json",
+          "<FIXTURE>/contract-patch.json"
+        ]
+      }
+    },
+    {
+      "name": "promote the contract to validated",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/validate_contract.py",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ],
+        "port": [
+          "specstride",
+          "contract",
+          "validate",
+          "<WORK>/launch-contract.json",
+          "--promote"
+        ]
+      }
+    },
+    {
+      "name": "render the launcher and the launch bundle",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/skills/mixture-of-loops/scripts/render_launcher.py",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ],
+        "port": [
+          "specstride",
+          "launcher",
+          "render",
+          "--contract",
+          "<WORK>/launch-contract.json",
+          "--output",
+          "<WORK>/launch.sh"
+        ]
+      }
+    },
+    {
+      "name": "launch the pipeline detached",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "launch",
+          "--launcher",
+          "<WORK>/launch.sh",
+          "--mode",
+          "run"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "launch",
+          "--launcher",
+          "<WORK>/launch.sh",
+          "--mode",
+          "run"
+        ]
+      }
+    },
+    {
+      "name": "wait for the launcher to end",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/await-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/await-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting"
+        ]
+      }
+    },
+    {
+      "name": "shape the records into launcher-exit-23",
+      "command": {
+        "reference": [
+          "python3",
+          "<FIXTURE>/shape-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "launcher-exit-23"
+        ],
+        "port": [
+          "python3",
+          "<FIXTURE>/shape-run.py",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "launcher-exit-23"
+        ]
+      }
+    },
+    {
+      "name": "read the run (relaunch-stale-sources)",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "observe",
+          "--run-dir",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "--json"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "observe",
+          "--run-dir",
+          "<WORK>/.mixture-of-loops/runs/001-greeting",
+          "--json"
+        ]
+      }
+    }
+  ],
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "001-greeting",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "claude",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "src/greet.py",
+          "content": "def greet(name):\n    return f'Hello, {name}!'\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "tests/test_greet.py",
+          "content": "def test_greet():\n    assert greet('x') == 'Hello, x!'\n"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "assets": [
+    {
+      "path": "tests/fixtures/repos/greeting-ready/README.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/expectations/greeting-ready.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    }
+  ],
+  "expectedExit": 22,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "pipeline"
+  ],
+  "pipeline": {
+    "root": "<WORK>/.mixture-of-loops/runs/001-greeting",
+    "records": [
+      "state.json",
+      "harness-run.json"
+    ],
+    "logs": [
+      "launcher.log",
+      "harness-launch.log",
+      "harness-report.log"
+    ]
+  },
+  "proves": [
+    "C-123"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)",
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE): the real engine the @full-stack variant drives (F141-FR-016)"
+  ]
+}

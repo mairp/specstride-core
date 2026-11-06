@@ -1,0 +1,81 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-25/window-per-harness",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "dsh:zai/glm-5.3-flash",
+    "SPECSTRIDE_FEATURE": "window-per-harness",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "one\n",
+          "evidenceContent": "the evidence of the phase, written by the proposer stub\n\n- T001 is met: `one.txt` is in the working directory.\n- Proof: `bulk/bulk-01.txt`\n- Proof: `bulk/bulk-02.txt`\n- Proof: `bulk/bulk-03.txt`\n- Proof: `bulk/bulk-04.txt`\n- Proof: `bulk/bulk-05.txt`\n- Proof: `bulk/bulk-06.txt`\n- Proof: `bulk/bulk-07.txt`\n- Proof: `bulk/bulk-08.txt`\n- Proof: `bulk/bulk-09.txt`\n- Proof: `bulk/bulk-10.txt`\n- Proof: `bulk/bulk-11.txt`\n- Proof: `bulk/bulk-12.txt`\n- Proof: `bulk/bulk-13.txt`\n- Proof: `bulk/bulk-14.txt`\n- Proof: `bulk/bulk-15.txt`\n- Proof: `bulk/bulk-16.txt`\n- Proof: `bulk/bulk-17.txt`\n- Proof: `bulk/bulk-18.txt`\n- Proof: `bulk/bulk-19.txt`\n- Proof: `bulk/bulk-20.txt`\n- Proof: `bulk/bulk-21.txt`\n- Proof: `bulk/bulk-22.txt`\n- Proof: `bulk/bulk-23.txt`\n- Proof: `bulk/bulk-24.txt`\n- Proof: `bulk/bulk-25.txt`\n- Proof: `bulk/bulk-26.txt`\n- Proof: `bulk/bulk-27.txt`\n- Proof: `bulk/bulk-28.txt`\n- Proof: `bulk/bulk-29.txt`\n- Proof: `bulk/bulk-30.txt`\n- Proof: `bulk/bulk-31.txt`\n- Proof: `bulk/bulk-32.txt`\n- Proof: `bulk/bulk-33.txt`\n- Proof: `bulk/bulk-34.txt`\n- Proof: `bulk/bulk-35.txt`\n- Proof: `bulk/bulk-36.txt`\n- Proof: `bulk/bulk-37.txt`\n- Proof: `bulk/bulk-38.txt`\n- Proof: `bulk/bulk-39.txt`\n- Proof: `bulk/bulk-40.txt`\n"
+        }
+      }
+    ],
+    "critic-cli": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stderr",
+    "state",
+    "events",
+    "transcript"
+  ],
+  "proves": [
+    "C-002"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

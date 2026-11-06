@@ -1,0 +1,235 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-waivers/1",
+ "waivers": [
+  {
+   "fixture": "FX-01/defaults-no-role-named",
+   "surface": "events",
+   "row": "DV-004",
+   "difference": {
+    "selector": "records/*/pairs/backend",
+    "reference": "prop:dsh/crit:claude",
+    "port": "prop:claude/crit:claude"
+   }
+  },
+  {
+   "fixture": "FX-01/defaults-no-role-named",
+   "surface": "stdout",
+   "row": "DV-004",
+   "difference": {
+    "selector": "the banner line that names the two backends",
+    "reference": "prop:dsh/crit:claude",
+    "port": "prop:claude/crit:claude"
+   }
+  },
+  {
+   "fixture": "FX-01/harness-prime",
+   "surface": "transcript",
+   "row": "DV-112",
+   "difference": {
+    "selector": "records/*/envNames",
+    "reference": "no variable that switches the harness's own telemetry off is set for prime",
+    "port": "every process started for prime carries the telemetry switch of the dialect and the do-not-track variable, so the names of two variables stand in the record that the reference does not have"
+   }
+  },
+  {
+   "fixture": "FX-01/harness-prime-variant",
+   "surface": "transcript",
+   "row": "DV-112",
+   "difference": {
+    "selector": "records/*/envNames",
+    "reference": "no variable that switches the harness's own telemetry off is set for prime",
+    "port": "every process started for prime carries the telemetry switch of the dialect and the do-not-track variable, so the names of two variables stand in the record that the reference does not have"
+   }
+  },
+  {
+   "fixture": "FX-06/prime-critic-error",
+   "surface": "transcript",
+   "row": "DV-112",
+   "difference": {
+    "selector": "records/*/envNames",
+    "reference": "no variable that switches the harness's own telemetry off is set for prime",
+    "port": "every process started for prime carries the telemetry switch of the dialect and the do-not-track variable, so the names of two variables stand in the record that the reference does not have"
+   }
+  },
+  {
+   "fixture": "FX-10/explicit-openspec",
+   "surface": "exit",
+   "row": "DV-073",
+   "difference": {
+    "selector": "exitCode",
+    "reference": 3,
+    "port": 0
+   }
+  },
+  {
+   "fixture": "FX-10/explicit-openspec",
+   "surface": "stderr",
+   "row": "DV-073",
+   "difference": {
+    "selector": "the line that refuses the format",
+    "reference": "the explicit format `openspec` is refused",
+    "port": ""
+   }
+  },
+  {
+   "fixture": "FX-11/orphaned-child",
+   "surface": "state",
+   "row": "DV-022",
+   "difference": {
+    "selector": "workspace:lock",
+    "reference": "the lock directory is held for the orphaned child and never released",
+    "port": "the process group is tracked, so the lock is released when the group ends"
+   }
+  },
+  {
+   "fixture": "FX-11/stale-lock",
+   "surface": "state",
+   "row": "DV-022",
+   "difference": {
+    "selector": "workspace:lock",
+    "reference": "the lock directory of the ended run is still there, with its `owner` file",
+    "port": "the lock is reclaimed by rename and the run proceeds"
+   }
+  },
+  {
+   "fixture": "FX-13/planted-approval-marker",
+   "surface": "state",
+   "row": "DV-029",
+   "difference": {
+    "selector": "gate:<N>:approved",
+    "reference": "an empty file, whose presence resume trusts",
+    "port": "an approval record of the control plane, which resume verifies"
+   }
+  },
+  {
+   "fixture": "FX-13/resume-tunable-key-in-environment",
+   "surface": "state",
+   "row": "DV-024",
+   "difference": {
+    "selector": "run:<runId>:snapshot",
+    "reference": "the saved value is turned into a flag and beats the environment",
+    "port": "a tunable key ranks below the environment, so the environment wins"
+   }
+  },
+  {
+   "fixture": "FX-13/resume-unsaved-setting",
+   "surface": "state",
+   "row": "DV-024",
+   "difference": {
+    "selector": "run:<runId>:snapshot",
+    "reference": "the setting is absent from the saved configuration of the run",
+    "port": "the snapshot holds every resolved key with its provenance"
+   }
+  },
+  {
+   "fixture": "FX-13/snapshot-write-fails",
+   "surface": "exit",
+   "row": "DV-024",
+   "difference": {
+    "selector": "exitCode",
+    "reference": "a failed write of the saved configuration is ignored and the run goes on",
+    "port": "a failed snapshot write is a launch error"
+   }
+  },
+  {
+   "fixture": "FX-25/evidence-cites-state-path",
+   "surface": "transcript",
+   "row": "DV-032",
+   "difference": {
+    "selector": "records/*/prompt (the grounding snapshot of the critic call)",
+    "reference": "a cited path inside the state directory is resolved and its content is shown: the snapshot holds the proof slice the proposer staged under the feature's `gates/proofs`",
+    "port": "grounding refuses the control plane by real path, so the citation is not resolved there and the snapshot does not carry the slice"
+   }
+  },
+  {
+   "fixture": "FX-31/delivery-status",
+   "surface": "telemetry",
+   "row": "DV-058",
+   "difference": {
+    "selector": "the delivery status recorded for the OTLP shipper",
+    "reference": "never `delivered`, whatever the sink answered",
+    "port": "the status the exporter observed"
+   }
+  },
+  {
+   "fixture": "FX-31/loki-payload",
+   "surface": "telemetry",
+   "row": "DV-107",
+   "difference": {
+    "selector": "the field `result_preview` of an `api_request` record",
+    "reference": "300 characters of the model's text, unredacted",
+    "port": null
+   }
+  },
+  {
+   "fixture": "FX-31/metric-names",
+   "surface": "telemetry",
+   "row": "DV-058",
+   "difference": {
+    "selector": "the metric and attribute names of the delivered payload",
+    "reference": "the names of the two shippers of the reference",
+    "port": "one exporter, with the names `specstride.*`"
+   }
+  },
+  {
+   "fixture": "FX-31/otlp-payload",
+   "surface": "telemetry",
+   "row": "DV-107",
+   "difference": {
+    "selector": "the field `result_preview` of an `api_request` record",
+    "reference": "300 characters of the model's text, unredacted",
+    "port": null
+   }
+  },
+  {
+   "fixture": "FX-32/tasks-unreadable-by-old-grammar",
+   "surface": "stdout",
+   "row": "DV-060",
+   "difference": {
+    "selector": "the phases the derivation found",
+    "reference": "none: the old grammar of mixture-of-loops reads only `## Phase N:` headings",
+    "port": "the phases the one grammar of Principle IV reads"
+   }
+  },
+  {
+   "fixture": "FX-36/mode-no-execution-phrasing@engine-stub",
+   "surface": "stdout",
+   "row": "DV-009",
+   "difference": {
+    "selector": "the mode the request selects",
+    "reference": "mode=generate",
+    "port": "mode=run"
+   }
+  },
+  {
+   "fixture": "FX-36/mode-no-execution-phrasing@full-stack",
+   "surface": "stdout",
+   "row": "DV-009",
+   "difference": {
+    "selector": "the mode the request selects",
+    "reference": "mode=generate",
+    "port": "mode=run"
+   }
+  },
+  {
+   "fixture": "FX-35/second-pipeline-on-held-workspace@full-stack",
+   "surface": "exit",
+   "row": "DV-075",
+   "difference": {
+    "selector": "exitCode",
+    "reference": "22",
+    "port": "24"
+   }
+  },
+  {
+   "fixture": "FX-35/second-pipeline-on-held-workspace@full-stack",
+   "surface": "pipeline",
+   "row": "DV-075",
+   "difference": {
+    "selector": "records/state.json/stages/implement-farewell/child_exit_code",
+    "reference": "5",
+    "port": "none: the port never starts the stage"
+   }
+  }
+ ]
+}

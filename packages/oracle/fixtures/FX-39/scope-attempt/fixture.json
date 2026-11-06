@@ -1,0 +1,94 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-39/scope-attempt",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "pass-loop",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:pass-loop>",
+      "--workdir",
+      "<WORK>",
+      "--evidence",
+      "<WORK>/gate.md",
+      "--prompt-file",
+      "<WORK>/prompt.txt",
+      "--sleep",
+      "0",
+      "--max-iter",
+      "2"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CODEX_OVERLAY": "attempt",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "scope-attempt",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "codex",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "one\n",
+          "evidence": "gate.md"
+        }
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-121"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "replace",
+      "file": "lib/backends.py",
+      "find": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\")))),",
+      "text": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\"))),\n            overlay={\"vars\": (\"HOME\", \"XDG_CONFIG_HOME\"),\n                     \"seeds\": ({\"var\": \"HOME\", \"path\": \".codex/config.toml\",\n                                \"content\": \"model = \\\"stub\\\"\\n\"},)}),",
+      "why": "no shipped registry entry sets `overlay`, so without this edit `scope_for` answers `none` and the scope the as-is variable declares has no effect at all"
+    }
+  ]
+}

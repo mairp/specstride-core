@@ -1,0 +1,88 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-18/harness-missing-dsh",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "harness-missing-dsh",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "5",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "nothing"
+        ]
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 4,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-052"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "replace",
+      "file": "proposer.sh",
+      "find": "      local dsh_bin=\"${SPECSTRIDE_DSH_BIN:-dsh}\"",
+      "text": "      local dsh_bin=\"${SPECSTRIDE_DSH_BIN:-no-such-dsh}\"",
+      "why": "the scenario is a pass whose harness is NOT installed, and `dsh` is a stub executable of \u00a7O.3 that stands on the search path of every run, so the condition cannot be reached by leaving it out. The as-is variable that names the DSH executable (`SPECSTRIDE_DSH_BIN`) stands in the environment alias table of feature 100, annex X \u00a7X.8 in PROSE only ('The as-is variable for the executable of a harness, and for its profile'), so `hermeticEnvironment` cannot declare it the way `FX-18/harness-missing-prime` declares `SPECSTRIDE_PRIME_AGENT_BIN`. The edit moves the DEFAULT of that variable to a name no directory of the search path holds; the line under test (`proposer.sh:549`, `command -v` and `return 127`) is untouched. The port reaches the same state through `harnesses.dsh.bin` and takes no edit."
+    }
+  ]
+}

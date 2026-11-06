@@ -1,0 +1,228 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-39/scope-attempt-signal",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 143,
+   "perCommand": [
+    143
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": ""
+  },
+  "stderr": {
+   "text": "----- proposer pass 1/2  <time> -----\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"scope-attempt-signal\",\"iter\":\"1\",\"max_iter\":\"2\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Declared overlay of the configuration home\n\nOne phase. The harness runs inside a throwaway configuration home.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "prompt.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "Write one.txt and cite the gate.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"scope-attempt-signal\",\"iter\":\"1\",\"max_iter\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "scope-attempt-signal",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "proposer",
+    "harness": "codex",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_AGENT_STREAM",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CODEX_OVERLAY",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CONFIG_HOME",
+     "XDG_RUNTIME_DIR"
+    ],
+    "prompt": "Write one.txt and cite the gate.",
+    "step": {
+     "verbs": [
+      "silent"
+     ]
+    },
+    "argv": [
+     "codex",
+     "exec",
+     "--dangerously-bypass-approvals-and-sandbox",
+     "Write one.txt and cite the gate."
+    ]
+   }
+  ],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 1,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 6,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 1,
+  "N-14": 1,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 1,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 4,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

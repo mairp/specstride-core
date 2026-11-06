@@ -1,0 +1,58 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-40/card",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "\u001b[2J\u001b[H\u001b[2J\u001b[H\u001b[K\n  ━━━━┿━━━╸\u001b[K\n      ✓ 1\u001b[K\n\u001b[K\n  phase 1/1  \u001b[K\n  ■ complete (<duration>)\u001b[K\n  run: <duration>\u001b[K\n  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\u001b[K\n  --:--:-- ┏ run start — 1 phases · ?→? · resume @ phase ?\u001b[K\n  --:--:-- ◆ phase 1/?\u001b[K\n  --:--:-- ■ run complete — approved\u001b[K\n  ■ approved\u001b[K\n  Ctrl-C to detach — the run keeps going\u001b[K\n\u001b[2J\u001b[H\u001b[K\n  ━━━━┿━━━╸\u001b[K\n      ✓ 1\u001b[K\n\u001b[K\n  phase 1/1  \u001b[K\n  ■ complete (<duration>)\u001b[K\n  run: <duration>\u001b[K\n  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\u001b[K\n  --:--:-- ┏ run start — 1 phases · ?→? · resume @ phase ?\u001b[K\n  --:--:-- ◆ phase 1/?\u001b[K\n  --:--:-- ■ run complete — approved\u001b[K\n  --:--:-- ┏ run start — 1 phases · ?→? · resume @ phase ?\u001b[K\n  --:--:-- ◆ phase 1/?\u001b[K\n  --:--:-- ■ run complete — approved\u001b[K\n  ■ approved\u001b[K\n  Ctrl-C to detach — the run keeps going\u001b[K\n\n"
+  },
+  "stderr": {
+   "text": ""
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 0,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 2,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 1,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 0,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

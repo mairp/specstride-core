@@ -1,0 +1,51 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-per-os/1",
+ "status": "inferred; unverified until a macOS runner has passed the oracle (ruling 67)",
+ "expectations": [
+  {
+   "subject": "Specstride reference",
+   "linux": "runs live; authoritative",
+   "macos": "does not run; the port is compared with the Linux capture"
+  },
+  {
+   "subject": "mixture-of-loops reference",
+   "linux": "runs live",
+   "macos": "runs live"
+  },
+  {
+   "subject": "workspace lock",
+   "linux": "as-is lock file",
+   "macos": "the form differs (DV-022); the refusal of a second run is compared"
+  },
+  {
+   "subject": "detached job",
+   "linux": "new process session",
+   "macos": "compared by behaviour: the job survives the pass"
+  },
+  {
+   "subject": "liveness of a process id",
+   "linux": "as at the baseline",
+   "macos": "the port may do better than the reference would; register row"
+  },
+  {
+   "subject": "event time",
+   "linux": "nanoseconds",
+   "macos": "normalized by N-04"
+  },
+  {
+   "subject": "temporary directory",
+   "linux": "as given",
+   "macos": "N-01 resolves real paths first"
+  },
+  {
+   "subject": "file system",
+   "linux": "case-sensitive",
+   "macos": "fixtures use no names that differ only in case"
+  },
+  {
+   "subject": "signals and exit 128+N",
+   "linux": "compared",
+   "macos": "compared; same numbers"
+  }
+ ]
+}

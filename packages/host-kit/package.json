@@ -1,0 +1,22 @@
+{
+  "name": "@specstride/host-kit",
+  "version": "0.0.0",
+  "description": "Specstride host kit: the host-neutral parts of the host port EP-01 \u2014 the logical skill sources and their registry, the generic render with its byte-budget check, the capability-description shape, the self-contained shim core and the reusable doctor host-check set \u2014 so a host package composes its plugin from one kit instead of copying engine source (the split of the monorepo, U-1 of 120)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./evals": "./src/evals/index.ts",
+    "./shim": "./src/shim.ts"
+  },
+  "scripts": {
+    "test": "node ../../tests/isolate.ts node --test \"test/**/*.test.*\"",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@specstride/contracts": "0.0.0"
+  }
+}

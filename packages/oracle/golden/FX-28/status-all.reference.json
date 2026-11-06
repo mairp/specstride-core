@@ -1,0 +1,144 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-28/status-all",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "specstride status --all — <WORK>\n  FEATURE                          PHASES     STATE\n  -------------------------------- ---------- -----\n  demo                             1/?        DONE:complete\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/demo",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/demo/gates",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/demo/runs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/demo/runs/run",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Front-door inspection commands\n\nThe spec of FX-28: one phase, so that `specstride phases` has something to list.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": [
+    {
+     "logicalName": "feature:<slug>:notebook",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "# Progress\n\n## Phase 1 — done\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "gate:<N>:approved",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:engine-log:<k>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "specstride orchestrator start <time>\n===== PHASE 1 =====\n>>> phase 1 APPROVED\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:events-legacy",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"time\": \"<time>\", \"event\": \"run_start\", \"run_id\": \"<run-id-1>\", \"feature\": \"demo\"}\n{\"time\": \"<time>\", \"event\": \"phase_start\", \"phase\": 1}\n{\"time\": \"<time>\", \"event\": \"gate_approved\", \"phase\": 1, \"attempt\": 1}\n{\"time\": \"<time>\", \"event\": \"run_end\", \"outcome\": \"complete\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:snapshot",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "FEATURE=demo\nSPECS=\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 3,
+  "N-02": 0,
+  "N-03": 1,
+  "N-04": 2,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 2,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 2,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

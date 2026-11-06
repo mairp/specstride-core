@@ -1,0 +1,300 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-26/claude-adapter-exposes-terminal-without-result-event",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  ✓ result: success  cost=$0.0000  turns=1  out_tok=2  <duration>\n"
+  },
+  "stderr": {
+   "text": "----- proposer pass 1/2  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/gate.md).\n"
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"claude-adapter-exposes-terminal-without-result-event\",\"iter\":\"1\",\"max_iter\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "claude-adapter-exposes-terminal-without-result-event",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_result\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"claude\",\"is_error\":false,\"subtype\":\"success\",\"duration_ms\":<duration>,\"num_turns\":1,\"input_tokens\":4,\"output_tokens\":2,\"iter\":1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "claude",
+        "type": "string"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "subtype",
+        "value": "success",
+        "type": "string"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "num_turns",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "input_tokens",
+        "value": 4,
+        "type": "number"
+       },
+       {
+        "key": "output_tokens",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"feature\":\"claude-adapter-exposes-terminal-without-result-event\",\"file\":\"gate.md\",\"iters\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "claude-adapter-exposes-terminal-without-result-event",
+        "type": "string"
+       },
+       {
+        "key": "file",
+        "value": "gate.md",
+        "type": "string"
+       },
+       {
+        "key": "iters",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "proposer",
+    "harness": "claude",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_AGENT_STREAM",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_STDIN_FILE",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "Write one.txt and cite the gate.",
+    "step": {
+     "verbs": [
+      "stream",
+      "evidence"
+     ]
+    },
+    "argv": [
+     "-p",
+     "--dangerously-skip-permissions",
+     "--verbose",
+     "--disable-slash-commands",
+     "--output-format",
+     "stream-json"
+    ]
+   }
+  ]
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 2,
+  "N-02": 0,
+  "N-03": 2,
+  "N-04": 11,
+  "N-05": 4,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 3,
+  "N-14": 3,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 1,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 7,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

@@ -1,0 +1,21 @@
+{"ts": 1767484800, "event": "run_start", "run_id": "20260104-000001-000004", "feature": "demo", "backend": "dsh"}
+{"ts": 1767484801, "event": "phase_start", "run_id": "20260104-000001-000004", "phase": 1, "title": "The only phase", "shape": "5c165bcf0b5cfe54"}
+{"ts": 1767484801, "event": "proposer_cap", "run_id": "20260104-000001-000004", "phase": 1, "seconds": 1800, "source": "default", "yield_poll": 30, "yield_poll_source": "default"}
+{"ts": 1767484802, "event": "proposer_start", "run_id": "20260104-000001-000004", "phase": 1, "attempt": 1}
+{"ts": 1767484812, "event": "iter_start", "run_id": "20260104-000001-000004", "iter": 1}
+{"ts": 1767484813, "event": "agent_tool", "run_id": "20260104-000001-000004", "tool": "Bash", "target": "pytest"}
+{"ts": 1767484932, "event": "agent_result", "run_id": "20260104-000001-000004", "cost_usd": 0.4, "duration_ms": 120000, "is_error": false}
+{"ts": 1767484932, "event": "iter_done", "run_id": "20260104-000001-000004", "iter": 1, "evidence": "written"}
+{"ts": 1767484822, "event": "iter_start", "run_id": "20260104-000001-000004", "iter": 2}
+{"ts": 1767484823, "event": "agent_tool", "run_id": "20260104-000001-000004", "tool": "Bash", "target": "pytest"}
+{"ts": 1767484912, "event": "agent_result", "run_id": "20260104-000001-000004", "cost_usd": 0.3, "duration_ms": 90000, "is_error": false}
+{"ts": 1767484912, "event": "iter_done", "run_id": "20260104-000001-000004", "iter": 2, "evidence": "written"}
+{"ts": 1767484832, "event": "iter_start", "run_id": "20260104-000001-000004", "iter": 3}
+{"ts": 1767484833, "event": "agent_tool", "run_id": "20260104-000001-000004", "tool": "Bash", "target": "pytest"}
+{"ts": 1767484982, "event": "agent_result", "run_id": "20260104-000001-000004", "cost_usd": 0.5, "duration_ms": 150000, "is_error": false}
+{"ts": 1767484982, "event": "iter_done", "run_id": "20260104-000001-000004", "iter": 3, "evidence": "written"}
+{"ts": 1767485000, "event": "evidence_written", "run_id": "20260104-000001-000004", "phase": 1, "attempt": 1}
+{"ts": 1767485001, "event": "critic_start", "run_id": "20260104-000001-000004", "phase": 1, "attempt": 1}
+{"ts": 1767485005, "event": "verdict", "run_id": "20260104-000001-000004", "phase": 1, "attempt": 1, "result": "APPROVED"}
+{"ts": 1767485006, "event": "phase_done", "run_id": "20260104-000001-000004", "phase": 1, "attempt": 1}
+{"ts": 1767485007, "event": "run_end", "run_id": "20260104-000001-000004", "outcome": "complete"}

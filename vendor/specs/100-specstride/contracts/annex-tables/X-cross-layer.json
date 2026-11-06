@@ -1,0 +1,4794 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "annex": "X",
+  "tables": [
+    {
+      "section": "§X.1",
+      "heading": "Event envelope and versioning",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "The constant `specstride.event`",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`v`",
+          "Major of the schema; 1",
+          "Whole number",
+          "Yes"
+        ],
+        [
+          "`seq`",
+          "Position in the run's stream: rising, without gaps, given by the one writer at the append",
+          "Whole number",
+          "Yes"
+        ],
+        [
+          "`ts`",
+          "Time, UTC, to the millisecond",
+          "Timestamp",
+          "Yes"
+        ],
+        [
+          "`type`",
+          "Dotted name of the event, lower case",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`runId`",
+          "The logical run",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`launchId`",
+          "The launch",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`engineStartId`",
+          "The engine start, where an engine wrote or caused the event",
+          "Text",
+          "No"
+        ],
+        [
+          "`featureId`, `phaseId`",
+          "Feature and phase, where they apply",
+          "Text",
+          "No"
+        ],
+        [
+          "`attemptId`, `attempt`",
+          "Id and ordinal of the phase attempt",
+          "Text, whole number",
+          "No"
+        ],
+        [
+          "`passId`, `pass`",
+          "Id and ordinal of the pass",
+          "Text, whole number",
+          "No"
+        ],
+        [
+          "`sessionId`, `parentSessionId`",
+          "Sessions of the harness",
+          "Text",
+          "No"
+        ],
+        [
+          "`role`",
+          "A role of the role registry, or one of `supervisor`, `host`",
+          "Text",
+          "No"
+        ],
+        [
+          "`harness`, `provider`, `model`",
+          "As known, else null",
+          "Text, or null",
+          "No"
+        ],
+        [
+          "`strategy`",
+          "`classic` or `micro`",
+          "Member of a closed set",
+          "On every event of a phase attempt and of a pass"
+        ],
+        [
+          "`traceId`, `spanId`",
+          "Trace identifiers; the trace id is the same for every launch of a run",
+          "Text",
+          "No"
+        ],
+        [
+          "`cause`",
+          "The `seq` or the id of the event that led to this one",
+          "Text",
+          "No"
+        ],
+        [
+          "`workerId`",
+          "The worker. Absent on the main line",
+          "Text",
+          "No"
+        ],
+        [
+          "`wseq`",
+          "Position inside the stream of one worker, rising. Absent on the main line",
+          "Whole number",
+          "No"
+        ],
+        [
+          "`data`",
+          "Content of the type. It holds no prompt, no reply, no body of a tool argument and no output of a command",
+          "Record",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§X.2",
+      "heading": "Config envelope, ranks and trust classes",
+      "subheading": null,
+      "header": [
+        "Rank",
+        "Layer",
+        "Note"
+      ],
+      "rows": [
+        [
+          "1",
+          "Pin of the launch contract",
+          "Only for keys marked as pinnable. Applies to children of the runtime root only"
+        ],
+        [
+          "2",
+          "Flag",
+          "The last flag wins. A generic flag reaches every key"
+        ],
+        [
+          "3",
+          "Run snapshot",
+          "On `resume` only, and only for keys of the class `pinned`"
+        ],
+        [
+          "4",
+          "Environment",
+          "With the as-is variable names as aliases"
+        ],
+        [
+          "5",
+          "Project configuration",
+          "Narrowing keys only"
+        ],
+        [
+          "6",
+          "User configuration",
+          "Takes the role of the as-is file at the install root, which is not read"
+        ],
+        [
+          "7",
+          "Learned value",
+          "Only under the learning mode `apply`, per knob and per phase"
+        ],
+        [
+          "8",
+          "Default",
+          "Built in or detected"
+        ]
+      ]
+    },
+    {
+      "section": "§X.2",
+      "heading": "Config envelope, ranks and trust classes",
+      "subheading": null,
+      "header": [
+        "Class",
+        "Meaning",
+        "Project configuration"
+      ],
+      "rows": [
+        [
+          "Widening",
+          "The key can widen capability: harness declarations and their command lines, endpoints, secret references, selection of the critic, containment level, permission flags, increases of a budget, commands of a host hook, telemetry endpoints, content capture, the transport of a harness adapter, the plugin allowlist of a harness, a declared write scope of a task, `loop.parallel.allow_detect`, the control root, `profile` (selected at flag, environment or user rank only; a project file cannot select it, F110-FR-013)",
+          "Ignored, with a launch message and a doctor warning"
+        ],
+        [
+          "Narrowing",
+          "The key limits a run: caps, budgets, modes, time limits",
+          "Accepted only if stricter than the value from the lower ranks"
+        ],
+        [
+          "Neutral",
+          "Neither",
+          "Accepted"
+        ],
+        [
+          "Pinnable",
+          "The launch contract may pin it",
+          "As its other class says"
+        ]
+      ]
+    },
+    {
+      "section": "§X.2",
+      "heading": "Config envelope, ranks and trust classes",
+      "subheading": null,
+      "header": [
+        "Field of a configuration file",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Major of the config schema; 1",
+          "Whole number",
+          "Yes"
+        ],
+        [
+          "Keys",
+          "The keys of feature 110, as a tree",
+          "—",
+          "No"
+        ],
+        [
+          "Keys under `x-`",
+          "Free for the consumer; ignored",
+          "—",
+          "No"
+        ]
+      ]
+    },
+    {
+      "section": "§X.3",
+      "heading": "Table evaluator",
+      "subheading": null,
+      "header": [
+        "Field of a table",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`id`, `version`",
+          "Id and version of the table",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`points`",
+          "Per decision point: the named signals it may read, with their types, and its closed choice set",
+          "Map",
+          "Yes"
+        ],
+        [
+          "`rows`",
+          "Per decision point an ordered list of rows",
+          "Map to lists",
+          "Yes"
+        ],
+        [
+          "`rows[].ruleId`",
+          "Id of the rule, stable, recorded with every decision",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`rows[].when`",
+          "A predicate over named signals, built from the closed set of operators: equal, not equal, less, greater, member of, present, and, or, not",
+          "Record",
+          "Yes; absent in the default row"
+        ],
+        [
+          "`rows[].choice`",
+          "A member of the choice set of the point",
+          "Member of a closed set",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§X.4",
+      "heading": "Redactor",
+      "subheading": null,
+      "header": [
+        "Operation",
+        "Input",
+        "Output"
+      ],
+      "rows": [
+        [
+          "`register`",
+          "A secret value that the runtime resolved",
+          "Nothing. The value is matched exactly from then on"
+        ],
+        [
+          "`redact`",
+          "A text and a size cap",
+          "The redacted, cut text; how many replacements were made; the version of the pattern set"
+        ]
+      ]
+    },
+    {
+      "section": "§X.4",
+      "heading": "Redactor",
+      "subheading": null,
+      "header": [
+        "Field of the pattern set",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`version`",
+          "Version of the set, recorded in every run record",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`keyNames`",
+          "Patterns of key names whose values are secrets",
+          "List of patterns",
+          "Yes"
+        ],
+        [
+          "`values`",
+          "Patterns of values: private-key blocks, signed tokens, access key ids of clouds, addresses with embedded credentials, prefixes of provider keys",
+          "List of patterns",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§X.5",
+      "heading": "Canonical hasher",
+      "subheading": null,
+      "header": [
+        "Operation",
+        "Input",
+        "Output"
+      ],
+      "rows": [
+        [
+          "Content hash",
+          "The bytes of a file, or a text taken as UTF-8",
+          "A SHA-256 hash"
+        ],
+        [
+          "Canonical record text",
+          "A record",
+          "The record as text with sorted keys, compact separators, non-ASCII characters kept, and no final line end. It is the input of the canonical record hash, and the form in which the Specstride baseline hashes the records of its verification plan"
+        ],
+        [
+          "Task-list hash that ignores checkboxes",
+          "A task list",
+          "A SHA-256 hash that does not change when a checkbox is ticked or cleared"
+        ],
+        [
+          "Canonical record hash",
+          "A record",
+          "The content hash of the canonical record text with one line end added"
+        ],
+        [
+          "Phase shape, obligation id, signature of unmet criteria",
+          "For the phase shape: the number, title and criteria of a phase; for the obligation id and the signature of unmet criteria: the text that each owner forms",
+          "As at the baseline; equal to the baseline's on the same input. The phase shape is built by the hasher (16 hexadecimal characters; rules: feature 104, F104-FR-021). The obligation id (rules: feature 107, F107-FR-004) and the signature of unmet criteria (rules: feature 101, F101-FR-019) are formed by their owners over the content hash of a text; the hasher holds no rule of theirs"
+        ],
+        [
+          "Classification of the staleness verdict",
+          "The recorded sources (logical name, repository-relative path, recorded hashes) and, for each, its hashes now or the mark that it cannot be read",
+          "For each source `unchanged`, `ticks-only`, `changed` or `unreadable`, and the verdict `fresh` or `stale`; a pure function that reads no file (rules: feature 104, F104-FR-024)"
+        ]
+      ]
+    },
+    {
+      "section": "§X.6",
+      "heading": "List of closed sets",
+      "subheading": null,
+      "header": [
+        "#",
+        "Closed set",
+        "Members, or where the list is",
+        "Owner",
+        "Closed by",
+        "Unknown value"
+      ],
+      "rows": [
+        [
+          "1",
+          "Run states",
+          "The ten written states of annex E §E.2",
+          "100",
+          "Design",
+          "Shown as `unknown` with an attention item; a writer never writes one"
+        ],
+        [
+          "2",
+          "Derived run conditions",
+          "`dead`, `stale`, `launch-abandoned`",
+          "100",
+          "Design",
+          "Not applicable: readers derive them"
+        ],
+        [
+          "3",
+          "Stop reasons",
+          "The 15 members of annex E §E.3",
+          "100",
+          "Owner decision",
+          "Treated as not retryable; reported"
+        ],
+        [
+          "4",
+          "Blocked reasons",
+          "The six of annex E §E.2",
+          "100",
+          "Design",
+          "Shown as text; the run stays blocked"
+        ],
+        [
+          "5",
+          "Terminal `cause`; `causedBy`",
+          "`normal`, `crash`, `owner-lost`; `self`, `operator`, `supervisor`, `host`, `crash`",
+          "101",
+          "Design",
+          "Read as `crash`"
+        ],
+        [
+          "6",
+          "Engine exit codes",
+          "Annex E §E.4",
+          "100",
+          "Owner decision",
+          "An exit outside the table is a crash"
+        ],
+        [
+          "7",
+          "Exit codes per command",
+          "Annex G §G.4; annex F §F.8",
+          "100",
+          "Owner decision",
+          "The supervisor's exit map gives 1"
+        ],
+        [
+          "8",
+          "Verdicts",
+          "APPROVED, REJECTED, MALFORMED",
+          "101",
+          "Owner decision",
+          "MALFORMED"
+        ],
+        [
+          "9",
+          "Kinds of phase attempt",
+          "`plain`, `diagnosed`, `accelerated`, `bumped`",
+          "149",
+          "Design",
+          "`plain`"
+        ],
+        [
+          "10",
+          "Kill reasons and their classes",
+          "Annex E F100-FR-150",
+          "118",
+          "Design",
+          "Class `futility`, as at the baseline"
+        ],
+        [
+          "11",
+          "Stage reasons, transient and deliberate",
+          "Annex E F100-FR-150",
+          "123",
+          "Design",
+          "Not transient"
+        ],
+        [
+          "12",
+          "Pipeline exit reasons",
+          "Annex E F100-FR-150",
+          "123",
+          "Design",
+          "Not transient"
+        ],
+        [
+          "13",
+          "Launch-check refusals",
+          "`launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`",
+          "123",
+          "Design",
+          "Refusal"
+        ],
+        [
+          "14",
+          "Relaunch refusals",
+          "Of the table `relaunch-observe`: `relaunch-disabled`, `still-running`, `operator-stop`, `completed`, `deliberate-stop`, `unknown-terminal`, `lock-conflict`, `unknown-launcher-exit`, `signal-stop`, `invalid-contract`, `preflight-blocked`, `stale-sources`, `launcher-exit-<n>`, `state-not-failed`, `unknown-stage`, `postcondition-failure`, `stage-precondition`, `setup-required`, `interrupted`, `stage-did-not-run`, `stage-did-not-fail`, `exec-error`, `stage-reason-not-transient`, `child-exit-not-retryable`, `stop-reason-not-allowed`, `contract-digest-changed`, `learning-decisions-changed`, `launcher-edited`, `budget-exhausted`, `budget-deadline-exceeded`; the approval `classified-transient`. Added by the table `relaunch-root` (table 1 of the supervisor reads rows of both tables; DV-114): `blocked-on-human`, `lease-lost`, `stop-not-retryable`, `relaunch-held`; the approval `classified-crash`",
+          "123",
+          "Design",
+          "Refusal"
+        ],
+        [
+          "15",
+          "Digest states",
+          "`completed`, `failed`, `stopped`, `dry-run`",
+          "123",
+          "Design",
+          "Supervisor outcome unknown-terminal"
+        ],
+        [
+          "16",
+          "Supervision outcomes",
+          "The seven of annex G F100-FR-184",
+          "123",
+          "Design",
+          "Exit 1"
+        ],
+        [
+          "17",
+          "Handshake outcomes",
+          "`started`, `attached`, `refused`",
+          "122",
+          "Design",
+          "`refused`"
+        ],
+        [
+          "18",
+          "Kinds of run request",
+          "`pipeline`, `engine`",
+          "123",
+          "Design",
+          "The launch is refused"
+        ],
+        [
+          "19",
+          "Engine start modes",
+          "`standalone`, `child`",
+          "100",
+          "Design",
+          "The start is refused"
+        ],
+        [
+          "20",
+          "`relaunch.owner`",
+          "`root`, `supervise`",
+          "123",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "21",
+          "Inbox request types",
+          "`stop`, `hold-relaunch`, `host-event`",
+          "122",
+          "Design",
+          "The request is ignored and reported"
+        ],
+        [
+          "22",
+          "Classes of the process registry; kinds of process",
+          "`owned`, `adoptable`; the seven kinds of annex B §B.10",
+          "122",
+          "Design",
+          "Class `owned`; the entry is never signalled without the identity check"
+        ],
+        [
+          "23",
+          "Results of a lock probe",
+          "The six of annex F §F.5",
+          "122",
+          "Design",
+          "`unknown`, which counts as held"
+        ],
+        [
+          "24",
+          "Detach strategies",
+          "An open registry; Wave 1: `spawn-detached`, `foreground`",
+          "122",
+          "Open",
+          "Configuration error"
+        ],
+        [
+          "25",
+          "Stage kinds; precondition checks",
+          "Open registries; Wave 1: the five and the six of annex F §F.7",
+          "123",
+          "Open",
+          "The launch contract is invalid"
+        ],
+        [
+          "26",
+          "Containment levels",
+          "C0, C1, C2, C3",
+          "109",
+          "Design",
+          "Read as C0"
+        ],
+        [
+          "27",
+          "`protection`",
+          "`prevent`, `detect`",
+          "116",
+          "Design",
+          "Read as `detect`"
+        ],
+        [
+          "28",
+          "Forms of the `completion` level",
+          "`tool-less`, `read-only-tools`",
+          "109",
+          "Owner decision",
+          "`critic_not_toolless`"
+        ],
+        [
+          "29",
+          "Tool-less mechanism of a descriptor",
+          "`structural`, `flag`, `config`, `none`",
+          "109",
+          "Design",
+          "`none`"
+        ],
+        [
+          "30",
+          "Transports of a harness adapter",
+          "`subprocess`, `sdk-in-process`, `direct-call`",
+          "109",
+          "Design",
+          "The transport is unavailable"
+        ],
+        [
+          "31",
+          "Kinds of descriptor; stream formats",
+          "Open sets, resolved through registries. Kinds of Wave 1: `cli`, `openai-chat`, `anthropic-messages`. Stream formats of Wave 1: `claude` (alias `claude-stream-json`), `prime-v3`, `text`, `jsonl`, `sse-openai`, `sse-anthropic`",
+          "109 (the kinds); 126 (the registry; the rows `claude`, `text`, `sse-openai`, `sse-anthropic`); 138 (the rows `jsonl`, `prime-v3`)",
+          "Open",
+          "The descriptor is refused"
+        ],
+        [
+          "32",
+          "Placeholders of a descriptor",
+          "The seven of annex C §C.2",
+          "109",
+          "Design",
+          "The descriptor is refused"
+        ],
+        [
+          "33",
+          "Provenance of a capability",
+          "`declared`, `probed`, `adapter`, `catalogue`",
+          "109",
+          "Design",
+          "The value is read as null"
+        ],
+        [
+          "34",
+          "States of a harness",
+          "`tested`, `locally-verified`, `declared`, `detected`",
+          "146",
+          "Design",
+          "`detected`"
+        ],
+        [
+          "35",
+          "Origin of a descriptor",
+          "`adapter`, `bundled`, `user`, `detected`",
+          "109",
+          "Design",
+          "The descriptor is refused"
+        ],
+        [
+          "36",
+          "Typed failures of the harness port",
+          "The eight of annex C §C.1",
+          "109",
+          "Design",
+          "`agent_failure`"
+        ],
+        [
+          "37",
+          "Outcomes of `betweenPasses`",
+          "`continue`; `stop` with 4; `stop` with 7",
+          "109",
+          "Design",
+          "`continue`"
+        ],
+        [
+          "38",
+          "Kinds of normalized stream record",
+          "`init`, `text`, `tool`, `usage`, `error`, `terminal`",
+          "126",
+          "Design",
+          "The record is dropped with a diagnostic event"
+        ],
+        [
+          "39",
+          "Dialects of the JSONL reader",
+          "The rows of the dialect table; Wave 1: `prime`, `pi`",
+          "138",
+          "Open by data",
+          "The stream is refused"
+        ],
+        [
+          "40",
+          "Auth tiers",
+          "Tier 1, Tier 2, Tier 3. Tier 3 is never a valid value of configuration or of a descriptor",
+          "147",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "41",
+          "Audiences",
+          "`personal`, `distributed`",
+          "147",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "42",
+          "Status of a terms row",
+          "`allowed`, `conditional`, `personal-only`, `refused`",
+          "147",
+          "Design",
+          "`refused`"
+        ],
+        [
+          "43",
+          "Cost classes",
+          "`subscription`, `metered`, `local`, `unknown`",
+          "109",
+          "Design",
+          "`unknown`"
+        ],
+        [
+          "44",
+          "Secret schemes",
+          "An open registry; Wave 1: `env:`, `file:`, `keychain:`",
+          "110",
+          "Open",
+          "Configuration error"
+        ],
+        [
+          "45",
+          "Results of `exists` of a secret",
+          "`yes`, `no`, `unprobed`",
+          "110",
+          "Design",
+          "`unprobed`"
+        ],
+        [
+          "46",
+          "Quota classes",
+          "The nine of annex C §C.13",
+          "127",
+          "Design",
+          "`provider_other`"
+        ],
+        [
+          "47",
+          "Quota confidence",
+          "`structured`, `status`, `text`, `stall`, `host`",
+          "127",
+          "Design",
+          "`text`"
+        ],
+        [
+          "48",
+          "Alert levels",
+          "`info`, `warn`, `loud`",
+          "127",
+          "Design",
+          "`warn`"
+        ],
+        [
+          "49",
+          "Spec formats",
+          "An open registry; Wave 1: `native`, `speckit-tasks`, `openspec-change`, alias `openspec`",
+          "104",
+          "Open",
+          "`unknown-format`"
+        ],
+        [
+          "50",
+          "Files of the staleness verdict",
+          "`spec`, `plan`, `tasks`",
+          "104",
+          "Owner decision",
+          "The verdict is stale"
+        ],
+        [
+          "51",
+          "`resume` refusals",
+          "`lock-held` (exit 5), `owner-survivors` (exit 5), `nothing-to-resume` (exit 3), `source-changed` (exit 3), `unsupported-record` (exit 3), `settings-invalid` (exit 3)",
+          "102",
+          "Owner decision",
+          "Not applicable: the CLI writes them"
+        ],
+        [
+          "52",
+          "Verification modes",
+          "`required`, `plan`, `off`",
+          "105",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "53",
+          "Result conditions of a check; reasons of `tainted`; reasons of `unchecked`",
+          "`tainted`, `cached`, `flaky`, `interrupted`, `unchecked`; `changed-during-check`, `protected-set-changed`, `pin-mismatch`; `no-command`, `slow`, `budget`, `flaky-excluded`, `gate-not-executing`, `partial`, `unknown-condition`",
+          "148",
+          "Design",
+          "An unknown condition makes the result `unchecked` with the reason `unknown-condition`; an unknown reason is shown as text"
+        ],
+        [
+          "54",
+          "Errors of the check runner",
+          "`cannot-start`, `timeout`, `interrupted`",
+          "148",
+          "Design",
+          "`cannot-start`"
+        ],
+        [
+          "55",
+          "Loop strategies",
+          "`classic`, `micro`",
+          "115",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "56",
+          "Micro levels",
+          "L0, L1, L2, L3; Wave 1 uses L1",
+          "115",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "57",
+          "Directives of a loop layer",
+          "The eleven of annex D §D.1",
+          "103",
+          "Design",
+          "The layer is refused at registration"
+        ],
+        [
+          "58",
+          "Returns of `afterPass`",
+          "`accept`, `refuse`, `none`",
+          "103",
+          "Design",
+          "`none`; the layer is off for the phase attempt"
+        ],
+        [
+          "59",
+          "Fallback reasons of the layer `micro`",
+          "`gate-not-executing`, `no-check`, `single-unit`, `harness`, `config`, `tripwire`",
+          "115",
+          "Design",
+          "Shown as text"
+        ],
+        [
+          "60",
+          "Fallback reasons of the layer `parallel`",
+          "`classic`, `gate-not-executing`, `not-git`, `submodules`, `git-version`, `harness`, `containment`, `no-group`",
+          "142",
+          "Design",
+          "Shown as text; the layer is off"
+        ],
+        [
+          "61",
+          "Admission checks of a parallel group",
+          "`marker`, `scope`, `protected`, `resource`, `headroom`, `check`, `links`, `jobs`",
+          "142",
+          "Design",
+          "The task is serial"
+        ],
+        [
+          "62",
+          "Outcomes of a worker",
+          "`integrated`, `refused`, `killed`, `paused`",
+          "143",
+          "Design",
+          "`refused`"
+        ],
+        [
+          "63",
+          "Refusal reasons of a delta",
+          "`scope`, `protected`, `overlap`, `path-leak`, `checkpoint`, `yield`, `tree-changed-after-end`, `workspace-changed`",
+          "142",
+          "Design",
+          "The delta is refused"
+        ],
+        [
+          "64",
+          "Operations of the tree store",
+          "The seven of annex D §D.2",
+          "143",
+          "Design",
+          "The layer is refused at registration"
+        ],
+        [
+          "65",
+          "Integrity kinds that reach the critic",
+          "`ledger-invalid`, `manifest-mismatch`, `pin-mismatch`, `changed-during-check`, `phase-entry-mismatch`, `toolchain-config-changed`, `advisory-marker-removed`, and the two neutral kinds of 142, `tree-changed-outside-pass` and `protected-change-not-applied`",
+          "116",
+          "Design",
+          "The kind is not shown to the critic; it stays in the event file"
+        ],
+        [
+          "66",
+          "Further facts of the fact block",
+          "`manifest-rederived`, `result-of-stopped-job`, `evidence-predates-tree`, `source-change-accepted`, `task-list-changed`",
+          "116",
+          "Design",
+          "Not shown"
+        ],
+        [
+          "67",
+          "Decision points of the router and their choice sets",
+          "`tools`: `run`, `exclude:flaky`, `exclude:slow`, `exclude:budget`. `loop`: `stay`, `off:<registered layer>`. `escalation`: `next-tier`, `skip:<skip reason>`. `attempt-tier` (of the attempt planner, owner 149): `bump`, `skip`, `none`. A layer may register a point",
+          "115",
+          "Design",
+          "The table is invalid"
+        ],
+        [
+          "68",
+          "Operators of a table predicate",
+          "The nine of §X.3",
+          "100",
+          "Design",
+          "The table is invalid"
+        ],
+        [
+          "69",
+          "Predicates of a yield; actions on a first failure",
+          "The seven kinds of annex D §D.6; `stop`, `continue-and-notify`",
+          "118",
+          "Design",
+          "The yield artifact is refused"
+        ],
+        [
+          "70",
+          "Job modes of a yield",
+          "`launch`, `adopt`",
+          "118",
+          "Design",
+          "The yield artifact is refused"
+        ],
+        [
+          "71",
+          "Severities of a doctor finding",
+          "`ok`, `info`, `warn`, `fail`",
+          "112",
+          "Design",
+          "`warn`"
+        ],
+        [
+          "72",
+          "Event roles",
+          "The role registry, and `supervisor`, `host`",
+          "111; 124",
+          "Open",
+          "Kept as text"
+        ],
+        [
+          "73",
+          "Event types",
+          "The catalogue of 111; the prefix `x.` is free",
+          "111",
+          "Open by prefix",
+          "Ignored by readers"
+        ],
+        [
+          "74",
+          "`parallel.*` event types",
+          "`parallel.plan`, `parallel.admission`, `parallel.group.started`, `parallel.group.ended`, `parallel.worker.started`, `parallel.worker.ended`, `parallel.integration`",
+          "111",
+          "Design",
+          "Ignored by readers; they project to nothing"
+        ],
+        [
+          "75",
+          "Ranks of configuration",
+          "The eight of §X.2",
+          "100",
+          "Owner decision",
+          "Not applicable"
+        ],
+        [
+          "76",
+          "Trust classes; key classes of the run snapshot",
+          "Widening, narrowing, neutral, pinnable; `pinned`, `tunable`",
+          "100; 102",
+          "Design",
+          "A key without a trust class is widening; a key of the run snapshot without a class is read as `pinned`"
+        ],
+        [
+          "77",
+          "Learning modes",
+          "`off`, `suggest`, `apply`",
+          "106",
+          "Design",
+          "`off`"
+        ],
+        [
+          "78",
+          "Modes of the host skill `specstride-run`",
+          "`run`, `dry-run`",
+          "107",
+          "Owner decision",
+          "The launch is withheld"
+        ],
+        [
+          "79",
+          "Status of a launch contract; kinds and dispositions of a coverage obligation; severity and status of a finding",
+          "`draft`, `validated`; the other members are in annex G §G.8",
+          "107",
+          "Design",
+          "The launch contract is invalid"
+        ],
+        [
+          "80",
+          "Output modes",
+          "Default output, compatibility output",
+          "100",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "81",
+          "Labels of output lines",
+          "The families of annex G §G.3",
+          "100; each line its feature",
+          "Design",
+          "A parser ignores a line whose label it does not know"
+        ],
+        [
+          "82",
+          "Reasons of a launch",
+          "`first`, `resume`, `relaunch`, `manual`",
+          "122",
+          "Design",
+          "`manual`"
+        ],
+        [
+          "83",
+          "Classes of implementation of an extension point",
+          "Data, first-party code, third-party code",
+          "100",
+          "Owner decision",
+          "Refused at registration"
+        ],
+        [
+          "84",
+          "Capabilities of a host",
+          "The six of annex H §H.1",
+          "113",
+          "Design",
+          "Ignored"
+        ],
+        [
+          "85",
+          "Normalization rules",
+          "N-01 to N-29 of §X.8",
+          "100",
+          "Owner decision",
+          "A rule is added only with a register row"
+        ],
+        [
+          "86",
+          "Results of the comparator",
+          "`equal`, `waived` with its register row, `different`",
+          "141",
+          "Design",
+          "`different`"
+        ],
+        [
+          "87",
+          "Auth schemes of a descriptor",
+          "`bearer`, `x-api-key`, `none`",
+          "109",
+          "Design",
+          "The descriptor is refused"
+        ],
+        [
+          "88",
+          "Scopes of an overlay",
+          "`none`, `pass`, `attempt`",
+          "109",
+          "Design",
+          "Configuration error (exit 3)"
+        ],
+        [
+          "89",
+          "Ingress classes",
+          "`stream-text`, `tool-arguments`, `tool-result`, `diagnostic`, `target`, `check-output`, `critic-reply`, `comment`, `free-text`",
+          "111",
+          "Design",
+          "Treated as `free-text`"
+        ],
+        [
+          "90",
+          "Marks of dropped content",
+          "`redactor-unavailable`, `pattern-set-invalid`",
+          "111",
+          "Design",
+          "Read as `redactor-unavailable`"
+        ],
+        [
+          "91",
+          "Writer classes of the compatibility projection",
+          "`engine`, `stream-tap`, `critic`, `learning`",
+          "144",
+          "Design",
+          "`engine`"
+        ],
+        [
+          "92",
+          "Row shapes of the compatibility projection",
+          "`bash`, `python`, `learning`, `none`",
+          "144",
+          "Design",
+          "The table is invalid"
+        ],
+        [
+          "93",
+          "Delivery statuses of a sink",
+          "`attempted`, `accepted`, `failed`, `unknown`",
+          "111",
+          "Design",
+          "`unknown`"
+        ],
+        [
+          "94",
+          "Reasons of a dropped event",
+          "`write-failed`, `invalid`, `too-large`",
+          "111",
+          "Design",
+          "`write-failed`"
+        ],
+        [
+          "95",
+          "Categories of a tool call",
+          "`read`, `edit`, `exec`, `wait`, `search`, `other`",
+          "111",
+          "Design",
+          "`other`"
+        ],
+        [
+          "96",
+          "Causes of a synthesized end of a run",
+          "`crash`, `host_exit`, `operator_stop`",
+          "111",
+          "Design",
+          "`crash`"
+        ],
+        [
+          "97",
+          "Kinds of source of a specification",
+          "`spec`, `plan`, `tasks`, `other`",
+          "104",
+          "Design",
+          "Read as `other`"
+        ],
+        [
+          "98",
+          "States of a source in a staleness verdict",
+          "`unchanged`, `ticks-only`, `changed`, `unreadable`",
+          "104",
+          "Design",
+          "Read as `changed`"
+        ],
+        [
+          "99",
+          "Errors of a spec-format adapter",
+          "`invalid-spec`, `ambiguous-candidates`, `unknown-format`",
+          "104",
+          "Design",
+          "Read as `invalid-spec`"
+        ],
+        [
+          "100",
+          "Subcommands of the command `spec`",
+          "`feature-slug`, `detect`, `context`, `render-context`, `validate`, `tick`, `numbers`, `title`, `shape`, `slice`, `first-unapproved`",
+          "104",
+          "Design",
+          "Usage error, exit 2"
+        ],
+        [
+          "101",
+          "Resolve refusals",
+          "`launcher-not-found`, `launcher-missing`, `launcher-ambiguous`, `launcher-unreadable`, `launcher-not-generated`",
+          "123",
+          "Design",
+          "Refusal"
+        ],
+        [
+          "102",
+          "Pipeline states; states of one stage",
+          "`preflight`, `ready`, `running`, `failed`, `stopped`, `completed`; `running`, `completed`, `failed`, `stopped`",
+          "123",
+          "Design",
+          "The record is read as empty"
+        ],
+        [
+          "103",
+          "Launch decisions; launch checks; statuses of a launch check",
+          "`launch`, `refuse`, `attach`; `launcher-intact`, `contract-validated`, `authorized-root`, `launcher-syntax`, `launcher-dry-run`, `run-directory-free`; `pass`, `fail`, `not-evaluated`",
+          "123",
+          "Design",
+          "`refuse`"
+        ],
+        [
+          "104",
+          "Relaunch decisions",
+          "`relaunch`, `refuse`, `hold`",
+          "123",
+          "Design",
+          "`refuse`"
+        ],
+        [
+          "105",
+          "Classes of a stage reason",
+          "`transient`, `postcondition`, `stage-precondition`, `setup-required`, `interrupted`, `existing-prerequisite`, `completed`, `exec-error`, `other`",
+          "123",
+          "Design",
+          "`other`"
+        ],
+        [
+          "106",
+          "Observation statuses of supervision",
+          "`running`, `starting`, `lock-conflict`, `completed`, `failed`, `stopped`, `unknown-terminal`",
+          "123",
+          "Design",
+          "`unknown-terminal`"
+        ],
+        [
+          "107",
+          "As-is modes of a launch by `supervise`; sources of a mode; sources of a launcher",
+          "`generate`, `run`, `auto`; `token`, `refusal`, `prose`, `default`; `request`, `feature-default`, `generated-marker`",
+          "123",
+          "Owner decision",
+          "The launch is withheld"
+        ],
+        [
+          "108",
+          "Timings and results of a precondition check",
+          "`preflight`, `stage`; `pass`, `fail`, `deferred`",
+          "123",
+          "Design",
+          "The check is `fail`"
+        ],
+        [
+          "109",
+          "Colour modes of the pipeline entry",
+          "`auto`, `always`, `never`",
+          "123",
+          "Design",
+          "Usage error, exit 2"
+        ],
+        [
+          "110",
+          "Relaunch classifier tables",
+          "`relaunch-observe`, `relaunch-root`",
+          "123",
+          "Design",
+          "The table is invalid"
+        ],
+        [
+          "111",
+          "Verbs of `supervise`",
+          "`mode`, `resolve`, `gate`, `launch`, `watch`, `observe`, `auto`, `stop`, `hold`, `release`, and `learning` and `retro` (owner 106)",
+          "123",
+          "Design",
+          "Usage error, exit 2"
+        ],
+        [
+          "112",
+          "Outcomes of a wait on a yield",
+          "`satisfied`, `timeout`, `stop`, `wall_budget`",
+          "118",
+          "Design",
+          "Read as `timeout`"
+        ],
+        [
+          "113",
+          "Steps of the end of a pass",
+          "`polite`, `terminate`, `kill`",
+          "118",
+          "Design",
+          "The step is not taken"
+        ],
+        [
+          "114",
+          "Results of the evaluation of a yield predicate",
+          "0 satisfied, 1 not yet, 2 cannot be satisfied",
+          "118",
+          "Design",
+          "Read as 2"
+        ],
+        [
+          "115",
+          "Kinds of presence line of the grounding snapshot",
+          "`file`, `directory`, `missing`, `needs-grounding`, `wildcard`, `binary`, `unreadable`, `refused`, `not-shown`",
+          "117",
+          "Design",
+          "The line is not written; the path counts as `not-shown`"
+        ],
+        [
+          "116",
+          "Refused roots of grounding",
+          "`control`, `events`, `outbox`, `carry-over`, `worker-root`, `tree-store`, `repository`",
+          "117",
+          "Owner decision",
+          "Refused"
+        ],
+        [
+          "117",
+          "Kinds of excerpt",
+          "`whole`, `anchored`, `head-tail`, `omitted`, `none`",
+          "117",
+          "Design",
+          "`omitted`"
+        ],
+        [
+          "118",
+          "Blocks of the critic's prompt",
+          "`rules`, `fact-block`, `criteria`, `evidence`, `grounding`, `pins`, `context`, `end`; for the diagnostician also `history`",
+          "117",
+          "Design",
+          "The block is left out and recorded"
+        ],
+        [
+          "119",
+          "Order of shrinking of the critic's prompt",
+          "`context`, `grounding`, `evidence`",
+          "117",
+          "Design",
+          "Not applicable"
+        ],
+        [
+          "120",
+          "Values of `prompt.critic.overWindow`",
+          "`refuse`, `send`",
+          "117",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "121",
+          "Block sets of a prompt (proposer and critic)",
+          "`current`, `as-is`",
+          "103; 117",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "122",
+          "Ways a critic call ends, for the return of the hidden files",
+          "`reply`, `failure`, `time-limit`, `kill`, `stop`",
+          "117",
+          "Design",
+          "The files are returned"
+        ],
+        [
+          "123",
+          "Capability levels of the harness port",
+          "`proposer`, `completion`",
+          "109",
+          "Design",
+          "The entry is refused at registration"
+        ],
+        [
+          "124",
+          "Qualifier forms of a registry entry",
+          "`none`, `optional`, `required`",
+          "109",
+          "Design",
+          "The entry is refused at registration"
+        ],
+        [
+          "125",
+          "Modes of `stop` of the harness port",
+          "`polite`, `terminate`, `kill`",
+          "109",
+          "Design",
+          "Read as `terminate`"
+        ],
+        [
+          "126",
+          "Session directives",
+          "`fresh`, `continue`",
+          "109",
+          "Design",
+          "Read as `fresh`"
+        ],
+        [
+          "127",
+          "Ways to hand over a prompt",
+          "`stdin`, `file`, `argument`",
+          "109",
+          "Design",
+          "The descriptor is refused"
+        ],
+        [
+          "128",
+          "Kinds of proof of the form of a critic",
+          "`initial-record`, `pinned-configuration`, `read-only-sandbox`",
+          "109",
+          "Owner decision (rulings 57, 57a, D1); the member `pinned-configuration` by the owner's answer of CQ-182 (2026-09-30; Principle IX of constitution v3.0.1)",
+          "`critic_not_toolless`"
+        ],
+        [
+          "129",
+          "Scope words of an overlay marker",
+          "`pass`, `attempt`, `critic`",
+          "109",
+          "Design",
+          "The tree is not an overlay of the product and is left alone"
+        ],
+        [
+          "130",
+          "Kinds of record of the environment record of an overlay",
+          "`unset`, `set`",
+          "109",
+          "Design",
+          "The pass fails with the result 1"
+        ],
+        [
+          "131",
+          "Results of `harness verify`",
+          "`passed`, `failed`",
+          "109",
+          "Design",
+          "Read as `failed`"
+        ],
+        [
+          "132",
+          "Kinds of record of the ledger namespace `core`",
+          "`attempt-open`, `attempt-closed`, `pass-closed`, `counts-reset`",
+          "103",
+          "Design",
+          "The record stays in the check of the chain; its content is ignored"
+        ],
+        [
+          "133",
+          "Reasons for a fresh session",
+          "`new-attempt`, `watchdog-kill`, `repeated-failure`, `context-fill`, `age`, `configuration-change`, `relaunch`, `session-unavailable`, `continuation-cap`, `profile-parity`, `group-applied`, `no-continuation`",
+          "103",
+          "Design",
+          "Read as `new-attempt`"
+        ],
+        [
+          "134",
+          "Groups of a doctor check",
+          "`env`, `cli`, `host`, `bin`, `harness`, `auth`, `model`, `critic`, `terms`, `quota`, `budget`, `config`, `secret`, `run`, `sandbox`, `ui`, `telemetry`, `events`, `memory`",
+          "112",
+          "Design",
+          "The check is refused at registration"
+        ],
+        [
+          "135",
+          "Kinds of accepted change of a source",
+          "`spec`, `plan`, `tasks`",
+          "102",
+          "Design",
+          "Refused"
+        ],
+        [
+          "136",
+          "Outcomes of a unit of work",
+          "`kept`, `repair`, `unresolved`",
+          "115",
+          "Design",
+          "Read as `unresolved`"
+        ],
+        [
+          "137",
+          "Status of a unit or task without a result",
+          "`unchecked`",
+          "115",
+          "Design",
+          "Read as `unchecked`"
+        ],
+        [
+          "138",
+          "Refusal reasons of a checkpoint",
+          "`pass-killed`, `foreign-id`, `yield-in-pass`, `not-regular`, `stale`, `too-large`, `changed-while-read`, `empty`",
+          "115",
+          "Design",
+          "The checkpoint is refused"
+        ],
+        [
+          "139",
+          "Kinds of record of the ledger namespace `micro`",
+          "`unit-declared`, `check-started`, `check-finished`, `unit-kept`, `unit-repair`, `unit-unresolved`, `command-excluded`, `escalation`, `closing-check`, `disengaged`, `integrity`",
+          "115",
+          "Design",
+          "The ledger is invalid for the layer; the layer is off for the phase attempt"
+        ],
+        [
+          "140",
+          "Skip reasons of an escalation",
+          "`off`, `integrity`, `flaky`, `not-due`, `cap`, `no-ladder`, `critic-collision`, `quota`, `budget`",
+          "115",
+          "Design",
+          "Read as a skip; shown as text"
+        ],
+        [
+          "141",
+          "Breach kinds of the integrity of the phase gate",
+          "`approval-without-gate`, `outer-counter-changed`, `critic-input-excluded-field`, `false-pass`",
+          "115",
+          "Owner decision",
+          "Treated as a breach"
+        ],
+        [
+          "142",
+          "Classes of the protected set",
+          "A, B",
+          "116",
+          "Design",
+          "Read as class A"
+        ],
+        [
+          "143",
+          "Freshness of a result",
+          "`current`, `superseded`",
+          "116",
+          "Design",
+          "Read as `superseded`"
+        ],
+        [
+          "144",
+          "Logical ids of host skills and entries",
+          "`specstride-run`, `specstride-reverse`, `doctor`",
+          "113",
+          "Design",
+          "The build fails"
+        ],
+        [
+          "145",
+          "Checks of the context-cost build",
+          "static size, reference closure, golden output, supervision cycle, judgment payload, host cross-check, startup",
+          "113",
+          "Design",
+          "The build fails"
+        ],
+        [
+          "146",
+          "Finding codes of the reverse lint",
+          "`template.mandatory`, `template.family`, `template.expected`, `placeholder`, `structure.extra`, `structure.contracts`, `structure.required`, `evidence.format`, `evidence.kind`, `evidence.confidence`, `evidence.validation`, `evidence.disproved`, `evidence.citation`, `evidence.contradicts`, `evidence.missing`, `evidence.skipped`, `unknowns.placement`, `spec.fr-format`, `spec.sc-format`, `spec.fr-unique`, `spec.sc-unique`, `spec.story-format`, `spec.story-numbers`, `spec.story-parts`, `spec.clarifications`, `research.decisions`, `data-model.entities`, `checklist.items`, `tasks.grammar`, `tasks.line-format`, `tasks.ids`, `tasks.phase-order`, `tasks.story-labels`, `tasks.story-exists`, `tasks.parallel-files`, `tasks.mode`, `coverage.fr`, `claims.missing`",
+          "140",
+          "Design",
+          "Read as an error finding of unknown kind"
+        ],
+        [
+          "147",
+          "Severities of a lint finding",
+          "`error`, `warning`",
+          "140",
+          "Design",
+          "Read as `error`"
+        ],
+        [
+          "148",
+          "Levels of the reverse lint",
+          "0, 1, 2, 3, 4, 5",
+          "140",
+          "Design",
+          "Exit 3"
+        ],
+        [
+          "149",
+          "Evidence kinds; evidence validations",
+          "`observed`, `inferred`, `declared`; `verified`, `unverified`, `disproved`",
+          "140",
+          "Design",
+          "An error finding"
+        ],
+        [
+          "150",
+          "Tasks modes of a reverse run",
+          "`done`, `open`",
+          "108",
+          "Design",
+          "Exit 3"
+        ],
+        [
+          "151",
+          "Walk modes of the source inventory",
+          "`git`, `walk`",
+          "140",
+          "Design",
+          "The inventory is refused"
+        ],
+        [
+          "152",
+          "Skip reasons of the source inventory",
+          "`binary`, `oversize`, `symlink-escape`",
+          "140",
+          "Design",
+          "Read as a skipped entry of unknown reason; still fingerprinted"
+        ],
+        [
+          "153",
+          "Roles of a file in the source inventory",
+          "`ci`, `test`, `schema`, `template`, `doc`, `script`, `source`, `config`, `other`",
+          "140",
+          "Design",
+          "`other`"
+        ],
+        [
+          "154",
+          "Kinds of entry point",
+          "`bin`, `console-script`, `export`, `container-entrypoint`, `python-main`, `go-main`, `script`",
+          "140",
+          "Design",
+          "Kept as text"
+        ],
+        [
+          "155",
+          "Languages of the source inventory",
+          "An open set by data: the table of names and extensions",
+          "140",
+          "Open by data",
+          "`unknown`"
+        ],
+        [
+          "156",
+          "Kinds of problem of the reverse guard",
+          "`deleted`, `added`, `changed`, `fingerprint differs`, `git HEAD moved`, `git status`",
+          "108",
+          "Design",
+          "Not applicable: the guard writes them"
+        ],
+        [
+          "157",
+          "Verbs of the front door",
+          "The commands of annex G §G.1",
+          "119",
+          "Design",
+          "Exit 1 with the message for an unknown first argument (verb), as F100-FR-182"
+        ],
+        [
+          "158",
+          "Reasons of a failure in default output",
+          "`no-state`, `no-feature`, `no-log`, `no-events`, `no-verdicts`, `no-verdict-for-phase`, `no-feedback`, `no-spec`, `spec-invalid`, `usage`, `unknown-subcommand`, `internal`",
+          "119",
+          "Design",
+          "`internal`"
+        ],
+        [
+          "159",
+          "States of a phase in `phases`",
+          "`pending`, `evidence-written`, `rejected(has-feedback)`, `APPROVED`",
+          "119",
+          "Design",
+          "Not applicable: derived"
+        ],
+        [
+          "160",
+          "Presenter modes",
+          "`timeline`, `card`, `plain`",
+          "145",
+          "Design",
+          "Usage error, exit 2"
+        ],
+        [
+          "161",
+          "Detail levels of the presenter",
+          "`milestones`, `tools`, `full`",
+          "145",
+          "Design",
+          "From the variable: `tools`; from the flag: usage error, exit 2"
+        ],
+        [
+          "162",
+          "Colour depths",
+          "`none`, `16`, `256`, `truecolor`",
+          "145",
+          "Design",
+          "Ignored"
+        ],
+        [
+          "163",
+          "Colour arguments",
+          "`always`, `never`, `auto`",
+          "145",
+          "Design",
+          "Usage error"
+        ],
+        [
+          "164",
+          "Backgrounds",
+          "`dark`, `light`",
+          "145",
+          "Design",
+          "`dark`"
+        ],
+        [
+          "165",
+          "Colour roles",
+          "`brand`, `accent`, `approved`, `warn`, `reject`, `muted`",
+          "145",
+          "Design",
+          "Not applicable"
+        ],
+        [
+          "166",
+          "Width steps of the banner",
+          "`full`, `compact`, `line`",
+          "145",
+          "Design",
+          "Not applicable: derived from the size"
+        ],
+        [
+          "167",
+          "Rail states",
+          "`A` approved, `R` rejected, `C` current, `P` pending",
+          "145",
+          "Design",
+          "`P`"
+        ],
+        [
+          "168",
+          "Live settings",
+          "`auto`, `true`, `false`",
+          "145",
+          "Design",
+          "`auto`"
+        ],
+        [
+          "169",
+          "Observability modes of a pass",
+          "`structured`, `raw-text`, `degraded`",
+          "126",
+          "Design",
+          "`degraded`"
+        ],
+        [
+          "170",
+          "Stream signals",
+          "`init`, `text`, `tool`, `evidence`, `result`",
+          "126",
+          "Design",
+          "The registration is refused"
+        ],
+        [
+          "171",
+          "Route reasons of a stream",
+          "`structured capture disabled`, `no registered adapter`, `adapter failed to start`; the as-is texts are in the specification of 126",
+          "126",
+          "Design",
+          "Shown as text"
+        ],
+        [
+          "172",
+          "Diagnostic codes of the stream seam",
+          "`adapter_error`, `malformed_json`, `unsupported_schema`, `absent_schema`, `duplicate_terminal`, `line_too_long`, `line_rate_exceeded`, `unknown_record_kind`",
+          "126",
+          "Design",
+          "Shown as text"
+        ],
+        [
+          "173",
+          "Invocation statuses",
+          "`success`, `error`, `timeout`, `cancelled`, `degraded`",
+          "126",
+          "Design",
+          "`error`"
+        ],
+        [
+          "174",
+          "Reason codes of an invocation result",
+          "`timeout`, `cancelled`, `launch_failed`, `producer_signaled`, `producer_nonzero`, `status_conflict`, `parser_failed`, `unsupported_schema`, `malformed_stream`, `provider_error`, `missing_terminal`, `success`, and any code the provider reports",
+          "126",
+          "Open by the provider",
+          "Shown as text"
+        ],
+        [
+          "175",
+          "Finalization decisions",
+          "`cap_halt`, `halt`, `continue`",
+          "126",
+          "Design",
+          "`continue`"
+        ],
+        [
+          "176",
+          "Canonical tool names",
+          "`Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Bash`, `Glob`, `Grep`, `Task`, `TodoWrite`, `WebFetch`, `WebSearch`",
+          "126",
+          "Design",
+          "The name passes through unchanged"
+        ],
+        [
+          "177",
+          "Sources of an invocation result",
+          "`synthesized`, `reconciled`",
+          "126",
+          "Design",
+          "`reconciled`"
+        ],
+        [
+          "178",
+          "Sources of discovery",
+          "`harness-adapter`, `binary`, `config-home`, `host`, `endpoint`, `gateway`, `declared`",
+          "146",
+          "Owner decision",
+          "The candidate is dropped, with a doctor finding"
+        ],
+        [
+          "179",
+          "Steps of the probe ladder",
+          "`presence`, `version-help`, `credential-presence`, `metadata`, `catalogue`",
+          "146",
+          "Design",
+          "The value is read as null"
+        ],
+        [
+          "180",
+          "Steps of the critic order",
+          "`configured`, `gateway`, `discovered`, `default-model-tier`",
+          "124",
+          "Owner decision",
+          "The record is refused"
+        ],
+        [
+          "181",
+          "Sources of the proposer",
+          "`flag`, `environment`, `configuration`, `default`",
+          "124",
+          "Owner decision",
+          "The record is refused"
+        ],
+        [
+          "182",
+          "Reasons why a critic candidate does not qualify or is passed over",
+          "`role-unsupported`, `form-unproven`, `unverified-cli`, `memory-not-off`, `window-unknown`, `window-too-small`, `not-diverse`, `credential-absent`, `preflight-failed`, `terms-refused`, `terms-unknown`, `quota-exhausted`, `no-budget`, `no-spend-cap`, `read-denial-unconfirmed`, `worker-root-not-empty`, `first-call-unproven`",
+          "124",
+          "Design",
+          "Shown as text; the candidate does not qualify"
+        ],
+        [
+          "183",
+          "Results of the diversity test",
+          "`diverse`, `same-provider`, `same-model`, `unverified`",
+          "124",
+          "Design",
+          "`unverified`, with the warning"
+        ],
+        [
+          "184",
+          "Kinds of record of the ledger namespace `parallel`",
+          "`group_planned`, `group_started`, `worker_started`, `worker_ended`, `group_barrier`, `audit_done`, `merge_done`, `apply_started`, `applied`, `ticks_applied`, `merge_check_started`, `merge_check_finished`, `group_closed`",
+          "143",
+          "Design",
+          "The ledger is invalid inside the group; the layer is off for the phase attempt"
+        ],
+        [
+          "185",
+          "Reasons for which the layer `parallel` is switched off inside a run",
+          "For the phase attempt: `group-failures`, `harness-error`, `unchecked`, `missing-object`, `ledger`, `check-budget`. For the run: `plan-hash`, `apply-incomplete`",
+          "142",
+          "Design",
+          "Shown as text; the layer is off for the run"
+        ],
+        [
+          "186",
+          "Sources of a write scope",
+          "`consumer`, `task-text`",
+          "142",
+          "Design",
+          "The scope is read as absent, which is the whole tree"
+        ],
+        [
+          "187",
+          "Adjustable knobs of learning",
+          "`proposer_timeout`, `yield_poll_interval`",
+          "106",
+          "Owner decision",
+          "Refused, exit 2"
+        ],
+        [
+          "188",
+          "Actions of a learning decision",
+          "`apply`, `revert`, `evaluate`",
+          "106",
+          "Design",
+          "The entry moves no value"
+        ],
+        [
+          "189",
+          "Arms of an evaluation",
+          "`applied`, `baseline`",
+          "106",
+          "Design",
+          "`baseline`"
+        ],
+        [
+          "190",
+          "Labels of an evaluation",
+          "`helped`, `neutral`, `regressed`, `insufficient`",
+          "106",
+          "Design",
+          "`insufficient`"
+        ],
+        [
+          "191",
+          "Actions taken by an evaluation",
+          "`evaluated`, `auto_reverted`, `skipped_superseded`",
+          "106",
+          "Design",
+          "`evaluated`"
+        ],
+        [
+          "192",
+          "Causes of a reset of the baseline of learning",
+          "`shape`, `backend`",
+          "106",
+          "Design",
+          "The label is `insufficient`"
+        ],
+        [
+          "193",
+          "Guardrails of learning; their states",
+          "`grounding_gap_rate`, `malformed_rate`, `verification`, `diagnostician_grounding_share`, `critic_input_size`, `arbitration_proxy`, `first_attempt_approval`; `ok`, `breach`, `unknown`",
+          "106",
+          "Design",
+          "`unknown`"
+        ],
+        [
+          "194",
+          "Counterfactuals of the proposer timeout",
+          "`censored`, `shorter_cap_wall_only`, `none`",
+          "106",
+          "Design",
+          "`none`"
+        ],
+        [
+          "195",
+          "Pass outcomes read by learning",
+          "`budget_kill`, `worker_error`, `open`, `productive`, `clean_no_progress`",
+          "106",
+          "Design",
+          "`clean_no_progress`"
+        ],
+        [
+          "196",
+          "Statuses of a stage of a retrospective",
+          "`ok`, `unavailable`",
+          "106",
+          "Design",
+          "`unavailable`"
+        ],
+        [
+          "197",
+          "Sink labels of a delivery record",
+          "`loki`, `otel`",
+          "128",
+          "Design",
+          "Shown as `unknown`"
+        ],
+        [
+          "198",
+          "Receiver states",
+          "`configured`, `reachable`, `request_accepted`, `query_verified`",
+          "128",
+          "Design",
+          "Read as `configured`"
+        ],
+        [
+          "199",
+          "Delivery reasons",
+          "`http_<status>`, `transport_error`, `queue_overflow`, `content_withheld`",
+          "128",
+          "Design",
+          "Read as `transport_error`"
+        ],
+        [
+          "200",
+          "OTLP signals",
+          "`logs`, `metrics`, `traces`",
+          "128",
+          "Design",
+          "The signal is not sent"
+        ],
+        [
+          "201",
+          "Attribute dialects",
+          "`specstride`, `genai`, `openinference`",
+          "128",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "202",
+          "Scopes of a span",
+          "`run`, `phase`, `attempt`, `pass`, `verification`, `critic`, `yield`, `long_job`, `check`, `pause`, `blocked`, `stage`, `pipeline`, `diagnosis`, `group`, `worker`",
+          "128",
+          "Design",
+          "The event is a point span"
+        ],
+        [
+          "203",
+          "Metric names",
+          "`specstride.cost.usd`, `specstride.tokens`, `specstride.pass.duration`, `specstride.errors`, `specstride.tool.calls`, `specstride.verdict`, `specstride.attempt.outcome`, `specstride.check.duration`, `specstride.pause.duration`, `specstride.blocked.duration`, `specstride.quota.utilization`, `specstride.run.state`; `specstride.context.bytes`, `specstride.context.tokens`, `specstride.context.limit`; as-is: `ralph.iter.duration_ms`, `ralph.cost_usd`, `ralph.tokens`, `ralph.errors`, `ralph.tool_use`, `ralph.gate`",
+          "128",
+          "Design",
+          "The metric is not exported"
+        ],
+        [
+          "204",
+          "Forms of a telemetry payload",
+          "`as-is`, `new`",
+          "128",
+          "Design",
+          "The new form"
+        ],
+        [
+          "205",
+          "Alert kinds",
+          "`budget-threshold`, `provider-warning`, `billing-mode-change`, `spend-unmeasurable`, `ledger-unreadable`",
+          "127",
+          "Design",
+          "Shown as text at the level `warn`"
+        ],
+        [
+          "206",
+          "Budget dimensions",
+          "`tokens`, `costUsd`, `wallClock`, `phaseAttempts`, `calls`",
+          "127",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "207",
+          "Sources of a reset time",
+          "`structured`, `header`, `parsed_text`",
+          "127",
+          "Design",
+          "Read as `parsed_text`"
+        ],
+        [
+          "208",
+          "Reasons that skip a fallback entry",
+          "`terms-refused`, `no-cap`, `not-in-plan`, `limited`",
+          "127",
+          "Design",
+          "Shown as text; the entry is skipped"
+        ],
+        [
+          "209",
+          "Results of `reclaim` of a lock",
+          "a lease, `lost-race`",
+          "122",
+          "Design",
+          "`lost-race`"
+        ],
+        [
+          "210",
+          "Errors of a detach strategy",
+          "`unavailable`, `not-ready`",
+          "122",
+          "Design",
+          "`not-ready`; the launch is refused"
+        ],
+        [
+          "211",
+          "What a detach strategy survives",
+          "`parent-end`, `session-end`, `reboot`",
+          "122",
+          "Design",
+          "Ignored"
+        ],
+        [
+          "212",
+          "Refusals of a launch written by the detached runtime and by `launch`",
+          "`lock-conflict`, `foreign-owner`, `owner-dead-group-alive`, `lock-unknown`, `provider-mismatch`, `detach-unavailable`, `detach-not-ready`, `control-root-not-writable`, `unadopted-approvals`, `launch-abandoned`, `control-root-unsafe`; `unknown-mode`, `comment-changed` (raised by the launch command of the CLI before the handshake, feature 107)",
+          "122; the last two 107",
+          "Design",
+          "Shown as text; the launch stays refused"
+        ],
+        [
+          "213",
+          "End causes of an entry of the process registry",
+          "`exited`, `signalled`, `ended-by-stop`, `ended-by-root`, `ended-as-survivor`, `identity-mismatch`, `gone`",
+          "122",
+          "Design",
+          "Shown as text"
+        ],
+        [
+          "214",
+          "Results of a case of the spike",
+          "`survived`, `ended`, `skipped`",
+          "122",
+          "Design",
+          "`skipped`"
+        ],
+        [
+          "215",
+          "Facts of the proof of the critic mode of dsh",
+          "`version-pin`, `tool-coverage`, `patch-hash`, `permission-mode`",
+          "130",
+          "Design",
+          "The proof fails: `critic_not_toolless`"
+        ],
+        [
+          "216",
+          "Values of `harnesses.dsh.critic.proof`",
+          "`strict`, `none`",
+          "130",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "217",
+          "Causes of a refused plugin request",
+          "`request-not-regular`, `request-link`, `request-too-large`, `request-json`, `request-keys`, `request-contract`, `request-plugins`, `request-duplicate`, `request-reason`, `allowlist-entry`, `not-allowed`, `allowlist-empty`, `install-launch`, `install-timeout`, `install-failed`",
+          "130",
+          "Design",
+          "The request is refused (result 7)"
+        ],
+        [
+          "218",
+          "Sources of a fact of the proof of a critic with read-only tools",
+          "`stream-first-record`, `adapter-invocation`",
+          "131",
+          "Design",
+          "The proof fails: `critic_not_toolless`"
+        ],
+        [
+          "219",
+          "Outcomes of the proof of a critic call of the Claude harness adapter",
+          "`proved`, `refused-tool`, `refused-server`, `refused-session`, `refused-no-record`, `refused-customisation`",
+          "125",
+          "Design",
+          "Read as a refusal, `critic_not_toolless`"
+        ],
+        [
+          "220",
+          "Availability of a transport",
+          "`available`, `absent-dependency`, `out-of-range`, `refused-at-tier`, `not-chosen`",
+          "125",
+          "Design",
+          "The transport is unavailable"
+        ],
+        [
+          "221",
+          "Classifier signals of the Claude harness adapter",
+          "limit event rejected, limit event warning, retry event, overload, billing error, credit required, authentication failure, spending cap, prompt too long, limit message, other",
+          "125",
+          "Design",
+          "`provider_other`, confidence `text`"
+        ],
+        [
+          "222",
+          "Diagnostic codes of the JSONL reader",
+          "`malformed_json`, `absent_schema`, `unsupported_schema`, `unknown_record`, `provider_retry`, `provider_auth`, `provider_error`, `abandoned_tool`",
+          "138",
+          "Design",
+          "Kept and treated as a warning"
+        ],
+        [
+          "223",
+          "Severities of a diagnostic of the JSONL reader",
+          "`error`, `warning`",
+          "138",
+          "Design",
+          "Read as `warning`"
+        ],
+        [
+          "224",
+          "Reason codes of a terminal written by the JSONL reader",
+          "`unsupported_schema`, `provider_auth`, `provider_error`",
+          "138",
+          "Design",
+          "Read as `provider_error`"
+        ],
+        [
+          "225",
+          "Statuses of a tool record",
+          "`start`, `progress`, `end`",
+          "138",
+          "Design",
+          "The record is dropped with a diagnostic event"
+        ],
+        [
+          "226",
+          "Words of the end of an agent's stream",
+          "Error: `error`, `failed`, `failure`. Success: `success`, `completed`, `complete`, `ok`",
+          "138",
+          "Design",
+          "No terminal"
+        ],
+        [
+          "227",
+          "Modes of a critic-class call on prime",
+          "`text`, `json`",
+          "138",
+          "Design",
+          "`text`"
+        ],
+        [
+          "228",
+          "Stages of a declared verification command",
+          "`gate`, `pre`, `prestage`, `both`",
+          "105",
+          "Design",
+          "The declaration is refused"
+        ],
+        [
+          "229",
+          "Reuse policies of a staged command",
+          "`per-attempt`, `per-phase`, `per-run`",
+          "105",
+          "Design",
+          "The declaration is refused"
+        ],
+        [
+          "230",
+          "Values of `discovery` of the verification-commands document",
+          "`none`",
+          "105",
+          "Design",
+          "The document is refused"
+        ],
+        [
+          "231",
+          "Kinds and levels of a verification obligation",
+          "`effect-witness` with `integration`; `positive` with `contract`",
+          "105",
+          "Design",
+          "The plan is refused"
+        ],
+        [
+          "232",
+          "Values of `automationStatus`",
+          "`planned`, `manual`",
+          "105",
+          "Design",
+          "The plan is refused"
+        ],
+        [
+          "233",
+          "Signals of a result that has no exit code",
+          "`TIMEOUT`, `EXEC_ERROR`, `DEADLINE`",
+          "148; `DEADLINE`: 105",
+          "Design",
+          "The command counts as failed"
+        ],
+        [
+          "234",
+          "Sub-commands of the command `verify`",
+          "`create`, `validate`, `slice`, `scaffold`, `run`, `prestage`, `prestage-report`",
+          "105",
+          "Owner decision",
+          "Exit 3"
+        ],
+        [
+          "235",
+          "State of a run of steps",
+          "`full`, `partial`",
+          "148",
+          "Design",
+          "`partial`"
+        ],
+        [
+          "236",
+          "Reasons of an admission to a batch of verification commands",
+          "`disjoint`; `undeclared`, `reads-written`, `writes-overlap`, `follows-writer`, `exclusive`, `steps`, `demoted`",
+          "148",
+          "Design",
+          "The command runs alone"
+        ],
+        [
+          "237",
+          "Errors of a secret resolver",
+          "`missing`, `inline-secret`, `unsafe-file`",
+          "110",
+          "Design",
+          "`missing`"
+        ],
+        [
+          "238",
+          "Check points of staleness",
+          "`launch`, `resume`, `pass-start`, `critic-start`",
+          "110",
+          "Owner decision",
+          "Configuration error"
+        ],
+        [
+          "239",
+          "Reserved literals of a row of a profile",
+          "`off`, `not used`, `baseline`, `as-is`, `(fixture)`",
+          "110",
+          "Design",
+          "The profile is invalid"
+        ],
+        [
+          "240",
+          "Values of `telemetry.content`",
+          "`auto`, `off`",
+          "110",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "241",
+          "Values of `memory.native.proposer`",
+          "`off`, `on`, `as-is`",
+          "110",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "242",
+          "Values of `roles.critic.transport`",
+          "`auto`, `as-is`",
+          "110",
+          "Design",
+          "Configuration error"
+        ],
+        [
+          "243",
+          "Lanes of the read model",
+          "`queued`, `proposing`, `verifying`, `reviewing`, `approved`, `blocked`, `paused`, `failed`",
+          "129",
+          "Design",
+          "Shown as text; the card is not moved"
+        ],
+        [
+          "244",
+          "Kinds of attention item",
+          "`blocked-on-human`, `source-changed`, `dead-run`, `launch-abandoned`, `quota-pause`, `budget-alert`, `stale-run`, `orphan-processes`, `unknown-state`",
+          "129",
+          "Design",
+          "Shown as text with the next command `status --json`"
+        ],
+        [
+          "245",
+          "Budget levels",
+          "`unknown`, `ok`, `info`, `warn`, `loud`, `over`",
+          "129",
+          "Design",
+          "Read as `unknown`"
+        ],
+        [
+          "246",
+          "Liveness values of the read model",
+          "`alive`, `dead`, `foreign`, `unknown`, `not-applicable`",
+          "129",
+          "Design",
+          "Read as `unknown`"
+        ],
+        [
+          "247",
+          "Reasons of `stale`",
+          "`heartbeat-and-events-old`, `event-major-out-of-range`",
+          "129",
+          "Design",
+          "Shown as text; the view stays `stale`"
+        ],
+        [
+          "248",
+          "Keys of the status line",
+          "`run`, `st`, `ph`, `unit`, `rej`, `el`, `next`, `strategy`, `attn`, `cur`, `validUntil`",
+          "129",
+          "Design",
+          "A parser ignores a key it does not know"
+        ],
+        [
+          "249",
+          "Quota states of a budget row",
+          "`ok`, `signalled`, `paused`",
+          "129",
+          "Design",
+          "Read as `ok`"
+        ],
+        [
+          "250",
+          "Rows of the lane table",
+          "L-01 `approved`, L-02 `failed`, L-03 `blocked`, L-04 `paused`, L-05 `reviewing`, L-06 `verifying`, L-07 `proposing`, L-08 `queued` (default)",
+          "129",
+          "Design",
+          "The default row fires"
+        ],
+        [
+          "251",
+          "Details of a MALFORMED verdict",
+          "`nonce-mismatch`, `no-verdict-line`, `multiple-verdict-lines`, `call-failed`",
+          "101",
+          "Design",
+          "Read as `call-failed`; the verdict stays MALFORMED"
+        ],
+        [
+          "252",
+          "Cases of a diagnosis",
+          "`grounding`, `real_gap`, `unknown`",
+          "101",
+          "Design",
+          "`unknown`"
+        ],
+        [
+          "253",
+          "Outcomes of the bump rule",
+          "`bump`, `skip`, `none`",
+          "149",
+          "Design",
+          "`none`"
+        ],
+        [
+          "254",
+          "Reasons of a skipped bump",
+          "`critic-model`, `quota-exhausted`, `ladder-top`",
+          "149",
+          "Design",
+          "Shown as text; the bump is skipped"
+        ],
+        [
+          "255",
+          "What failed in an approval record",
+          "`schema`, `signature`, `key-unknown`, `verdict`, `evidence-hash`, `verification-hash`, `missing`, `marker-only`",
+          "101",
+          "Design",
+          "The record counts as not approved"
+        ],
+        [
+          "256",
+          "Kinds of source of a launch contract",
+          "`constitution`, `spec`, `plan`, `tasks`, `research`, `data-model`, `quickstart`, `verification-commands`, `contract`, `checklist`",
+          "107",
+          "Design",
+          "The source is refused"
+        ],
+        [
+          "257",
+          "Timing of a coverage obligation",
+          "`pipeline-start`, `before:<stage>`, `after:<stage>`, `release`, `specstride-phase:<n>`, `unclassified`",
+          "107",
+          "Design",
+          "The launch contract is invalid"
+        ],
+        [
+          "258",
+          "Producer of a coverage obligation",
+          "`existing`, `stage:<id>`, `automated-policy`, `external-authority`, `unknown`, `unclassified`",
+          "107",
+          "Design",
+          "The launch contract is invalid"
+        ],
+        [
+          "259",
+          "Kinds of judgment item",
+          "`classify-obligation`, `settle-prerequisite`, `map-declared-command`, `resolve-blocker`",
+          "107",
+          "Design",
+          "The batch is refused"
+        ],
+        [
+          "260",
+          "Route of an answer to a judgment item",
+          "`host-model`, `delegated-harness`",
+          "107",
+          "Design",
+          "The answer is refused"
+        ],
+        [
+          "261",
+          "Source of a declaration of scope, read or write",
+          "`user-config`, `environment`, `flag`",
+          "107",
+          "Design",
+          "The declaration is refused"
+        ],
+        [
+          "262",
+          "Kinds of stub of the oracle",
+          "proposer, critic over HTTP, critic as a CLI, diagnostician, engine, verification command, plugin installer, telemetry sink",
+          "141",
+          "Design",
+          "The fixture is refused"
+        ],
+        [
+          "263",
+          "Verbs of the proposer stub",
+          "`write`, `evidence`, `stream`, `text`, `sleep`, `exit`, `yield`, `silent`, `repeat`, `nothing`, `plugin-request`",
+          "141",
+          "Design",
+          "The fixture is refused"
+        ],
+        [
+          "264",
+          "Verbs of the critic stub and the diagnostician stub",
+          "`approve`, `reject`, `malformed-none`, `malformed-wrong-nonce`, `malformed-duplicate`, `empty`, `http-error`, `exit`, `hang`, `hint`, `fail`",
+          "141",
+          "Design",
+          "The fixture is refused"
+        ],
+        [
+          "265",
+          "Verbs of the engine stub",
+          "`succeed`, `transient`, `fail`, `stop`, `sleep`, `crash`",
+          "141",
+          "Design",
+          "The fixture is refused"
+        ],
+        [
+          "266",
+          "Verbs of the verification command stubs; of the installer stub",
+          "`pass`, `fail`, `slow`, `write-result`; `install`, `fail`, `hang`. The verbs of the sink stub are in the specification of 141",
+          "141",
+          "Design",
+          "The fixture is refused"
+        ],
+        [
+          "267",
+          "Surfaces of the oracle",
+          "`exit`, `stdout`, `stderr`, `tree`, `state`, `events`, `transcript`, `processes`, `pipeline`, `telemetry`, `repository`, `launcher`, `home`, `events-primary`, `control-records`, `counters` (S-01 to S-16)",
+          "141",
+          "Design",
+          "The test is refused"
+        ],
+        [
+          "268",
+          "Handling of a register row in the oracle",
+          "normalization rule, off, mapped, waiver, layer field, not observable, none needed, no differential test",
+          "141",
+          "Design",
+          "The suite fails"
+        ],
+        [
+          "269",
+          "Variants of a scenario of FX-35 and FX-36",
+          "`@engine-stub`, `@full-stack`",
+          "141",
+          "Design",
+          "The test is refused"
+        ],
+        [
+          "270",
+          "Test tiers of the oracle; status of a fixture family",
+          "hermetic, reference, platform; active, retired",
+          "141",
+          "Design",
+          "The test is refused; a family is read as retired"
+        ],
+        [
+          "271",
+          "End causes of a pass (`pass.ended`, field `endCause`)",
+          "`evidence`, `completed`, `yield`, `no_progress`, `error`, `killed`, `hard_cap`, `quota_pause`, `stopped`, `crash`",
+          "111",
+          "Design",
+          "Read as `error`"
+        ],
+        [
+          "272",
+          "End causes of a phase attempt (`attempt.ended`, field `endCause`)",
+          "`approved`, `rejected`, `malformed`, `verification-failed`, `no-evidence`, `budget`, `blocked`, `stopped`, `error`, `crash`",
+          "111",
+          "Design",
+          "Read as `error`"
+        ],
+        [
+          "273",
+          "Outcomes of a phase (`phase.ended`, field `outcome`)",
+          "`approved`, `halted`, `blocked`, `stopped`, `crash`",
+          "111",
+          "Design",
+          "Read as `halted`"
+        ],
+        [
+          "274",
+          "Error classes of the validation of a launch contract",
+          "`unreadable`, `structure`, `action`, `check`, `verification-commands`, `learning`, `auto`, `open-blocker`, `unchecked-prerequisite`, `not-promoted`",
+          "107",
+          "Design",
+          "The build fails (assumption: CQ-194)"
+        ],
+        [
+          "275",
+          "Kinds of dsh-profile customisation",
+          "`plugins`, `host-hooks`, `skills`, `tool-servers`",
+          "130",
+          "Design",
+          "Recorded as `not-switchable`"
+        ],
+        [
+          "276",
+          "States of a customisation or of native memory of dsh",
+          "`off`, `absent`, `opted-in`, `not-switchable`, `as-is`",
+          "130",
+          "Design",
+          "Read as `not-switchable`"
+        ],
+        [
+          "277",
+          "Providers of lock and liveness",
+          "An open registry: the lock providers and liveness probes registered at EP-13 by their owners; Wave 1 names the providers of feature 122",
+          "122",
+          "Open",
+          "An unknown provider id is refused at registration"
+        ],
+        [
+          "278",
+          "`outcome` of the record of a phase attempt",
+          "`approved`, `rejected`, `malformed`, `gate-failed`, `config-error`, `no-verdict`",
+          "101",
+          "Design",
+          "Read as `rejected`; the verdict stays one of the three members of row 8"
+        ],
+        [
+          "279",
+          "Hold refusals",
+          "`no-live-run`",
+          "123",
+          "Design",
+          "Refusal"
+        ],
+        [
+          "280",
+          "Kill classes read by learning",
+          "`budget`, `futility`, `hang`",
+          "106",
+          "Design",
+          "`unknown`, counted as neither budget nor futility. The as-is kill reasons map onto the classes: hard cap to budget; repeat stall and progress stall to futility; idle timeout to hang"
+        ],
+        [
+          "281",
+          "Sources of a selected learning mode",
+          "`token`, `refusal`, `prose`, `default`",
+          "106",
+          "Design",
+          "`default`"
+        ],
+        [
+          "282",
+          "Timing of a check of a launch contract",
+          "`preflight`, `stage`",
+          "107",
+          "Design",
+          "The launch contract is invalid. The default is stage, and a postcondition may not have the timing preflight"
+        ],
+        [
+          "283",
+          "Options that the consumer's comment may select",
+          "`features`, `relaunch`, `learning`, `mode`",
+          "107",
+          "Owner decision",
+          "The call is refused (F107-FR-035)"
+        ],
+        [
+          "284",
+          "Reason of the verification mode that derivation sets",
+          "`declared`, `configured`",
+          "107",
+          "Design",
+          "The build fails: the reason is computed, never read"
+        ],
+        [
+          "285",
+          "Choices of a judgment item",
+          "`mapped`, `optional`, `out-of-scope`, `specstride-phase:<n>`, `accepted`, `keep-blocker`",
+          "107",
+          "Design",
+          "The answer is refused (F107-FR-010)"
+        ]
+      ]
+    },
+    {
+      "section": "§X.7",
+      "heading": "The `parity` profile",
+      "subheading": null,
+      "header": [
+        "#",
+        "Switch",
+        "Key",
+        "Default",
+        "Under `parity`",
+        "Owner",
+        "Register row"
+      ],
+      "rows": [
+        [
+          "1",
+          "Loop strategy",
+          "`loop.strategy`",
+          "`micro`",
+          "`classic`",
+          "115",
+          "DV-012"
+        ],
+        [
+          "2",
+          "Closing check",
+          "`loop.micro.closing_check`",
+          "on",
+          "off",
+          "115",
+          "DV-046"
+        ],
+        [
+          "3",
+          "Escalation of the model tier as the second repair",
+          "`loop.escalation`",
+          "on",
+          "off",
+          "115",
+          "DV-050"
+        ],
+        [
+          "4",
+          "First-failure predicate",
+          "`verification.failfast`",
+          "on",
+          "off",
+          "118",
+          "DV-051"
+        ],
+        [
+          "5",
+          "Default action on a first failure",
+          "`verification.failfast_action`",
+          "`stop`",
+          "not used",
+          "118",
+          "DV-051"
+        ],
+        [
+          "6",
+          "Step runner",
+          "`verification.step_runner`",
+          "off",
+          "off",
+          "148",
+          "—"
+        ],
+        [
+          "7",
+          "Concurrent verification commands",
+          "`verification.parallelism`",
+          "1 (ceiling 4)",
+          "1",
+          "148",
+          "DV-080"
+        ],
+        [
+          "8",
+          "Ledger and handoff",
+          "`carry.ledger_handoff`",
+          "on",
+          "off",
+          "103",
+          "DV-092"
+        ],
+        [
+          "9",
+          "Obligations index",
+          "`carry.index`",
+          "on",
+          "off",
+          "103",
+          "DV-045"
+        ],
+        [
+          "10",
+          "Session continuation inside a phase attempt",
+          "`carry.continuation`",
+          "on, where the harness supports it",
+          "off",
+          "125, 103",
+          "DV-010"
+        ],
+        [
+          "11",
+          "Polite stop",
+          "`carry.polite_stop`",
+          "on",
+          "off",
+          "118",
+          "DV-093"
+        ],
+        [
+          "12",
+          "Block set of the proposer's prompt, with the cache-stable start",
+          "`prompt.block_set`",
+          "current",
+          "as-is",
+          "103",
+          "DV-094"
+        ],
+        [
+          "13",
+          "Counts survive a resume, and a rerun through `run` or `launch`",
+          "— (the flag `--reset-counts`)",
+          "counts continue",
+          "Fixtures that resume or rerun pass the flag",
+          "102",
+          "DV-011; DV-044"
+        ],
+        [
+          "14",
+          "Owner of relaunch",
+          "`relaunch.owner`",
+          "`root`",
+          "`supervise`",
+          "123",
+          "DV-074"
+        ],
+        [
+          "15",
+          "Check points of staleness",
+          "`staleness.check_points`",
+          "launch, resume and every pass start",
+          "critic start only",
+          "102, 103, 105",
+          "DV-082"
+        ],
+        [
+          "16",
+          "Content capture in telemetry",
+          "`telemetry.content`",
+          "`auto`: follows traces",
+          "off",
+          "128",
+          "DV-083"
+        ],
+        [
+          "17",
+          "Compatibility projection of events",
+          "`compat.legacyEvents`",
+          "off",
+          "on",
+          "144",
+          "DV-007"
+        ],
+        [
+          "18",
+          "Output mode",
+          "`output.compat`",
+          "default output",
+          "compatibility output",
+          "119, 123",
+          "DV-033"
+        ],
+        [
+          "19",
+          "Lines with no as-is equivalent, `[LOOP]` included",
+          "— (follows rows 1, 18, 20)",
+          "printed when their feature is on",
+          "never printed",
+          "100",
+          "DV-034; DV-018"
+        ],
+        [
+          "20",
+          "Parallel units",
+          "`loop.parallel.units`",
+          "off",
+          "off",
+          "142",
+          "DV-080; DV-084; DV-085; DV-086; DV-088"
+        ],
+        [
+          "21",
+          "Workers of a group",
+          "`loop.parallel.workers`",
+          "2; the ceiling is the key of row 130, `loop.parallel.workersMax`; a value above the ceiling is a configuration error",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "22",
+          "Quota headroom for a group",
+          "`loop.parallel.quota_headroom`",
+          "70 per cent",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "23",
+          "Parallel units at detection only",
+          "`loop.parallel.allow_detect`",
+          "off",
+          "off",
+          "142",
+          "DV-080"
+        ],
+        [
+          "24",
+          "Model-tier bump after K rejections",
+          "`attempt.tier_bump`",
+          "off",
+          "off",
+          "149",
+          "DV-079"
+        ],
+        [
+          "25",
+          "Containment level",
+          "`sandbox.level`",
+          "The strongest the harness offers",
+          "As at the baseline: none",
+          "109",
+          "DV-030"
+        ],
+        [
+          "26",
+          "Permission mode and argument list of each harness, with the extra flags of the critic and the tool allow-list",
+          "`sandbox.permissionMode`",
+          "Contained, the mode always stated",
+          "`baseline`: as at the baseline, mapped through the argument table of the harness adapter",
+          "125, 130, 131, 134, 138",
+          "DV-031"
+        ],
+        [
+          "27",
+          "Transport of a harness adapter",
+          "`harnesses.<id>.transport`",
+          "`subprocess`",
+          "`subprocess`; the SDK transport is not used",
+          "109, 125",
+          "—"
+        ],
+        [
+          "28",
+          "Transport and mode of the critic of each harness",
+          "`roles.critic.transport`",
+          "The harness CLI without tools at Tier 1; for one harness read-only tools; for prime JSON mode",
+          "`as-is`: the as-is transport and mode of each harness, with its as-is context window for a model that is not listed",
+          "109, 124, 131, 138",
+          "DV-001; DV-081; DV-090"
+        ],
+        [
+          "29",
+          "Harness-native memory",
+          "`memory.native.proposer`",
+          "off for the critic always; off for the proposer",
+          "`as-is`: no flag about memory is passed",
+          "109",
+          "DV-047"
+        ],
+        [
+          "30",
+          "Overlay of the configuration home",
+          "`harnesses.<id>.overlay`",
+          "Unset: follows the auth tier, the real home at Tier 1 and a throwaway home at Tier 2",
+          "`none`",
+          "109",
+          "DV-002"
+        ],
+        [
+          "31",
+          "Fingerprints around every command of the verification gate and around grounding",
+          "`integrity.gate_fingerprint`",
+          "on",
+          "off",
+          "148, 117",
+          "DV-076"
+        ],
+        [
+          "32",
+          "Comparison of the tree at phase entry",
+          "`integrity.phase_entry`",
+          "on",
+          "off",
+          "116; 149 performs the comparison",
+          "DV-077"
+        ],
+        [
+          "33",
+          "Comparison of the check manifest on a relaunch",
+          "`integrity.manifest_relaunch`",
+          "on",
+          "off",
+          "105",
+          "DV-078"
+        ],
+        [
+          "34",
+          "Audience",
+          "`distribution.audience`",
+          "`distributed`",
+          "`personal`",
+          "147",
+          "DV-048"
+        ],
+        [
+          "35",
+          "Automatic pick of the critic",
+          "`critic.autoPick`",
+          "on",
+          "not reached: every fixture names the critic",
+          "124",
+          "DV-049"
+        ],
+        [
+          "36",
+          "Default proposer and critic",
+          "`roles.proposer.harness`, `roles.critic.harness`",
+          "The default harness for both, on different model tiers",
+          "Every fixture names both",
+          "110, 124",
+          "DV-004"
+        ],
+        [
+          "37",
+          "Mode of the host skill",
+          "— (the argument of `launch`)",
+          "`run`",
+          "Mapped through the mode map",
+          "107",
+          "DV-009"
+        ],
+        [
+          "38",
+          "Pins of the launch contract",
+          "—",
+          "The pinnable keys",
+          "The two as-is keys only",
+          "123",
+          "DV-026"
+        ],
+        [
+          "39",
+          "Quota pause",
+          "`pause.maxTotalMs`",
+          "On; ceiling 24 hours",
+          "Not reached: the stub agents emit no quota signal",
+          "127",
+          "DV-005"
+        ],
+        [
+          "40",
+          "Fallback of a role",
+          "`roles.<role>.fallback`",
+          "off",
+          "off",
+          "127",
+          "—"
+        ],
+        [
+          "41",
+          "Executable of the engine",
+          "`engine.executable`",
+          "The product's own entry",
+          "Set by the oracle to its engine stub where a fixture needs one",
+          "122, 123",
+          "—"
+        ],
+        [
+          "42",
+          "As-is names of metrics",
+          "`telemetry.otel.legacyMetricNames`",
+          "off",
+          "off",
+          "128",
+          "DV-058"
+        ],
+        [
+          "43",
+          "Learning mode",
+          "`learning.mode`",
+          "`off`",
+          "As the fixture sets it",
+          "106",
+          "DV-026"
+        ],
+        [
+          "44",
+          "Limits of the observability policy",
+          "`observability.limits.text`, `.toolArguments`, `.toolResult`, `.diagnostic`, `.target`, `.maxTargets`, `.freeText`",
+          "4096, 2048, 4096, 1024, 512, 8, 1024",
+          "The same, as at the baseline",
+          "111",
+          "—"
+        ],
+        [
+          "45",
+          "Retention of captures",
+          "`observability.retention.rawCapture`, `.rawDays`, `.metadataDays`",
+          "off, 7, 30",
+          "The same",
+          "111, 126",
+          "—"
+        ],
+        [
+          "46",
+          "Time limit of a call of a sink",
+          "`telemetry.sinkTimeoutMs`",
+          "2000",
+          "not used",
+          "111",
+          "—"
+        ],
+        [
+          "47",
+          "Delegation of derivation judgment to a harness",
+          "`derive.judgment.harness`",
+          "unset",
+          "unset",
+          "107",
+          "DV-096"
+        ],
+        [
+          "48",
+          "Ceilings of the relaunch count and of the wall clock",
+          "`supervise.maxRelaunches`, `supervise.wallClockSec`",
+          "2; derived",
+          "unset",
+          "107",
+          "DV-055"
+        ],
+        [
+          "49",
+          "Inputs of the specification",
+          "`spec.format`, `spec.feature`, `spec.contextBudget`",
+          "detected; the last active; 24000",
+          "As the fixture sets them; 24000",
+          "104",
+          "DV-027"
+        ],
+        [
+          "50",
+          "Grace of the polite stop",
+          "`carry.politeStopGraceSec`",
+          "10",
+          "not used",
+          "118",
+          "DV-093"
+        ],
+        [
+          "51",
+          "Grace of a stop at a first failure",
+          "`verification.failfastGraceSec`",
+          "10",
+          "not used",
+          "118",
+          "DV-051"
+        ],
+        [
+          "52",
+          "Grounding pass of the critic",
+          "`roles.critic.grounding`",
+          "true",
+          "true, unless the fixture sets it",
+          "117",
+          "DV-027"
+        ],
+        [
+          "53",
+          "Cap of presence lines",
+          "`roles.critic.groundingMaxFiles`",
+          "80",
+          "80",
+          "117",
+          "DV-027"
+        ],
+        [
+          "54",
+          "Ceiling per file of an anchored excerpt",
+          "`roles.critic.anchorMaxBytes`",
+          "49152",
+          "49152",
+          "117",
+          "DV-027"
+        ],
+        [
+          "55",
+          "Context window of the critic, set by the consumer",
+          "`roles.critic.contextTokens`",
+          "The window of the model",
+          "Not set unless the fixture sets it; the as-is fallback of the harness applies (row 28)",
+          "117",
+          "DV-027; DV-106; DV-111"
+        ],
+        [
+          "56",
+          "Debug output of the critic",
+          "`roles.critic.debug`",
+          "false",
+          "false, unless the fixture sets it",
+          "117",
+          "DV-066"
+        ],
+        [
+          "57",
+          "A critic prompt still over the window",
+          "`prompt.critic.overWindow`",
+          "`refuse`",
+          "`send`",
+          "117",
+          "DV-099"
+        ],
+        [
+          "58",
+          "Block set of the critic's prompt, which the prompt of the diagnostician also reads",
+          "`prompt.critic.block_set`",
+          "`current`",
+          "`as-is`",
+          "117",
+          "DV-100"
+        ],
+        [
+          "59",
+          "No-progress breaker on the structured path",
+          "`loop.noProgressStructured`",
+          "on",
+          "off",
+          "103",
+          "DV-067"
+        ],
+        [
+          "60",
+          "Parameters of carry-over",
+          "`carry.handoffMaxBytes`, `carry.indexTitleChars`, `carry.maxContinuedPasses`, `carry.contextFillTokens`, `carry.contextFillShare`, `carry.ageFallbackSec`",
+          "6144; set by the plan; 3; 150000; 50; 300",
+          "not used",
+          "103",
+          "DV-092; DV-045; DV-010"
+        ],
+        [
+          "61",
+          "Options of the doctor",
+          "`doctor.staleAfterDays`, `doctor.online`, `doctor.probeTimeoutSec`, `doctor.probeOutputBytes`",
+          "90; true; 5; 65536",
+          "not used",
+          "112",
+          "—"
+        ],
+        [
+          "62",
+          "Continuation of an unfinished run",
+          "— (the flag `--new-run`)",
+          "A launch continues the unfinished run",
+          "not used",
+          "102",
+          "DV-011"
+        ],
+        [
+          "63",
+          "End of adoptable jobs at a stop",
+          "— (the flag `--jobs` of `stop`)",
+          "off",
+          "not used",
+          "102",
+          "—"
+        ],
+        [
+          "64",
+          "Routing",
+          "`loop.routing`",
+          "on",
+          "not used",
+          "115",
+          "—"
+        ],
+        [
+          "65",
+          "Caps of the micro-loop layer",
+          "`loop.micro.caps.repairs`, `.escalationsPerTask`, `.escalationsPerAttempt`, `.proposalMin`, `.unitMin`, `.checkMin`, `.checkSharePercent`, `.cyclesExtra`, `.cyclesMin`, `.unresolvedUnits`",
+          "2; 1; 2; 20; 30; 5; 15; 6; 12; 2",
+          "not used",
+          "115",
+          "DV-012"
+        ],
+        [
+          "66",
+          "Detached reverse run",
+          "— (the flag `--detach` of `reverse`)",
+          "off; the host skill passes it",
+          "off",
+          "108",
+          "—"
+        ],
+        [
+          "67",
+          "Comment of a reverse run",
+          "— (the flag `--comment` of `reverse`)",
+          "absent",
+          "not used",
+          "108",
+          "—"
+        ],
+        [
+          "68",
+          "Tasks mode of a reverse run",
+          "`reverse.tasks`",
+          "`done`",
+          "`done`",
+          "108",
+          "DV-027"
+        ],
+        [
+          "69",
+          "Limits of the source inventory",
+          "`reverse.maxFileBytes`, `reverse.maxTotalBytes`, `reverse.contextBudget`",
+          "1048576; 20971520; 24000",
+          "The same",
+          "140",
+          "DV-027"
+        ],
+        [
+          "70",
+          "Live timeline",
+          "`output.live`",
+          "`auto`",
+          "`auto`",
+          "145",
+          "DV-027"
+        ],
+        [
+          "71",
+          "Live detail",
+          "`output.liveDetail`",
+          "`tools`",
+          "`tools`",
+          "145",
+          "DV-027"
+        ],
+        [
+          "72",
+          "Verbose output",
+          "`output.verbose`",
+          "false",
+          "not used",
+          "119",
+          "DV-033"
+        ],
+        [
+          "73",
+          "Colour depth",
+          "`output.color`",
+          "unset",
+          "unset",
+          "145",
+          "DV-027"
+        ],
+        [
+          "74",
+          "Banner",
+          "`output.banner`",
+          "on",
+          "on",
+          "145",
+          "DV-027"
+        ],
+        [
+          "75",
+          "Animation",
+          "`output.motion`",
+          "on where a terminal allows it",
+          "As at the baseline",
+          "145",
+          "DV-027"
+        ],
+        [
+          "76",
+          "Live rail",
+          "`output.liveRail`",
+          "on",
+          "on",
+          "145",
+          "DV-027"
+        ],
+        [
+          "77",
+          "Background of the banner",
+          "`output.bannerBg`",
+          "unset",
+          "unset",
+          "145",
+          "DV-027"
+        ],
+        [
+          "78",
+          "ASCII glyphs",
+          "`output.ascii`",
+          "off",
+          "off",
+          "145",
+          "DV-027"
+        ],
+        [
+          "79",
+          "Stream tap",
+          "`stream.tap`",
+          "on",
+          "on",
+          "126",
+          "DV-065"
+        ],
+        [
+          "80",
+          "Executable of the stream tap",
+          "`stream.tapExecutable`",
+          "unset",
+          "unset",
+          "126",
+          "—"
+        ],
+        [
+          "81",
+          "Caps on the size and the rate of stream lines",
+          "`stream.limits.lineBytes`, `stream.limits.linesPerSecond`",
+          "1048576; 5000",
+          "off",
+          "126",
+          "DV-102"
+        ],
+        [
+          "82",
+          "Flag of a pass that did nothing",
+          "`stream.noActivityFlag`",
+          "on",
+          "off",
+          "126",
+          "DV-101"
+        ],
+        [
+          "83",
+          "Invocation record for every pass",
+          "`invocation.recordAllPasses`",
+          "on",
+          "off",
+          "126",
+          "DV-103"
+        ],
+        [
+          "84",
+          "Base of the invocation id",
+          "`invocation.idBase`",
+          "unset",
+          "unset",
+          "126",
+          "—"
+        ],
+        [
+          "85",
+          "Debug retention of prompt and reply",
+          "`invocation.debug`",
+          "off",
+          "off",
+          "126",
+          "—"
+        ],
+        [
+          "86",
+          "Capture of the agent stream: the same switch as row 79",
+          "`stream.tap` (the proposed key `stream.capture` is not used)",
+          "on",
+          "on",
+          "126",
+          "—"
+        ],
+        [
+          "87",
+          "Discovery",
+          "`discovery.enabled`",
+          "true",
+          "off",
+          "146",
+          "DV-064"
+        ],
+        [
+          "88",
+          "Metadata pass of discovery",
+          "`discovery.online`",
+          "true when a credential reference exists",
+          "off",
+          "146",
+          "DV-064"
+        ],
+        [
+          "89",
+          "Safety margin on a context window from the catalogue",
+          "`critic.catalogueWindowMargin`",
+          "20 per cent",
+          "not used",
+          "146",
+          "DV-049"
+        ],
+        [
+          "90",
+          "Refusal at launch of a role name that the registry does not hold",
+          "`roles.refuseUnknown`",
+          "on",
+          "off",
+          "124",
+          "DV-104"
+        ],
+        [
+          "91",
+          "Hard spending cap of an automatically picked metered critic",
+          "`critic.autoPickMaxUsd`",
+          "not set",
+          "not used",
+          "124",
+          "DV-049"
+        ],
+        [
+          "92",
+          "Line of the critic-diversity warning",
+          "`critic.warnSameModel`",
+          "true",
+          "not printed",
+          "124",
+          "DV-034"
+        ],
+        [
+          "93",
+          "Declared write scope of a task",
+          "`loop.parallel.scopes.<taskId>`",
+          "none",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "94",
+          "Tasks removed from eligibility",
+          "`loop.parallel.exclude`",
+          "empty",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "95",
+          "Seed paths of worker trees",
+          "`loop.parallel.seedPaths`",
+          "empty",
+          "not used",
+          "143",
+          "DV-080"
+        ],
+        [
+          "96",
+          "Capacity of an exclusive resource",
+          "`loop.parallel.resources.<name>.capacity`",
+          "1",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "97",
+          "Loki sink",
+          "`telemetry.enabled`, `telemetry.loki.url`",
+          "false; `http://localhost:3100`",
+          "false unless the fixture sets it; the same address",
+          "128",
+          "DV-058"
+        ],
+        [
+          "98",
+          "OTLP exporter",
+          "`telemetry.otel.enabled`, `telemetry.otel.url`",
+          "false; `http://localhost:4318`",
+          "false unless the fixture sets it; the same address",
+          "128",
+          "DV-058"
+        ],
+        [
+          "99",
+          "Traces when the exporter is on",
+          "`telemetry.otel.traces`",
+          "on",
+          "on",
+          "128",
+          "DV-058"
+        ],
+        [
+          "100",
+          "Attribute dialects",
+          "`telemetry.otel.dialects`",
+          "empty",
+          "empty",
+          "128",
+          "—"
+        ],
+        [
+          "101",
+          "Limits of captured content",
+          "`telemetry.contentMaxPromptBytes`, `telemetry.contentMaxReplyBytes`",
+          "262144; 16384",
+          "not used",
+          "128",
+          "DV-083"
+        ],
+        [
+          "102",
+          "Time limit of a request of a sink",
+          "`telemetry.loki.timeoutMs`, `telemetry.otel.timeoutMs`",
+          "2500; 2500",
+          "The same",
+          "128",
+          "DV-027"
+        ],
+        [
+          "103",
+          "Bound of a batch",
+          "`telemetry.loki.maxBatchBytes`, `telemetry.otel.maxBatchBytes`",
+          "3145728; 3145728",
+          "The same",
+          "128",
+          "DV-027"
+        ],
+        [
+          "104",
+          "Flush interval",
+          "`telemetry.flush.intervalMs`",
+          "2000",
+          "0: a flush at every event",
+          "128",
+          "DV-058"
+        ],
+        [
+          "105",
+          "Buffer of a sink",
+          "`telemetry.queueMaxEvents`",
+          "10000",
+          "not used",
+          "128",
+          "—"
+        ],
+        [
+          "106",
+          "Credential of a collector",
+          "`telemetry.loki.auth`, `telemetry.otel.auth`",
+          "unset",
+          "unset",
+          "128",
+          "—"
+        ],
+        [
+          "107",
+          "Wall-clock budget of a run",
+          "`loop.maxWallMin`",
+          "0 (unlimited)",
+          "0, unless the fixture sets it",
+          "127",
+          "—"
+        ],
+        [
+          "108",
+          "Ceilings per role and per run",
+          "`budget.role.<role>.costUsd`, `.tokens`, `.softTokens`, `.calls`; `budget.run.costUsd`, `.tokens`, `.phaseAttempts`, `.calls`",
+          "none",
+          "none",
+          "127",
+          "—"
+        ],
+        [
+          "109",
+          "Alert thresholds",
+          "`budget.alerts.thresholds`",
+          "50, 75, 90",
+          "not used",
+          "127",
+          "—"
+        ],
+        [
+          "110",
+          "Rate table for estimated cost",
+          "`budget.rates`",
+          "unset",
+          "unset",
+          "127",
+          "—"
+        ],
+        [
+          "111",
+          "Margin, jitter and probe schedule of a quota pause; bounds of the retries at pass level",
+          "`pause.marginMs`, `pause.jitterMs`, `pause.probeScheduleMs`, `quota.transientMaxWaitMs`, `quota.overloadRetries`",
+          "60000; 30000; 300000, 900000, 1800000, 3600000; 60000; 3",
+          "Not reached",
+          "127",
+          "DV-005"
+        ],
+        [
+          "112",
+          "Delay and return of a fallback",
+          "`roles.<role>.fallbackAfterMs`, `roles.<role>.fallbackReturn`",
+          "0; `restore`",
+          "not used",
+          "127",
+          "—"
+        ],
+        [
+          "113",
+          "Detach strategy",
+          "`runtime.detach.strategy`",
+          "`spawn-detached`",
+          "`spawn-detached`",
+          "122",
+          "DV-074"
+        ],
+        [
+          "114",
+          "Limit of the handshake; heartbeat and grace of the lease",
+          "`runtime.handshake.timeoutSec`, `runtime.lease.heartbeatSec`, `runtime.lease.graceSec`",
+          "30; 10; 30",
+          "The defaults; not observable",
+          "122",
+          "—"
+        ],
+        [
+          "115",
+          "Lock and liveness provider",
+          "`runtime.lock.provider`",
+          "The shipped provider",
+          "The shipped provider",
+          "122",
+          "DV-022"
+        ],
+        [
+          "116",
+          "Control root",
+          "`state.dir`",
+          "The user's state directory, keyed by the workspace",
+          "Set by the fixture through the as-is variable",
+          "122",
+          "DV-006"
+        ],
+        [
+          "117",
+          "Proof of the critic mode of dsh",
+          "`harnesses.dsh.critic.proof`",
+          "`strict`",
+          "`none`",
+          "130",
+          "DV-110"
+        ],
+        [
+          "118",
+          "Plugin allowlist of a harness",
+          "`harnesses.<id>.pluginAllowlist`",
+          "empty",
+          "As the fixture sets it",
+          "130",
+          "DV-091"
+        ],
+        [
+          "119",
+          "Slash-command skills of the Claude proposer",
+          "`harnesses.claude.proposerSkills`",
+          "off",
+          "off",
+          "125",
+          "DV-027"
+        ],
+        [
+          "120",
+          "Scrub of credentials from the environment of tool commands",
+          "`harnesses.claude.subprocessEnvScrub`",
+          "on",
+          "off",
+          "125",
+          "—"
+        ],
+        [
+          "121",
+          "Removal of the harness's repository snapshot from context",
+          "`harnesses.claude.gitInstructions`",
+          "unset",
+          "unset",
+          "125",
+          "DV-094"
+        ],
+        [
+          "122",
+          "Refusal of the sub-agent tool on the SDK transport",
+          "`harnesses.claude.disableSubagents`",
+          "off",
+          "not used",
+          "125",
+          "—"
+        ],
+        [
+          "123",
+          "Verification mode",
+          "`verification.mode`",
+          "`required`",
+          "As the fixture sets it",
+          "105",
+          "DV-043"
+        ],
+        [
+          "124",
+          "Places of the verification plan, the verification-commands document and the test scaffolds",
+          "`verification.testPlan`, `verification.commands`, `verification.generateTests`",
+          "`testautomation/<slug>/TEST_PLAN.md`; none; `testautomation/<slug>/generated`. The two places are under the working directory and hold unless the mode is `off`",
+          "As the fixture sets them",
+          "105",
+          "—"
+        ],
+        [
+          "125",
+          "Environment allow-list of a check",
+          "`verification.envAllowlist`",
+          "on",
+          "off: the environment of the process is passed",
+          "148",
+          "DV-113"
+        ],
+        [
+          "126",
+          "Lines of the failure summary",
+          "`verification.summary.tailLines`, `verification.summary.tailErrLines`",
+          "80; 40",
+          "80; 40",
+          "105",
+          "—"
+        ],
+        [
+          "127",
+          "Precomputed status line",
+          "`status.precompute`",
+          "on",
+          "off",
+          "129",
+          "DV-034"
+        ],
+        [
+          "128",
+          "K of the model-tier bump",
+          "`attempt.tier_bump_after`",
+          "2",
+          "not used",
+          "149",
+          "DV-079"
+        ],
+        [
+          "129",
+          "Refusal of a start for ticked phases without an approval record",
+          "— (follows the approval record)",
+          "on",
+          "off",
+          "101",
+          "DV-029"
+        ],
+        [
+          "130",
+          "Ceiling of the workers of a group",
+          "`loop.parallel.workersMax`",
+          "4",
+          "not used",
+          "142",
+          "DV-080"
+        ],
+        [
+          "131",
+          "Customisations of a harness that are loaded into a proposer pass by themselves: project instruction files, and the auto-loaded context of a harness (extensions, skills, context files, prompt templates). Row 29 covers harness-native memory only",
+          "`harnesses.<id>.proposerCustomisations`",
+          "off; never loaded into a critic-class call",
+          "`as-is`: no flag about customisations is passed",
+          "131, 134",
+          "DV-047; DV-002"
+        ],
+        [
+          "132",
+          "The reading of `retryable` in the observation of a stopped launcher by `supervise observe` (DV-114). The reading of the blocked reason (row O-33 of table 1, refusal `blocked-on-human`) is not switched by the profile: it is on under every profile, `parity` included (CQ-238)",
+          "— (follows the tables `relaunch-observe` and `relaunch-root`)",
+          "on: table 1 reads `retryable` from the terminal record and refuses with `stop-not-retryable` (row O-34)",
+          "off: row O-34 is inactive and a stop that is not blocked is classified by the as-is classifier of DV-074",
+          "123",
+          "DV-114"
+        ],
+        [
+          "133",
+          "A missing credential of the critic is a configuration error, found before the call by `preflight` and refused with engine exit 3 and `critic_config`; no count changes",
+          "— (none; feature 110 may name one)",
+          "on",
+          "off: the missing credential is raised inside the call and scored as a failed call (DV-117)",
+          "101",
+          "DV-117"
+        ]
+      ]
+    },
+    {
+      "section": "§X.8",
+      "heading": "Normalization contract",
+      "subheading": "Normalization rules",
+      "header": [
+        "Id",
+        "Subject",
+        "Rule"
+      ],
+      "rows": [
+        [
+          "N-01",
+          "Absolute paths",
+          "The working directory, the root of the fixture, the root of the reference, the root of the port, the home and the temporary directory become named placeholders; the longest prefix first; real paths are resolved first"
+        ],
+        [
+          "N-02",
+          "State layout",
+          "Both sides map physical paths to logical names through the layout tables. It applies to captured trees and to the text of messages that name state"
+        ],
+        [
+          "N-03",
+          "Run id",
+          "The as-is run id becomes a numbered placeholder, numbered by first appearance"
+        ],
+        [
+          "N-04",
+          "Timestamps",
+          "Every time field, log header and file stamp of a transcript becomes a placeholder. Order is kept: values do not decrease where the reference's do not"
+        ],
+        [
+          "N-05",
+          "Durations",
+          "Every duration becomes a placeholder, unless the fixture declares the value as the behaviour under test"
+        ],
+        [
+          "N-06",
+          "Nonce",
+          "The 16 hexadecimal characters of each critic call become a numbered placeholder. First the comparator asserts the form and that no two calls share a nonce"
+        ],
+        [
+          "N-07",
+          "Process ids",
+          "Process ids, process group ids and lock owners become numbered placeholders"
+        ],
+        [
+          "N-08",
+          "Temporary names",
+          "Generated suffixes and names of temporary files become a placeholder"
+        ],
+        [
+          "N-09",
+          "Hash, same class",
+          "Hashes over fixture content must be equal and are not normalized"
+        ],
+        [
+          "N-10",
+          "Hash, path class",
+          "A hash whose input holds an absolute path is computed again from the side's own input, asserted, replaced by a placeholder, and the normalized inputs are compared"
+        ],
+        [
+          "N-11",
+          "Hash, implementation class",
+          "A hash over bytes of the implementation: self-consistency is asserted, the value becomes a placeholder, the content is not compared"
+        ],
+        [
+          "N-12",
+          "Event vocabulary",
+          "The compatibility projection of the port is compared, not its primary stream"
+        ],
+        [
+          "N-13",
+          "Event typing and duplicate keys",
+          "Lines are read as ordered pairs of key and value with types kept, so that text against number and duplicate keys are compared as they are"
+        ],
+        [
+          "N-14",
+          "Event order",
+          "Order is compared inside each class of writer. Interleaving between classes is not compared"
+        ],
+        [
+          "N-15",
+          "Implementation names in text",
+          "A prefix that names an implementation file maps to a logical component name through the component-name table; the message after the prefix must be equal"
+        ],
+        [
+          "N-16",
+          "Generated-by fields",
+          "Fields that name the generating tool compare through the component-name table"
+        ],
+        [
+          "N-17",
+          "Body of the launcher",
+          "Compared as a logical record (marker present, hash valid, reference to the launch bundle resolves, arguments passed through), not as text"
+        ],
+        [
+          "N-18",
+          "Messages of the old interpreters",
+          "Usage text and error text of the old language compare by exit code and by the class of the first line only"
+        ],
+        [
+          "N-19",
+          "Literals of the old language",
+          "Compared as written. No rule hides them"
+        ],
+        [
+          "N-20",
+          "Output labels",
+          "The supervisor lines and the digest are compared as written, in compatibility output"
+        ],
+        [
+          "N-21",
+          "Colour",
+          "Captures run with colour off; a fixture that tests colour compares the escape sequences as written"
+        ],
+        [
+          "N-22",
+          "Objects of the repository",
+          "Hashes of commits become numbered placeholders; message, tree content and the absence of a push are compared"
+        ],
+        [
+          "N-23",
+          "Counter files and transcripts of stub agents",
+          "Counter files are left out of the tree; transcripts are compared after N-01 to N-08"
+        ],
+        [
+          "N-24",
+          "Prompt text",
+          "Prompts are compared in full after N-01 to N-08"
+        ],
+        [
+          "N-25",
+          "Caches of the languages",
+          "Left out; their presence inside the working directory is a failure"
+        ],
+        [
+          "N-26",
+          "Telemetry payloads",
+          "Compared at the stub sink after N-03, N-04 and N-07"
+        ],
+        [
+          "N-27",
+          "Sorting that depends on the locale",
+          "Both sides run with the same locale; the comparator does not sort for them"
+        ],
+        [
+          "N-28",
+          "Legacy state and names",
+          "The behaviour of the legacy command names, legacy variables and the pre-v2 layout is not compared"
+        ],
+        [
+          "N-29",
+          "Field `schema` of a reverse-run source inventory",
+          "The key `schema` is removed from the source inventory of a reverse run before the inventory is compared (DV-116: the as-is inventory carries `schema_version` 1 and no field `schema`)"
+        ]
+      ]
+    },
+    {
+      "section": "§X.8",
+      "heading": "Normalization contract",
+      "subheading": "Layout table, old side",
+      "header": [
+        "As-is path",
+        "Logical name"
+      ],
+      "rows": [
+        [
+          "`<state>/lock`, `<state>/lock.d/owner`",
+          "`workspace:lock`"
+        ],
+        [
+          "`<state>/stop.flag`",
+          "`inbox:stop`"
+        ],
+        [
+          "`<state>/proposer.pid`",
+          "`run:<runId>:procs` (the entry of the pass in flight)"
+        ],
+        [
+          "`<state>/last-run.conf`, `<state>/features/<slug>/last-run.conf`",
+          "`run:<runId>:snapshot`"
+        ],
+        [
+          "`<state>/run.log`",
+          "`workspace:current:engine-log`"
+        ],
+        [
+          "`<state>/events.jsonl`",
+          "`workspace:current:events`, compared through `run:<runId>:events-legacy`"
+        ],
+        [
+          "`<state>/features/<slug>/PROGRESS.md`",
+          "`feature:<slug>:notebook`"
+        ],
+        [
+          "`<state>/features/<slug>/gates/GATE<N>-EVIDENCE.md`",
+          "`gate:<N>:evidence`"
+        ],
+        [
+          "`<state>/features/<slug>/gates/GATE<N>-APPROVED`",
+          "`gate:<N>:approved` (existence only)"
+        ],
+        [
+          "`<state>/features/<slug>/gates/GATE<N>-FEEDBACK.md`",
+          "`attempt:<N>:<k>:<n>:feedback` of the newest phase attempt"
+        ],
+        [
+          "`<state>/features/<slug>/gates/GATE<N>-HINT.md`",
+          "`attempt:<N>:<k>:<n>:hint` of the newest phase attempt"
+        ],
+        [
+          "`<state>/features/<slug>/gates/GATE<N>-ACCELERATION.md`",
+          "`attempt:<N>:<k>:<n>:acceleration` of the newest phase attempt"
+        ],
+        [
+          "`<state>/features/<slug>/attempts/phase<N>/attempt<M>` with or without the run-id suffix",
+          "`attempt:<N>:<k>:<n>:evidence` and its siblings"
+        ],
+        [
+          "`<state>/features/<slug>/verdicts/phase<N>.attempt<M>.<time>.txt`",
+          "`attempt:<N>:<k>:<n>:verdict`"
+        ],
+        [
+          "`<state>/features/<slug>/yield/phase<N>-attempt<M>-<run id>.json`",
+          "`job:<jobId>:yield`"
+        ],
+        [
+          "`<state>/features/<slug>/proposer-prompt.phase<N>.txt`, `<state>/features/<slug>/accelerator-prompt.phase<N>.txt`",
+          "`pass:<passId>:prompt` of the newest pass of the phase"
+        ],
+        [
+          "`<state>/features/<slug>/learning/applied.json`",
+          "`feature:<slug>:learning:decisions`"
+        ],
+        [
+          "`<state>/features/<slug>/events.jsonl`",
+          "`feature:<slug>:learning:events`, compared through `feature:<slug>:learning:events-legacy`"
+        ],
+        [
+          "`<state>/features/<slug>/runs/<run id>/run.log`",
+          "`run:<runId>:engine-log:<k>`, the engine log of the engine start; `run:<runId>:engine-log` resolves to the newest"
+        ],
+        [
+          "`<state>/features/<slug>/runs/<run id>/events.jsonl`",
+          "`run:<runId>:events-legacy`"
+        ],
+        [
+          "`<state>/features/<slug>/runs/<run id>/verification/verification-plan.json`",
+          "`run:<runId>:verification:plan`"
+        ],
+        [
+          "The launcher file",
+          "`pipeline:<pipelineId>:launcher`"
+        ],
+        [
+          "`<artifacts>/generated/<id>/<hash prefix>/`",
+          "`pipeline:<pipelineId>:bundle:<hash>`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/lock`",
+          "`workspace:lock`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/state.json`",
+          "`pipeline:<pipelineId>:state`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/launcher.log`",
+          "`pipeline:<pipelineId>:launcher-log`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/harness-run.json`",
+          "`pipeline:<pipelineId>:harness-run`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/harness-launch.log`",
+          "`pipeline:<pipelineId>:launch-log`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/harness-report.log`",
+          "`pipeline:<pipelineId>:report-log`"
+        ],
+        [
+          "`<artifacts>/runs/<id>/retrospectives/<hash>.json`",
+          "`pipeline:<pipelineId>:retrospective:<hash>`"
+        ]
+      ]
+    },
+    {
+      "section": "§X.8",
+      "heading": "Normalization contract",
+      "subheading": "Environment alias table",
+      "header": [
+        "As-is variable",
+        "Key"
+      ],
+      "rows": [
+        [
+          "`SPECSTRIDE_PROPOSER`, `SPECSTRIDE_CRITIC`",
+          "`roles.proposer.harness`, `roles.critic.harness`"
+        ],
+        [
+          "`SPECSTRIDE_<HARNESS>_PROPOSER_MODEL`, `SPECSTRIDE_<HARNESS>_CRITIC_MODEL`, and the as-is model variable of a harness that has one name for both roles",
+          "`roles.<role>.model` for the named harness"
+        ],
+        [
+          "The as-is variable for the executable of a harness, and for its profile",
+          "`harnesses.<id>.bin`, `harnesses.<id>.profile`"
+        ],
+        [
+          "`SPECSTRIDE_<HARNESS>_OVERLAY`",
+          "`harnesses.<id>.overlay`"
+        ],
+        [
+          "`SPECSTRIDE_PROPOSER_TIMEOUT`, `SPECSTRIDE_PROPOSER_TIMEOUT_PHASE_<N>`",
+          "`roles.proposer.timeoutSec`, `phases.<N>.proposer.timeoutSec`"
+        ],
+        [
+          "`SPECSTRIDE_DIAGNOSTICIAN`, `SPECSTRIDE_ACCELERATOR`, `SPECSTRIDE_ACCELERATOR_BACKEND`",
+          "`roles.diagnostician.*`, `roles.accelerator.*`"
+        ],
+        [
+          "`SPECSTRIDE_MAX_REJECTS`, `SPECSTRIDE_MAX_ITER`, `SPECSTRIDE_MAX_WALL_MIN`, `SPECSTRIDE_OSC_MAX`",
+          "`loop.maxRejects`, `loop.maxIter`, `loop.maxWallMin`, `loop.oscMax`"
+        ],
+        [
+          "`SPECSTRIDE_PROMPT_MAX_BYTES`, `SPECSTRIDE_GIT_COMMITS`",
+          "`loop.promptMaxBytes`, `loop.gitCommits`"
+        ],
+        [
+          "`SPECSTRIDE_SPEC_FORMAT`, `SPECSTRIDE_FEATURE`",
+          "`spec.format`, `spec.feature`"
+        ],
+        [
+          "`SPECSTRIDE_VERIFICATION`, `SPECSTRIDE_TEST_PLAN`, `SPECSTRIDE_VERIFICATION_COMMANDS`, `SPECSTRIDE_GENERATE_TESTS`",
+          "`verification.mode`, `verification.testPlan`, `verification.commands`, `verification.generateTests`"
+        ],
+        [
+          "`SPECSTRIDE_VERIFY_TAIL_LINES`, `SPECSTRIDE_VERIFY_TAIL_ERR_LINES`",
+          "`verification.summary.tailLines`, `verification.summary.tailErrLines`"
+        ],
+        [
+          "`SPECSTRIDE_VERIFICATION_PLAN`",
+          "No key: the as-is default of the plan argument of a critic call. The engine hands the critic call the verification plan of the run by logical name (`run:<runId>:verification:plan`); under the `parity` profile a set variable names the plan as at the baseline, and an empty value means no plan (F105-FR-042)"
+        ],
+        [
+          "`SPECSTRIDE_TELEMETRY_ENABLED`, `SPECSTRIDE_LOKI_URL`, `SPECSTRIDE_OTEL_ENABLED`, `SPECSTRIDE_OTEL_URL`",
+          "`telemetry.enabled`, `telemetry.loki.url`, `telemetry.otel.enabled`, `telemetry.otel.url`"
+        ],
+        [
+          "`SPECSTRIDE_LIVE`, `SPECSTRIDE_LIVE_DETAIL`, `SPECSTRIDE_VERBOSE`",
+          "`output.live`, `output.liveDetail`, `output.verbose`"
+        ],
+        [
+          "`SPECSTRIDE_LEARNING`, `SPECSTRIDE_LEARNING_THROUGH`",
+          "`learning.mode`, `learning.through`"
+        ],
+        [
+          "`SPECSTRIDE_STATE_DIR`",
+          "`state.dir`, the control root"
+        ],
+        [
+          "`SPECSTRIDE_REVERSE_*`",
+          "`reverse.*`"
+        ],
+        [
+          "`SPECSTRIDE_CONTEXT_BUDGET`",
+          "`spec.contextBudget` and `reverse.contextBudget`: one variable feeds both keys"
+        ],
+        [
+          "`SPECSTRIDE_GROUNDING_MAX_FILES`, `SPECSTRIDE_ANCHOR_MAX_BYTES_CEIL`",
+          "`roles.critic.groundingMaxFiles`, `roles.critic.anchorMaxBytes`"
+        ],
+        [
+          "`SPECSTRIDE_CRITIC_TIMEOUT`, `SPECSTRIDE_CRITIC_MALFORMED_LIMIT`, `SPECSTRIDE_CRITIC_GROUNDING`, `SPECSTRIDE_CRITIC_CONTEXT_TOKENS`",
+          "`roles.critic.timeoutSec`, `roles.critic.malformedLimit`, `roles.critic.grounding`, `roles.critic.contextTokens`"
+        ],
+        [
+          "`SPECSTRIDE_PROPOSER_IDLE_TIMEOUT`, `SPECSTRIDE_PROPOSER_PROGRESS_TIMEOUT`, `SPECSTRIDE_PROPOSER_REPEAT_LIMIT`, `SPECSTRIDE_PROPOSER_REPEAT_IGNORE`, `SPECSTRIDE_PROPOSER_PROGRESS_PATHS`, `SPECSTRIDE_PROPOSER_MAX_ERRORS`, `SPECSTRIDE_PROPOSER_MAX_CAPS`, `SPECSTRIDE_PROPOSER_MAX_NOPROGRESS`",
+          "`roles.proposer.idleTimeoutSec`, `.progressTimeoutSec`, `.repeatLimit`, `.repeatIgnore`, `.progressPaths`, `.maxErrors`, `.maxCaps`, `.maxNoProgress`"
+        ],
+        [
+          "`SPECSTRIDE_WATCHDOG_TICK`, `SPECSTRIDE_SHORT_PASS_SEC`, `SPECSTRIDE_SHORT_PASS_NUDGE_AFTER`",
+          "`loop.watchdogTickSec`, `loop.shortPass.sec`, `loop.shortPass.nudgeAfter`"
+        ],
+        [
+          "`SPECSTRIDE_YIELD_POLL`, `SPECSTRIDE_YIELD_MAX_PER_ATTEMPT`, `SPECSTRIDE_YIELD_COUNTS_AS_ITER`, `SPECSTRIDE_YIELD_ALLOW_COMMAND`, and the other `SPECSTRIDE_YIELD_*`",
+          "`loop.yield.pollSec`, `loop.yield.maxPerAttempt`, `loop.yield.countsAsIter`, `loop.yield.allowCommand`; each of the others the key of the same meaning under `loop.yield.*`"
+        ],
+        [
+          "`SPECSTRIDE_LONG_JOB_PHASE`, `SPECSTRIDE_LONG_JOB_CMD`",
+          "`verification.longJob.phase`, `verification.longJob.cmd`"
+        ],
+        [
+          "`SPECSTRIDE_PROMPT_PROTECTED_BLOCKS`, `SPECSTRIDE_TICK_TASKS`",
+          "`loop.promptProtectedBlocks`, `loop.tickTasks`"
+        ],
+        [
+          "`SPECSTRIDE_COLOR`, `SPECSTRIDE_MOTION`, `SPECSTRIDE_BANNER`, `SPECSTRIDE_LIVE_RAIL`, `SPECSTRIDE_BANNER_BG`, `SPECSTRIDE_ASCII`",
+          "`output.color`, `output.motion`, `output.banner`, `output.liveRail`, `output.bannerBg`, `output.ascii`"
+        ],
+        [
+          "`SPECSTRIDE_AGENT_STREAM`, `SPECSTRIDE_AGENT_TAP`",
+          "`stream.tap`, `stream.tapExecutable`"
+        ],
+        [
+          "`SPECSTRIDE_DSH_PLUGIN_ALLOWLIST`, `SPECSTRIDE_DSH_PLUGIN_TIMEOUT`",
+          "`harnesses.dsh.pluginAllowlist`, `harnesses.dsh.pluginTimeoutSec`"
+        ],
+        [
+          "`SPECSTRIDE_DSH_REASONING_EFFORT`, and the as-is variable of the reasoning effort of the critic",
+          "`roles.proposer.effort`, `roles.critic.effort`"
+        ],
+        [
+          "The as-is variables of one harness for its home, its provider and the provider of its critic",
+          "`harnesses.dsh.home`, `harnesses.dsh.provider`, `roles.critic.provider`"
+        ],
+        [
+          "`OPENAI_BASE_URL`, `OPENAI_API_KEY`",
+          "`harnesses.codex.endpoint.base`, and the secret reference `harnesses.codex.auth.credential`"
+        ],
+        [
+          "`SPECSTRIDE_CLAUDE_CRITIC_BASE_URL`, `SPECSTRIDE_CLAUDE_CRITIC_API_KEY`, `SPECSTRIDE_CLAUDE_CRITIC_MODEL`",
+          "`harnesses.claude.endpoint.base`, the secret reference `harnesses.claude.auth.credential`, `roles.critic.model` for this harness"
+        ],
+        [
+          "`SPECSTRIDE_PROPOSER_SKILLS`, `SPECSTRIDE_BACKEND_LABEL`",
+          "`harnesses.claude.proposerSkills`, `harnesses.claude.label`"
+        ],
+        [
+          "`SPECSTRIDE_STDIN_FILE`",
+          "No key: the as-is hand-over of the prompt as a file, which the harness adapter performs"
+        ],
+        [
+          "`SPECSTRIDE_EVENTS`, `SPECSTRIDE_RUN_ID`, `SPECSTRIDE_TASK`, `SPECSTRIDE_TRACE_ID`",
+          "No key: the event context of the run (annex C §C.10), handed under these names to every process the runtime starts under the `parity` profile (F144-FR-006, F126-FR-011, F128-FR-017)"
+        ],
+        [
+          "`SPECSTRIDE_SHIP`",
+          "No key: under the `parity` profile the name is handed to every process the runtime starts, with an empty value; nothing reads it, because no shipper program exists (DV-065) and delivery is the exporter of feature 128"
+        ],
+        [
+          "`SPECSTRIDE_PRIME_BIN`, `SPECSTRIDE_PRIME_AGENT_BIN`",
+          "`harnesses.prime.launcher`, `harnesses.prime.bin`"
+        ],
+        [
+          "`SPECSTRIDE_PRIME_FLEET_BIN`",
+          "`harnesses.prime.launcher`, read before `SPECSTRIDE_PRIME_BIN`, which is read only when the first is unset or empty; the one pair of names that reaches one key without refusing the launch when the two differ (feature 110, §K.8; assumption: CQ-196)"
+        ],
+        [
+          "`SPECSTRIDE_OTEL_STATE_DIR`",
+          "Accepted and without effect; a message at launch says so (CQ-120)"
+        ],
+        [
+          "`SPECSTRIDE_OTEL_TRACES`, `RALPH_OTEL_URL`, `RALPH_OTEL_TIMEOUT`, `RALPH_OTEL_MAX_BATCH_BYTES`, `RALPH_LOKI_URL`, `RALPH_LOKI_TIMEOUT`, `RALPH_LOKI_MAX_BATCH_BYTES`",
+          "`telemetry.otel.traces`, `telemetry.otel.url`, `telemetry.otel.timeoutMs`, `telemetry.otel.maxBatchBytes`, `telemetry.loki.url`, `telemetry.loki.timeoutMs`, `telemetry.loki.maxBatchBytes`. The as-is timeout variables are in seconds; the keys are in milliseconds, and the alias multiplies by 1000"
+        ],
+        [
+          "The `WIGGUM_*` names",
+          "Not carried"
+        ]
+      ]
+    },
+    {
+      "section": "§X.8",
+      "heading": "Normalization contract",
+      "subheading": "Component-name table",
+      "header": [
+        "As-is implementation file",
+        "Logical component name"
+      ],
+      "rows": [
+        [
+          "The engine script of the Specstride baseline",
+          "`engine`"
+        ],
+        [
+          "The pass-loop script",
+          "`pass-loop`"
+        ],
+        [
+          "The front-door script",
+          "`front-door`"
+        ],
+        [
+          "The critic module",
+          "`critic`"
+        ],
+        [
+          "The verification-plan module",
+          "`verification`"
+        ],
+        [
+          "The spec module",
+          "`spec`"
+        ],
+        [
+          "The learning module",
+          "`learning`"
+        ],
+        [
+          "The reverse module and the reverse-inventory module",
+          "`reverse`, `reverse-inventory`"
+        ],
+        [
+          "The derivation tool, the validation tool and the rendering tool of mixture-of-loops",
+          "`contract-derive`, `contract-validate`, `launcher-render`"
+        ],
+        [
+          "The pipeline runtime of mixture-of-loops",
+          "`pipeline-runtime`"
+        ],
+        [
+          "The supervisor of mixture-of-loops",
+          "`supervisor`"
+        ],
+        [
+          "The stream tap",
+          "`stream-tap`"
+        ],
+        [
+          "The telemetry shipper for Loki",
+          "`telemetry-loki`"
+        ],
+        [
+          "The telemetry shipper for OTLP",
+          "`telemetry-otlp`"
+        ],
+        [
+          "The overlay tool",
+          "`overlay`"
+        ],
+        [
+          "The plugin request processor of one harness",
+          "`plugin-requests`"
+        ]
+      ]
+    },
+    {
+      "section": "§X.9",
+      "heading": "Threat model",
+      "subheading": null,
+      "header": [
+        "Control",
+        "Content"
+      ],
+      "rows": [
+        [
+          "R-1",
+          "The control plane is outside the proposer's write scope. Approval is a signed record, verified on `resume`"
+        ],
+        [
+          "R-2",
+          "Containment levels C0 to C3 as a capability of a harness adapter. The strongest available is the default; C0 is an opt-in in user configuration"
+        ],
+        [
+          "R-3",
+          "One point of redaction, which fails closed. Content is captured whenever traces are on, so this point carries the risk, and its patterns are widened and tested with planted canaries before a release"
+        ],
+        [
+          "R-4",
+          "Project configuration may narrow a run and never widen it"
+        ],
+        [
+          "R-5",
+          "Text from outside the runtime is framed as data everywhere"
+        ]
+      ]
+    },
+    {
+      "section": "§X.9",
+      "heading": "Threat model",
+      "subheading": null,
+      "header": [
+        "Id",
+        "Threat",
+        "Control",
+        "Owner"
+      ],
+      "rows": [
+        [
+          "T-01",
+          "A verdict line planted in phase evidence or in a grounded file",
+          "A nonce of 64 bits per call; the verdict is parsed only from the reply, as a full line, with exactly one match; MALFORMED is the safe failure",
+          "101"
+        ],
+        [
+          "T-02",
+          "The proposer forges approval state",
+          "R-1; the signed approval record bound to verdict, evidence hash, verification result and tree fingerprint; `resume` verifies",
+          "101, 102, 100"
+        ],
+        [
+          "T-03",
+          "Text persuades the critic to approve",
+          "The verification gate runs before the critic and cannot be overridden by it; critic diversity; R-5; a critic without tools",
+          "105, 117, 124"
+        ],
+        [
+          "T-04",
+          "Phase evidence imitates a banner of the runtime",
+          "Random boundary tokens per call on every section; the boundary pattern is escaped in untrusted text; facts of the runtime stand before untrusted text",
+          "117"
+        ],
+        [
+          "T-05",
+          "The nonce is written before the call returns",
+          "Never stored or exported before the return; afterwards only its hash",
+          "101, 111"
+        ],
+        [
+          "T-06",
+          "Evidence makes the critic reply malformed until the run halts",
+          "The safe failure is kept; the halt at the MALFORMED limit is a stop that is not retryable (`critic_unavailable`), shown as an attention item; it is not a member of the blocked reasons and emits no `blocked` event",
+          "101"
+        ],
+        [
+          "T-07",
+          "A proposer with all tools acts on injected instructions",
+          "R-2; the environment allow-list; the runtime never asserts a sandbox",
+          "109, 125, 130, 131, 134, 138, 112"
+        ],
+        [
+          "T-08",
+          "An injected critic reply reaches the next phase attempt through feedback",
+          "Feedback is framed as data; only criterion ids and the text after them are taken, with a cap; the verdict line is removed",
+          "101, 103, 117"
+        ],
+        [
+          "T-09",
+          "Repository text makes the host model alter the consumer's comment",
+          "The comment is passed verbatim and stored with its hash before any repository text is printed; the digest shows it",
+          "113, 107"
+        ],
+        [
+          "T-10",
+          "A comment is read as permission to skip a check",
+          "Enforcement lives in the runtime; no flag switches off a launch check, the terms gate or a budget cap",
+          "107, 147, 110"
+        ],
+        [
+          "T-11",
+          "The host model reports a run wrongly",
+          "The digest is produced by the runtime from events and printed verbatim",
+          "123, 113"
+        ],
+        [
+          "T-12",
+          "Output of the product injects the host session",
+          "Default output is terse; untrusted text is never echoed, only named",
+          "119, 145, 113"
+        ],
+        [
+          "T-13",
+          "Project configuration declares a harness, a critic, a command or an endpoint",
+          "R-4",
+          "110, 109, 146, 112"
+        ],
+        [
+          "T-14",
+          "A discovered harness claims falsely that it qualifies as critic",
+          "Only a mode that the runtime enforces and proves qualifies; the pick is announced and recorded; identity of the provider comes from the endpoint",
+          "124, 109, 112"
+        ],
+        [
+          "T-15",
+          "An executable shadows a harness on the search path",
+          "Resolved to an absolute path at launch; paths inside the workspace are refused",
+          "109, 146, 112"
+        ],
+        [
+          "T-16",
+          "An endpoint points at an attacker",
+          "Endpoints from user scope only; a secret is bound to its host; unencrypted endpoints are refused except loopback",
+          "110, 109, 146"
+        ],
+        [
+          "T-17",
+          "A stream imitates terminal records or cost figures",
+          "Only the harness's own framing is parsed; caps per line",
+          "126, 111"
+        ],
+        [
+          "T-18",
+          "A harness with unknown cost spends without being counted",
+          "Budgets by wall clock and count of passes; the doctor says that spend cannot be measured",
+          "127"
+        ],
+        [
+          "T-19",
+          "The proposer edits what a check reads",
+          "The check manifest is frozen and hashed at launch; the protected set is fingerprinted before and after every check; a change is a fact for the critic",
+          "115, 116, 105"
+        ],
+        [
+          "T-20",
+          "The proposer weakens the tests it is measured by",
+          "Changes to existing tests and suppression markers are facts for the critic",
+          "116"
+        ],
+        [
+          "T-21",
+          "A check runs repository code with the runtime's environment",
+          "A scrubbed environment, no provider key, containment, no write access to the control plane, a time limit",
+          "105, 148, 115"
+        ],
+        [
+          "T-22",
+          "An inner result is taken for a verdict",
+          "A loop layer holds no writer of the phase gate; the tripwire",
+          "115, 101, 149"
+        ],
+        [
+          "T-23",
+          "Repair history reaches the critic through files of the proposer",
+          "Records of the runtime stay in the control plane; grounding refuses state paths; such files are claims",
+          "115, 116, 117"
+        ],
+        [
+          "T-24",
+          "The proposer overwrites the result the critic will see",
+          "The result is written by the runtime into the control plane and handed over by the runtime",
+          "116"
+        ],
+        [
+          "T-25",
+          "A check with huge output or without end",
+          "Output cap, time limit, end of the process group, the first-failure predicate",
+          "105, 148, 118"
+        ],
+        [
+          "T-26",
+          "A process record points at an unrelated process",
+          "The process registry is in the control plane; a signal only when pid, start time and run token match",
+          "122, 102"
+        ],
+        [
+          "T-27",
+          "A stale or planted lock blocks every run",
+          "Liveness backed by the kernel; reclaim by rename; the doctor reports a lock without a live holder",
+          "122, 112"
+        ],
+        [
+          "T-28",
+          "The proposer writes a stop request, a snapshot or a state file",
+          "R-1; replayed settings are validated against the schema and the trust classes again",
+          "102, 122"
+        ],
+        [
+          "T-29",
+          "Other users of the machine read the state",
+          "Permissions for the owner only; the doctor checks",
+          "122, 112"
+        ],
+        [
+          "T-30",
+          "A link or a path leaves its root",
+          "Real paths must stay inside their root; links in the control plane are refused",
+          "100, 117"
+        ],
+        [
+          "T-31",
+          "The event file is edited or cut",
+          "The event file is in the control plane; `seq` has no gaps; the ledger is chained and signed",
+          "111, 103"
+        ],
+        [
+          "T-32",
+          "Content leaves the machine on spans",
+          "R-3; capture can be switched off; the doctor shows the endpoint and whether capture is on",
+          "111, 128, 112"
+        ],
+        [
+          "T-33",
+          "A secret printed by a tool reaches records",
+          "R-3; exact-match removal of resolved secrets; the scan before a commit",
+          "111, 110, 101"
+        ],
+        [
+          "T-34",
+          "The proposer inherits the whole environment",
+          "The environment allow-list per harness adapter",
+          "109, 110"
+        ],
+        [
+          "T-35",
+          "A secret is written inline or on a command line",
+          "References only; passed by environment or standard input",
+          "110, 112"
+        ],
+        [
+          "T-36",
+          "A telemetry endpoint is set by the project or by the proposer",
+          "Telemetry endpoints are widening keys",
+          "110, 128"
+        ],
+        [
+          "T-37",
+          "An exporter blocks or fails",
+          "Sinks never break the loop",
+          "111, 128"
+        ],
+        [
+          "T-38",
+          "A viewer in a browser: requests from other origins",
+          "No component of Wave 1 opens a network listener. The read model renders nothing; a later viewer is read-only, bound to loopback, with a token per session",
+          "129 for the read model (Wave 1); the viewer is Wave 2"
+        ],
+        [
+          "T-39",
+          "A viewer in a browser: other local users",
+          "No component of Wave 1 opens a network listener. The read model renders nothing; a later viewer is read-only, bound to loopback, with a token per session",
+          "129 for the read model (Wave 1); the viewer is Wave 2"
+        ],
+        [
+          "T-40",
+          "A viewer in a browser: script in rendered text",
+          "No component of Wave 1 opens a network listener. The read model renders nothing; a later viewer is read-only, bound to loopback, with a token per session",
+          "129 for the read model (Wave 1); the viewer is Wave 2"
+        ],
+        [
+          "T-41",
+          "A viewer in a browser: exported pages",
+          "No component of Wave 1 opens a network listener. The read model renders nothing; a later viewer is read-only, bound to loopback, with a token per session",
+          "129 for the read model (Wave 1); the viewer is Wave 2"
+        ],
+        [
+          "T-42",
+          "A viewer in a browser: a listener that outlives the run",
+          "No component of Wave 1 opens a network listener. The read model renders nothing; a later viewer is read-only, bound to loopback, with a token per session",
+          "129 for the read model (Wave 1); the viewer is Wave 2"
+        ],
+        [
+          "T-43",
+          "A malicious version is published",
+          "Publishing from the build on a protected branch, with attestation",
+          "100, 113"
+        ],
+        [
+          "T-44",
+          "A dependency is compromised",
+          "Few dependencies, exact versions, no install script, nothing compiled at install",
+          "100, 113"
+        ],
+        [
+          "T-45",
+          "An impostor package or plugin",
+          "The documentation and the host package name the exact package; the host package verifies the protocol integer",
+          "113"
+        ],
+        [
+          "T-46",
+          "The host package installs the CLI silently",
+          "It detects, reports and prints the command",
+          "113, 112"
+        ],
+        [
+          "T-47",
+          "The launch bundle is edited between rendering and launch",
+          "The hash of the launch bundle and of the launcher are verified at launch and at every relaunch",
+          "107, 123"
+        ],
+        [
+          "T-48",
+          "A critic with read-only tools reads the project by itself",
+          "A read-only sandbox with the network off; the proposer's notebook, handoff and outbox moved out; the withheld paths denied; the grounding snapshot and the nonce as before. Repository text can still reach this critic without passing the snapshot: a residual risk the owner accepted",
+          "109, 117, 124, 131"
+        ],
+        [
+          "T-49",
+          "Several workers on one phase",
+          "Containment C2 by default; a repository of its own per worker; the store unwritable by workers; composition of audited, disjoint deltas; the merge check and the full verification gate on the workspace; neutral integrity kinds",
+          "142, 143, 115, 116, 117"
+        ]
+      ]
+    }
+  ]
+}

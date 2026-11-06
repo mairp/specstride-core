@@ -1,0 +1,199 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-stub-vocabulary/1",
+ "note": "spec.md §O.3 stands where the two differ.",
+ "rules": [
+  "no clock, no randomness; state is an invocation counter outside the working directory",
+  "no model call, no credential read, no connection other than loopback",
+  "the same stub unchanged for the reference and the port",
+  "one transcript record per invocation",
+  "scenarios are data: no nonce, no time, no path outside the fixture"
+ ],
+ "overrunExitCode": 97,
+ "kinds": {
+  "proposer": {
+   "verbs": [
+    "write",
+    "evidence",
+    "stream",
+    "text",
+    "sleep",
+    "exit",
+    "yield",
+    "silent",
+    "repeat",
+    "nothing",
+    "plugin-request"
+   ],
+   "arguments": {
+    "write": {
+     "state": "<logical name>",
+     "meaning": "write or change that file of state, at the path the oracle resolves for the side the stub runs on; the script holds the logical name and never a path"
+    }
+   }
+  },
+  "critic-http": {
+   "verbs": [
+    "approve",
+    "reject",
+    "malformed-none",
+    "malformed-wrong-nonce",
+    "malformed-duplicate",
+    "empty",
+    "http-error",
+    "hang"
+   ],
+   "requestShapes": [
+    "messages",
+    "chat-completions"
+   ],
+   "arguments": {
+    "empty": {
+     "choices": [
+      "none"
+     ],
+     "meaning": "second request shape only: reply with an empty list of choices"
+    }
+   }
+  },
+  "critic-cli": {
+   "verbs": [
+    "approve",
+    "reject",
+    "malformed-none",
+    "malformed-wrong-nonce",
+    "malformed-duplicate",
+    "empty",
+    "exit",
+    "hang"
+   ]
+  },
+  "diagnostician": {
+   "verbs": [
+    "hint",
+    "fail"
+   ],
+   "recognizedBy": "a prompt without a nonce"
+  },
+  "engine": {
+   "verbs": [
+    "succeed",
+    "transient",
+    "fail",
+    "stop",
+    "sleep",
+    "crash"
+   ]
+  },
+  "verification-command": {
+   "verbs": [
+    "pass",
+    "fail",
+    "slow",
+    "write-result"
+   ]
+  },
+  "plugin-installer": {
+   "verbs": [
+    "install",
+    "fail",
+    "hang"
+   ]
+  },
+  "telemetry-sink": {
+   "verbs": [
+    "accept",
+    "refuse",
+    "down"
+   ]
+  }
+ },
+ "harnessStubs": [
+  {
+   "harness": "claude",
+   "executables": [
+    "claude"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-http"
+   },
+   "prompt": "as at the baseline",
+   "streamFormat": "claude",
+   "sides": "both"
+  },
+  {
+   "harness": "dsh",
+   "executables": [
+    "dsh"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-cli",
+    "installer": "plugin-installer"
+   },
+   "prompt": "one positional argument; for the critic in chunks",
+   "streamFormat": "text",
+   "records": [
+    "settings file of the given home",
+    "patch file",
+    "permission mode"
+   ],
+   "sides": "both"
+  },
+  {
+   "harness": "codex",
+   "executables": [
+    "codex"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-http"
+   },
+   "prompt": "positional argument",
+   "streamFormat": "text",
+   "sides": "both"
+  },
+  {
+   "harness": "prime",
+   "executables": [
+    "prime-agent",
+    "prime"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-cli"
+   },
+   "prompt": "standard input",
+   "streamFormat": "prime-v3 or text, by the mode it is called in",
+   "sides": "both"
+  },
+  {
+   "harness": "pi",
+   "executables": [
+    "pi"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-cli"
+   },
+   "prompt": "as the harness descriptor of feature 134 declares",
+   "streamFormat": "the pi dialect of the JSONL reader",
+   "sides": "port only; no fixture family names it"
+  },
+  {
+   "harness": "generic",
+   "executables": [
+    "stub-harness"
+   ],
+   "roles": {
+    "proposer": "proposer",
+    "critic": "critic-cli"
+   },
+   "prompt": "as the harness descriptor of the fixture declares",
+   "streamFormat": "as declared",
+   "sides": "both"
+  }
+ ],
+ "engineExecutable": "specstride",
+ "closedList": false
+}

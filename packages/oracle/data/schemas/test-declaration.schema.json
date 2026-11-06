@@ -1,0 +1,65 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:internal:141:oracle-test-declaration/1",
+ "title": "Declaration of a parity test",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "name",
+  "proves",
+  "fixture",
+  "surfaces"
+ ],
+ "properties": {
+  "name": {
+   "type": "string",
+   "pattern": "^PT-[0-9]{3}-((028|011|002)(FR|SC)[0-9]{3}|C-[0-9]{3})-[a-z0-9][a-z0-9-]*$"
+  },
+  "proves": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "pattern": "^((028|011|002) (FR|SC)-[0-9]{3}|C-[0-9]{3}|B-[0-9]{4})$"
+   }
+  },
+  "fixture": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "pattern": "^FX-[0-9]{2}(/[a-z0-9][a-z0-9-]*)?(@engine-stub|@full-stack)?$"
+   }
+  },
+  "surfaces": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "enum": [
+     "exit",
+     "stdout",
+     "stderr",
+     "tree",
+     "state",
+     "events",
+     "transcript",
+     "processes",
+     "pipeline",
+     "telemetry",
+     "repository",
+     "launcher",
+     "home",
+     "events-primary",
+     "control-records",
+     "counters",
+     "transcript.proposer",
+     "transcript.critic",
+     "transcript.diagnostician",
+     "transcript.engine",
+     "transcript.verification",
+     "transcript.installer"
+    ]
+   }
+  }
+ }
+}

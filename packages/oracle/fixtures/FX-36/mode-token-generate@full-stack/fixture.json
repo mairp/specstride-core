@@ -1,0 +1,153 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-36/mode-token-generate",
+  "variant": "@full-stack",
+  "system": "mixture-of-loops",
+  "engineSystem": "specstride",
+  "entryPoint": {
+    "reference": "supervisor-mode",
+    "port": "supervisor mode"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:supervisor>",
+      "mode"
+    ],
+    "port": [
+      "specstride",
+      "supervisor",
+      "mode"
+    ]
+  },
+  "steps": [
+    {
+      "name": "read the request",
+      "command": {
+        "reference": [
+          "python3",
+          "<IMPL>/<component:supervisor>",
+          "mode",
+          "--request",
+          "do the thing",
+          "--token=--generate"
+        ],
+        "port": [
+          "specstride",
+          "supervisor",
+          "mode",
+          "--request",
+          "do the thing",
+          "--token=--generate"
+        ]
+      }
+    }
+  ],
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "001-greeting",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "claude",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "src/greet.py",
+          "content": "def greet(name):\n    return f'Hello, {name}!'\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "tests/test_greet.py",
+          "content": "def test_greet():\n    assert greet('x') == 'Hello, x!'\n"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "assets": [
+    {
+      "path": "tests/fixtures/repos/greeting-ready/README.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/expectations/greeting-ready.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    }
+  ],
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-123"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)",
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE): the real engine the @full-stack variant drives (F141-FR-016)"
+  ]
+}

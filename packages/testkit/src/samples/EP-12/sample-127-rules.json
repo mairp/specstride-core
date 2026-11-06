@@ -1,0 +1,26 @@
+{
+  "note": "The rules of the sample classifier of T082 (feature 127), as data. They are the product's own rules of §Q.1 and §Q.2 — not a fact about any provider — so they need no capture. The signals themselves come from the `failures` map of `fake-harness.descriptor.json`, never from a harness name.",
+  "sampleOf": "EP-12, specstride.quota-classifier/1",
+  "confidenceOrder": ["structured", "status", "text", "stall", "host"],
+  "resetSourceOrder": ["structured", "header", "parsed_text"],
+  "retryableOfClass": {
+    "quota_window": true,
+    "quota_credit": false,
+    "rate_limit_transient": true,
+    "overload": true,
+    "auth": false,
+    "context_window": false,
+    "agent_failure": true,
+    "provider_other": true,
+    "budget_cap": false
+  },
+  "classWhenNothingMatches": "provider_other",
+  "confidenceWhenNothingMatches": "text",
+  "observe": {
+    "gauge": [
+      { "atMost": 0, "level": "critical" },
+      { "below": 10, "level": "warn" }
+    ],
+    "hostFact": "info"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-32/greeting-ready",
+  "system": "mixture-of-loops",
+  "entryPoint": {
+    "reference": "contract-derive",
+    "port": "contract derive"
+  },
+  "command": {
+    "reference": [
+      "sh",
+      "-c",
+      "MOL_VIA=shell exec python3 <IMPL>/skills/mixture-of-loops/scripts/bootstrap_contract.py --repo <WORK> --feature specs/001-greeting --output <WORK>/launch-contract.json"
+    ],
+    "port": [
+      "specstride",
+      "contract",
+      "derive",
+      "--repo",
+      "<WORK>",
+      "--feature",
+      "specs/001-greeting",
+      "--output",
+      "<WORK>/launch-contract.json"
+    ]
+  },
+  "environment": {},
+  "stubs": {},
+  "workdirTemplate": "workdir",
+  "assets": [
+    {
+      "path": "tests/fixtures/repos/greeting-ready/README.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/approvals/release-approval.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/spec.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/plan.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/repos/greeting-ready/specs/001-greeting/tasks.md",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    },
+    {
+      "path": "tests/fixtures/expectations/greeting-ready.json",
+      "baseline": "mixture-of-loops@9c88f86",
+      "licence": "Apache-2.0"
+    }
+  ],
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state"
+  ],
+  "proves": [
+    "011 SC-008"
+  ],
+  "os": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": [
+    "python3 3.10 to 3.13",
+    "the mixture-of-loops reference tree at 9c88f86 in scratch (ORACLE_REF_MOL)",
+    "the product's command `specstride contract derive` for the port side (features 107 and 119). Where a build does not have that command, the port side of this scenario is a declared missing prerequisite and is reported as a skip with this reason, never as a pass (F141-FR-037); at the release check a skip blocks (F141-FR-026). `packages/cli` declares the commands it has in `specstride.commands` of its manifest, and that is what the oracle reads"
+  ]
+}

@@ -1,0 +1,93 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:internal:141:oracle-waivers/1",
+ "title": "The one waiver file",
+ "type": "object",
+ "required": [
+  "schema",
+  "waivers"
+ ],
+ "properties": {
+  "schema": {
+   "const": "urn:specstride:schema:internal:141:oracle-waivers/1"
+  },
+  "waivers": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "fixture",
+     "surface",
+     "row",
+     "difference"
+    ],
+    "properties": {
+     "fixture": {
+      "type": "string",
+      "pattern": "^FX-[0-9]{2}/[a-z0-9][a-z0-9-]*(@engine-stub|@full-stack)?$"
+     },
+     "surface": {
+      "enum": [
+       "exit",
+       "stdout",
+       "stderr",
+       "tree",
+       "state",
+       "events",
+       "transcript",
+       "processes",
+       "pipeline",
+       "telemetry",
+       "repository",
+       "launcher",
+       "home",
+       "events-primary",
+       "control-records",
+       "counters",
+       "transcript.proposer",
+       "transcript.critic",
+       "transcript.diagnostician",
+       "transcript.engine",
+       "transcript.verification",
+       "transcript.installer"
+      ]
+     },
+     "row": {
+      "type": "string",
+      "pattern": "^DV-[0-9]{3}$"
+     },
+     "difference": {
+      "type": "object",
+      "required": [
+       "selector",
+       "reference",
+       "port"
+      ],
+      "properties": {
+       "selector": {
+        "type": "string",
+        "description": "the field, line, logical name or record the difference is in"
+       },
+       "reference": {
+        "description": "the normalized value on the reference side"
+       },
+       "port": {
+        "description": "the normalized value on the port side"
+       }
+      }
+     },
+     "os": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "linux",
+        "macos"
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}

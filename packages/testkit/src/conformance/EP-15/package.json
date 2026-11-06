@@ -1,0 +1,6 @@
+{
+  "//": "Not a package and not a workspace (the root `workspaces` are packages/* and tools/* only). It exists for ONE reason: Node's directory resolution looks for `index.js`, `index.json` and `index.node` and never for `index.ts`, so without a `main` the entry point of this directory could not be TypeScript \u2014 and F100-FR-030 requires every source file of the product to be TypeScript. `type` is `module` so that the TypeScript files of this directory stay ECMAScript modules, as they are everywhere else in the repository. Added by feature 103 (T050 to T056) for the validation command of specs/103-proposer-pass/quickstart.md section 5.",
+  "private": true,
+  "type": "module",
+  "main": "index.ts"
+}

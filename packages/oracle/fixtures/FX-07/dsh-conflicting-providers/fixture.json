@@ -1,0 +1,142 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-07/dsh-conflicting-providers",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "dsh",
+    "SPECSTRIDE_CRITIC_MALFORMED_LIMIT": "3",
+    "SPECSTRIDE_DSH_CRITIC_MODEL": "zai/glm-stub",
+    "SPECSTRIDE_FEATURE": "dsh-conflicting-providers",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "5",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 1\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 2\n"
+        }
+      },
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "attempt 3\n"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ],
+    "critic-cli": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      },
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 1,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-002"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "replace",
+      "file": "lib/critic.py",
+      "find": "    provider = provider or os.environ.get(\"SPECSTRIDE_DSH_PROVIDER\", \"\")",
+      "text": "    provider = provider or os.environ.get(\"SPECSTRIDE_DSH_PROVIDER\", \"\") or \"openrouter\"",
+      "why": "the conflict under test needs a DSH provider in the environment AND a model ref that embeds a different one. The as-is variable that names the DSH provider (`SPECSTRIDE_DSH_PROVIDER`, `SPECSTRIDE_DSH_CRITIC_PROVIDER`) stands in the environment alias table of feature 100, annex X \u00a7X.8 in PROSE only ('The as-is variables of one harness for its home, its provider and the provider of its critic'), so `hermeticEnvironment` cannot declare it and the fixture cannot set it. The edit supplies the value the variable would, and nothing else: the conflict itself is raised by the model ref the fixture declares, at the line under test (`lib/critic.py:1963`). The port reaches the same state through `harnesses.dsh.provider` and takes no edit."
+    }
+  ]
+}

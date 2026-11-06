@@ -1,0 +1,42 @@
+{
+  "note": "The three performance goals of specs/100-specstride/plan.md, \"Performance Goals\", and the values measured in the build (T209). Confidence is low: they are starting values. A breach is a WARNING until the values have been measured on three builds; from the third recorded build on, a breach fails the test. `measurements` is appended by a person or a build job that records a run of packages/testkit/test/performance.test.ts; the test never writes this file.",
+  "schema": "specstride.performance-goals/1",
+  "source": "specs/100-specstride/plan.md, \"Performance Goals\"",
+  "buildsNeededBeforeABreachFails": 3,
+  "goals": [
+    {
+      "id": "contracts-load",
+      "subject": "loading the `contracts` package",
+      "goal": "adds under 30 ms to the start of a command",
+      "limitMs": 30,
+      "measures": "one cold import of packages/contracts/src/index.ts in a fresh Node process"
+    },
+    {
+      "id": "table-decision",
+      "subject": "a decision of the table evaluator",
+      "goal": "decides in under 1 ms for a table of 100 rows",
+      "limitMs": 1,
+      "measures": "evaluateTable of @specstride/kernel on a loaded table of 100 rows at one decision point, the median of 1000 vectors"
+    },
+    {
+      "id": "import-boundary",
+      "subject": "the import-boundary check",
+      "goal": "runs in under 10 s on the whole workspace",
+      "limitMs": 10000,
+      "measures": "run() of tools/import-boundary/src/index.ts over the workspace root"
+    }
+  ],
+  "measurements": [
+    {
+      "build": "b2dffb6 (working tree of phase 8; no build job of .github/workflows/build.yml has recorded a run yet)",
+      "date": "2026-10-01",
+      "platform": "linux 7.0.14-15-pve x64, Debian GNU/Linux 13, Node v22.23.2, 22 x Intel(R) Core(TM) Ultra 7 155H",
+      "values": {
+        "contracts-load": 226.911,
+        "table-decision": 0.01,
+        "import-boundary": 636.67
+      },
+      "note": "Run of packages/testkit/test/performance.test.ts. `contracts-load` breaches the goal of 30 ms and is reported as a WARNING: the values have been measured on 1 build of 3. The load of one small module of the same package was 54.632 ms in the same run, so most of the value is the module loader of the platform stripping the types of the package's TypeScript at load, not work of the package."
+    }
+  ]
+}

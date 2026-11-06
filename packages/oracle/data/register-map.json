@@ -1,0 +1,1341 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-register-map/1",
+  "note": "One entry per row of the divergence register (consolidation.md section 6), which stands where the two differ. Development data of feature 141.",
+  "rows": [
+    {
+      "row": "DV-001",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable** as a difference: the stub critic serves both transports and the transcript is compared in a transport-neutral form (R18 O-3 rule 4)"
+    },
+    {
+      "row": "DV-002",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed** for the home: stubs run with overlay scope `none` on both sides. The flags that switch customisations off change argv: see DV-031"
+    },
+    {
+      "row": "DV-003",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**: stubs hold no login"
+    },
+    {
+      "row": "DV-004",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Every fixture names both roles. One fixture tests the defaults: **waiver**"
+    },
+    {
+      "row": "DV-005",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable** in the parity suite: stubs emit no quota signal, so consecutive errors take the old path (R18 O-11). Quota pause has its own tests"
+    },
+    {
+      "row": "DV-006",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-01",
+        "N-02"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-01**, **N-02** (layout table)"
+    },
+    {
+      "row": "DV-007",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-12",
+        "N-13",
+        "N-14",
+        "N-20"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-12**, **N-13**, **N-14**, **N-20**: the projection is compared, not the primary stream"
+    },
+    {
+      "row": "DV-008",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-10",
+        "N-11",
+        "N-16",
+        "N-17"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-11** (self-consistency asserted, value replaced), **N-10** for hashes over paths, **N-16**, **N-17**"
+    },
+    {
+      "row": "DV-009",
+      "handling": [
+        "mapped",
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-36"
+      ],
+      "note": "",
+      "registerText": "**Mapped** through the mode map. The case \"no execution phrasing\" is a **waiver**: reference `generate`, port `run` (R18 O-11; FX-36)"
+    },
+    {
+      "row": "DV-010",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off.** The comparator also asserts from the stub transcripts that no invocation carried a continuation argument"
+    },
+    {
+      "row": "DV-011",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-13"
+      ],
+      "note": "",
+      "registerText": "**Off**: resume fixtures pass the reset flag (FX-13). Surviving counts get characterization tests"
+    },
+    {
+      "row": "DV-012",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** for the parity suite. A second suite runs every fixture with the layer on and stub agents that never complete a unit of work (R18 O-10)"
+    },
+    {
+      "row": "DV-013",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Reachable only with the layer on and a declared unit of work: **not observable** in either suite; own tests"
+    },
+    {
+      "row": "DV-014",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "As DV-013. The second suite asserts equal counters (R18 O-10 item 4)"
+    },
+    {
+      "row": "DV-015",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "As DV-013"
+    },
+    {
+      "row": "DV-019",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [
+        "FX-25"
+      ],
+      "note": "",
+      "registerText": "**None needed.** FX-25 compares the wildcard line as it is. A waiver returns only if the reference is pinned before `d6dab74`"
+    },
+    {
+      "row": "DV-016",
+      "handling": [
+        "layer field",
+        "normalization rule"
+      ],
+      "rules": [
+        "N-12"
+      ],
+      "families": [],
+      "note": "The allowlist names the event types of the catalogue of feature 111, `strategy.selected` and `microloop.inert`; the register text of the row is proposed upstream (analyze-report.md, P2).",
+      "registerText": "Layer field, by name. In the parity suite the events project to nothing (N-12)"
+    },
+    {
+      "row": "DV-017",
+      "handling": [
+        "layer field"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Layer field, by name"
+    },
+    {
+      "row": "DV-018",
+      "handling": [
+        "layer field"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Layer field, by name. In the parity suite see DV-034"
+    },
+    {
+      "row": "DV-020",
+      "handling": [
+        "layer field",
+        "normalization rule"
+      ],
+      "rules": [
+        "N-24"
+      ],
+      "families": [],
+      "note": "The allowlist names the catalogue types `prompt.block_dropped` and `prompt.block_protected` (feature 111); proposed upstream (analyze-report.md, P2).",
+      "registerText": "Layer field, by name: the block, and the prompt-derived values. N-24 compares the rest of the prompt in full"
+    },
+    {
+      "row": "DV-052",
+      "handling": [
+        "layer field",
+        "normalization rule"
+      ],
+      "rules": [
+        "N-02"
+      ],
+      "families": [],
+      "note": "The allowlist names `phase:<N>:manifest` (it holds the derivation and the pins) and `phase:<N>:protected-set`; `run:<runId>:task-list` is written in every run and is no layer field. The register text is proposed upstream (analyze-report.md, P3; CQ-084).",
+      "registerText": "Layer field, by logical name in the layout table (N-02)"
+    },
+    {
+      "row": "DV-021",
+      "handling": [
+        "mapped"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Mapped**: exit-code map for `resume` (1 → 5, 1 → 3). The spec-hash refusal has no reference: own test"
+    },
+    {
+      "row": "DV-022",
+      "handling": [
+        "mapped",
+        "waiver"
+      ],
+      "rules": [
+        "N-02"
+      ],
+      "families": [
+        "FX-11",
+        "FX-35"
+      ],
+      "note": "",
+      "registerText": "Exit 5 and exit 24 on a second run are compared (FX-11, FX-35). The lock's file form is **mapped** per OS (N-02; R18 O-9). Stale-lock and orphaned-child fixtures: **waiver**"
+    },
+    {
+      "row": "DV-023",
+      "handling": [
+        "none needed",
+        "waiver"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed**: the reference archive holds no `.env` (R18 O-1). A fixture that tests the layer is a **waiver**"
+    },
+    {
+      "row": "DV-024",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-13"
+      ],
+      "note": "",
+      "registerText": "Pinned keys: equal, compared (FX-13). Tunable key set in the environment on resume, a setting that today is not saved, and a failed write: **waiver** each"
+    },
+    {
+      "row": "DV-025",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [
+        "FX-29"
+      ],
+      "note": "",
+      "registerText": "**None needed**: same as today (FX-29)"
+    },
+    {
+      "row": "DV-026",
+      "handling": [
+        "off",
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed** for the two keys of today. The rule is **off** for any other key"
+    },
+    {
+      "row": "DV-027",
+      "handling": [
+        "mapped"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Mapped**: alias table, part of feature 100's normalization contract (R18 O-2)"
+    },
+    {
+      "row": "DV-029",
+      "handling": [
+        "mapped",
+        "waiver"
+      ],
+      "rules": [
+        "N-02"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "Existence is **mapped** by the logical name `gate:<N>:approved` (N-02). Content: **waiver** by surface. A fixture with a planted marker: **waiver**"
+    },
+    {
+      "row": "DV-030",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off**: containment is set to today's behaviour. The environment variable names the stub saw are compared in the transcript"
+    },
+    {
+      "row": "DV-031",
+      "handling": [
+        "mapped",
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "The stub transcript records argv. **Mapped** through a per-harness argv table owned by the harness adapter, or **off** with DV-030"
+    },
+    {
+      "row": "DV-044",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-04"
+      ],
+      "note": "",
+      "registerText": "**Off** with DV-011 (the reset flag restores the as-is window). FX-04 compared"
+    },
+    {
+      "row": "DV-045",
+      "handling": [
+        "off"
+      ],
+      "rules": [
+        "N-24"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**Off.** N-24 then compares the prompt in full"
+    },
+    {
+      "row": "DV-046",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** in the parity suite. In the second suite it cannot run: no unit of work is declared (R23v IR-52)"
+    },
+    {
+      "row": "DV-047",
+      "handling": [
+        "mapped",
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Changes argv: handled with DV-031"
+    },
+    {
+      "row": "DV-048",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Fixtures declare audience `personal`: **none needed**. Refusals have own tests"
+    },
+    {
+      "row": "DV-049",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Every fixture names the critic: **not observable**"
+    },
+    {
+      "row": "DV-050",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off**"
+    },
+    {
+      "row": "DV-051",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off**"
+    },
+    {
+      "row": "DV-053",
+      "handling": [
+        "layer field"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "The second suite runs those fixtures with the classic loop; the announcement is a layer field"
+    },
+    {
+      "row": "DV-054",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-17"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-17**: compared as a logical record, not as text"
+    },
+    {
+      "row": "DV-068",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed**: no reference behaviour. Own tests"
+    },
+    {
+      "row": "DV-069",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "see DV-083",
+      "registerText": "See DV-083"
+    },
+    {
+      "row": "DV-070",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-19"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-19** compares them as written. If the owner rules for clean output: two waivers"
+    },
+    {
+      "row": "DV-035",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Every fixture starts from an empty state. **None needed**"
+    },
+    {
+      "row": "DV-036",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-28"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-28**: not compared; the B-items are `superseded`"
+    },
+    {
+      "row": "DV-037",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-28"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-28**"
+    },
+    {
+      "row": "DV-038",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-28"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-28**"
+    },
+    {
+      "row": "DV-039",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "No fixture holds an old file. **None needed**"
+    },
+    {
+      "row": "DV-042",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "No characterization test is carried for the Lisa side"
+    },
+    {
+      "row": "DV-043",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [
+        "FX-14"
+      ],
+      "note": "",
+      "registerText": "028 side compared (FX-14). No characterization test for the Lisa side"
+    },
+    {
+      "row": "DV-040",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "As DV-043"
+    },
+    {
+      "row": "DV-028",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [
+        "FX-35",
+        "FX-36"
+      ],
+      "note": "compared as it is (FX-35, FX-36)",
+      "registerText": "Same values: compared (FX-35, FX-36). The new launch check: own test"
+    },
+    {
+      "row": "DV-032",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-25"
+      ],
+      "note": "",
+      "registerText": "Applies with the layer on and off. A fixture whose phase evidence cites a state path: **waiver** (FX-25)"
+    },
+    {
+      "row": "DV-033",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-20"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-20**: the oracle runs the port in compatibility output"
+    },
+    {
+      "row": "DV-034",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "Ruling 68 (F100-FR-176): under the `parity` profile no line without an as-is equivalent is emitted, so the row is off there; what the second suite compares stays CQ-028. Follows the register of 2026-09-30 (cross-feature review of feature 100).",
+      "registerText": "The rule is settled (ruling 68; F100-FR-176): under the `parity` profile no line without an as-is equivalent is emitted. What the second suite compares remains CQ-028; where it compares default output, DV-018 applies"
+    },
+    {
+      "row": "DV-041",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "No reference in 028 or 011. Characterization test of the new codes"
+    },
+    {
+      "row": "DV-055",
+      "handling": [
+        "mapped"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Mapped**: mode map; key name map in the launch contract comparison"
+    },
+    {
+      "row": "DV-056",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [
+        "FX-37"
+      ],
+      "note": "FX-37 is retired. The register says \"retired with a waiver\"; a waiver entry would match no difference, so the retirement is recorded in the catalogue and no waiver entry is written (F141-FR-013)",
+      "registerText": "No differential test is possible. FX-37 is retired with a **waiver**"
+    },
+    {
+      "row": "DV-057",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "No differential test is possible"
+    },
+    {
+      "row": "DV-058",
+      "handling": [
+        "normalization rule",
+        "waiver"
+      ],
+      "rules": [
+        "N-26"
+      ],
+      "families": [
+        "FX-31"
+      ],
+      "note": "",
+      "registerText": "**N-26** at the stub sink. Metric renames and the delivery status: **waiver** (FX-31)"
+    },
+    {
+      "row": "DV-059",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [
+        "FX-33"
+      ],
+      "note": "",
+      "registerText": "The validator's behaviour is the reference (FX-33). The schema file is not compared"
+    },
+    {
+      "row": "DV-060",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-32"
+      ],
+      "note": "",
+      "registerText": "The inventory output is compared (FX-32). A `tasks.md` the old parser could not read: **waiver**"
+    },
+    {
+      "row": "DV-061",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Not compared. Each is `dropped` with a written justification"
+    },
+    {
+      "row": "DV-062",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-08"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-08** covers temporary names; the file lies outside the compared tree"
+    },
+    {
+      "row": "DV-063",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Lisa side only: characterization test of the fixed behaviour"
+    },
+    {
+      "row": "DV-064",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-15"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "Fixtures use stub executables named after as-is commands, and one generic name for a descriptor-driven harness (R18 O-3). Unknown-name messages: **N-15**"
+    },
+    {
+      "row": "DV-065",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-18",
+        "N-25"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-18**, **N-25**. B-0118 is `superseded`"
+    },
+    {
+      "row": "DV-066",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-15",
+        "N-16"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**N-15**, **N-16**"
+    },
+    {
+      "row": "DV-067",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-12"
+      ],
+      "families": [],
+      "note": "projects to nothing (N-12); compared as it is where the breaker fires",
+      "registerText": "The event projects to nothing (N-12). The stop is as-is where the breaker fires. Other paths: own tests"
+    },
+    {
+      "row": "DV-071",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "per-OS expectations (F141-FR-035)",
+      "registerText": "The port on macOS is compared with the Linux capture plus per-OS expectations (R18 O-9). Every expectation is `inferred`"
+    },
+    {
+      "row": "DV-072",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**: captures are taken after the run"
+    },
+    {
+      "row": "DV-073",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-10"
+      ],
+      "note": "",
+      "registerText": "One fixture: **waiver** (FX-10)"
+    },
+    {
+      "row": "DV-074",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-35",
+        "FX-36"
+      ],
+      "note": "",
+      "registerText": "**Off**: the `parity` profile sets `supervise`, so FX-35 and FX-36 compare as they are. The root's table has its own tests"
+    },
+    {
+      "row": "DV-075",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-35"
+      ],
+      "note": "",
+      "registerText": "One fixture of FX-35: **waiver**. Every other lock fixture compares as it is"
+    },
+    {
+      "row": "DV-076",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile. With it on and no difference found, no output changes; the fact row has its own tests"
+    },
+    {
+      "row": "DV-077",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-078",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-079",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests and an ablation arm"
+    },
+    {
+      "row": "DV-080",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests; experiment E6"
+    },
+    {
+      "row": "DV-081",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**: the stub critic serves both forms and the transcript is compared in transport-neutral form"
+    },
+    {
+      "row": "DV-082",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile, where the check happens at critic start as today; own tests"
+    },
+    {
+      "row": "DV-083",
+      "handling": [
+        "normalization rule",
+        "off"
+      ],
+      "rules": [
+        "N-26"
+      ],
+      "families": [
+        "FX-31"
+      ],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile, so that the payloads at the stub sink compare with the baseline's (FX-31, N-26); own tests, with planted canaries for the redaction point"
+    },
+    {
+      "row": "DV-084",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; the project's `.git` is asserted byte-identical in the option's own tests"
+    },
+    {
+      "row": "DV-085",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-086",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile (the option is off)"
+    },
+    {
+      "row": "DV-087",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [
+        "N-05"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed**: durations are normalized (N-05) and no output differs"
+    },
+    {
+      "row": "DV-088",
+      "handling": [
+        "layer field",
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "Layer field, by name; **off** under the `parity` profile"
+    },
+    {
+      "row": "DV-089",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable** in the parity suite: no fixture cites such a path; own tests"
+    },
+    {
+      "row": "DV-090",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-091",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "own tests for the flag; the plugin allowlist compares as it is (FX-38)",
+      "registerText": "The flag has no reference: own tests. The plugin allowlist compares as it is"
+    },
+    {
+      "row": "DV-092",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-093",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-094",
+      "handling": [
+        "off",
+        "normalization rule"
+      ],
+      "rules": [
+        "N-24"
+      ],
+      "families": [],
+      "note": "",
+      "registerText": "Under the `parity` profile the as-is block set and order are used, and N-24 compares the prompt in full; own tests"
+    },
+    {
+      "row": "DV-095",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**None needed**: a test asserts that no fixture text matches a widened-only pattern; own tests and the canary test"
+    },
+    {
+      "row": "DV-096",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**; own tests"
+    },
+    {
+      "row": "DV-097",
+      "handling": [
+        "no differential test"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "The register says \"not compared\"; the oracle has no handling of that name, and the nearest one is \"no differential test\"",
+      "registerText": "Not compared; own tests"
+    },
+    {
+      "row": "DV-098",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "No fixture of the first set resumes after a stop inside a wait",
+      "registerText": "**Not observable** unless a fixture resumes after a stop inside a wait; own tests"
+    },
+    {
+      "row": "DV-099",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile (value `send`); own tests"
+    },
+    {
+      "row": "DV-100",
+      "handling": [
+        "off"
+      ],
+      "rules": [
+        "N-24"
+      ],
+      "families": [
+        "FX-25"
+      ],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile (block set `as-is`); N-24 compares the prompt in full; own tests"
+    },
+    {
+      "row": "DV-101",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-102",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-103",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-104",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-18"
+      ],
+      "note": "The as-is behaviour is the scenario `unknown-harness-name` of FX-18",
+      "registerText": "**Off** under the `parity` profile; own tests"
+    },
+    {
+      "row": "DV-105",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**; own test CT-106-3"
+    },
+    {
+      "row": "DV-106",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-25"
+      ],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile, where the fallback applies; own tests"
+    },
+    {
+      "row": "DV-107",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-31"
+      ],
+      "note": "Waived on the scenarios `loki-payload` and `otlp-payload`",
+      "registerText": "**Waiver** on FX-31 for the absent field; own tests"
+    },
+    {
+      "row": "DV-108",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Not observable**; own tests"
+    },
+    {
+      "row": "DV-109",
+      "handling": [
+        "none needed"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "The register says that the fixture supplies the rows of the table; no rule, switch or waiver is needed",
+      "registerText": "The fixture supplies the rows"
+    },
+    {
+      "row": "DV-110",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile (value `none`); own tests"
+    },
+    {
+      "row": "DV-111",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-25"
+      ],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile, where the default is kept; own tests"
+    },
+    {
+      "row": "DV-112",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [
+        "FX-01",
+        "FX-06",
+        "FX-26"
+      ],
+      "note": "The register names FX-18 as well. No scenario of FX-18 starts the prime stub: in each of them the pass fails before the harness starts. A waiver there would match no difference, so none is written (F141-FR-022)",
+      "registerText": "**Waiver** on the surface `transcript` for the two variable names, in the scenarios of FX-01, FX-06 and FX-26 in which the prime stub is started (in the prime scenarios of FX-18 the pass fails before the harness starts, so a waiver there would match nothing)"
+    },
+    {
+      "row": "DV-113",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "",
+      "registerText": "**Off** under the `parity` profile, because the surface `transcript.verification` records the names of variables; own tests"
+    },
+    {
+      "row": "DV-114",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [
+        "FX-35",
+        "FX-36"
+      ],
+      "note": "Off under the parity profile; the two rows are inactive, so FX-35 and FX-36 compare as they are. Own tests for the two rows.",
+      "registerText": "**Off** under the `parity` profile for row O-34 only: FX-36 scenarios that end not retryable compare as they are. Own tests for the two rows"
+    },
+    {
+      "row": "DV-115",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "Confirmed by feature 141 (2026-09-30): no fixture of the catalogue makes the local append of an event fail, and F141-FR-002 forbids a fixture to make a file unwritable to reach a line (CQ-193), so the row is not observable. Own test CT-126-11 (feature 126).",
+      "registerText": "**Not observable**, confirmed by feature 141 on 2026-09-30: no fixture makes the local append fail; own test CT-126-11"
+    },
+    {
+      "row": "DV-116",
+      "handling": [
+        "normalization rule"
+      ],
+      "rules": [
+        "N-29"
+      ],
+      "families": [
+        "FX-30"
+      ],
+      "note": "Confirmed by feature 141 (2026-09-30): the field `schema` of the port's inventory is removed by the normalization rule N-29 of feature 100, annex X §X.8, before the inventory is compared on FX-30. F108-FR-027 consumes this row.",
+      "registerText": "To be confirmed by feature 141. Proposed: a normalization rule that removes the key `schema` before the inventory is compared on FX-30"
+    },
+    {
+      "row": "DV-117",
+      "handling": [
+        "off"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "Off under the parity profile; own test CT-101-30 (feature 101). The row falls away if the owner answers CQ-187 with \"a failed call everywhere\".",
+      "registerText": "**Off** under the `parity` profile; own test CT-101-30. The row falls away if the owner answers CQ-187 with \"a failed call everywhere\""
+    },
+    {
+      "row": "DV-118",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "No fixture of the catalogue gives the mixture-of-loops baseline an OpenSpec change, so the hash that ignores checkboxes never meets a task line with a dotted id. Own tests of feature 104 (T034, T048).",
+      "registerText": "**Not observable**: the baseline has no fixture with an OpenSpec change; own tests of feature 104 (T034, T048)"
+    },
+    {
+      "row": "DV-119",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "No scenario of FX-32 holds a lower-case phase heading. Own test of feature 104 (T019).",
+      "registerText": "**Not observable**: no fixture of FX-32 has a lower-case heading; own test of feature 104 (T019)"
+    },
+    {
+      "row": "DV-120",
+      "handling": [
+        "mapped"
+      ],
+      "rules": [],
+      "families": [
+        "FX-32"
+      ],
+      "note": "The launch contract's `schema` stands for the as-is `schema_version: \"1.0\"`; the pair is in the key-name map of the launch contract (feature 100, annex X §X.8, `launchContractKeyMap` of `data/normalization.json`), and the message of B-2521 is compared through it on FX-32 (feature 107, F107-FR-005, F107-FR-012). Added 2026-09-30.",
+      "registerText": "**Mapped**: the key-name map of the launch contract (annex X §X.8) gains the pair `schema_version` and `schema` with their two values, and the message of B-2521 is compared through it"
+    }
+  ]
+}

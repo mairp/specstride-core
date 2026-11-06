@@ -1,0 +1,2907 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-29/quarantined",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 4,
+   "perCommand": [
+    4
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": ""
+  },
+  "stderr": {
+   "text": "learn: refusing to apply — quarantined: 900 is within ±10% of 900, auto-reverted by <run-id-1> (reverting <run-id-2>, guardrail cost,wall); 0 of 6 new samples since — pass --force to apply anyway\n"
+  },
+  "state": {
+   "entries": [
+    {
+     "logicalName": "feature:<slug>:learning:decisions",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"schema\": \"specstride.learn.applied/2\", \"action\": \"apply\", \"run_id\": \"<run-id-2>\", \"knob\": \"proposer_timeout\", \"phase\": 1, \"shape\": \"<nonce-1>\", \"value\": 900, \"previous\": 1800, \"samples\": 4, \"source_runs\": [\"<run-id-3>\", \"<run-id-4>\", \"<run-id-5>\", \"<run-id-6>\"], \"metric\": \"work_sec_p90\", \"applied_at\": \"<time>\", \"baseline\": {\"backend\": \"dsh\", \"shape\": \"<nonce-1>\", \"runs\": [\"<run-id-3>\", \"<run-id-4>\", \"<run-id-5>\", \"<run-id-6>\"], \"cost\": [[\"<run-id-3>\", 0.4], [\"<run-id-3>\", 0.3], [\"<run-id-3>\", 0.5], [\"<run-id-4>\", 0.4], [\"<run-id-4>\", 0.3], [\"<run-id-4>\", 0.5], [\"<run-id-5>\", 0.4], [\"<run-id-5>\", 0.3], [\"<run-id-5>\", 0.5], [\"<run-id-6>\", 0.4], [\"<run-id-6>\", 0.3], [\"<run-id-6>\", 0.5]], \"wall\": [[\"<run-id-3>\", 120.0], [\"<run-id-3>\", 90.0], [\"<run-id-3>\", 150.0], [\"<run-id-4>\", 120.0], [\"<run-id-4>\", 90.0], [\"<run-id-4>\", 150.0], [\"<run-id-5>\", 120.0], [\"<run-id-5>\", 90.0], [\"<run-id-5>\", 150.0], [\"<run-id-6>\", 120.0], [\"<run-id-6>\", 90.0], [\"<run-id-6>\", 150.0]], \"guardrails\": {\"attempts\": 4, \"verdicts\": 4, \"malformed\": 0, \"grounding_gap\": 0, \"verification_failed\": 0, \"first_verdicts\": 4, \"first_approved\": 4, \"diagnostician_cases\": 0, \"diagnostician_grounding\": 0, \"episodes\": 4, \"arbitration\": 0, \"critic_prompt_bytes\": []}}}\n{\"schema\": \"specstride.learn.applied/2\", \"action\": \"revert\", \"auto\": true, \"run_id\": \"<run-id-1>\", \"reverts_run_id\": \"<run-id-2>\", \"knob\": \"proposer_timeout\", \"phase\": 1, \"shape\": \"<nonce-1>\", \"value\": 1800, \"previous\": 900, \"quarantined_value\": 900, \"backend\": \"dsh\", \"reverted_ts\": <time>, \"evaluated_from\": \"<run-id-7>\", \"guardrail\": [\"cost\", \"wall\"], \"applied_at\": \"<time>\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "feature:<slug>:notebook",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "# Progress\n\n## Phase 1 — approved\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:engine-log:<k>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "run <run-id-3>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:events-legacy#runId=<run-id-3>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-3>\", \"feature\": \"demo\", \"backend\": \"dsh\"}\n{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}\n{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}\n{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 1}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 1, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 2}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 2, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 3}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 3, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}\n{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-3>\", \"outcome\": \"complete\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:events-legacy#runId=<run-id-4>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-4>\", \"feature\": \"demo\", \"backend\": \"dsh\"}\n{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}\n{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}\n{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 1}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 1, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 2}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 2, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 3}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 3, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}\n{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-4>\", \"outcome\": \"complete\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:events-legacy#runId=<run-id-5>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-5>\", \"feature\": \"demo\", \"backend\": \"dsh\"}\n{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}\n{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}\n{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 1}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 1, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 2}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 2, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 3}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 3, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}\n{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-5>\", \"outcome\": \"complete\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:events-legacy#runId=<run-id-6>",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-6>\", \"feature\": \"demo\", \"backend\": \"dsh\"}\n{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}\n{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}\n{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 1}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 1, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 2}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 2, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 3}\n{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}\n{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}\n{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 3, \"evidence\": \"written\"}\n{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}\n{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}\n{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-6>\", \"outcome\": \"complete\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "logicalName": "run:<runId>:snapshot",
+     "exists": true,
+     "type": "file",
+     "mode": "0644",
+     "content": "FEATURE=demo\nSPEC_FORMAT=native\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "events": {
+   "files": [
+    "events.jsonl",
+    "events.jsonl",
+    "events.jsonl",
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-3>\", \"feature\": \"demo\", \"backend\": \"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225600,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "demo",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225601,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225601,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "source",
+        "value": "default",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": 30,
+        "type": "number"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "default",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225602,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225612,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225613,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225732,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.4,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 1, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225732,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 2}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225622,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225623,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225712,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.3,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 2, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225712,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-3>\", \"iter\": 3}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225632,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-3>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225633,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-3>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225782,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.5,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-3>\", \"iter\": 3, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225782,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 17,
+      "raw": "{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225800,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 18,
+      "raw": "{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225801,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 19,
+      "raw": "{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225805,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "APPROVED",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 20,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-3>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225806,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 21,
+      "raw": "{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-3>\", \"outcome\": \"complete\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767225807,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_end",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "outcome",
+        "value": "complete",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-4>\", \"feature\": \"demo\", \"backend\": \"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312000,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "demo",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312001,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312001,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "source",
+        "value": "default",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": 30,
+        "type": "number"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "default",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312002,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312012,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312013,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312132,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.4,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 1, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312132,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 2}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312022,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312023,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312112,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.3,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 2, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312112,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-4>\", \"iter\": 3}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312032,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-4>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312033,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-4>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312182,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.5,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-4>\", \"iter\": 3, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312182,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 17,
+      "raw": "{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312200,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 18,
+      "raw": "{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312201,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 19,
+      "raw": "{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312205,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "APPROVED",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 20,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-4>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312206,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 21,
+      "raw": "{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-4>\", \"outcome\": \"complete\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767312207,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_end",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-4>",
+        "type": "string"
+       },
+       {
+        "key": "outcome",
+        "value": "complete",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-5>\", \"feature\": \"demo\", \"backend\": \"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398400,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "demo",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398401,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398401,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "source",
+        "value": "default",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": 30,
+        "type": "number"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "default",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398402,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398412,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398413,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398532,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.4,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 1, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398532,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 2}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398422,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398423,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398512,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.3,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 2, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398512,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-5>\", \"iter\": 3}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398432,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-5>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398433,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-5>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398582,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.5,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-5>\", \"iter\": 3, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398582,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 17,
+      "raw": "{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398600,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 18,
+      "raw": "{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398601,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 19,
+      "raw": "{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398605,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "APPROVED",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 20,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-5>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398606,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 21,
+      "raw": "{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-5>\", \"outcome\": \"complete\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767398607,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_end",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-5>",
+        "type": "string"
+       },
+       {
+        "key": "outcome",
+        "value": "complete",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\": <time>, \"event\": \"run_start\", \"run_id\": \"<run-id-6>\", \"feature\": \"demo\", \"backend\": \"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484800,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "demo",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"title\": \"The only phase\", \"shape\": \"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484801,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_cap\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"seconds\": 1800, \"source\": \"default\", \"yield_poll\": 30, \"yield_poll_source\": \"default\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484801,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "source",
+        "value": "default",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": 30,
+        "type": "number"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "default",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\": <time>, \"event\": \"proposer_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484802,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484812,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484813,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.4, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484932,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.4,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 1, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484932,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 2}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484822,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484823,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.3, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484912,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.3,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 2, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484912,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_start\", \"run_id\": \"<run-id-6>\", \"iter\": 3}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484832,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_tool\", \"run_id\": \"<run-id-6>\", \"tool\": \"Bash\", \"target\": \"pytest\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484833,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_tool",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "tool",
+        "value": "Bash",
+        "type": "string"
+       },
+       {
+        "key": "target",
+        "value": "pytest",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\": <time>, \"event\": \"agent_result\", \"run_id\": \"<run-id-6>\", \"cost_usd\": 0.5, \"duration_ms\": <duration>, \"is_error\": false}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484982,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "cost_usd",
+        "value": 0.5,
+        "type": "number"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "is_error",
+        "value": false,
+        "type": "boolean"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\": <time>, \"event\": \"iter_done\", \"run_id\": \"<run-id-6>\", \"iter\": 3, \"evidence\": \"written\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767484982,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "evidence",
+        "value": "written",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 17,
+      "raw": "{\"ts\": <time>, \"event\": \"evidence_written\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767485000,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 18,
+      "raw": "{\"ts\": <time>, \"event\": \"critic_start\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767485001,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 19,
+      "raw": "{\"ts\": <time>, \"event\": \"verdict\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1, \"result\": \"APPROVED\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767485005,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "APPROVED",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 20,
+      "raw": "{\"ts\": <time>, \"event\": \"phase_done\", \"run_id\": \"<run-id-6>\", \"phase\": 1, \"attempt\": 1}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767485006,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "phase_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 21,
+      "raw": "{\"ts\": <time>, \"event\": \"run_end\", \"run_id\": \"<run-id-6>\", \"outcome\": \"complete\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": 1767485007,
+        "type": "number"
+       },
+       {
+        "key": "event",
+        "value": "run_end",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-6>",
+        "type": "string"
+       },
+       {
+        "key": "outcome",
+        "value": "complete",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 0,
+  "N-02": 0,
+  "N-03": 180,
+  "N-04": 89,
+  "N-05": 32,
+  "N-06": 13,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 84,
+  "N-14": 84,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 12,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 87,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

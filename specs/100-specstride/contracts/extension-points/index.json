@@ -1,0 +1,281 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "extensionPoints": [
+    {
+      "ep": "EP-01",
+      "ids": [
+        "specstride.host/1"
+      ],
+      "annex": "H",
+      "section": "§H.1",
+      "file": "extension-points/EP-01.host.json",
+      "operations": [
+        "describe",
+        "renderSkill",
+        "renderEntry",
+        "renderStatusHooks",
+        "evalDriver.run"
+      ]
+    },
+    {
+      "ep": "EP-02",
+      "ids": [
+        "specstride.harness/1"
+      ],
+      "annex": "C",
+      "section": "§C.1",
+      "file": "extension-points/EP-02.harness.json",
+      "operations": [
+        "detect",
+        "capabilities",
+        "preflight",
+        "startPass",
+        "complete",
+        "stop",
+        "betweenPasses",
+        "classify"
+      ]
+    },
+    {
+      "ep": "EP-03",
+      "ids": [
+        "specstride.spec-format/1"
+      ],
+      "annex": "C",
+      "section": "§C.7",
+      "file": "extension-points/EP-03.spec-format.json",
+      "operations": [
+        "detect",
+        "parse",
+        "validate",
+        "tick",
+        "inputs"
+      ]
+    },
+    {
+      "ep": "EP-04",
+      "ids": [
+        "specstride.loop-layer/1"
+      ],
+      "annex": "D",
+      "section": "§D.1",
+      "file": "extension-points/EP-04.loop-layer.json",
+      "operations": [
+        "contributePrompt",
+        "afterPass",
+        "betweenPasses",
+        "nextPassBlock",
+        "onEvidence",
+        "contributeCriticInput",
+        "resume",
+        "report"
+      ]
+    },
+    {
+      "ep": "EP-05",
+      "ids": [
+        "specstride.check-runner/1"
+      ],
+      "annex": "C",
+      "section": "§C.8",
+      "file": "extension-points/EP-05.check-runner.json",
+      "operations": [
+        "pin",
+        "start",
+        "poll",
+        "result",
+        "cancel",
+        "environment"
+      ]
+    },
+    {
+      "ep": "EP-06",
+      "ids": [
+        "specstride.router-rules/1"
+      ],
+      "annex": "D",
+      "section": "§D.4",
+      "file": "extension-points/EP-06.router-rules.json",
+      "operations": [
+        "route.decided"
+      ]
+    },
+    {
+      "ep": "EP-07",
+      "ids": [
+        "specstride.verification-source/1"
+      ],
+      "annex": "C",
+      "section": "§C.9",
+      "file": "extension-points/EP-07.verification-source.json",
+      "operations": [
+        "discover",
+        "obligations",
+        "conflicts"
+      ]
+    },
+    {
+      "ep": "EP-08",
+      "ids": [
+        "specstride.event-sink/1"
+      ],
+      "annex": "C",
+      "section": "§C.10",
+      "file": "extension-points/EP-08.event-sink.json",
+      "operations": [
+        "open",
+        "write",
+        "flush",
+        "close",
+        "status"
+      ]
+    },
+    {
+      "ep": "EP-09",
+      "ids": [
+        "specstride.view/1"
+      ],
+      "annex": "G",
+      "section": "§G.6",
+      "file": "extension-points/EP-09.view.json",
+      "operations": [
+        "project",
+        "reduce"
+      ]
+    },
+    {
+      "ep": "EP-10",
+      "ids": [
+        "specstride.secret-resolver/1"
+      ],
+      "annex": "C",
+      "section": "§C.11",
+      "file": "extension-points/EP-10.secret-resolver.json",
+      "operations": [
+        "handles",
+        "exists",
+        "resolve",
+        "boundHost"
+      ]
+    },
+    {
+      "ep": "EP-11",
+      "ids": [
+        "specstride.terms/1"
+      ],
+      "annex": "C",
+      "section": "§C.12",
+      "file": "extension-points/EP-11.terms.json",
+      "operations": [
+        "evaluate"
+      ]
+    },
+    {
+      "ep": "EP-12",
+      "ids": [
+        "specstride.quota-classifier/1"
+      ],
+      "annex": "C",
+      "section": "§C.13",
+      "file": "extension-points/EP-12.quota-classifier.json",
+      "operations": [
+        "classify",
+        "observe"
+      ]
+    },
+    {
+      "ep": "EP-13",
+      "ids": [
+        "specstride.lock/1"
+      ],
+      "annex": "F",
+      "section": "§F.5",
+      "file": "extension-points/EP-13.lock.json",
+      "operations": [
+        "acquire",
+        "heartbeat",
+        "release",
+        "probe",
+        "reclaim",
+        "handDown",
+        "verify"
+      ]
+    },
+    {
+      "ep": "EP-14",
+      "ids": [
+        "specstride.doctor/1"
+      ],
+      "annex": "G",
+      "section": "§G.7",
+      "file": "extension-points/EP-14.doctor.json",
+      "operations": [
+        "run"
+      ]
+    },
+    {
+      "ep": "EP-15",
+      "ids": [
+        "specstride.prompt-block/1"
+      ],
+      "annex": "D",
+      "section": "§D.5",
+      "file": "extension-points/EP-15.prompt-block.json",
+      "operations": [
+        "blocks"
+      ]
+    },
+    {
+      "ep": "EP-16",
+      "ids": [
+        "specstride.toolchain/1"
+      ],
+      "annex": "C",
+      "section": "§C.14",
+      "file": "extension-points/EP-16.toolchain.json",
+      "operations": []
+    },
+    {
+      "ep": "EP-17",
+      "ids": [
+        "specstride.detach/1"
+      ],
+      "annex": "F",
+      "section": "§F.6",
+      "file": "extension-points/EP-17.detach.json",
+      "operations": [
+        "available",
+        "start",
+        "describe"
+      ]
+    },
+    {
+      "ep": "EP-18",
+      "ids": [
+        "specstride.critic-strategy/1",
+        "specstride.attempt-planner/1"
+      ],
+      "annex": "E",
+      "section": "§E.1",
+      "file": "extension-points/EP-18.critic-strategy-and-attempt-planner.json",
+      "operations": [
+        "judge",
+        "next"
+      ]
+    },
+    {
+      "ep": "EP-19",
+      "ids": [
+        "specstride.stage-kind/1"
+      ],
+      "annex": "F",
+      "section": "§F.7",
+      "file": "extension-points/EP-19.stage-kind.json",
+      "operations": [
+        "validate",
+        "run",
+        "evaluate"
+      ]
+    }
+  ]
+}

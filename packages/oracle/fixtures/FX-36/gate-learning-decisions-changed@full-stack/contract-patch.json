@@ -1,0 +1,93 @@
+{
+  "stages": [
+    {
+      "id": "implement-feature",
+      "kind": "specstride",
+      "depends_on": [],
+      "cwd": ".",
+      "action": {
+        "argv": [
+          "specstride",
+          "run",
+          "-w",
+          ".",
+          "-s",
+          "specs/001-greeting/tasks.md",
+          "--spec-format",
+          "speckit-tasks",
+          "--feature",
+          "001-greeting"
+        ],
+        "timeout_seconds": 3600,
+        "env": {
+          "SPECSTRIDE_LEARNING": "off",
+          "SPECSTRIDE_LEARNING_THROUGH": "learn-000000000001"
+        }
+      },
+      "preconditions": [
+        {
+          "type": "file_exists",
+          "path": "approvals/release-approval.json",
+          "timing": "preflight"
+        },
+        {
+          "type": "command_available",
+          "name": "specstride",
+          "timing": "preflight"
+        }
+      ],
+      "postconditions": [
+        {
+          "type": "dir_exists",
+          "path": ".specstride/features/001-greeting"
+        }
+      ],
+      "evidence": [
+        ".specstride/features/001-greeting"
+      ],
+      "recovery": {
+        "max_attempts": 1,
+        "retry_exit_codes": [
+          4
+        ]
+      }
+    },
+    {
+      "id": "verify-greeting",
+      "kind": "command",
+      "depends_on": [],
+      "cwd": ".",
+      "action": {
+        "argv": [
+          "python3",
+          "-c",
+          "import pathlib; pathlib.Path('verified.txt').write_text('ok\\n')"
+        ],
+        "timeout_seconds": 600
+      },
+      "preconditions": [],
+      "postconditions": [
+        {
+          "type": "file_exists",
+          "path": "verified.txt"
+        }
+      ],
+      "evidence": [
+        "verified.txt"
+      ]
+    }
+  ],
+  "configuration": {
+    "learning": {
+      "mode": "off",
+      "decisions_through": "learn-000000000001",
+      "decisions_sha256": "0cf5045183c942b75140b714390109eb80a313250b25a89958024502b0f8089e",
+      "source_path": "applied.json",
+      "effective": {
+        "proposer_timeout_sec": {
+          "1": 1800
+        }
+      }
+    }
+  }
+}

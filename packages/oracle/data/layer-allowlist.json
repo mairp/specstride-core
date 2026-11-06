@@ -1,0 +1,78 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-layer-allowlist/1",
+ "note": "Generated from the register rows that name a layer field. An entry that matches nothing in any fixture fails the second suite. Event types are those of the event catalogue of feature 111 (F111-FR-050); logical names are those of feature 100, annex B §B.5 and annex D §D.8. The texts of DV-016, DV-020 and DV-052 that name these values are proposed upstream in analyze-report.md, \"Proposed upstream fixes\" (P2, P3).",
+ "entries": [
+  {
+   "row": "DV-016",
+   "surface": "events-primary",
+   "match": "event type",
+   "values": [
+    "strategy.selected",
+    "microloop.inert"
+   ]
+  },
+  {
+   "row": "DV-017",
+   "surface": "control-records",
+   "match": "field of the run record and key of the run snapshot",
+   "values": [
+    "loop.strategy",
+    "loop.level",
+    "loop.manifest_hash"
+   ]
+  },
+  {
+   "row": "DV-020",
+   "surface": "transcript.proposer",
+   "match": "prompt block",
+   "values": [
+    "checkpoint contract block"
+   ]
+  },
+  {
+   "row": "DV-020",
+   "surface": "events-primary",
+   "match": "values derived from the prompt",
+   "values": [
+    "prompt size",
+    "prompt hash",
+    "prompt.block_dropped",
+    "prompt.block_protected"
+   ]
+  },
+  {
+   "row": "DV-052",
+   "surface": "control-records",
+   "match": "logical name",
+   "values": [
+    "phase:<N>:manifest",
+    "phase:<N>:protected-set"
+   ],
+   "valueNotes": {
+    "phase:<N>:manifest": "the check manifest (annex D §D.8); it holds the record of its derivation (entries[].provenance) and the pins (entries[].pin), which have no logical name of their own",
+    "phase:<N>:protected-set": "the fingerprints of the protected set at phase entry (F116-FR-004); written when a loop layer or an integrity switch is on, and no integrity switch is on under the parity profile"
+   }
+  },
+  {
+   "row": "DV-053",
+   "surface": "events-primary",
+   "match": "announcement",
+   "values": [
+    "strategy.selected with fallbackReason gate-not-executing"
+   ],
+   "onlyFixtures": "verification mode plan or off"
+  }
+ ],
+ "notReachable": [
+  {
+   "row": "DV-018",
+   "field": "the [LOOP] line and the strategy in the status line",
+   "reason": "not printed in compatibility output, which the second suite keeps (F100-FR-179, F100-FR-211); CQ-028"
+  },
+  {
+   "row": "DV-052",
+   "field": "run:<runId>:task-list, the task list as read at launch (CQ-084 as feature 115 reads it)",
+   "reason": "not a layer field: the engine writes it at launch in every run (annex B §B.5; F115-FR-012), so captures A and B both hold it and compare it; an entry for it would match nothing and fail the suite"
+  }
+ ]
+}

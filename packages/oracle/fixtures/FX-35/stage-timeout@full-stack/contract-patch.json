@@ -1,0 +1,68 @@
+{
+  "stages": [
+    {
+      "id": "implement-feature",
+      "kind": "specstride",
+      "depends_on": [],
+      "cwd": ".",
+      "action": {
+        "argv": [
+          "specstride",
+          "run",
+          "-w",
+          ".",
+          "-s",
+          "specs/001-greeting/tasks.md",
+          "--spec-format",
+          "speckit-tasks",
+          "--feature",
+          "001-greeting"
+        ],
+        "timeout_seconds": 3600
+      },
+      "preconditions": [
+        {
+          "type": "file_exists",
+          "path": "approvals/release-approval.json",
+          "timing": "preflight"
+        },
+        {
+          "type": "command_available",
+          "name": "specstride",
+          "timing": "preflight"
+        }
+      ],
+      "postconditions": [
+        {
+          "type": "dir_exists",
+          "path": ".specstride/features/001-greeting"
+        }
+      ],
+      "evidence": [
+        ".specstride/features/001-greeting"
+      ]
+    },
+    {
+      "id": "slow-stage",
+      "kind": "command",
+      "depends_on": [],
+      "cwd": ".",
+      "action": {
+        "argv": [
+          "python3",
+          "-c",
+          "import time; time.sleep(30)"
+        ],
+        "timeout_seconds": 1
+      },
+      "preconditions": [],
+      "postconditions": [
+        {
+          "type": "file_exists",
+          "path": "slept.txt"
+        }
+      ],
+      "evidence": []
+    }
+  ]
+}

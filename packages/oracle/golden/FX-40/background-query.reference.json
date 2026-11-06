@@ -1,0 +1,58 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-40/background-query",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  ┏━━━━┿━━━━┿━━━━╸\n  ┃                   specstride\n  ┗━━━━┿━━━━┿━━━━┓    From specs to tested code.\n                 ┃    Every step, signed off.\n  ╺━━━━┿━━━━┿━━━━┛\n\n  ━━━━┿╍╍╍╍\n      • 1\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : background-query   (state: .specstride/features/background-query/)\n  proposer : dsh\n  critic   : claude  (model claude-opus-4-8, window 1000000 tokens)\n  max-rej  : 1   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  health   : none — the loop cannot see its infrastructure (--health-cmd)\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n----- proposer: phase 1 attempt 1/1 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/background-query/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 1 (claude) -----\nAPPROVED\n===== PHASE 1 APPROVED (attempt 1) =====\n\n# DONE — all 1 phase(s) approved. <time>\n"
+  },
+  "stderr": {
+   "text": ""
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 2,
+  "N-02": 0,
+  "N-03": 2,
+  "N-04": 2,
+  "N-05": 2,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 1,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 0,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

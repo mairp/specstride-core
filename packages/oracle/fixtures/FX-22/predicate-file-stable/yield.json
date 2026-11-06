@@ -1,0 +1,19 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "deadline_sec": 60,
+ "on_resume": "write the evidence of the phase",
+ "reason": "a job of the scenario whose output stops growing",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "echo one > the-report; sleep 1"
+  ]
+ },
+ "resume_when": {
+  "kind": "file_stable",
+  "path": "the-report",
+  "stable_sec": 2
+ }
+}

@@ -1,0 +1,139 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-36/learning-selection@full-stack",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "mixture-of-loops",
+ "commit": "9c88f86e1771efeabcfe3b4b1cb24384fff284e8",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "[MOL-LEARNING] mode=apply source=prose evidence=\"use the learned timeouts\"\n[MOL-NEXT] next=\"bootstrap with --learning-mode apply; if it emits no configuration.learning block there are no applied decisions to bind: use suggest and say so\"\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "README.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# greeting\n\nA one-function Python package used as a Spec Kit fixture.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "approvals",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "approvals/release-approval.json",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\n  \"feature\": \"001-greeting\",\n  \"approved_by\": \"release-manager\",\n  \"signature\": \"fixture-signature-not-a-real-credential\",\n  \"scope\": \"release of 001-greeting\"\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/001-greeting",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/001-greeting/plan.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Implementation Plan: Greeting\n\n## Summary\n\nImplement `greet(name)` in `src/greet.py` and verify it with the standard library test runner.\n\n## Verification\n\nThe only declared verification command, run from the repository root:\n\n```bash\npython3 -m unittest discover -s tests -v\n```\n\n## Prerequisites\n\n- PRE-001: The release manager's signed approval file `approvals/release-approval.json` must exist before any stage runs. It is non-delegable authority: no task or stage may create, sign, or fabricate it. If it is absent when the pipeline is derived, derivation must stop with a blocker.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/001-greeting/spec.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Feature Specification: Greeting\n\n**Feature**: 001-greeting\n\n## User Story 1 (P1)\n\nAs a user I call `greet(name)` and receive `Hello, <name>!`.\n\n## Requirements\n\n- **FR-001**: `greet(\"Ada\")` returns `Hello, Ada!`.\n- **FR-002**: The release of this feature requires the release manager's signed approval.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/001-greeting/tasks.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Tasks: Greeting\n\n## Phase 1: Setup\n- [ ] T001 Create `src/greet.py` with `greet(name)` returning `Hello, <name>!`\n\n## Phase 2: Verify\n- [ ] T002 [US1] Add `tests/test_greet.py` and run the declared verification command from plan.md\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [],
+   "records": []
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 1,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 1,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

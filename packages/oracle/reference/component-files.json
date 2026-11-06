@@ -1,0 +1,95 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-component-files/1",
+  "note": "T055, F141-FR-020. The component-name table of feature 100, annex X \u00a7X.8, names each as-is implementation in PROSE (\"The pass-loop script\"); the rule N-15 replaces a PREFIX of a message, which is a file name. This file is the one fact feature 100's table does not carry: which file of each pinned baseline each of its rows names. It is a record of the reference trees at the pinned commits of `pins.json` and no table of normalization: the as-is-to-logical mapping stays feature 100's and is read from `normalization.json` (F141-FR-020, \"MUST hold no table of its own\"). One entry per row of that table, in the order of the annex; `test/normalize/rules.test.ts` holds the two to each other and checks every file against the reference tree. The five file names that F100-FR-026 reserves to `packages/contracts/data/layout-old-side.json` are NOT copied here: a row that names one gives the behaviour item of that file instead (`filesFromOldSide`), and `componentFiles()` reads the name out of the one file that may carry it, joining it to the directories the row names.",
+  "rows": [
+    {
+      "asIs": "The engine script of the Specstride baseline",
+      "system": "specstride",
+      "filesFromOldSide": ["B-0156"],
+      "directories": [""]
+    },
+    {
+      "asIs": "The pass-loop script",
+      "system": "specstride",
+      "files": ["proposer.sh"]
+    },
+    {
+      "asIs": "The front-door script",
+      "system": "specstride",
+      "files": ["specstride"]
+    },
+    {
+      "asIs": "The critic module",
+      "system": "specstride",
+      "files": ["lib/critic.py", "critic.py"]
+    },
+    {
+      "asIs": "The verification-plan module",
+      "system": "specstride",
+      "files": ["lib/verification_plan.py", "verification_plan.py"]
+    },
+    {
+      "asIs": "The spec module",
+      "system": "specstride",
+      "files": ["lib/specstride_spec.py", "specstride_spec.py"]
+    },
+    {
+      "asIs": "The learning module",
+      "system": "specstride",
+      "files": ["lib/learn.py", "learn.py"]
+    },
+    {
+      "asIs": "The reverse module and the reverse-inventory module",
+      "system": "specstride",
+      "files": ["lib/reverse.py", "reverse.py", "lib/reverse_inventory.py", "reverse_inventory.py"]
+    },
+    {
+      "asIs": "The derivation tool, the validation tool and the rendering tool of mixture-of-loops",
+      "system": "mixture-of-loops",
+      "files": [
+        "skills/mixture-of-loops/scripts/bootstrap_contract.py",
+        "bootstrap_contract.py",
+        "skills/mixture-of-loops/scripts/validate_contract.py",
+        "validate_contract.py",
+        "skills/mixture-of-loops/scripts/render_launcher.py",
+        "render_launcher.py"
+      ]
+    },
+    {
+      "asIs": "The pipeline runtime of mixture-of-loops",
+      "system": "mixture-of-loops",
+      "filesFromOldSide": ["B-2547"],
+      "directories": ["skills/mixture-of-loops/scripts", ""]
+    },
+    {
+      "asIs": "The supervisor of mixture-of-loops",
+      "system": "mixture-of-loops",
+      "files": ["skills/mixture-of-loops/scripts/supervise.py", "supervise.py"]
+    },
+    {
+      "asIs": "The stream tap",
+      "system": "specstride",
+      "files": ["lib/agent_stream.py", "agent_stream.py"]
+    },
+    {
+      "asIs": "The telemetry shipper for Loki",
+      "system": "specstride",
+      "files": ["lib/ralph_loki_ship.py", "ralph_loki_ship.py"]
+    },
+    {
+      "asIs": "The telemetry shipper for OTLP",
+      "system": "specstride",
+      "files": ["lib/ralph_otel_ship.py", "ralph_otel_ship.py"]
+    },
+    {
+      "asIs": "The overlay tool",
+      "system": "specstride",
+      "files": ["lib/backend_overlay.py", "backend_overlay.py"]
+    },
+    {
+      "asIs": "The plugin request processor of one harness",
+      "system": "specstride",
+      "files": ["lib/dsh_plugin_requests.py", "dsh_plugin_requests.py"]
+    }
+  ]
+}

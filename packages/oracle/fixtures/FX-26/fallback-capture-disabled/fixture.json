@@ -1,0 +1,105 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-26/fallback-capture-disabled",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "pass-loop",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:pass-loop>",
+      "--workdir",
+      "<WORK>",
+      "--evidence",
+      "<WORK>/gate.md",
+      "--prompt-file",
+      "<WORK>/prompt.txt",
+      "--sleep",
+      "0",
+      "--max-iter",
+      "2"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "fallback-capture-disabled",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "codex",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "text",
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "text": "wrote one.txt\n",
+          "path": "one.txt",
+          "content": "one\n",
+          "evidence": "gate.md"
+        }
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events",
+    "transcript"
+  ],
+  "proves": [
+    "C-108"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "copy-asset",
+      "file": "lib/stream_test_adapter.py",
+      "asset": "streams/specstride@9cab15d/lib/fixtures/stream_test_adapter.py",
+      "why": "edit 1 of the quickstart: the adapter module of the test format"
+    },
+    {
+      "edit": "insert-before",
+      "file": "lib/agent_stream.py",
+      "marker": "FORMATS = build_registry(STREAM_FORMATS)",
+      "text": "from stream_test_adapter import StreamTestAdapter\n\nSTREAM_FORMATS += (\n    StreamFormat(\"specstride-test-v1\", StreamTestAdapter,\n                 capability=Capability(\"specstride test stream selected\"),\n                 has_init_record=False, synth_init=True,\n                 synth_terminal=True, no_activity=True),\n)\n",
+      "why": "edit 2 of the quickstart: one import and one row inside the marked seam block"
+    },
+    {
+      "edit": "replace",
+      "file": "lib/backends.py",
+      "find": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\")))),",
+      "text": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\"))), stream=\"specstride-test-v1\"),",
+      "why": "edit 3 of the quickstart: the route of the entry; no shipped entry sets `stream=`, so without it the fallback block never runs"
+    }
+  ]
+}

@@ -1,0 +1,1157 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-18/harness-missing-dsh",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 4,
+   "perCommand": [
+    4
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : harness-missing-dsh   (state: .specstride/features/harness-missing-dsh/)\n  proposer : dsh\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 5\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n----- proposer: phase 1 attempt 1/1 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 1 changed nothing outside .specstride — consecutive no-progress passes: 1/3\n----- proposer pass 2/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 2 ended after <duration> with no evidence and no yield — 2 short passes in a row; the next pass is told to yield instead of waiting.\npass-loop: pass 2 changed nothing outside .specstride — consecutive no-progress passes: 2/3\n----- proposer pass 3/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 3 ended after <duration> with no evidence and no yield — 3 short passes in a row; the next pass is told to yield instead of waiting.\npass-loop: pass 3 changed nothing outside .specstride — consecutive no-progress passes: 3/3\npass-loop: 3 consecutive passes wrote nothing — the phase is blocked on something the agent cannot decide for itself (exit 8). Read the newest agent note and the phase's run note; record the decision it asks for, then resume.\n>>> proposer made no progress for phase 1 — halting (exit 4).\n#   Consecutive passes completed cleanly and changed NOTHING outside the\n#   loop's own bookkeeping. That is what a phase blocked on a decision looks\n#   like: the agent will not break a spec rule or weaken a criterion to get\n#   past it, so it writes its reasoning and waits. This is NOT a timeout and\n#   raising a budget will not clear it.\n#   Read, in this order:\n#     - the newest agent note in <WORK>/.specstride/features/harness-missing-dsh/PROGRESS.md (it names the blocker)\n#     - the phase's run note under the spec's runs/ directory (it usually lists\n#       the options the operator has to choose between)\n#   Record the decision where the note asks for it, then: specstride resume -w <WORK>\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/harness-missing-dsh/runs/<run-id-1>/events.jsonl"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/attempts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/debug",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/gates",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/gates/proofs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=harness-missing-dsh\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=claude\nMAX_REJECTS=1\nMAX_ITER=5\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/harness-missing-dsh/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<RUN>/edited-reference/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/proposer-prompt.phase1.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/harness-missing-dsh/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/harness-missing-dsh/, not here\n(gate evidence/feedback files live in .specstride/features/harness-missing-dsh/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/harness-missing-dsh/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/harness-missing-dsh/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/harness-missing-dsh/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/harness-missing-dsh/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/harness-missing-dsh/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/harness-missing-dsh/yield/phase1-attempt1-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/runs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/runs/<run-id-1>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/runs/<run-id-1>/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"harness-missing-dsh\",\"proposer\":\"dsh\",\"critic\":\"claude\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/harness-missing-dsh/runs/<run-id-1>/verification/verification-plan.json\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-1>\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"attempt\":\"1\",\"backend\":\"dsh\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"attempt\":\"1\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"consec\":\"1\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"evidence\":\"missing\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"elapsed\":\"<duration>\",\"consec\":\"2\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"consec\":\"2\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"evidence\":\"missing\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"elapsed\":\"<duration>\",\"consec\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"consec\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"reason\":\"proposer_no_progress\",\"iter\":\"3\",\"consec\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"reason\":\"proposer_no_progress\",\"phase\":\"1\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/runs/<run-id-1>/run.log",
+     "type": "file",
+     "mode": "0644",
+     "content": "  .====+====+====-\n  |                   specstride\n  '====+====+====.    From specs to tested code.\n                 |    Every step, signed off.\n  -====+====+===='\n\n  ====+----\n      1 now\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : harness-missing-dsh   (state: .specstride/features/harness-missing-dsh/)\n  proposer : dsh\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 5\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n----- proposer: phase 1 attempt 1/1 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 1 changed nothing outside .specstride — consecutive no-progress passes: 1/3\n----- proposer pass 2/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 2 ended after <duration> with no evidence and no yield — 2 short passes in a row; the next pass is told to yield instead of waiting.\npass-loop: pass 2 changed nothing outside .specstride — consecutive no-progress passes: 2/3\n----- proposer pass 3/5  <time> -----\npass-loop: DeepSeek Harness not found: no-such-dsh (set $SPECSTRIDE_DSH_BIN)\npass-loop: pass 3 ended after <duration> with no evidence and no yield — 3 short passes in a row; the next pass is told to yield instead of waiting.\npass-loop: pass 3 changed nothing outside .specstride — consecutive no-progress passes: 3/3\npass-loop: 3 consecutive passes wrote nothing — the phase is blocked on something the agent cannot decide for itself (exit 8). Read the newest agent note and the phase's run note; record the decision it asks for, then resume.\n>>> proposer made no progress for phase 1 — halting (exit 4).\n#   Consecutive passes completed cleanly and changed NOTHING outside the\n#   loop's own bookkeeping. That is what a phase blocked on a decision looks\n#   like: the agent will not break a spec rule or weaken a criterion to get\n#   past it, so it writes its reasoning and waits. This is NOT a timeout and\n#   raising a budget will not clear it.\n#   Read, in this order:\n#     - the newest agent note in <WORK>/.specstride/features/harness-missing-dsh/PROGRESS.md (it names the blocker)\n#     - the phase's run note under the spec's runs/ directory (it usually lists\n#       the options the operator has to choose between)\n#   Record the decision where the note asks for it, then: specstride resume -w <WORK>\n  ====+----\n      1 now\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/runs/<run-id-1>/verification",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/verdicts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/harness-missing-dsh/yield",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=harness-missing-dsh\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=claude\nMAX_REJECTS=1\nMAX_ITER=5\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/harness-missing-dsh/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<RUN>/edited-reference/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/lock",
+     "type": "file",
+     "mode": "0644",
+     "content": "<run-id-1> <time>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/run.log",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/harness-missing-dsh/runs/<run-id-1>/run.log"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Consecutive errors\n\nA pass that fails before the harness starts.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "prompt.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"harness-missing-dsh\",\"proposer\":\"dsh\",\"critic\":\"claude\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/harness-missing-dsh/runs/<run-id-1>/verification/verification-plan.json\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "workdir",
+        "value": "<WORK>",
+        "type": "string"
+       },
+       {
+        "key": "phases",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "proposer",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "critic",
+        "value": "claude",
+        "type": "string"
+       },
+       {
+        "key": "resume",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "states",
+        "value": "C",
+        "type": "string"
+       },
+       {
+        "key": "verification",
+        "value": "off",
+        "type": "string"
+       },
+       {
+        "key": "verification_plan",
+        "value": "<WORK>/.specstride/features/harness-missing-dsh/runs/<run-id-1>/verification/verification-plan.json",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "total",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"attempt\":\"1\",\"backend\":\"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"consec\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"1\",\"evidence\":\"missing\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "evidence",
+        "value": "missing",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"elapsed\":\"<duration>\",\"consec\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_short_pass",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "elapsed",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"consec\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"2\",\"evidence\":\"missing\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "evidence",
+        "value": "missing",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"elapsed\":\"<duration>\",\"consec\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_short_pass",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "elapsed",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"iter\":\"3\",\"consec\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"reason\":\"proposer_no_progress\",\"iter\":\"3\",\"consec\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "proposer_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"reason\":\"proposer_no_progress\",\"phase\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "proposer_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     }
+    ],
+    "proposer": [
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"harness-missing-dsh\",\"phase\":\"1\",\"attempt\":\"1\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "harness-missing-dsh",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "global",
+        "type": "string"
+       },
+       {
+        "key": "arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "override",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "tamper_bracket",
+        "value": "",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 11,
+  "N-02": 0,
+  "N-03": 47,
+  "N-04": 55,
+  "N-05": 9,
+  "N-06": 3,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 16,
+  "N-14": 16,
+  "N-15": 5,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 5,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 18,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

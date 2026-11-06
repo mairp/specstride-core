@@ -1,0 +1,22 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "deadline_sec": 60,
+ "on_resume": "write the evidence of the phase",
+ "reason": "a job of the scenario; a command of the scenario says when it is done",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "sleep 1; : > the-job-is-done"
+  ]
+ },
+ "resume_when": {
+  "kind": "command",
+  "argv": [
+   "test",
+   "-e",
+   "the-job-is-done"
+  ]
+ }
+}

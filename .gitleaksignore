@@ -1,0 +1,15 @@
+# Planted test canaries of the redactor and canary suites, not credentials.
+packages/cli/test/output/frame.test.ts:generic-api-key:16
+packages/core/test/phase2-shared-parts-101.test.ts:generic-api-key:1003
+packages/harness/tests/canary/fixtures/home/.ssh/id_ed25519:private-key:1
+packages/kernel/test/redactor/secrets-commit.test.ts:generic-api-key:52
+packages/kernel/test/redactor/secrets-commit.test.ts:generic-api-key:98
+packages/kernel/test/redactor/secrets-commit.test.ts:generic-api-key:139
+packages/kernel/test/redactor/secrets-commit.test.ts:generic-api-key:221
+packages/kernel/test/redactor/secrets-commit.test.ts:generic-api-key:235
+packages/observability/test/content-accessor.test.ts:generic-api-key:45
+packages/observability/test/no-content.test.ts:generic-api-key:54
+packages/runtime/test/fixtures/ps-macos.json:generic-api-key:14
+packages/runtime/test/fixtures/ps-macos.json:generic-api-key:22
+packages/runtime/test/unit/platform.test.ts:generic-api-key:86
+packages/testkit/test/redactor-contract.test.ts:private-key:159

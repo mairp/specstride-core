@@ -1,0 +1,174 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-36/gate-launcher-not-found@engine-stub",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "mixture-of-loops",
+ "commit": "9c88f86e1771efeabcfe3b4b1cb24384fff284e8",
+ "surfaces": {
+  "exit": {
+   "exitCode": 4,
+   "perCommand": [
+    0,
+    0,
+    0,
+    4
+   ],
+   "signals": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "stdout": {
+   "text": "promoted to validated: 001-greeting\nvalid validated launch contract: 001-greeting\n[MOL-GATE] check=launcher-intact status=fail reason=launcher-not-found detail=\"<WORK>/launch.sh does not exist\"\n[MOL-GATE] check=contract-validated status=not-evaluated\n[MOL-GATE] check=authorized-root status=not-evaluated\n[MOL-GATE] check=launcher-syntax status=not-evaluated\n[MOL-GATE] check=launcher-dry-run status=not-evaluated\n[MOL-GATE] check=run-directory-free status=not-evaluated\n[MOL-GATE] decision=refuse reason=launcher-not-found detail=\"<WORK>/launch.sh does not exist\" next=\"generate the launcher first, or ask for `auto`\"\n"
+  },
+  "stderr": {
+   "text": "note: <component:contract-derive> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\nnote: <component:contract-validate> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": "README.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# greeting\n\nA one-function Python package used as a Spec Kit fixture.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "approvals",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "approvals/release-approval.json",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\n  \"feature\": \"001-greeting\",\n  \"approved_by\": \"release-manager\",\n  \"signature\": \"fixture-signature-not-a-real-credential\",\n  \"scope\": \"release of 001-greeting\"\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "launch-contract.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"authorized_roots\": [\n    \"<WORK>\"\n  ],\n  \"configuration\": {\n    \"agent_stream\": true,\n    \"color\": \"auto\",\n    \"live_detail\": \"full\",\n    \"specstride_live\": true,\n    \"telemetry\": {\n      \"loki\": {\n        \"enabled\": false\n      },\n      \"otel\": {\n        \"enabled\": false\n      }\n    }\n  },\n  \"coverage\": [\n    {\n      \"disposition\": \"mapped\",\n      \"evidence\": [\n        \".specstride/features/001-greeting\",\n        \"verified.txt\"\n      ],\n      \"id\": \"OBL-DF4BD387EE2A\",\n      \"kind\": \"implementation\",\n      \"producer\": \"stage:implement-feature\",\n      \"rationale\": \"Create `src/greet.py` with `greet(name)` returning `Hello, <name>!`\",\n      \"source\": {\n        \"anchor\": \"T001\",\n        \"line\": 4,\n        \"path\": \"specs/001-greeting/tasks.md\"\n      },\n      \"stage_ids\": [\n        \"implement-feature\"\n      ],\n      \"timing\": \"specstride-phase:1\",\n      \"verification_ids\": []\n    },\n    {\n      \"disposition\": \"mapped\",\n      \"evidence\": [\n        \".specstride/features/001-greeting\",\n        \"verified.txt\"\n      ],\n      \"id\": \"OBL-009BE79CD853\",\n      \"kind\": \"implementation\",\n      \"producer\": \"stage:implement-feature\",\n      \"rationale\": \"Add `tests/test_greet.py` and run the declared verification command from plan.md\",\n      \"source\": {\n        \"anchor\": \"T002\",\n        \"line\": 7,\n        \"path\": \"specs/001-greeting/tasks.md\"\n      },\n      \"stage_ids\": [\n        \"implement-feature\",\n        \"verify-greeting\"\n      ],\n      \"timing\": \"specstride-phase:2\",\n      \"verification_ids\": []\n    }\n  ],\n  \"features\": [\n    {\n      \"artifacts_absent\": [\n        \"research.md\",\n        \"data-model.md\",\n        \"quickstart.md\",\n        \"verification-commands.json\"\n      ],\n      \"artifacts_present\": [\n        \"spec.md\",\n        \"plan.md\",\n        \"tasks.md\"\n      ],\n      \"path\": \"specs/001-greeting\",\n      \"phases\": [\n        {\n          \"line\": 3,\n          \"number\": 1,\n          \"title\": \"Setup\"\n        },\n        {\n          \"line\": 6,\n          \"number\": 2,\n          \"title\": \"Verify\"\n        }\n      ],\n      \"slug\": \"001-greeting\",\n      \"task_count\": 2\n    }\n  ],\n  \"findings\": [\n    {\n      \"id\": \"semantic-derivation-required\",\n      \"message\": \"Classify every execution-relevant obligation and construct the stage graph.\",\n      \"resolution\": \"Stages derived and mapped to every task.\",\n      \"severity\": \"blocker\",\n      \"source\": {\n        \"anchor\": \"T001\",\n        \"line\": 4,\n        \"path\": \"specs/001-greeting/tasks.md\"\n      },\n      \"status\": \"resolved\"\n    }\n  ],\n  \"generated_by\": {\n    \"tool\": \"contract-derive\",\n    \"version\": \"1.0\"\n  },\n  \"id\": \"001-greeting\",\n  \"inventory\": {\n    \"prerequisites\": [\n      {\n        \"id\": \"PRE-001\",\n        \"path\": \"approvals/release-approval.json\",\n        \"present\": true,\n        \"resolved\": \"approvals/release-approval.json\",\n        \"source\": {\n          \"anchor\": \"PRE-001\",\n          \"line\": 17,\n          \"path\": \"specs/001-greeting/plan.md\"\n        }\n      }\n    ],\n    \"shell_candidates\": [\n      {\n        \"classification\": \"candidate-only\",\n        \"end_line\": 12,\n        \"path\": \"specs/001-greeting/plan.md\",\n        \"start_line\": 12,\n        \"text\": \"python3 -m unittest discover -s tests -v\"\n      }\n    ],\n    \"tasks\": [\n      {\n        \"checked\": false,\n        \"id\": \"T001\",\n        \"line\": 4,\n        \"parallel_marker\": false,\n        \"phase\": 1,\n        \"source\": \"specs/001-greeting/tasks.md\",\n        \"story\": null,\n        \"text\": \"Create `src/greet.py` with `greet(name)` returning `Hello, <name>!`\"\n      },\n      {\n        \"checked\": false,\n        \"id\": \"T002\",\n        \"line\": 7,\n        \"parallel_marker\": false,\n        \"phase\": 2,\n        \"source\": \"specs/001-greeting/tasks.md\",\n        \"story\": \"US1\",\n        \"text\": \"Add `tests/test_greet.py` and run the declared verification command from plan.md\"\n      }\n    ],\n    \"verification_documents\": []\n  },\n  \"repository\": {\n    \"dirty\": null,\n    \"revision\": null,\n    \"root\": \"<WORK>\"\n  },\n  \"schema_version\": \"1.0\",\n  \"sources\": [\n    {\n      \"kind\": \"plan\",\n      \"lines\": 17,\n      \"path\": \"specs/001-greeting/plan.md\",\n      \"sha256\": \"<hash-impl-1>\"\n    },\n    {\n      \"kind\": \"spec\",\n      \"lines\": 12,\n      \"path\": \"specs/001-greeting/spec.md\",\n      \"sha256\": \"<hash-impl-2>\"\n    },\n    {\n      \"kind\": \"tasks\",\n      \"lines\": 7,\n      \"path\": \"specs/001-greeting/tasks.md\",\n      \"semantic_sha256\": \"<hash-impl-3>\",\n      \"sha256\": \"<hash-impl-3>\"\n    }\n  ],\n  \"stages\": [\n    {\n      \"action\": {\n        \"argv\": [\n          \"specstride\",\n          \"run\",\n          \"-w\",\n          \".\",\n          \"-s\",\n          \"specs/001-greeting/tasks.md\",\n          \"--spec-format\",\n          \"speckit-tasks\",\n          \"--feature\",\n          \"001-greeting\"\n        ],\n        \"timeout_seconds\": 3600\n      },\n      \"cwd\": \".\",\n      \"depends_on\": [],\n      \"evidence\": [\n        \".specstride/features/001-greeting\"\n      ],\n      \"id\": \"implement-feature\",\n      \"kind\": \"specstride\",\n      \"postconditions\": [\n        {\n          \"path\": \".specstride/features/001-greeting\",\n          \"type\": \"dir_exists\"\n        }\n      ],\n      \"preconditions\": [\n        {\n          \"path\": \"approvals/release-approval.json\",\n          \"timing\": \"preflight\",\n          \"type\": \"file_exists\"\n        },\n        {\n          \"name\": \"specstride\",\n          \"timing\": \"preflight\",\n          \"type\": \"command_available\"\n        }\n      ]\n    },\n    {\n      \"action\": {\n        \"argv\": [\n          \"python3\",\n          \"-c\",\n          \"import pathlib; pathlib.Path('verified.txt').write_text('ok\\\\n')\"\n        ],\n        \"timeout_seconds\": 600\n      },\n      \"cwd\": \".\",\n      \"depends_on\": [],\n      \"evidence\": [\n        \"verified.txt\"\n      ],\n      \"id\": \"verify-greeting\",\n      \"kind\": \"command\",\n      \"postconditions\": [\n        {\n          \"path\": \"verified.txt\",\n          \"type\": \"file_exists\"\n        }\n      ],\n      \"preconditions\": []\n    }\n  ],\n  \"status\": \"validated\",\n  \"promotion\": {\n    \"by\": \"<component:contract-validate> --promote\",\n    \"sha256\": \"<hash-impl-4>\"\n  }\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/001-greeting",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/001-greeting/plan.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Implementation Plan: Greeting\n\n## Summary\n\nImplement `greet(name)` in `src/greet.py` and verify it with the standard library test runner.\n\n## Verification\n\nThe only declared verification command, run from the repository root:\n\n```bash\npython3 -m unittest discover -s tests -v\n```\n\n## Prerequisites\n\n- PRE-001: The release manager's signed approval file `approvals/release-approval.json` must exist before any stage runs. It is non-delegable authority: no task or stage may create, sign, or fabricate it. If it is absent when the pipeline is derived, derivation must stop with a blocker.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/001-greeting/spec.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Feature Specification: Greeting\n\n**Feature**: 001-greeting\n\n## User Story 1 (P1)\n\nAs a user I call `greet(name)` and receive `Hello, <name>!`.\n\n## Requirements\n\n- **FR-001**: `greet(\"Ada\")` returns `Hello, Ada!`.\n- **FR-002**: The release of this feature requires the release manager's signed approval.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/001-greeting/tasks.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Tasks: Greeting\n\n## Phase 1: Setup\n- [ ] T001 Create `src/greet.py` with `greet(name)` returning `Hello, <name>!`\n\n## Phase 2: Verify\n- [ ] T002 [US1] Add `tests/test_greet.py` and run the declared verification command from plan.md\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [],
+   "records": []
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  },
+  "pipeline": {
+   "root": "<WORK>/.mixture-of-loops/runs/001-greeting",
+   "records": [
+    {
+     "name": "state.json",
+     "exists": false
+    },
+    {
+     "name": "harness-run.json",
+     "exists": false
+    }
+   ],
+   "logs": [
+    {
+     "name": "launcher.log",
+     "exists": false
+    },
+    {
+     "name": "harness-launch.log",
+     "exists": false
+    },
+    {
+     "name": "harness-report.log",
+     "exists": false
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 5,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 5,
+  "N-10": 0,
+  "N-11": 1,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 4,
+  "N-16": 1,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 5,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

@@ -1,0 +1,1496 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-18/consecutive-errors-structured",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 7,
+   "perCommand": [
+    7
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  · init prime-v3 session=fixture-session-truncated\n  ! malformed_json: Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\n  · init prime-v3 session=fixture-session-truncated\n  ! malformed_json: Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\n"
+  },
+  "stderr": {
+   "text": "----- proposer pass 1/5  <time> -----\npass-loop: pass 1 errored (reason 'malformed_stream') — consecutive errors: 1/2\n----- proposer pass 2/5  <time> -----\npass-loop: pass 2 ended after <duration> with no evidence and no yield — 2 short passes in a row; the next pass is told to yield instead of waiting.\npass-loop: pass 2 errored (reason 'malformed_stream') — consecutive errors: 2/2\npass-loop: 2 consecutive agent errors — aborting (exit 7). Raise --timeout or SPECSTRIDE_PROPOSER_MAX_ERRORS, or fix the phase harness (e.g. an over-long prompt or a run that never reaches a verdict).\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/.breaker-state.<run-id-1>.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"cap_count\": 0,\n  \"count\": 2,\n  \"last_invocation_id\": \"<run-id-2>\",\n  \"last_kill_class\": null,\n  \"last_reason_code\": \"malformed_stream\"\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/.last-invocation-dir",
+     "type": "file",
+     "mode": "0644",
+     "content": "<WORK>/.specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_observability\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":1,\"mode\":\"structured\",\"reason\":\"Prime JSON schema v3 selected\",\"provider_format\":\"prime-v3\",\"supported_signals\":\"init,text,tool,evidence,result\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":2,\"schema_version\":3,\"session_id\":\"fixture-session-truncated\",\"cwd\":\"/work/project\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_diagnostic\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":3,\"code\":\"malformed_json\",\"severity\":\"error\",\"message\":\"Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\",\"redacted\":false,\"truncated\":false,\"original_bytes\":83,\"retained_bytes\":83}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_result\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":1,\"status\":\"error\",\"is_error\":true,\"reason_code\":\"malformed_stream\",\"reason\":\"Provider stream was malformed or truncated\",\"source\":\"reconciled\",\"producer_exit_code\":0,\"parser_exit_code\":0,\"timed_out\":false,\"duration_ms\":<duration>,\"finalized_at\":\"<time>\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"subtype\":\"malformed_stream\",\"consec\":\"1\",\"reason\":\"agent_error\",\"kill_class\":\"agent\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"evidence\":\"missing\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_observability\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":1,\"mode\":\"structured\",\"reason\":\"Prime JSON schema v3 selected\",\"provider_format\":\"prime-v3\",\"supported_signals\":\"init,text,tool,evidence,result\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":2,\"schema_version\":3,\"session_id\":\"fixture-session-truncated\",\"cwd\":\"/work/project\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_diagnostic\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":3,\"code\":\"malformed_json\",\"severity\":\"error\",\"message\":\"Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\",\"redacted\":false,\"truncated\":false,\"original_bytes\":83,\"retained_bytes\":83}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"elapsed\":\"<duration>\",\"consec\":\"2\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_result\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":1,\"status\":\"error\",\"is_error\":true,\"reason_code\":\"malformed_stream\",\"reason\":\"Provider stream was malformed or truncated\",\"source\":\"reconciled\",\"producer_exit_code\":0,\"parser_exit_code\":0,\"timed_out\":false,\"duration_ms\":<duration>,\"finalized_at\":\"<time>\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"subtype\":\"malformed_stream\",\"consec\":\"2\",\"reason\":\"agent_error\",\"kill_class\":\"agent\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"feature\":\"consecutive-errors-structured\",\"reason\":\"proposer_consecutive_errors\",\"iter\":\"2\",\"subtype\":\"malformed_stream\",\"kill_reason\":\"agent_error\",\"kill_class\":\"agent\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1/<run-id-3>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1/<run-id-3>/metadata.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"attempt\": 1,\n  \"backend\": \"prime\",\n  \"contract\": \"specstride-invocation/v1\",\n  \"expected_evidence\": \"<WORK>/gate.md\",\n  \"feature\": \"consecutive-errors-structured\",\n  \"invocation_id\": \"<run-id-3>\",\n  \"iteration\": 1,\n  \"observability_mode\": \"structured\",\n  \"phase\": 0,\n  \"provider_format\": \"prime-v3\",\n  \"role\": \"proposer\",\n  \"run_id\": \"<run-id-1>\"\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1/<run-id-3>/producer.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"contract\": \"specstride-producer<generated>/v1\",\n  \"duration_ms\": <duration>,\n  \"launch_failed\": false,\n  \"parser_exit_code\": 0,\n  \"producer_exit_code\": 0,\n  \"producer_signal\": null,\n  \"timed_out\": false\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1/<run-id-3>/provider-terminal.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"contract\": \"specstride-provider<generated>/v1\",\n  \"malformed_stream\": true,\n  \"provider_terminal\": null\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-1/<run-id-3>/result.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"attempt\": 1,\n  \"backend\": \"prime\",\n  \"contract\": \"specstride-invocation<generated>/v1\",\n  \"duration_ms\": <duration>,\n  \"feature\": \"consecutive-errors-structured\",\n  \"finalized_at\": \"<time>\",\n  \"invocation_id\": \"<run-id-3>\",\n  \"is_error\": true,\n  \"iteration\": 1,\n  \"parser_exit_code\": 0,\n  \"phase\": 0,\n  \"producer_exit_code\": 0,\n  \"producer_signal\": null,\n  \"provider_status\": null,\n  \"provider_stop_reason\": null,\n  \"reason\": \"Provider stream was malformed or truncated\",\n  \"reason_code\": \"malformed_stream\",\n  \"role\": \"proposer\",\n  \"run_id\": \"<run-id-1>\",\n  \"source\": \"reconciled\",\n  \"status\": \"error\",\n  \"timed_out\": false\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>/metadata.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"attempt\": 1,\n  \"backend\": \"prime\",\n  \"contract\": \"specstride-invocation/v1\",\n  \"expected_evidence\": \"<WORK>/gate.md\",\n  \"feature\": \"consecutive-errors-structured\",\n  \"invocation_id\": \"<run-id-2>\",\n  \"iteration\": 2,\n  \"observability_mode\": \"structured\",\n  \"phase\": 0,\n  \"provider_format\": \"prime-v3\",\n  \"role\": \"proposer\",\n  \"run_id\": \"<run-id-1>\"\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>/producer.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"contract\": \"specstride-producer<generated>/v1\",\n  \"duration_ms\": <duration>,\n  \"launch_failed\": false,\n  \"parser_exit_code\": 0,\n  \"producer_exit_code\": 0,\n  \"producer_signal\": null,\n  \"timed_out\": false\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>/provider-terminal.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"contract\": \"specstride-provider<generated>/v1\",\n  \"malformed_stream\": true,\n  \"provider_terminal\": null\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/consecutive-errors-structured/debug/invocations/<run-id-1>/proposer/phase-0/attempt-1/iter-2/<run-id-2>/result.json",
+     "type": "file",
+     "mode": "0600",
+     "content": "{\n  \"attempt\": 1,\n  \"backend\": \"prime\",\n  \"contract\": \"specstride-invocation<generated>/v1\",\n  \"duration_ms\": <duration>,\n  \"feature\": \"consecutive-errors-structured\",\n  \"finalized_at\": \"<time>\",\n  \"invocation_id\": \"<run-id-2>\",\n  \"is_error\": true,\n  \"iteration\": 2,\n  \"parser_exit_code\": 0,\n  \"phase\": 0,\n  \"producer_exit_code\": 0,\n  \"producer_signal\": null,\n  \"provider_status\": null,\n  \"provider_stop_reason\": null,\n  \"reason\": \"Provider stream was malformed or truncated\",\n  \"reason_code\": \"malformed_stream\",\n  \"role\": \"proposer\",\n  \"run_id\": \"<run-id-1>\",\n  \"source\": \"reconciled\",\n  \"status\": \"error\",\n  \"timed_out\": false\n}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Consecutive errors\n\nA pass that fails before the harness starts.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "prompt.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"subtype\":\"malformed_stream\",\"consec\":\"1\",\"reason\":\"agent_error\",\"kill_class\":\"agent\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_error",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "malformed_stream",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "agent_error",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "agent",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"1\",\"evidence\":\"missing\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "evidence",
+        "value": "missing",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_short_pass\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"elapsed\":\"<duration>\",\"consec\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_short_pass",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "elapsed",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-structured\",\"iter\":\"2\",\"subtype\":\"malformed_stream\",\"consec\":\"2\",\"reason\":\"agent_error\",\"kill_class\":\"agent\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_error",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "malformed_stream",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "agent_error",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "agent",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"feature\":\"consecutive-errors-structured\",\"reason\":\"proposer_consecutive_errors\",\"iter\":\"2\",\"subtype\":\"malformed_stream\",\"kill_reason\":\"agent_error\",\"kill_class\":\"agent\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "proposer_consecutive_errors",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "malformed_stream",
+        "type": "string"
+       },
+       {
+        "key": "kill_reason",
+        "value": "agent_error",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "agent",
+        "type": "string"
+       }
+      ]
+     }
+    ],
+    "proposer": [
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_observability\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":1,\"mode\":\"structured\",\"reason\":\"Prime JSON schema v3 selected\",\"provider_format\":\"prime-v3\",\"supported_signals\":\"init,text,tool,evidence,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "init,text,tool,evidence,result",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":2,\"schema_version\":3,\"session_id\":\"fixture-session-truncated\",\"cwd\":\"/work/project\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_init",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "schema_version",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "session_id",
+        "value": "fixture-session-truncated",
+        "type": "string"
+       },
+       {
+        "key": "cwd",
+        "value": "/work/project",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_diagnostic\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":3,\"code\":\"malformed_json\",\"severity\":\"error\",\"message\":\"Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\",\"redacted\":false,\"truncated\":false,\"original_bytes\":83,\"retained_bytes\":83}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_diagnostic",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "code",
+        "value": "malformed_json",
+        "type": "string"
+       },
+       {
+        "key": "severity",
+        "value": "error",
+        "type": "string"
+       },
+       {
+        "key": "message",
+        "value": "Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)",
+        "type": "string"
+       },
+       {
+        "key": "redacted",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "truncated",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "original_bytes",
+        "value": 83,
+        "type": "number"
+       },
+       {
+        "key": "retained_bytes",
+        "value": 83,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_result\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":1,\"invocation_id\":\"<run-id-3>\",\"sequence\":1,\"status\":\"error\",\"is_error\":true,\"reason_code\":\"malformed_stream\",\"reason\":\"Provider stream was malformed or truncated\",\"source\":\"reconciled\",\"producer_exit_code\":0,\"parser_exit_code\":0,\"timed_out\":false,\"duration_ms\":<duration>,\"finalized_at\":\"<time>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-3>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "status",
+        "value": "error",
+        "type": "string"
+       },
+       {
+        "key": "is_error",
+        "value": true,
+        "type": "boolean"
+       },
+       {
+        "key": "reason_code",
+        "value": "malformed_stream",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Provider stream was malformed or truncated",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "reconciled",
+        "type": "string"
+       },
+       {
+        "key": "producer_exit_code",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "parser_exit_code",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "timed_out",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "finalized_at",
+        "value": "<time>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_observability\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":1,\"mode\":\"structured\",\"reason\":\"Prime JSON schema v3 selected\",\"provider_format\":\"prime-v3\",\"supported_signals\":\"init,text,tool,evidence,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "init,text,tool,evidence,result",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_init\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":2,\"schema_version\":3,\"session_id\":\"fixture-session-truncated\",\"cwd\":\"/work/project\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_init",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "schema_version",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "session_id",
+        "value": "fixture-session-truncated",
+        "type": "string"
+       },
+       {
+        "key": "cwd",
+        "value": "/work/project",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_diagnostic\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":3,\"code\":\"malformed_json\",\"severity\":\"error\",\"message\":\"Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)\",\"redacted\":false,\"truncated\":false,\"original_bytes\":83,\"retained_bytes\":83}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_diagnostic",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "code",
+        "value": "malformed_json",
+        "type": "string"
+       },
+       {
+        "key": "severity",
+        "value": "error",
+        "type": "string"
+       },
+       {
+        "key": "message",
+        "value": "Malformed Prime JSON: Unterminated string starting at: line 1 column 104 (char 103)",
+        "type": "string"
+       },
+       {
+        "key": "redacted",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "truncated",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "original_bytes",
+        "value": 83,
+        "type": "number"
+       },
+       {
+        "key": "retained_bytes",
+        "value": 83,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"agent_result\",\"run_id\":\"<run-id-1>\",\"feature\":\"consecutive-errors-structured\",\"role\":\"proposer\",\"backend\":\"prime\",\"phase\":0,\"attempt\":1,\"iteration\":2,\"invocation_id\":\"<run-id-2>\",\"sequence\":1,\"status\":\"error\",\"is_error\":true,\"reason_code\":\"malformed_stream\",\"reason\":\"Provider stream was malformed or truncated\",\"source\":\"reconciled\",\"producer_exit_code\":0,\"parser_exit_code\":0,\"timed_out\":false,\"duration_ms\":<duration>,\"finalized_at\":\"<time>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_result",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-structured",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "iteration",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "invocation_id",
+        "value": "<run-id-2>",
+        "type": "string"
+       },
+       {
+        "key": "sequence",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "status",
+        "value": "error",
+        "type": "string"
+       },
+       {
+        "key": "is_error",
+        "value": true,
+        "type": "boolean"
+       },
+       {
+        "key": "reason_code",
+        "value": "malformed_stream",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Provider stream was malformed or truncated",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "reconciled",
+        "type": "string"
+       },
+       {
+        "key": "producer_exit_code",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "parser_exit_code",
+        "value": 0,
+        "type": "number"
+       },
+       {
+        "key": "timed_out",
+        "value": false,
+        "type": "boolean"
+       },
+       {
+        "key": "duration_ms",
+        "value": "<duration>",
+        "type": "number"
+       },
+       {
+        "key": "finalized_at",
+        "value": "<time>",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "proposer",
+    "harness": "prime",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.",
+    "given": {
+     "mode": "json"
+    },
+    "step": {
+     "verbs": [
+      "stream"
+     ]
+    },
+    "argv": [
+     "-p",
+     "--mode",
+     "json",
+     "--no-session",
+     "--cwd",
+     "<WORK>"
+    ]
+   },
+   {
+    "role": "proposer",
+    "harness": "prime",
+    "call": 2,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.",
+    "given": {
+     "mode": "json"
+    },
+    "step": {
+     "verbs": [
+      "stream"
+     ]
+    },
+    "argv": [
+     "-p",
+     "--mode",
+     "json",
+     "--no-session",
+     "--cwd",
+     "<WORK>"
+    ]
+   }
+  ],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 6,
+  "N-02": 0,
+  "N-03": 48,
+  "N-04": 52,
+  "N-05": 13,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 6,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 15,
+  "N-14": 15,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 5,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 2,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 23,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

@@ -1,0 +1,711 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-18/consecutive-errors-legacy",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 7,
+   "perCommand": [
+    7
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": ""
+  },
+  "stderr": {
+   "text": "----- proposer pass 1/5  <time> -----\npass-loop: pass 1 was terminated by the watchdog (idle_timeout, class hang); its checkpoint is carried into the next pass.\npass-loop: pass 1 errored (subtype 'watchdog_idle_timeout', is_error) — consecutive errors: 1/2\npass-loop: pass 1 changed nothing outside .specstride — consecutive no-progress passes: 1/3\n----- proposer pass 2/5  <time> -----\npass-loop: pass 2 was terminated by the watchdog (idle_timeout, class hang); its checkpoint is carried into the next pass.\npass-loop: pass 2 errored (subtype 'watchdog_idle_timeout', is_error) — consecutive errors: 2/2\npass-loop: 2 consecutive agent errors — aborting (exit 7). Raise --timeout or SPECSTRIDE_PROPOSER_MAX_ERRORS, or fix the phase harness (e.g. an over-long prompt or a run that never reaches a verdict).\n"
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/.last-watchdog-kill",
+     "type": "file",
+     "mode": "0644",
+     "content": "idle_timeout|<duration>|\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/.last-watchdog-kill.path",
+     "type": "file",
+     "mode": "0644",
+     "content": "<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass2-<time>.md\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"pass_killed\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"reason\":\"idle_timeout\",\"class\":\"hang\",\"elapsed\":\"<duration>\",\"detail\":\"\",\"checkpoint\":\"<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass1-<time>.md\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"subtype\":\"watchdog_idle_timeout\",\"consec\":\"1\",\"reason\":\"idle_timeout\",\"kill_class\":\"hang\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"consec\":\"1\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"evidence\":\"missing\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"max_iter\":\"5\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"pass_killed\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"reason\":\"idle_timeout\",\"class\":\"hang\",\"elapsed\":\"<duration>\",\"detail\":\"\",\"checkpoint\":\"<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass2-<time>.md\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"subtype\":\"watchdog_idle_timeout\",\"consec\":\"2\",\"reason\":\"idle_timeout\",\"kill_class\":\"hang\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"feature\":\"consecutive-errors-legacy\",\"reason\":\"proposer_consecutive_errors\",\"iter\":\"2\",\"subtype\":\"watchdog_idle_timeout\",\"kill_reason\":\"idle_timeout\",\"kill_class\":\"hang\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Consecutive errors\n\nA pass that fails before the harness starts.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "prompt.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"pass_killed\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"reason\":\"idle_timeout\",\"class\":\"hang\",\"elapsed\":\"<duration>\",\"detail\":\"\",\"checkpoint\":\"<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass1-<time>.md\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "pass_killed",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "class",
+        "value": "hang",
+        "type": "string"
+       },
+       {
+        "key": "elapsed",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "detail",
+        "value": "",
+        "type": "string"
+       },
+       {
+        "key": "checkpoint",
+        "value": "<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass1-<time>.md",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"subtype\":\"watchdog_idle_timeout\",\"consec\":\"1\",\"reason\":\"idle_timeout\",\"kill_class\":\"hang\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_error",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "watchdog_idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "hang",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_no_progress\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"consec\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_no_progress",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_done\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"1\",\"evidence\":\"missing\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_done",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "evidence",
+        "value": "missing",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"max_iter\":\"5\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "5",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"pass_killed\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"reason\":\"idle_timeout\",\"class\":\"hang\",\"elapsed\":\"<duration>\",\"detail\":\"\",\"checkpoint\":\"<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass2-<time>.md\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "pass_killed",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "class",
+        "value": "hang",
+        "type": "string"
+       },
+       {
+        "key": "elapsed",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "detail",
+        "value": "",
+        "type": "string"
+       },
+       {
+        "key": "checkpoint",
+        "value": "<RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass2-<time>.md",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_error\",\"feature\":\"consecutive-errors-legacy\",\"iter\":\"2\",\"subtype\":\"watchdog_idle_timeout\",\"consec\":\"2\",\"reason\":\"idle_timeout\",\"kill_class\":\"hang\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_error",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "watchdog_idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "consec",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "hang",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"feature\":\"consecutive-errors-legacy\",\"reason\":\"proposer_consecutive_errors\",\"iter\":\"2\",\"subtype\":\"watchdog_idle_timeout\",\"kill_reason\":\"idle_timeout\",\"kill_class\":\"hang\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "consecutive-errors-legacy",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "proposer_consecutive_errors",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "subtype",
+        "value": "watchdog_idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "kill_reason",
+        "value": "idle_timeout",
+        "type": "string"
+       },
+       {
+        "key": "kill_class",
+        "value": "hang",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "proposer",
+    "harness": "dsh",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "DSH_HOME",
+     "DSH_PERMISSION_MODE",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_AGENT_STREAM",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.",
+    "given": {
+     "permissionMode": "workspace-write"
+    },
+    "step": {
+     "verbs": [
+      "silent"
+     ]
+    },
+    "argv": [
+     "--profile",
+     "headless",
+     "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory."
+    ]
+   },
+   {
+    "role": "proposer",
+    "harness": "dsh",
+    "call": 2,
+    "envNames": [
+     "CLICOLOR",
+     "DSH_HOME",
+     "DSH_PERMISSION_MODE",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_AGENT_STREAM",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.\n\n## Your previous pass was terminated by the harness, not by you\nReason: **idle_timeout** after <duration>.\nBudget your work to fit a single pass: prefer writing down partial, verified\nresults over starting anything you cannot finish inside one pass.\nFull checkpoint (what you were doing when it was killed): <RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass1-<time>.md",
+    "given": {
+     "permissionMode": "workspace-write"
+    },
+    "step": {
+     "verbs": [
+      "silent"
+     ]
+    },
+    "argv": [
+     "--profile",
+     "headless",
+     "You are the PROPOSER of phase 1.\nWrite the evidence of the phase to gate.md in the working directory.\n\n## Your previous pass was terminated by the harness, not by you\nReason: **idle_timeout** after <duration>.\nBudget your work to fit a single pass: prefer writing down partial, verified\nresults over starting anything you cannot finish inside one pass.\nFull checkpoint (what you were doing when it was killed): <RUN>/pass-checkpoints/<run-id-1>-phase0-attempt1-pass1-<time>.md"
+    ]
+   }
+  ],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 9,
+  "N-02": 0,
+  "N-03": 8,
+  "N-04": 35,
+  "N-05": 8,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 9,
+  "N-14": 9,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 3,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 2,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 16,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

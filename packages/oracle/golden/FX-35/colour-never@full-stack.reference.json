@@ -1,0 +1,95 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-35/colour-never@full-stack",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "mixture-of-loops",
+ "commit": "9c88f86e1771efeabcfe3b4b1cb24384fff284e8",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "signals": [
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "stdout": {
+   "text": "promoted to validated: 001-greeting\nvalid validated launch contract: 001-greeting\nrendered <WORK>/launch.sh\nbundle <WORK>/.mixture-of-loops/generated/001-greeting/<generated>\n[RUN] implement-feature attempt 1/1: env[NO_COLOR,SPECSTRIDE_LIVE,WIGGUM_LIVE] \"specstride\" \"run\" \"-w\" \".\" \"-s\" \"specs/001-greeting/tasks.md\" \"--spec-format\" \"speckit-tasks\" \"--feature\" \"001-greeting\" \"--no-live\"\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/specs/001-greeting/tasks.md  (2 phases: 1 2)\n  feature  : 001-greeting   (state: .specstride/features/001-greeting/)\n  proposer : claude\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — Setup  (<time>) =====\n----- proposer: phase 1 attempt 1/1 (claude) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/001-greeting/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 1 (claude) -----\nAPPROVED\n===== PHASE 1 APPROVED (attempt 1) =====\n      ticked 1 task checkbox(es) of phase 1 in <WORK>/specs/001-greeting/tasks.md\n\n===== PHASE 2 — Verify  (<time>) =====\n----- proposer: phase 2 attempt 1/1 (claude) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/001-greeting/gates/GATE2-EVIDENCE.md).\n----- critic: phase 2 attempt 1 (claude) -----\nAPPROVED\n===== PHASE 2 APPROVED (attempt 1) =====\n      ticked 1 task checkbox(es) of phase 2 in <WORK>/specs/001-greeting/tasks.md\n\n# DONE — all 2 phase(s) approved. <time>\n[PASS] implement-feature completed\n[RUN] verify-greeting attempt 1/1: env[NO_COLOR] \"python3\" \"-c\" \"import pathlib; pathlib.Path('verified.txt').write_text('ok\\\\n')\"\n[PASS] verify-greeting completed\n[DIGEST] state=completed exit=0 last-stage=verify-greeting evidence=<WORK>/.mixture-of-loops/runs/001-greeting\n"
+  },
+  "stderr": {
+   "text": "note: <component:contract-derive> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\nnote: <component:contract-validate> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\nnote: <component:launcher-render> ran without MOL_VIA=shell set; run it as a shell command line prefixed MOL_VIA=shell (SKILL.md steps 3 and 8), in %%bash or a ! line in a notebook harness, not through another language's subprocess API.\n"
+  },
+  "pipeline": {
+   "root": "<WORK>/.mixture-of-loops/runs/001-greeting",
+   "records": [
+    {
+     "name": "state.json",
+     "exists": true,
+     "content": "{\n  \"contract_digest\": \"<hash-impl-1>\",\n  \"exit_reason\": \"all-stages-complete\",\n  \"last_stage\": \"verify-greeting\",\n  \"pipeline\": \"001-greeting\",\n  \"stages\": {\n    \"implement-feature\": {\n      \"child_exit_code\": 0,\n      \"evidence\": [\n        \".specstride/features/001-greeting\"\n      ],\n      \"finished_at\": <time>,\n      \"reason\": \"completed\",\n      \"started_at\": <time>,\n      \"status\": \"completed\"\n    },\n    \"verify-greeting\": {\n      \"child_exit_code\": 0,\n      \"evidence\": [\n        \"verified.txt\"\n      ],\n      \"finished_at\": <time>,\n      \"reason\": \"completed\",\n      \"started_at\": <time>,\n      \"status\": \"completed\"\n    }\n  },\n  \"state\": \"completed\",\n  \"superseded_contract_digest\": null,\n  \"updated_at\": <time>\n}\n"
+    },
+    {
+     "name": "harness-run.json",
+     "exists": false
+    }
+   ],
+   "logs": [
+    {
+     "name": "launcher.log",
+     "exists": true,
+     "content": "[RUN] implement-feature attempt 1/1: env[NO_COLOR,SPECSTRIDE_LIVE,WIGGUM_LIVE] \"specstride\" \"run\" \"-w\" \".\" \"-s\" \"specs/001-greeting/tasks.md\" \"--spec-format\" \"speckit-tasks\" \"--feature\" \"001-greeting\" \"--no-live\"\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/specs/001-greeting/tasks.md  (2 phases: 1 2)\n  feature  : 001-greeting   (state: .specstride/features/001-greeting/)\n  proposer : claude\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — Setup  (<time>) =====\n----- proposer: phase 1 attempt 1/1 (claude) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/001-greeting/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 1 (claude) -----\nAPPROVED\n===== PHASE 1 APPROVED (attempt 1) =====\n      ticked 1 task checkbox(es) of phase 1 in <WORK>/specs/001-greeting/tasks.md\n\n===== PHASE 2 — Verify  (<time>) =====\n----- proposer: phase 2 attempt 1/1 (claude) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/001-greeting/gates/GATE2-EVIDENCE.md).\n----- critic: phase 2 attempt 1 (claude) -----\nAPPROVED\n===== PHASE 2 APPROVED (attempt 1) =====\n      ticked 1 task checkbox(es) of phase 2 in <WORK>/specs/001-greeting/tasks.md\n\n# DONE — all 2 phase(s) approved. <time>\n[PASS] implement-feature completed\n[RUN] verify-greeting attempt 1/1: env[NO_COLOR] \"python3\" \"-c\" \"import pathlib; pathlib.Path('verified.txt').write_text('ok\\\\n')\"\n[PASS] verify-greeting completed\n[DIGEST] state=completed exit=0 last-stage=verify-greeting evidence=<WORK>/.mixture-of-loops/runs/001-greeting\n"
+    },
+    {
+     "name": "harness-launch.log",
+     "exists": false
+    },
+    {
+     "name": "harness-report.log",
+     "exists": false
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 5,
+  "N-02": 0,
+  "N-03": 3,
+  "N-04": 4,
+  "N-05": 3,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 2,
+  "N-09": 1,
+  "N-10": 0,
+  "N-11": 1,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 7,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 2,
+  "N-20": 2,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 4,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

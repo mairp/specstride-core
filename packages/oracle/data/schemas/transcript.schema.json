@@ -1,0 +1,67 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:internal:141:oracle-transcript/1",
+ "title": "One transcript record",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "role",
+  "call",
+  "argv",
+  "envNames",
+  "prompt"
+ ],
+ "properties": {
+  "role": {
+   "enum": [
+    "proposer",
+    "critic",
+    "diagnostician",
+    "engine",
+    "verification",
+    "installer"
+   ]
+  },
+  "harness": {
+   "type": "string"
+  },
+  "call": {
+   "type": "integer",
+   "minimum": 1
+  },
+  "argv": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "envNames": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "prompt": {
+   "type": "string"
+  },
+  "promptChannel": {
+   "enum": [
+    "stdin",
+    "argument",
+    "request-body"
+   ],
+   "description": "recorded, and left out of the transport-neutral form for the critic"
+  },
+  "given": {
+   "type": "object",
+   "description": "files the stub was handed: settings file, patch file"
+  },
+  "step": {
+   "type": "object",
+   "description": "the step of the script that answered"
+  },
+  "overrun": {
+   "type": "boolean"
+  }
+ }
+}

@@ -1,0 +1,1 @@
+../../../conformance/EP-02/fake-binary.mjs

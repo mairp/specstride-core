@@ -1,0 +1,60 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-29/quarantined",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "learning",
+    "port": "learn"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "learn",
+      "--apply",
+      "--phase",
+      "1",
+      "--run-id",
+      "learn-00000000000b",
+      "-w",
+      "<WORK>",
+      "--feature",
+      "demo"
+    ],
+    "port": [
+      "specstride",
+      "learn",
+      "--apply",
+      "--phase",
+      "1",
+      "--run-id",
+      "learn-00000000000b",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_FEATURE": "demo",
+    "SPECSTRIDE_LIVE": "false"
+  },
+  "stubs": {},
+  "workdirTemplate": "workdir",
+  "expectedExit": 4,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events"
+  ],
+  "proves": [
+    "C-051"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

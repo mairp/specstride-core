@@ -1,0 +1,172 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-14/mode-required-pass",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/specstride",
+      "run",
+      "-w",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "mode-required-pass",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "required"
+  },
+  "stubs": {
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ],
+    "proposer": [
+      {
+        "verbs": [
+          "write",
+          "evidence"
+        ],
+        "args": {
+          "path": "one.txt",
+          "content": "done\n"
+        }
+      }
+    ],
+    "verification-command": [
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      },
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      },
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      },
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      },
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      },
+      {
+        "verbs": [
+          "pass"
+        ],
+        "args": {
+          "text": "3 tests, 3 passed\n"
+        }
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-008"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "steps": [
+    {
+      "command": {
+        "reference": [
+          "sh",
+          "-c",
+          "cat > verification-commands.json <<EOF\n{\n \"schema_version\": \"1\",\n \"discovery\": \"none\",\n \"commands\": [\n  {\n   \"id\": \"the-suite\",\n   \"phase\": 1,\n   \"executable\": \"stub-harness\",\n   \"args\": [\n    \"verify\"\n   ],\n   \"cwd\": \"$(pwd)\",\n   \"timeoutSec\": 60\n  }\n ]\n}\nEOF\necho 'the document of the scenario is written'"
+        ],
+        "port": [
+          "sh",
+          "-c",
+          "cat > verification-commands.json <<EOF\n{\n \"schema_version\": \"1\",\n \"discovery\": \"none\",\n \"commands\": [\n  {\n   \"id\": \"the-suite\",\n   \"phase\": 1,\n   \"executable\": \"stub-harness\",\n   \"args\": [\n    \"verify\"\n   ],\n   \"cwd\": \"$(pwd)\",\n   \"timeoutSec\": 60\n  }\n ]\n}\nEOF\necho 'the document of the scenario is written'"
+        ]
+      }
+    },
+    {
+      "command": {
+        "reference": [
+          "<IMPL>/specstride",
+          "run",
+          "-w",
+          "<WORK>",
+          "-s",
+          "<WORK>/SPECS.md",
+          "--verification-commands",
+          "<WORK>/verification-commands.json"
+        ],
+        "port": [
+          "specstride",
+          "run",
+          "--workspace",
+          "<WORK>",
+          "--verification-commands",
+          "<WORK>/verification-commands.json"
+        ]
+      }
+    }
+  ]
+}

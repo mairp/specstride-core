@@ -1,0 +1,3521 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture-catalogue/1",
+ "note": "Generated from spec.md §O.2 by contracts/tools/generate.py. spec.md stands where the two differ.",
+ "families": [
+  {
+   "id": "FX-01",
+   "name": "All phases approved first time",
+   "status": "active",
+   "exercises": "The core loop, ticking of tasks, the final event of a run, the proposer and critic invocation of each harness with as-is behaviour",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-cli",
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "101",
+    "106",
+    "109",
+    "111",
+    "124",
+    "125",
+    "130",
+    "131",
+    "138",
+    "144",
+    "145"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "three-phases",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "single-phase",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-claude",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-dsh",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-dsh-model-override",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-codex",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-prime",
+     "pattern": false,
+     "waiver": "DV-112",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-prime-variant",
+     "pattern": false,
+     "waiver": "DV-112",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "harness-generic",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "defaults-no-role-named",
+     "pattern": false,
+     "waiver": "DV-004",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "codex-model-named",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "131",
+     "testOf": "131",
+     "stubsAndVerbs": "P `evidence`; CH `approve`",
+     "surfacesCompared": "Run set",
+     "note": "In scope: the invocation of a harness"
+    },
+    {
+     "name": "106-learning-suggest",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "P `evidence`; CH `approve`",
+     "surfacesCompared": "Run set",
+     "note": "In scope: the core loop. The learning mode is a variable of the fixture; the decision log is a file of state in the template (F141-FR-012). Registered on 2026-09-30 under the name feature 106 gave it"
+    },
+    {
+     "name": "106-learning-apply",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "P `evidence`; CH `approve`",
+     "surfacesCompared": "Run set",
+     "note": "In scope, as `106-learning-suggest`, with the learning mode `apply`"
+    },
+    {
+     "name": "106-learning-tampered",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "P `write` with the argument `state`",
+     "surfacesCompared": "Run set",
+     "note": "In scope. A pass changes the decision log by its logical name; the argument is added in §O.3, no verb is added"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-02",
+   "name": "Reject then approve",
+   "status": "active",
+   "exercises": "Archive of a rejected phase attempt, feedback, numbering of phase attempts",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "reject-approve",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "reject-twice-approve",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "archive-collision",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-03",
+   "name": "Reject limit reached",
+   "status": "active",
+   "exercises": "Engine exit 2, the last phase attempt left unarchived",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "101",
+    "102",
+    "103",
+    "105"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "reject-limit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "reject-limit-of-one",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-04",
+   "name": "Oscillation",
+   "status": "active",
+   "exercises": "The oscillation halt and its thresholds",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "101"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "oscillation-halt",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "oscillation-below-threshold",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-05",
+   "name": "MALFORMED variants and limit",
+   "status": "active",
+   "exercises": "The verdict grammar, the MALFORMED limit, engine exit 1",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "101",
+    "109",
+    "125"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "no-verdict",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "wrong-nonce",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "duplicate-verdict",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "empty-reply",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "malformed-limit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-06",
+   "name": "Critic transport failure",
+   "status": "active",
+   "exercises": "Scoring of a failed critic call as MALFORMED, on each transport",
+   "reference": "S, `front-door` `run`; `critic`",
+   "system": "specstride",
+   "stubs": [
+    "critic-cli",
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "109",
+    "125",
+    "130",
+    "131",
+    "138",
+    "148"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "http-error",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 2730; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "http-hang",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, lines 2730 and 2738; the engine script, lines 2163 to 2182",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "cli-nonzero-exit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, lines 2181 and 2738",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "cli-empty-output",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, lines 2184 and 2738",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "dsh-error-on-stdout",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, lines 2181 and 2738",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "prime-critic-error",
+     "pattern": false,
+     "waiver": "DV-112",
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, lines 2219 and 2738",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "cli-timeout",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "CC `hang`",
+     "surfacesCompared": "Run set",
+     "note": "In scope: a failed critic call on the CLI transport"
+    },
+    {
+     "name": "codex-empty-choices",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "131",
+     "testOf": "131",
+     "stubsAndVerbs": "CH `empty` with the argument `choices: none`",
+     "surfacesCompared": "Run set",
+     "note": "In scope. The argument is added in §O.3; no verb is added"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-07",
+   "name": "Critic configuration error",
+   "status": "active",
+   "exercises": "Where an error of the configuration of the critic ends. An error that the critic finds before its call (the phase is not in the spec; the spec or the phase evidence is missing; the format or the verification plan is invalid) ends with critic exit 3, engine exit 3 and the stop reason `critic_config`. An error that is raised inside the call (a missing key, an unknown harness name, an invalid reference of a harness) is scored MALFORMED and ends at the MALFORMED limit with engine exit 1 and the stop reason `critic_unavailable`",
+   "reference": "S, `front-door` `run`; `critic`",
+   "system": "specstride",
+   "stubs": [
+    "critic-cli",
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "101",
+    "124",
+    "130",
+    "131",
+    "138"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "missing-key",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 1883; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "unknown-harness-name",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 2395; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "dsh-conflicting-providers",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 1963; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "dsh-invalid-model-ref",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 1978; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "prime-empty-variant",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 2370; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "codex-missing-key",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "engine exit 1 after three phase attempts, each scored MALFORMED",
+      "stopReason": "`critic_unavailable`",
+      "evidence": "The critic module, line 1904; the handler at lines 2730 to 2743; the engine script, lines 2163 to 2182",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "phase-not-found",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "critic exit 3, engine exit 3, in the first phase attempt; no count changes",
+      "stopReason": "`critic_config`",
+      "evidence": "The critic module, line 2545; the engine script, lines 2133 to 2136",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "P `write` (the spec without the phase), `evidence`; CH is never called",
+     "surfacesCompared": "Run set",
+     "note": "The only scenario of the family that reaches engine exit 3"
+    },
+    {
+     "name": "critic-spec-missing",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`critic`",
+      "end": "critic exit 3",
+      "stopReason": "none: the critic writes no stop reason",
+      "evidence": "The critic module, line 2533",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "Drives the entry point `critic`"
+    },
+    {
+     "name": "critic-format-invalid",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`critic`",
+      "end": "critic exit 3",
+      "stopReason": "none",
+      "evidence": "The critic module, line 2542",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "Drives the entry point `critic`"
+    },
+    {
+     "name": "critic-phase-not-found",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`critic`",
+      "end": "critic exit 3",
+      "stopReason": "none",
+      "evidence": "The critic module, line 2545",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "Drives the entry point `critic`"
+    },
+    {
+     "name": "critic-plan-invalid",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`critic`",
+      "end": "critic exit 3",
+      "stopReason": "none",
+      "evidence": "The critic module, line 2554",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "Drives the entry point `critic`"
+    },
+    {
+     "name": "critic-evidence-missing",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`critic`",
+      "end": "critic exit 3",
+      "stopReason": "none",
+      "evidence": "The critic module, line 2562",
+      "knownBy": "run"
+     },
+     "testOf": "101",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "Drives the entry point `critic`"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-08",
+   "name": "Diagnostician and accelerator",
+   "status": "active",
+   "exercises": "The recovery cycle: signature markers, one diagnosis per signature",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "diagnostician",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "102",
+    "103",
+    "118"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "new-signature-hint",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "same-signature-no-second-hint",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "accelerated-attempt",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "diagnostician-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-09",
+   "name": "Spec resolution order and ambiguity",
+   "status": "active",
+   "exercises": "Resolution order, the listings of exit 3",
+   "reference": "S, `front-door` `run`, `phases`; `spec`",
+   "system": "specstride",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state"
+   ],
+   "features": [
+    "104"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "explicit-path",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "feature-flag",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "single-candidate",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "ambiguous-candidates",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "no-candidate",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-10",
+   "name": "Three spec formats, invalid spec",
+   "status": "active",
+   "exercises": "Grammar and detection of each format",
+   "reference": "S, `spec`; `front-door` `phases`",
+   "system": "specstride",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree"
+   ],
+   "features": [
+    "104"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "native",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "speckit-tasks",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "openspec-change",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-spec",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "unknown-format",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "explicit-openspec",
+     "pattern": false,
+     "waiver": "DV-073",
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-11",
+   "name": "Lock held",
+   "status": "active",
+   "exercises": "Engine exit 5 on a second engine start; the form of the lock",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "105",
+    "109",
+    "118",
+    "122"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "second-run-refused",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "lock-form",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stale-lock",
+     "pattern": false,
+     "waiver": "DV-022",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "orphaned-child",
+     "pattern": false,
+     "waiver": "DV-022",
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-12",
+   "name": "Stop request at each check point",
+   "status": "active",
+   "exercises": "Engine exit 6; `stop` and `stop --now`",
+   "reference": "S, `front-door` `run`, `stop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "102",
+    "118"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "stop-before-phase",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stop-between-passes",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stop-during-yield",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stop-now",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stop-with-no-run",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-13",
+   "name": "Resume and replay of settings",
+   "status": "active",
+   "exercises": "Counts on resume, replayed keys, the refusals of `resume`",
+   "reference": "S, `front-door` `run`, `resume`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "102",
+    "103",
+    "118",
+    "122"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "resume-after-reject-limit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "resume-pinned-keys",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "resume-lock-held",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "resume-nothing-to-resume",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "resume-tunable-key-in-environment",
+     "pattern": false,
+     "waiver": "DV-024",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "resume-unsaved-setting",
+     "pattern": false,
+     "waiver": "DV-024",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "snapshot-write-fails",
+     "pattern": false,
+     "waiver": "DV-024",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "planted-approval-marker",
+     "pattern": false,
+     "waiver": "DV-029",
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-14",
+   "name": "Verification modes",
+   "status": "active",
+   "exercises": "`off`, `plan`, `required`; the verification gate before the critic; synthetic feedback",
+   "reference": "S, `front-door` `run`; `verification`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer",
+    "verification-command"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "105",
+    "148"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "mode-off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "mode-plan",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "mode-required-pass",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "mode-required-fail",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "generate-tests-upgrades-off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-15",
+   "name": "Release verification failure",
+   "status": "active",
+   "exercises": "Engine exit 2 with the stop reason `release_verification`",
+   "reference": "S, `front-door` `run`; `verification`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer",
+    "verification-command"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "105",
+    "148"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "release-verification-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "release-verification-passes",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-16",
+   "name": "Pre-staged and detached verification commands",
+   "status": "active",
+   "exercises": "Reuse rules of results, long detached jobs",
+   "reference": "S, `front-door` `run`; `verification`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer",
+    "verification-command"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "102",
+    "105",
+    "118",
+    "130",
+    "148"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "pre-staged-reused",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "pre-staged-stale",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "long-job-running",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "long-job-finished",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-17",
+   "name": "Iteration limit",
+   "status": "active",
+   "exercises": "Pass-loop exit 4 to engine exit 4",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "100",
+    "103",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "iteration-limit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 4, engine exit 4",
+      "stopReason": "`proposer_max_iter`",
+      "evidence": "The pass-loop script, line 2365; the engine script, lines 1888 to 1891",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "iteration-returned-by-yield",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "the iteration limit is NOT reached: a yield hands the iteration back, so the pass that yielded and the pass that resumed are one logical pass; the phase is approved and the engine exits 0",
+      "stopReason": "none: no breaker fires",
+      "evidence": "The pass-loop script, line 2142, with the default at line 1218",
+      "knownBy": "run"
+     }
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-18",
+   "name": "Consecutive errors",
+   "status": "active",
+   "exercises": "Pass-loop exit 7 to engine exit 4; a pass that fails before the harness starts. On the structured path such a pass is an error and the loop ends with pass-loop exit 7. On the plain-output path it is no error, and the no-progress breaker ends the loop with pass-loop exit 8",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "103",
+    "124",
+    "130",
+    "138"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "consecutive-errors-legacy",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`pass-loop`",
+      "end": "pass-loop exit 7 after two passes that the idle watchdog ended. On the plain-output path a pass that ends with an exit code other than 0 is no error; only a kill by a watchdog is",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 2300 to 2335",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "consecutive-errors-structured",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`pass-loop`",
+      "end": "pass-loop exit 7 after two passes without a terminal record",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 2245 to 2261",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "harness-missing-dsh",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "every pass returns 127 and is not counted as an error; pass-loop exit 8, engine exit 4",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 549 and 2343 to 2350; the engine script, lines 1893 to 1906",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "harness-missing-prime",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 7 after two passes with the reason `launch_failed`, engine exit 4",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 596 and 2245 to 2261; the engine script, lines 1908 to 1921",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "harness-missing-prime-launcher",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 7 after two passes with the reason `launch_failed`, engine exit 4",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 610 and 2245 to 2261",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "dsh-model-and-qualifier",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`pass-loop`",
+      "end": "every pass returns 1 and is not counted as an error; pass-loop exit 8",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 544 and 2343 to 2350",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "dsh-no-provider",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "every pass returns 1 and is not counted as an error; pass-loop exit 8, engine exit 4",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 381 and 2343 to 2350",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "prime-variant-with-model",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`pass-loop`",
+      "end": "pass-loop exit 7 after two passes with the reason `producer_nonzero`",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 611 and 2245 to 2261",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "dsh-overlay-cannot-build",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`pass-loop`",
+      "end": "every pass returns 1; pass-loop exit 8. Not reproduced: the build fails only when a link or the settings file cannot be written, and no fixture made it fail",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 557 and 2343 to 2350",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "unknown-harness-name",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "every pass returns 127 and is not counted as an error; pass-loop exit 8, engine exit 4",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 640 and 2343 to 2350; the engine script, lines 1893 to 1906",
+      "knownBy": "run"
+     },
+     "testOf": "124",
+     "stubsAndVerbs": "none is called: no stub has the name",
+     "surfacesCompared": "Run set",
+     "note": "Asked by 124 (B-0575)"
+    },
+    {
+     "name": "prime-empty-variant",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 7 after two passes with the reason `producer_nonzero`, engine exit 4",
+      "stopReason": "`proposer_consecutive_errors`",
+      "evidence": "The pass-loop script, lines 608 and 2245 to 2261",
+      "knownBy": "run"
+     },
+     "testOf": "138",
+     "stubsAndVerbs": "none is called",
+     "surfacesCompared": "Run set",
+     "note": "The proposer side of `FX-07/prime-empty-variant`"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-19",
+   "name": "No progress",
+   "status": "active",
+   "exercises": "Pass-loop exit 8 on the plain-output path; no evaluation on the structured path",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "103",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "no-progress-legacy",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 8, engine exit 4",
+      "stopReason": "`proposer_no_progress`",
+      "evidence": "The pass-loop script, lines 2343 to 2350",
+      "knownBy": "run"
+     }
+    },
+    {
+     "name": "no-progress-structured-not-evaluated",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "the no-progress breaker is not reached: the structured path goes to the next pass at line 2270",
+      "stopReason": "none from this breaker",
+      "evidence": "The pass-loop script, line 2270",
+      "knownBy": "read"
+     }
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-20",
+   "name": "Hard cap kills",
+   "status": "active",
+   "exercises": "Pass-loop exit 10, kill notes",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "103",
+    "105",
+    "118",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "cap-exhausted-legacy",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 10, engine exit 4",
+      "stopReason": "`proposer_cap_exhausted`",
+      "evidence": "The pass-loop script, lines 2318 to 2320; the engine script, lines 1949 to 1966",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "cap-exhausted-structured",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "pass-loop exit 10, engine exit 4",
+      "stopReason": "`proposer_cap_exhausted`",
+      "evidence": "The pass-loop script, lines 2253 to 2255; the engine script, lines 1949 to 1966",
+      "knownBy": "read"
+     }
+    },
+    {
+     "name": "kill-note-carried",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "endOnReference": {
+      "entryPoint": "`front-door` `run`",
+      "end": "the hard cap is NOT exhausted: the first pass is killed by the watchdog and counted (1 of 3), its checkpoint is carried into the prompt of the next pass, that pass writes the evidence and the phase is approved; the engine exits 0",
+      "stopReason": "none: the cap breaker does not fire",
+      "evidence": "The pass-loop script, lines 2084 to 2088, and the note in the next pass's prompt at lines 1129 to 1141",
+      "knownBy": "run"
+     }
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-21",
+   "name": "Idle, progress and repetition watchdogs",
+   "status": "active",
+   "exercises": "The kill reasons and their classes",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "103",
+    "109",
+    "118"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "idle-timeout",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "progress-stall",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "repeat-stall",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "crash-reads-clean",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-22",
+   "name": "Yield",
+   "status": "active",
+   "exercises": "Each predicate, the limit, the deadline, the refusal; pass-loop exit 9",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer",
+    "verification-command"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "102",
+    "103",
+    "105",
+    "118",
+    "127",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "predicate-<kind>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "predicate-pid",
+      "predicate-exit-code-file",
+      "predicate-file-exists",
+      "predicate-file-stable",
+      "predicate-grep",
+      "predicate-command"
+     ],
+     "source": "Feature 100, annex X §X.6 row 69, owner 118. Six of the seven kinds: the kind `first_failure` is new and has no reference. Baseline: the pass-loop script, line 1250"
+    },
+    {
+     "name": "yield-limit",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "yield-deadline",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "yield-refused",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "yield-timeout",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-23",
+   "name": "Wall-clock budget",
+   "status": "active",
+   "exercises": "The stop reason `wall_budget`",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "101",
+    "102",
+    "118",
+    "127"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "wall-budget",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-24",
+   "name": "Short-pass nudge",
+   "status": "active",
+   "exercises": "The prompt block and its event",
+   "reference": "S, `front-door` `run`; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "103",
+    "118",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "short-pass-nudge",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "yield-leaves-counter",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-25",
+   "name": "Grounding snapshot",
+   "status": "active",
+   "exercises": "Caps, budgets, wildcard, placeholder, missing file, context windows per harness",
+   "reference": "S, `critic`; `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-cli",
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stderr",
+    "state",
+    "events",
+    "transcript"
+   ],
+   "features": [
+    "117",
+    "130",
+    "131"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "file-cap",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "byte-budget",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "wildcard-match",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "placeholder",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "missing-file",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "window-per-harness",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "evidence-cites-state-path",
+     "pattern": false,
+     "waiver": "DV-032",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "codex-model-listed",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "131",
+     "testOf": "131",
+     "stubsAndVerbs": "CH `approve`",
+     "surfacesCompared": "`exit`, `stderr`, `state`, `events`, `transcript`",
+     "note": "In scope: the context window of a harness"
+    },
+    {
+     "name": "codex-model-unlisted",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "131",
+     "testOf": "131",
+     "stubsAndVerbs": "CH `approve`",
+     "surfacesCompared": "`exit`, `stderr`, `state`, `events`, `transcript`",
+     "note": "In scope"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-26",
+   "name": "Stream formats through the seam",
+   "status": "active",
+   "exercises": "The event vocabulary of each stream format, the three fallbacks of the seam, the proposer invocation of each harness",
+   "reference": "S, the stream tap; `pass-loop`",
+   "system": "specstride",
+   "stubs": [
+    "generic",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events",
+    "transcript"
+   ],
+   "features": [
+    "109",
+    "111",
+    "126",
+    "130",
+    "131",
+    "138",
+    "144"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "claude-<name>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "claude-empty",
+      "claude-adapter-exposes-terminal-without-result-event",
+      "claude-adapter-preserves-visible-event-mapping-and-exact-evidence",
+      "claude-tool-target-is-redacted-before-live-output",
+      "claude-legacy-cli-keeps-one-result-event",
+      "claude-evidence-event",
+      "claude-init-event",
+      "claude-legacy-cli-event-sequence",
+      "claude-result-terminal",
+      "claude-text-event",
+      "claude-tool-event",
+      "claude-cli-early-eof-emits-exactly-one-synthesized-result",
+      "claude-cli-successful-stream-keeps-single-unchanged-result",
+      "claude-early-eof-synthesizes-one-failing-terminal",
+      "claude-finish-is-idempotent-and-synthesizes-at-most-once",
+      "claude-provider-error-result-is-preserved-not-replaced",
+      "claude-successful-result-is-not-resynthesized-on-finish",
+      "claude-stream-fixture"
+     ],
+     "source": "No closed set. The 18 as-is input streams of the Claude format that are imported (F141-FR-012); the name is the name of the as-is file without its prefixes. One further as-is stream belongs to the locally registered backend and is not imported. Tests: 125, 126, 144"
+    },
+    {
+     "name": "prime-v3-<name>",
+     "pattern": true,
+     "waiver": "DV-112",
+     "scenarioOf": "141",
+     "members": [
+      "prime-v3-empty",
+      "prime-v3-fleet-evidence",
+      "prime-v3-fleet-ipython",
+      "prime-v3-fleet-text",
+      "prime-v3-malformed",
+      "prime-v3-stock-auth-error",
+      "prime-v3-stock-retry",
+      "prime-v3-stock-success",
+      "prime-v3-truncated",
+      "prime-v3-unknown-record"
+     ],
+     "source": "No closed set. The ten as-is input streams of the prime format. Tests: 138, 126"
+    },
+    {
+     "name": "dsh-text",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "codex-text",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "generic-text",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "fallback-<reason>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "fallback-capture-disabled",
+      "fallback-tap-unavailable",
+      "fallback-no-adapter"
+     ],
+     "source": "Feature 100, annex X §X.6 row 171, owner 126. Baseline: the pass-loop script, lines 337, 339 and 341. Only `fallback-capture-disabled` was run on the reference; whether a fixture can reach the other two on a read-only reference tree is for the exercise map"
+    },
+    {
+     "name": "pass-through",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "registry-queries",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "G `text`",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`, `events`, `transcript`",
+     "note": "In scope: the route of a stream is read from the registry"
+    },
+    {
+     "name": "root-sandbox-assertion",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "P `text`",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `transcript`",
+     "note": "In scope: the invocation of a harness. Prerequisite: the run has the effective user id 0; otherwise a skip with its reason"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-27",
+   "name": "Commit after approval",
+   "status": "active",
+   "exercises": "The commit message; no push",
+   "reference": "S, `front-door` `run`",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "repository"
+   ],
+   "features": [
+    "101",
+    "102"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "commit-per-phase",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "commits-off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-28",
+   "name": "Front-door inspection commands",
+   "status": "active",
+   "exercises": "Output lines and exit codes of the inspection commands and of `status` in compatibility output",
+   "reference": "S, `front-door`",
+   "system": "specstride",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state"
+   ],
+   "features": [
+    "119",
+    "145"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "<command>-<case>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "status-ok",
+      "status-all",
+      "status-no-state",
+      "status-no-feature",
+      "tail-ok",
+      "tail-no-log",
+      "events-ok",
+      "events-json",
+      "events-no-events",
+      "verdicts-ok",
+      "verdicts-no-verdicts",
+      "verdicts-no-verdict-for-phase",
+      "feedback-ok",
+      "feedback-usage",
+      "feedback-no-feedback",
+      "phases-ok",
+      "phases-no-spec",
+      "phases-spec-invalid",
+      "help-usage",
+      "unknown-subcommand"
+     ],
+     "source": "Feature 100, annex X §X.6 row 158, owner 119, for the cases; the commands are the inspection commands of feature 119 and `status`. Baseline: the front-door script, lines 252 to 534 and 720"
+    },
+    {
+     "name": "flag-without-value",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "119",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Cited by 119 in F119-FR-005 as the capture of exit 127"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-29",
+   "name": "Learning",
+   "status": "active",
+   "exercises": "Show, advise, apply, revert, off, evaluate; the allowlist, the sample floors, quarantine",
+   "reference": "S, `learning`; `front-door` `learn`",
+   "system": "specstride",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state",
+    "events"
+   ],
+   "features": [
+    "106"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "show",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "advise-no-telemetry",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "apply",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "revert",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "evaluate",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "below-sample-floor",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "quarantined",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "106-apply-forced",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`, `events`",
+     "note": "In scope: the command `learn` with `--apply --force` over a quarantined value"
+    },
+    {
+     "name": "106-evaluate-recorded",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`, `events`",
+     "note": "In scope: the evaluation that records an `evaluate` entry (`lib/learn.py evaluate` without `--dry-run`, which the `learn` mode of the entry point always passes). Registered by feature 106 to capture the member order of the entry"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-30",
+   "name": "Reverse",
+   "status": "active",
+   "exercises": "Plan, the finding codes of reverse lint, the reverse guard",
+   "reference": "S, `reverse`, `reverse-inventory`; `front-door` `reverse`",
+   "system": "specstride",
+   "stubs": [
+    "engine",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state"
+   ],
+   "features": [
+    "108",
+    "140"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "plan",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "lint-<code>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "lint-template-mandatory",
+      "lint-template-family",
+      "lint-template-expected",
+      "lint-placeholder",
+      "lint-structure-extra",
+      "lint-structure-contracts",
+      "lint-structure-required",
+      "lint-evidence-format",
+      "lint-evidence-kind",
+      "lint-evidence-confidence",
+      "lint-evidence-validation",
+      "lint-evidence-disproved",
+      "lint-evidence-citation",
+      "lint-evidence-contradicts",
+      "lint-evidence-missing",
+      "lint-evidence-skipped",
+      "lint-unknowns-placement",
+      "lint-spec-fr-format",
+      "lint-spec-sc-format",
+      "lint-spec-fr-unique",
+      "lint-spec-sc-unique",
+      "lint-spec-story-format",
+      "lint-spec-story-numbers",
+      "lint-spec-story-parts",
+      "lint-spec-clarifications",
+      "lint-research-decisions",
+      "lint-data-model-entities",
+      "lint-checklist-items",
+      "lint-tasks-grammar",
+      "lint-tasks-line-format",
+      "lint-tasks-ids",
+      "lint-tasks-phase-order",
+      "lint-tasks-story-labels",
+      "lint-tasks-story-exists",
+      "lint-tasks-parallel-files",
+      "lint-tasks-mode",
+      "lint-coverage-fr",
+      "lint-claims-missing"
+     ],
+     "source": "Feature 100, annex X §X.6 row 146, owner 140 (moved from 108 in the split). One scenario per finding code; the dot of a code is written as a hyphen, because a scenario name holds no dot"
+    },
+    {
+     "name": "guard-refuses",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "refused-flag",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-31",
+   "name": "Telemetry shippers against a local sink",
+   "status": "active",
+   "exercises": "Payload shapes",
+   "reference": "S, the two shippers",
+   "system": "specstride",
+   "stubs": [
+    "telemetry-sink"
+   ],
+   "surfaces": [
+    "exit",
+    "stderr",
+    "telemetry",
+    "state"
+   ],
+   "features": [
+    "128"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "loki-payload",
+     "pattern": false,
+     "waiver": "DV-107",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "otlp-payload",
+     "pattern": false,
+     "waiver": "DV-107",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "sink-down",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "metric-names",
+     "pattern": false,
+     "waiver": "DV-058",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "delivery-status",
+     "pattern": false,
+     "waiver": "DV-058",
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-32",
+   "name": "Derivation of a launch contract",
+   "status": "active",
+   "exercises": "`greeting-ready`, `greeting-blocked`, ambiguity; inventory and draft",
+   "reference": "M, `contract-derive`",
+   "system": "mixture-of-loops",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state"
+   ],
+   "features": [
+    "104",
+    "107",
+    "141"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "greeting-ready",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "greeting-blocked",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "ambiguous-feature",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "tasks-unreadable-by-old-grammar",
+     "pattern": false,
+     "waiver": "DV-060",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "107-plan-with-other-fence",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "107",
+     "testOf": "107",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `tree`, `state`",
+     "note": "In scope: derivation on a plan that holds a fence of another kind before a shell block (the reading of fences of the baseline, F107-FR-004). Registered on 2026-09-30 under the name feature 107 gave it"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-33",
+   "name": "Validate and promote",
+   "status": "active",
+   "exercises": "Each error class, staleness, the learning binding; exits 20 and 23",
+   "reference": "M, `contract-validate`; `launcher-render` for `invalid-not-promoted`",
+   "system": "mixture-of-loops",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "state"
+   ],
+   "features": [
+    "100",
+    "104",
+    "106",
+    "107"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "valid",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-<class>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "invalid-unreadable",
+      "invalid-structure",
+      "invalid-action",
+      "invalid-check",
+      "invalid-verification-commands",
+      "invalid-learning",
+      "invalid-auto",
+      "invalid-open-blocker",
+      "invalid-unchecked-prerequisite",
+      "invalid-not-promoted"
+     ],
+     "source": "Feature 100, annex X §X.6 row 274, owner 107 (F107-FR-040): the ten validators of the baseline, the contract library of mixture-of-loops at `9c88f86`, lines 111 to 117, 248, 293, 196, 483, 536, 932, 935 and 969. At the baseline only the renderer raises `not-promoted` (line 969, called by the render script), so `invalid-not-promoted` is driven through the entry point `launcher-render`; the other nine through `contract-validate`. Owner of the tests: 107. assumption: CQ-194"
+    },
+    {
+     "name": "stale-sources",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "learning-decisions-changed",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "promote",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "107-promote-unreadable",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "107",
+     "testOf": "107",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `state`",
+     "note": "In scope: `contract-validate --promote` on a file that is not JSON; the baseline replaces it by a record with the status `draft` (F107-FR-021)"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-34",
+   "name": "Render",
+   "status": "active",
+   "exercises": "The stamp, an edited launcher, reuse of a launch bundle",
+   "reference": "M, `launcher-render`",
+   "system": "mixture-of-loops",
+   "stubs": [],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "launcher",
+    "state"
+   ],
+   "features": [
+    "107"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "render",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "edited-launcher",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "bundle-reused",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stale",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-35",
+   "name": "Launcher and pipeline runtime",
+   "status": "active",
+   "exercises": "Dry run, launch checks of the pipeline, stages, recovery, pipeline resume, signals, lock; the digest; exits 20 to 24 and 128+N",
+   "reference": "M, the launcher and `pipeline-runtime`",
+   "system": "mixture-of-loops",
+   "stubs": [
+    "critic-http",
+    "engine",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "pipeline",
+    "launcher"
+   ],
+   "features": [
+    "100",
+    "106",
+    "122",
+    "123"
+   ],
+   "variants": [
+    "@engine-stub",
+    "@full-stack"
+   ],
+   "scenarios": [
+    {
+     "name": "dry-run",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "preflight-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stages-complete",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stage-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stage-timeout",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "in-stage-retry",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "pipeline-resume",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "signal-<name>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "signal-int",
+      "signal-term",
+      "signal-hup"
+     ],
+     "source": "Owner 123. Baseline: the pipeline runtime of mixture-of-loops, line 588"
+    },
+    {
+     "name": "lock-held",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "second-pipeline-on-held-workspace",
+     "pattern": false,
+     "waiver": "DV-075",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "stale-sources",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E `succeed`",
+     "surfacesCompared": "Run set, `pipeline`, `launcher`",
+     "note": "Asked by 123. Exit 23"
+    },
+    {
+     "name": "invalid-launch-contract",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E is never called",
+     "surfacesCompared": "Run set, `pipeline`, `launcher`",
+     "note": "Asked by 123. Exit 20"
+    },
+    {
+     "name": "colour-always",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E `succeed`",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `pipeline`",
+     "note": "Asked by 123. The colour mode is an argument of the command line; escape sequences are compared as written"
+    },
+    {
+     "name": "colour-never",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E `succeed`",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`, `pipeline`",
+     "note": "Asked by 123"
+    },
+    {
+     "name": "setup-without-implement",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E is never called",
+     "surfacesCompared": "Run set, `pipeline`",
+     "note": "Asked by 123. The stage reason `setup-required`"
+    },
+    {
+     "name": "precondition-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E is never called for the stage",
+     "surfacesCompared": "Run set, `pipeline`",
+     "note": "Asked by 123. The stage reason `stage-precondition`"
+    },
+    {
+     "name": "106-learning-exported",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "106",
+     "testOf": "106",
+     "stubsAndVerbs": "E `succeed`",
+     "surfacesCompared": "Run set, `pipeline`",
+     "note": "In scope: a pipeline started with a learning mode exported in the shell. Runs as `@engine-stub` and as `@full-stack`"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-36",
+   "name": "Supervisor",
+   "status": "active",
+   "exercises": "Mode and learning selection, launch check, launch, observe, relaunch classifier, stop, retrospective; the supervisor lines; the exit map",
+   "reference": "M, `supervisor`",
+   "system": "mixture-of-loops",
+   "stubs": [
+    "critic-http",
+    "engine",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home",
+    "pipeline"
+   ],
+   "features": [
+    "100",
+    "106",
+    "122",
+    "123"
+   ],
+   "variants": [
+    "@engine-stub",
+    "@full-stack"
+   ],
+   "scenarios": [
+    {
+     "name": "mode-<case>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "mode-token-auto",
+      "mode-token-run",
+      "mode-token-generate",
+      "mode-refusal",
+      "mode-refusal-dry-run",
+      "mode-prose-auto",
+      "mode-prose-run",
+      "mode-prose-generate-then-run",
+      "mode-default"
+     ],
+     "source": "Feature 100, annex X §X.6 row 107, owner 123: the three tokens and the sources `refusal`, `prose` and `default`. Baseline: the supervisor library, lines 179 to 211"
+    },
+    {
+     "name": "mode-no-execution-phrasing",
+     "pattern": false,
+     "waiver": "DV-009",
+     "scenarioOf": "141"
+    },
+    {
+     "name": "learning-selection",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "gate-<refusal>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "gate-launcher-not-found",
+      "gate-launcher-edited",
+      "gate-learning-decisions-changed",
+      "gate-stale-sources",
+      "gate-open-blocker",
+      "gate-draft-contract",
+      "gate-invalid-contract",
+      "gate-unauthorized-root",
+      "gate-launcher-syntax-error",
+      "gate-dry-run-failed"
+     ],
+     "source": "Feature 100, annex X §X.6 row 13, owner 123. Ten of the eleven members; the eleventh, `already-running`, is the scenario `gate-attach`. Baseline: the supervisor library, lines 455 to 544"
+    },
+    {
+     "name": "gate-attach",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "launch",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "observe-<status>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "observe-running",
+      "observe-starting",
+      "observe-lock-conflict",
+      "observe-completed",
+      "observe-failed",
+      "observe-stopped",
+      "observe-unknown-terminal"
+     ],
+     "source": "Feature 100, annex X §X.6 row 106, owner 123. Baseline: the supervisor library, line 829"
+    },
+    {
+     "name": "relaunch-<decision>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "relaunch-disabled",
+      "relaunch-still-running",
+      "relaunch-operator-stop",
+      "relaunch-completed",
+      "relaunch-deliberate-stop",
+      "relaunch-unknown-terminal",
+      "relaunch-lock-conflict",
+      "relaunch-unknown-launcher-exit",
+      "relaunch-signal-stop",
+      "relaunch-invalid-contract",
+      "relaunch-preflight-blocked",
+      "relaunch-stale-sources",
+      "relaunch-state-not-failed",
+      "relaunch-unknown-stage",
+      "relaunch-postcondition-failure",
+      "relaunch-stage-precondition",
+      "relaunch-setup-required",
+      "relaunch-interrupted",
+      "relaunch-stage-did-not-run",
+      "relaunch-stage-did-not-fail",
+      "relaunch-exec-error",
+      "relaunch-stage-reason-not-transient",
+      "relaunch-child-exit-not-retryable",
+      "relaunch-stop-reason-not-allowed",
+      "relaunch-contract-digest-changed",
+      "relaunch-learning-decisions-changed",
+      "relaunch-launcher-edited",
+      "relaunch-budget-exhausted",
+      "relaunch-budget-deadline-exceeded",
+      "relaunch-launcher-exit-unknown",
+      "relaunch-classified-transient"
+     ],
+     "source": "Feature 100, annex X §X.6 row 14, owner 123: the 29 refusals of the table `relaunch-observe` that are literals, one scenario for an exit code of the launcher outside the table, and the approval `classified-transient`. The five members that the table `relaunch-root` adds are new and have no reference. Baseline: the supervisor library, lines 962 to 1053"
+    },
+    {
+     "name": "stop",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "retro",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "observe-cadence",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "123",
+     "stubsAndVerbs": "E `sleep`, `succeed`",
+     "surfacesCompared": "Run set, `pipeline`",
+     "note": "Asked by 123"
+    },
+    {
+     "name": "relaunch-budget-<n>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "123",
+     "testOf": "123",
+     "stubsAndVerbs": "E `transient`",
+     "surfacesCompared": "Run set, `pipeline`",
+     "note": "In scope. A pattern of 123: `<n>` is the relaunch count of its test. The members `relaunch-budget-exhausted` and `relaunch-budget-deadline-exceeded` of this feature cover the two refusals"
+    }
+   ],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-37",
+   "name": "Onboarding",
+   "status": "retired",
+   "exercises": "Retired. No differential test is possible (DV-056). The family has no scenario and is cited by no test",
+   "reference": "—",
+   "system": null,
+   "stubs": [],
+   "surfaces": [],
+   "features": [],
+   "variants": [],
+   "scenarios": [],
+   "answersReservation": null
+  },
+  {
+   "id": "FX-38",
+   "name": "dsh plugin request protocol",
+   "status": "active",
+   "exercises": "The request file, its validation, the allowlist, the installer call, the receipt, the restart pass, the exemption from breakers, the three ends (restart, exit 7, exit 4)",
+   "reference": "S, `pass-loop`; the plugin request processor",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "plugin-installer",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "no-request-file",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "installed-then-restart",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "installed-on-final-pass",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "allowlist-empty",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "denied-not-in-allowlist",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-request-<case>",
+     "pattern": true,
+     "waiver": null,
+     "scenarioOf": "141",
+     "members": [
+      "invalid-request-link",
+      "invalid-request-not-regular",
+      "invalid-request-too-large",
+      "invalid-request-json",
+      "invalid-request-keys",
+      "invalid-request-contract",
+      "invalid-request-plugins",
+      "invalid-request-plugin-spec",
+      "invalid-request-duplicate",
+      "invalid-request-reason"
+     ],
+     "source": "Feature 100, annex X §X.6 row 217, owner 130. Baseline: the plugin request processor, lines 45 to 69"
+    },
+    {
+     "name": "installer-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "installer-times-out",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "request-and-evidence-in-one-pass",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "qualified-harness-never-processed",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-allowlist-entry",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "130",
+     "stubsAndVerbs": "P `plugin-request`; I is never called",
+     "surfacesCompared": "Run set",
+     "note": "The member `allowlist-entry` of annex X §X.6 row 217. Baseline: the plugin request processor, line 38"
+    }
+   ],
+   "answersReservation": 17
+  },
+  {
+   "id": "FX-39",
+   "name": "Declared overlay of the configuration home",
+   "status": "active",
+   "exercises": "An overlay declared for a harness: the scopes `pass` and `attempt`, population, the signals with a phase-attempt scope, removal; the throwaway home of dsh for a model override",
+   "reference": "S, `pass-loop`; the overlay tool; `critic`",
+   "system": "specstride",
+   "stubs": [
+    "critic-cli",
+    "generic",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+   ],
+   "features": [
+    "109",
+    "130"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "scope-pass",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "scope-attempt",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "scope-attempt-signal",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-declaration",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "populate-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "dsh-settings-overlay",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "dsh-reasoning-effort",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "invalid-scope-value",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "none is called",
+     "surfacesCompared": "Run set",
+     "note": "In scope"
+    },
+    {
+     "name": "scope-without-declaration",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "P `evidence`",
+     "surfacesCompared": "Run set",
+     "note": "In scope"
+    },
+    {
+     "name": "stale-overlay-swept",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "P `evidence`",
+     "surfacesCompared": "Run set",
+     "note": "In scope. The stale tree is part of the template of the temporary directory"
+    },
+    {
+     "name": "removal-fails",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "P `evidence`",
+     "surfacesCompared": "Run set",
+     "note": "In scope"
+    },
+    {
+     "name": "critic-overlay",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "CC `approve`",
+     "surfacesCompared": "Run set",
+     "note": "In scope: the family names the entry point `critic`"
+    },
+    {
+     "name": "executable-missing",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "109",
+     "testOf": "109",
+     "stubsAndVerbs": "none is called",
+     "surfacesCompared": "Run set",
+     "note": "In scope"
+    }
+   ],
+   "answersReservation": 2
+  },
+  {
+   "id": "FX-40",
+   "name": "Rendering on a terminal",
+   "status": "active",
+   "exercises": "The presenter, the banner and the theme on a pseudo-terminal: colour detection and depth, the background, glyphs, width tiers, the live timeline, the card, escape sequences as written; and the timeline where no terminal is present",
+   "reference": "S, `front-door`; the presenter, the banner and the theme tool",
+   "system": "specstride",
+   "stubs": [
+    "critic-http",
+    "proposer"
+   ],
+   "surfaces": [
+    "exit",
+    "stdout",
+    "stderr"
+   ],
+   "features": [
+    "145"
+   ],
+   "variants": [],
+   "scenarios": [
+    {
+     "name": "banner",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "timeline-live",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "colour-detected",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "colour-never",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141"
+    },
+    {
+     "name": "banner-width-full",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "P, CH as in `FX-01/single-phase`",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "A terminal of 80 columns"
+    },
+    {
+     "name": "banner-width-compact",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "P, CH",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "A terminal of 60 columns"
+    },
+    {
+     "name": "banner-width-line",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "P, CH",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "A terminal of 30 columns"
+    },
+    {
+     "name": "banner-flags",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the banner: background, colour, no motion, preview, size"
+    },
+    {
+     "name": "banner-motion-off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the banner with the three variables that switch motion off"
+    },
+    {
+     "name": "banner-switched-off",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the banner with the variables that switch the banner and the rail off, and with no phases and no states"
+    },
+    {
+     "name": "colour-depth-16",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the banner and the presenter"
+    },
+    {
+     "name": "colour-depth-256",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "As above"
+    },
+    {
+     "name": "colour-depth-truecolor",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "As above"
+    },
+    {
+     "name": "colour-forced",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "No terminal; colour forced by variable and by argument"
+    },
+    {
+     "name": "colour-override",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "The variable that overrides the depth last"
+    },
+    {
+     "name": "background-set",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "The background from a variable, in its two forms, and inside a terminal multiplexer"
+    },
+    {
+     "name": "background-query",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the theme tool; the pseudo-terminal answers the query from the fixture, or does not answer"
+    },
+    {
+     "name": "theme-usage",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the theme tool with an unknown argument: exit 1"
+    },
+    {
+     "name": "glyphs-ascii",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "The variable and the locale that force ASCII"
+    },
+    {
+     "name": "timeline-events",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives the presenter with an event file of the fixture that holds every event it renders"
+    },
+    {
+     "name": "timeline-detail-milestones",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "As `timeline-events`, by flag and by variable"
+    },
+    {
+     "name": "timeline-detail-full",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "As `timeline-events`"
+    },
+    {
+     "name": "timeline-debug",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Unknown events shown"
+    },
+    {
+     "name": "timeline-no-terminal",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "The timeline without a terminal: lines and rails only"
+    },
+    {
+     "name": "timeline-stop-requested",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "P `sleep`; CH",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "A stop request while the timeline follows"
+    },
+    {
+     "name": "timeline-narrow",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "A terminal under 40 columns: the rail collapses"
+    },
+    {
+     "name": "card",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "Drives `watch`; ended by an interrupt after the last event"
+    },
+    {
+     "name": "card-stop-resume",
+     "pattern": false,
+     "waiver": null,
+     "scenarioOf": "141",
+     "testOf": "145",
+     "stubsAndVerbs": "none",
+     "surfacesCompared": "`exit`, `stdout`, `stderr`",
+     "note": "An event file with a stop and a second start"
+    }
+   ],
+   "answersReservation": 3
+  }
+ ],
+ "reservedNames": [
+  {
+   "families": [
+    "FX-17",
+    "FX-18",
+    "FX-19",
+    "FX-20",
+    "FX-24"
+   ],
+   "names": "103-<name>",
+   "reservedBy": "103",
+   "note": "Names that feature 103 reserves for the usage failures of the pass loop and the empty prompt. Not yet named; feature 103 registers each name here when it writes it"
+  }
+ ],
+ "notScenarios": [
+  {
+   "families": [
+    "FX-26"
+   ],
+   "asked": "help-list-unavailable",
+   "askedBy": "109",
+   "why": "Outside the scope of FX-26, which is the stream formats and the invocation of a harness. The as-is line is printed only when the registry module of the reference cannot run; the reference tree is read-only (F141-FR-002) and no stub may take the name of the interpreter (§O.3, names). Feature 109 proves F109-FR-006 by a characterization test"
+  },
+  {
+   "families": [
+    "FX-18",
+    "FX-23"
+   ],
+   "asked": "a limit signal declared by the generic stub",
+   "askedBy": "127",
+   "why": "No stub emits a quota signal in a fixture of a family (F141-FR-043): the reference has no behaviour for it. In a characterization test the generic stub prints what its script gives it through `text` or `stream`; no verb is needed"
+  }
+ ]
+}

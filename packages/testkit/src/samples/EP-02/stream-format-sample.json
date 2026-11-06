@@ -1,0 +1,42 @@
+{
+  "sampleId": "sample-ep02-stream-format",
+  "note": "A stream format given as data only (F126-FR-007): the descriptor fields stream.mapping and stream.usage, and the recorded sample streams of the format. No code, no change of a core file. The conformance suite of EP-02 replays these streams through the generic mapping reader.",
+  "format": {
+    "name": "sample-ep02",
+    "reason": "the sample stream format of the EP-02 conformance suite, given as data only",
+    "signals": ["text", "result"],
+    "hasInitRecord": false,
+    "synthInit": true,
+    "synthTerminal": true
+  },
+  "mapping": {
+    "selector": "v",
+    "fields": {
+      "text": "words"
+    },
+    "usage": {
+      "inputTokens": "burn.in",
+      "outputTokens": "burn.out",
+      "usageId": "call"
+    },
+    "tolerate": ["missing_usage"]
+  },
+  "recordedStreams": [
+    [
+      {
+        "v": 1,
+        "words": "first block of the sample stream",
+        "burn": { "in": 3, "out": 5 },
+        "call": "u-1"
+      }
+    ],
+    [
+      { "v": 1, "words": "" },
+      { "v": 2, "words": "second block", "burn": { "in": 1, "out": 0 }, "call": "u-2" }
+    ]
+  ],
+  "expected": {
+    "kinds": ["init", "text", "usage", "terminal"],
+    "synthesized": ["init", "terminal"]
+  }
+}

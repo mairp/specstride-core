@@ -1,0 +1,7 @@
+{
+  "contract": "specstride-dsh-plugin-request/v1",
+  "plugins": [
+    "@acme/stub-plugin@1.2.3"
+  ],
+  "reason": "the stub needs the plugin of the fixture"
+}

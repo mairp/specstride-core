@@ -1,0 +1,88 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-39/populate-fails",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "overlay",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "python3",
+      "<IMPL>/<component:overlay>",
+      "populate",
+      "codex",
+      "<WORK>/not-a-directory",
+      "--scope",
+      "pass",
+      "--owner-pid",
+      "1",
+      "--workdir",
+      "<WORK>"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CODEX_OVERLAY": "pass",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "populate-fails",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "codex",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "nothing"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 1,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-121"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "replace",
+      "file": "lib/backends.py",
+      "find": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\")))),",
+      "text": "    Backend(\"codex\", ((\"proposer\", Qualifier(\"none\")), (\"critic\", Qualifier(\"none\"))),\n            overlay={\"vars\": (\"HOME\", \"XDG_CONFIG_HOME\"),\n                     \"seeds\": ({\"var\": \"HOME\", \"path\": \".codex/config.toml\",\n                                \"content\": \"model = \\\"stub\\\"\\n\"},)}),",
+      "why": "`populate` refuses a backend that declares no overlay before it ever reaches the directory, so the failure under test needs a declaration to exist"
+    }
+  ]
+}

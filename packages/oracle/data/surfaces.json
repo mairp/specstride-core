@@ -1,0 +1,105 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-surfaces/1",
+ "note": "spec.md \u00a7O.4 stands where the two differ.",
+ "runSet": [
+  "exit",
+  "stdout",
+  "stderr",
+  "tree",
+  "state",
+  "events",
+  "transcript",
+  "processes",
+  "home"
+ ],
+ "transcriptRoles": [
+  "proposer",
+  "critic",
+  "diagnostician",
+  "engine",
+  "verification",
+  "installer"
+ ],
+ "surfaces": [
+  {
+   "id": "S-01",
+   "name": "exit",
+   "suites": "both"
+  },
+  {
+   "id": "S-02",
+   "name": "stdout",
+   "suites": "both"
+  },
+  {
+   "id": "S-03",
+   "name": "stderr",
+   "suites": "both"
+  },
+  {
+   "id": "S-04",
+   "name": "tree",
+   "suites": "both"
+  },
+  {
+   "id": "S-05",
+   "name": "state",
+   "suites": "both"
+  },
+  {
+   "id": "S-06",
+   "name": "events",
+   "suites": "both"
+  },
+  {
+   "id": "S-07",
+   "name": "transcript",
+   "suites": "both"
+  },
+  {
+   "id": "S-08",
+   "name": "processes",
+   "suites": "both"
+  },
+  {
+   "id": "S-09",
+   "name": "pipeline",
+   "suites": "both"
+  },
+  {
+   "id": "S-10",
+   "name": "telemetry",
+   "suites": "both"
+  },
+  {
+   "id": "S-11",
+   "name": "repository",
+   "suites": "both"
+  },
+  {
+   "id": "S-12",
+   "name": "launcher",
+   "suites": "both"
+  },
+  {
+   "id": "S-13",
+   "name": "home",
+   "suites": "both"
+  },
+  {
+   "id": "S-14",
+   "name": "events-primary",
+   "suites": "second suite"
+  },
+  {
+   "id": "S-15",
+   "name": "control-records",
+   "suites": "second suite"
+  },
+  {
+   "id": "S-16",
+   "name": "counters",
+   "suites": "second suite"
+  }
+ ]
+}

@@ -1,0 +1,88 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-40/banner-motion-off",
+ "system": "specstride",
+ "entryPoint": {
+  "reference": "banner",
+  "port": "banner"
+ },
+ "command": {
+  "reference": [
+   "<IMPL>/specstride",
+   "run",
+   "-w",
+   "<WORK>",
+   "-s",
+   "<WORK>/SPECS.md"
+  ],
+  "port": [
+   "specstride",
+   "run",
+   "--workspace",
+   "<WORK>"
+  ]
+ },
+ "environment": {
+  "SPECSTRIDE_BANNER_BG": "dark",
+  "SPECSTRIDE_CRITIC": "claude",
+  "SPECSTRIDE_FEATURE": "banner-motion-off",
+  "SPECSTRIDE_GIT_COMMITS": "off",
+  "SPECSTRIDE_LIVE": "false",
+  "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+  "SPECSTRIDE_MAX_ITER": "3",
+  "SPECSTRIDE_MAX_REJECTS": "1",
+  "SPECSTRIDE_MOTION": "0",
+  "SPECSTRIDE_OTEL_ENABLED": "false",
+  "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+  "SPECSTRIDE_PROPOSER": "dsh",
+  "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+  "SPECSTRIDE_VERIFICATION": "off"
+ },
+ "stubs": {
+  "proposer": [
+   {
+    "verbs": [
+     "write",
+     "evidence"
+    ],
+    "args": {
+     "path": "one.txt",
+     "content": "one\n"
+    }
+   }
+  ],
+  "critic-http": [
+   {
+    "verbs": [
+     "approve"
+    ]
+   }
+  ]
+ },
+ "workdirTemplate": "workdir",
+ "pseudoTerminal": true,
+ "expectedExit": 0,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr"
+ ],
+ "proves": [
+  "C-097"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "bash 4 or later, flock, setsid, GNU stat and date",
+  "python3 3.10 to 3.13",
+  "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+ ],
+ "entryPointArguments": {
+  "reference": [
+   "--cols",
+   "72"
+  ],
+  "port": []
+ }
+}

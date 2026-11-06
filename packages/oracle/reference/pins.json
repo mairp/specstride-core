@@ -1,0 +1,32 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-pins/1",
+  "note": "The pins of the reference systems (F141-FR-001). Only the pinned commit counts: a pin names a commit and the tree of that commit and nothing else, so the branch a source repository has checked out and any uncommitted change in it have no effect on the reference. spec.md F141-FR-001 stands where this file and the specification differ.",
+  "pins": [
+    {
+      "system": "specstride",
+      "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+      "tree": "d58ea3b50f67a6cdfb387b1d86e5d145ac923880"
+    },
+    {
+      "system": "mixture-of-loops",
+      "commit": "9c88f86e1771efeabcfe3b4b1cb24384fff284e8",
+      "tree": "a7473137805cded899ee0077b7879c70a05f4451"
+    }
+  ],
+  "noPin": [
+    {
+      "system": "lisa",
+      "why": "Lisa has no pin and no reference run (F141-FR-001). The third system of the consolidation is not a reference for behaviour: a Lisa behaviour has no reference side and a parity test of one is refused (F141-FR-028)."
+    }
+  ],
+  "clones": [
+    {
+      "system": "specstride",
+      "variable": "ORACLE_REF_SPECSTRIDE"
+    },
+    {
+      "system": "mixture-of-loops",
+      "variable": "ORACLE_REF_MOL"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+node_modules/
+/dist/
+/tmp/
+.build/
+.specstride/
+packages/cli/.build/
+*.log
+.env
+.env.*

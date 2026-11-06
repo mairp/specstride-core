@@ -1,0 +1,166 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-30/lint-claims-missing",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 3,
+   "perCommand": [
+    3
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "ERROR claims-unit.md [claims.missing] claims file not written: <WORK>/claims-unit.md\n1 error(s), 0 warning(s)\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specify",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specify/memory",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specify/memory/constitution.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Constitution of the sample source\n\n## Core Principles\n\n### I. One greeting\nThe source prints one greeting and nothing else.\n\n## Governance\nThe owner amends this document.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "app.py",
+     "type": "file",
+     "mode": "0644",
+     "content": "def greet(name):\n    \"\"\"Return the greeting the launcher prints.\"\"\"\n    return \"hello, %s\" % name\n\n\ndef main():\n    print(greet(\"world\"))\n\n\nif __name__ == \"__main__\":\n    main()\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/reverse-app",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/reverse-app/checklists",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/reverse-app/checklists/requirements.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specification Quality Checklist: Greeting\n\n## Content Quality\n\n- [x] No implementation detail in the specification\n- [x] Every requirement is testable\n\n## Requirement Completeness\n\n- [x] Every requirement carries evidence\n- [x] Every success criterion carries evidence\n\n## Notes\n\nValidated once.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/contracts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": "specs/reverse-app/contracts/api.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Contract: the greeting function\n\n`greet(name)` returns one line of text and prints nothing.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/data-model.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Data model: Greeting\n\n## Entities\n\n### Greeting\n<!-- evidence: app.py:1-3 | kind=observed | confidence=0.90 | contradicts=none | validation=verified -->\nThe text one call returns.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/plan.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Implementation Plan: Greeting\n\n## Summary\nOne module, one function, one line of output.\n\n## Technical Context\npython3, no dependency.\n\n## Constitution Check\nOne greeting: met.\n\n## Project Structure\n`app.py` at the root of the source.\n\n## Complexity Tracking\nNo deviation.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/quickstart.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Quickstart: Greeting\n\nRun `python3 app.py` and read the line.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/research.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Research: Greeting\n\n## Decisions\n\n- **Decision**: the greeting is formatted with the percent operator.\n<!-- evidence: app.py:3-3 | kind=observed | confidence=0.90 | contradicts=none | validation=verified -->\n  **Rationale**: it is what the source does.\n  **Alternatives considered**: an f-string, which the source does not use.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/spec.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Feature Specification: Greeting\n\n**Feature Branch**: `reverse-app`\n\n**Created**: <time>\n\n**Status**: Draft\n\n## User Scenarios & Testing\n\n### User Story 1 - A reader runs the greeting (Priority: P1)\n\nA reader of the source runs it and reads one line.\n\n**Why this priority**: it is the whole of the behaviour.\n\n**Independent Test**: run the module and read the line.\n\n**Acceptance Scenarios**:\n\n1. **Given** the module on the path, **When** it is run, **Then** it prints one greeting.\n\n## Requirements\n\n- **FR-001**: The source prints the greeting of one name.\n<!-- evidence: app.py:1-3 | kind=observed | confidence=0.95 | contradicts=none | validation=verified -->\n- **FR-002**: The source prints the greeting of `world` when it is run as a module.\n<!-- evidence: app.py:6-7 | kind=observed | confidence=0.95 | contradicts=none | validation=verified -->\n\n## Success Criteria\n\n- **SC-001**: One line reaches standard output.\n<!-- evidence: app.py:6-7 | kind=observed | confidence=0.90 | contradicts=none | validation=verified -->\n\n## Assumptions\n\nThe reader has python3.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "specs/reverse-app/tasks.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Tasks: Greeting\n\n## Format: `[ID] [P?] [Story] Description`\n\nA task line is `- [x] T### [P]? [USn]? description`.\n\n## Path Conventions\n\nPaths are relative to the root of the source.\n\n## Phase 1: Setup\n\n- [x] T001 Read the source of the greeting\n\n## Phase 2: Foundational\n\n- [x] T002 Record what `greet` returns for FR-001\n\n## Phase 3: User Story 1 - A reader runs the greeting\n\n- [x] T003 [US1] Record the module entry point for FR-002\n\n## Phase 4: Polish\n\n- [x] T004 Read the checklist back\n\n## Dependencies & Execution Order\n\nPhase 1, then 2, then 3, then 4.\n\n## Parallel Example: User Story 1\n\nNothing of User Story 1 runs in parallel.\n\n## Implementation Strategy\n\nOne phase at a time.\n\n## Notes\n\n<!-- specstride-reverse: tasks=done -->\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 3,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 1,
+  "N-05": 0,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 1,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-40/colour-depth-16",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 0,
+   "perCommand": [
+    0,
+    0
+   ],
+   "signals": [
+    null,
+    null
+   ]
+  },
+  "stdout": {
+   "text": "  \u001b[<duration>┏━━━━┿━━━━┿━━━━╸\u001b[<duration>\n  \u001b[<duration>┃\u001b[<duration>                   \u001b[<duration>\u001b[39mspecstride\u001b[<duration>\u001b[<duration>\n  \u001b[<duration>┗━━━━┿━━━━┿━━━━┓\u001b[<duration>    From specs to tested code.\n  \u001b[<duration>               ┃\u001b[<duration>    \u001b[90mEvery step, signed off.\u001b[<duration>\n  \u001b[<duration>╺━━━━┿━━━━┿━━━━┛\u001b[<duration>\n\n  \u001b[<duration>━━━━┿━━━━━━━━━┿━━━━━━━━━┿━━━━━━━━━┿━━━━━━━━━┿━━━━\u001b[<duration>\n\n"
+  },
+  "stderr": {
+   "text": ""
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 0,
+  "N-02": 0,
+  "N-03": 0,
+  "N-04": 0,
+  "N-05": 2,
+  "N-06": 0,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 0,
+  "N-14": 0,
+  "N-15": 0,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 0,
+  "N-20": 0,
+  "N-21": 1,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 2,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

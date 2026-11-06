@@ -1,0 +1,405 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-12/stop-before-phase",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 6,
+   "perCommand": [
+    6
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : stop-before-phase   (state: .specstride/features/stop-before-phase/)\n  proposer : dsh\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n>>> stop.flag detected — halting cleanly (exit 6; rerun resumes).\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/stop-before-phase/runs/<run-id-1>/events.jsonl"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/attempts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/debug",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/gates",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/gates/proofs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=stop-before-phase\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=claude\nMAX_REJECTS=1\nMAX_ITER=3\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/stop-before-phase/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<IMPL>/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/runs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/runs/<run-id-1>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/runs/<run-id-1>/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"stop-before-phase\",\"proposer\":\"dsh\",\"critic\":\"claude\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/stop-before-phase/runs/<run-id-1>/verification/verification-plan.json\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-1>\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"reason\":\"stop_flag\",\"phase\":\"1\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/runs/<run-id-1>/run.log",
+     "type": "file",
+     "mode": "0644",
+     "content": "  .====+====+====-\n  |                   specstride\n  '====+====+====.    From specs to tested code.\n                 |    Every step, signed off.\n  -====+====+===='\n\n  ====+----\n      1 now\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : stop-before-phase   (state: .specstride/features/stop-before-phase/)\n  proposer : dsh\n  critic   : claude\n  max-rej  : 1   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n>>> stop.flag detected — halting cleanly (exit 6; rerun resumes).\n  ====+----\n      1 now\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/runs/<run-id-1>/verification",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/stop-before-phase/verdicts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=stop-before-phase\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=claude\nMAX_REJECTS=1\nMAX_ITER=3\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/stop-before-phase/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<IMPL>/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/lock",
+     "type": "file",
+     "mode": "0644",
+     "content": "<run-id-1> <time>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/run.log",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/stop-before-phase/runs/<run-id-1>/run.log"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# A stop request that is already there\n\nThe stop request is in the state directory before the run starts, so the run stops before the first phase.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": [
+    {
+     "logicalName": "inbox:stop",
+     "exists": false
+    }
+   ]
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"stop-before-phase\",\"proposer\":\"dsh\",\"critic\":\"claude\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/stop-before-phase/runs/<run-id-1>/verification/verification-plan.json\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "stop-before-phase",
+        "type": "string"
+       },
+       {
+        "key": "workdir",
+        "value": "<WORK>",
+        "type": "string"
+       },
+       {
+        "key": "phases",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "stop-before-phase",
+        "type": "string"
+       },
+       {
+        "key": "proposer",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "critic",
+        "value": "claude",
+        "type": "string"
+       },
+       {
+        "key": "resume",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "states",
+        "value": "C",
+        "type": "string"
+       },
+       {
+        "key": "verification",
+        "value": "off",
+        "type": "string"
+       },
+       {
+        "key": "verification_plan",
+        "value": "<WORK>/.specstride/features/stop-before-phase/runs/<run-id-1>/verification/verification-plan.json",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-1>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "stop-before-phase",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "total",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-1>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:claude\",\"feature\":\"stop-before-phase\",\"reason\":\"stop_flag\",\"phase\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:claude",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "stop-before-phase",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "stop_flag",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 10,
+  "N-02": 0,
+  "N-03": 20,
+  "N-04": 16,
+  "N-05": 3,
+  "N-06": 3,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 0,
+  "N-10": 0,
+  "N-11": 0,
+  "N-12": 0,
+  "N-13": 3,
+  "N-14": 3,
+  "N-15": 2,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 3,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 0,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 5,
+  "N-28": 0,
+  "N-29": 0
+ }
+}

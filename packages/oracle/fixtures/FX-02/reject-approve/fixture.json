@@ -1,0 +1,105 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-02/reject-approve",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "front-door",
+    "port": "run"
+  },
+  "command": {
+    "reference": ["<IMPL>/specstride", "run", "-w", "<WORK>", "-s", "<WORK>/SPECS.md"],
+    "port": ["specstride", "run", "--workspace", "<WORK>"]
+  },
+  "environment": {
+    "SPECSTRIDE_PROPOSER": "dsh",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "reject-approve",
+    "SPECSTRIDE_VERIFICATION": "off",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "3",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": ["write", "evidence"],
+        "args": {
+          "path": "one.txt",
+          "content": "one\n",
+          "evidence": ".specstride/features/reject-approve/gates/GATE1-EVIDENCE.md"
+        }
+      },
+      {
+        "verbs": ["write", "evidence"],
+        "args": {
+          "path": "one.txt",
+          "content": "one, after the feedback\n",
+          "evidence": ".specstride/features/reject-approve/gates/GATE1-EVIDENCE.md"
+        }
+      },
+      {
+        "verbs": ["write", "evidence"],
+        "args": {
+          "path": "two.txt",
+          "content": "two\n",
+          "evidence": ".specstride/features/reject-approve/gates/GATE2-EVIDENCE.md"
+        }
+      },
+      {
+        "verbs": ["write", "evidence"],
+        "args": {
+          "path": "three.txt",
+          "content": "three\n",
+          "evidence": ".specstride/features/reject-approve/gates/GATE3-EVIDENCE.md"
+        }
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": ["reject"]
+      },
+      {
+        "verbs": ["approve"]
+      },
+      {
+        "verbs": ["approve"]
+      },
+      {
+        "verbs": ["approve"]
+      }
+    ],
+    "diagnostician": [
+      {
+        "verbs": ["hint"]
+      },
+      {
+        "verbs": ["hint"]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 0,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": ["C-002"],
+  "os": ["linux"],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ]
+}

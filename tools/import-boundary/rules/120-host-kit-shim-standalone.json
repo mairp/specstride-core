@@ -1,0 +1,8 @@
+{
+  "rule": "RF-120-01",
+  "owner": "120",
+  "requirement": "F113-FR-030 (the guarantee annex H section H.1 carries into the port, settled for every host by the split, U-1 and U-2 of 120)",
+  "from": ["packages/host-kit/src/shim.ts"],
+  "forbid": ["@specstride", "@specstride/**"],
+  "reason": "The shim core of @specstride/host-kit is rendered into a plugin as a STANDALONE FILE at build time and runs on the consumer's machine, so the module may import nothing of specstride — not @specstride/contracts, which the rest of the kit may import at build time. mayImport separates packages and cannot express that qualifier (F149-FR-007). The module inlines the protocol integer and the refusal line of annex H section H.1, and a test of the kit holds them against @specstride/contracts/ep/host. This is the rule RF-113-01 of the Claude plugin, carried to the kit the module moved to."
+}

@@ -1,0 +1,17 @@
+{
+ "contract": "specstride-pass-yield/v1",
+ "deadline_sec": 60,
+ "on_resume": "write the evidence of the phase",
+ "reason": "a job of the scenario; the pass resumes when its status file is written",
+ "job": {
+  "mode": "launch",
+  "argv": [
+   "sh",
+   "-c",
+   "exit 0"
+  ]
+ },
+ "resume_when": {
+  "kind": "exit_code_file"
+ }
+}

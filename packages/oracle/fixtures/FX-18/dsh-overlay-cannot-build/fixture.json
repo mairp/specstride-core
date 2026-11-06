@@ -1,0 +1,94 @@
+{
+  "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "id": "FX-18/dsh-overlay-cannot-build",
+  "system": "specstride",
+  "entryPoint": {
+    "reference": "pass-loop",
+    "port": "run"
+  },
+  "command": {
+    "reference": [
+      "<IMPL>/<component:pass-loop>",
+      "--workdir",
+      "<WORK>",
+      "--evidence",
+      "<WORK>/gate.md",
+      "--prompt-file",
+      "<WORK>/prompt.txt",
+      "--sleep",
+      "0",
+      "--max-iter",
+      "5"
+    ],
+    "port": [
+      "specstride",
+      "run",
+      "--workspace",
+      "<WORK>"
+    ]
+  },
+  "environment": {
+    "SPECSTRIDE_AGENT_STREAM": "false",
+    "SPECSTRIDE_CRITIC": "claude",
+    "SPECSTRIDE_FEATURE": "dsh-overlay-cannot-build",
+    "SPECSTRIDE_GIT_COMMITS": "off",
+    "SPECSTRIDE_LIVE": "false",
+    "SPECSTRIDE_LOKI_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_MAX_ITER": "3",
+    "SPECSTRIDE_MAX_REJECTS": "1",
+    "SPECSTRIDE_OTEL_ENABLED": "false",
+    "SPECSTRIDE_OTEL_URL": "http://127.0.0.1:1",
+    "SPECSTRIDE_PROPOSER": "dsh:zai/glm-stub",
+    "SPECSTRIDE_TELEMETRY_ENABLED": "false",
+    "SPECSTRIDE_VERIFICATION": "off"
+  },
+  "stubs": {
+    "proposer": [
+      {
+        "verbs": [
+          "nothing"
+        ]
+      }
+    ],
+    "critic-http": [
+      {
+        "verbs": [
+          "approve"
+        ]
+      }
+    ]
+  },
+  "workdirTemplate": "workdir",
+  "expectedExit": 8,
+  "surfaces": [
+    "exit",
+    "stdout",
+    "stderr",
+    "tree",
+    "state",
+    "events",
+    "transcript",
+    "processes",
+    "home"
+  ],
+  "proves": [
+    "C-052"
+  ],
+  "os": [
+    "linux"
+  ],
+  "prerequisites": [
+    "bash 4 or later, flock, setsid, GNU stat and date",
+    "python3 3.10 to 3.13",
+    "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+  ],
+  "referenceEdits": [
+    {
+      "edit": "replace",
+      "file": "proposer.sh",
+      "find": "        overlay_dir=\"$(mktemp -d \"${TMPDIR:-/tmp}/specstride-dsh-home.XXXXXX\")\" || return 1",
+      "text": "        overlay_dir=\"$(mktemp -d \"${TMPDIR:-/tmp}/specstride-dsh-home.XXXXXX\")\" || return 1\n        mkdir -p \"$overlay_dir/settings.yaml\"",
+      "why": "`dsh_make_home_overlay` fails only when a link or the settings file of the throwaway DSH_HOME cannot be written (`proposer.sh:407` to `:433`), and no permission can express that on a hermetic host that runs as root. The edit makes the settings file of the throwaway home a DIRECTORY before the build, so the redirection `> \"$overlay/settings.yaml\"` fails with EISDIR for any user, which is the reproducible form of 'the settings file cannot be written'. The line under test (`proposer.sh:557`, the handler that reports 'could not build DSH_HOME overlay' and returns 1) is untouched, and so is `dsh_make_home_overlay` itself. This answers CQ-pending-141-1 for this scenario the way `FX-26/fallback-tap-unavailable` answers it for the tap: through a declared as-is edit of a private writable copy, never of the pinned tree (F141-FR-002)."
+    }
+  ]
+}

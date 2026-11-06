@@ -1,0 +1,55 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-07/critic-evidence-missing",
+ "system": "specstride",
+ "entryPoint": {
+  "reference": "critic",
+  "port": "critic"
+ },
+ "command": {
+  "reference": [
+   "python3",
+   "<IMPL>/<component:critic>",
+   "--workdir",
+   "<WORK>",
+   "--specs",
+   "<WORK>/SPECS.md",
+   "--phase",
+   "1",
+   "--feature",
+   "<FEATURE>"
+  ],
+  "port": [
+   "specstride",
+   "critic",
+   "--workspace",
+   "<WORK>",
+   "--phase",
+   "1"
+  ]
+ },
+ "environment": {
+  "SPECSTRIDE_FEATURE": "critic",
+  "SPECSTRIDE_LIVE": "false"
+ },
+ "stubs": {},
+ "workdirTemplate": "workdir",
+ "expectedExit": 3,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr",
+  "state"
+ ],
+ "proves": [
+  "C-033"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "bash 4 or later, flock, setsid, GNU stat and date",
+  "python3 3.10 to 3.13",
+  "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+ ]
+}

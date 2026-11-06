@@ -1,0 +1,65 @@
+# Licence notice of the imported as-is assets
+
+T022, F141-FR-012, assumption CQ-030.
+
+The scenarios of the fixture catalogue (`spec.md` §O.2) use as-is files of the two baselines:
+the recorded input streams of the Claude and the prime stream formats, the two greeting projects,
+the reverse sources and the learning events. Those files are imported into this directory as
+**assets of the oracle**, byte for byte unchanged, and each one keeps the licence of the baseline
+it came from. They are never modified here; a scenario that needs a changed file writes the change
+in its own template or through a step of the scenario.
+
+This repository is under the MIT licence (`LICENSE` at the root). The imported assets are not:
+they stay under the licence of their baseline. The owner ruled this admissible because
+`@specstride/oracle` is a package at layer `dev` that is `private` and is never shipped in the
+product package (F141-FR-045, W-100-16), so no distributed artefact of the product carries them.
+
+## One entry per baseline
+
+The table below is the notice itself. `src/catalogue/fixture.ts` reads it
+(`readAssetNotice`, `licenceOfBaseline`) and refuses a fixture whose asset names a baseline the
+notice does not record, or declares a licence other than the one recorded here
+(`assertAssetsCarryTheirNotice`).
+
+| Baseline | Licence | Copyright holder |
+|---|---|---|
+| `specstride@9cab15d` | Apache-2.0 | The Specstride baseline authors |
+| `mixture-of-loops@9c88f86` | Apache-2.0 | The mixture-of-loops baseline authors |
+
+The baseline keys are the system and the short form of its pinned commit, exactly as the field
+`baseline` of `schemas/fixture.schema.json` names them; the oracle derives them from
+`reference/pins.json` (`assetBaselines`), so the notice and the pins cannot drift apart.
+
+## Where an asset lies
+
+An imported asset lies at `fixtures/assets/<baseline>/<path>`, where `<path>` is the path the
+asset has inside its baseline. The baseline is part of the path, so the licence that applies to a
+file is never in doubt.
+
+The recorded input streams are imported under `fixtures/assets/streams/<baseline>/<path>` (T123):
+one directory for the whole kind, the baseline inside it, and the as-is path under that, so the
+rule above still decides the licence. They are the 18 input streams of the Claude format
+(`lib/fixtures/stream-golden/claude/*.jsonl` of the Specstride baseline) and the 10 of the prime
+format (`lib/fixtures/prime-v3/*.jsonl`), each the member of the pattern name of FX-26 that carries
+its name, and each byte for byte as the baseline holds it at the pinned commit.
+
+One further as-is file is imported under the same root, `lib/fixtures/stream_test_adapter.py` of
+the Specstride baseline (T131): it is the stream adapter the baseline's own quickstart adds to
+reach a ROUTED stream format, and the three `fallback-<reason>` scenarios of FX-26 copy it into
+their private writable copy of the reference tree, because no shipped registry entry sets
+`stream=` and the three fallback reasons are unreachable without one. It is byte for byte as the
+baseline holds it at the pinned commit.
+
+## What is NOT imported
+
+The as-is assets of the registry entry of the baseline that the product does not carry are **not**
+imported (`spec.md` §O.7; F141-FR-012; F141-FR-029). Its name is found at run time, as the entries
+of the reference registry minus the entries with as-is behaviour that the product carries, and it
+is written in no file of the oracle — this notice included. `assertAssetIsNotOfTheEntryNotCarried`
+in `src/catalogue/fixture.ts` takes the name as an argument and refuses the asset.
+
+## Licence text
+
+The full text of the Apache License, Version 2.0 is at <https://www.apache.org/licenses/LICENSE-2.0>.
+Each baseline carries its own `LICENSE` file at the pinned commit; the reference trees of
+`src/reference/fetch.ts` unpack it with the rest of the tree, read-only.

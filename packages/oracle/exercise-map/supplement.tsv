@@ -1,0 +1,3 @@
+b_item	system	kind	cluster	disposition	feature	evidence	must_contain	item
+B-2784	SS	stop-reason	C-055	ported	118-pass-supervision-and-jobs	proposer.sh:2253	specstride_emit run_stop reason proposer_cap_exhausted	`run_stop reason=proposer_cap_exhausted` written on the structured path of the pass loop, with fields `iter`, `kill_reason`, `consec`; followed by exit 10.
+B-2785	SS	stop-reason	C-055	ported	103-proposer-pass	proposer.sh:2259	specstride_emit run_stop reason proposer_consecutive_errors	`run_stop reason=proposer_consecutive_errors` written on the structured path of the pass loop, with fields `iter`, `subtype`, `kill_reason`, `kill_class`; followed by exit 7.

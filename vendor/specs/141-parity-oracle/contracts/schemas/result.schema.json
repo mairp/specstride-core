@@ -1,0 +1,80 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:internal:141:oracle-result/1",
+ "title": "Report of one comparison",
+ "type": "object",
+ "required": [
+  "schema",
+  "suite",
+  "fixture",
+  "results",
+  "replacements"
+ ],
+ "properties": {
+  "schema": {
+   "const": "urn:specstride:schema:internal:141:oracle-result/1"
+  },
+  "suite": {
+   "enum": [
+    "first",
+    "second"
+   ]
+  },
+  "tier": {
+   "enum": [
+    "hermetic",
+    "reference",
+    "platform"
+   ]
+  },
+  "fixture": {
+   "type": "string"
+  },
+  "skipped": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   }
+  },
+  "results": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "result"
+    ],
+    "properties": {
+     "result": {
+      "enum": [
+       "equal",
+       "waived",
+       "different"
+      ]
+     },
+     "row": {
+      "type": "string",
+      "pattern": "^DV-[0-9]{3}$"
+     },
+     "assertions": {
+      "type": "array"
+     },
+     "differences": {
+      "type": "array"
+     }
+    }
+   }
+  },
+  "replacements": {
+   "type": "object",
+   "description": "per normalization rule, the number of values replaced or left out",
+   "additionalProperties": {
+    "type": "integer"
+   }
+  },
+  "counters": {
+   "type": "object"
+  }
+ }
+}

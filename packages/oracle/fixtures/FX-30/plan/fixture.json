@@ -1,0 +1,45 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-fixture/1",
+ "id": "FX-30/plan",
+ "system": "specstride",
+ "entryPoint": {
+  "reference": "front-door reverse",
+  "port": "reverse"
+ },
+ "command": {
+  "reference": [
+   "<IMPL>/specstride",
+   "reverse",
+   "<WORK>",
+   "--dry-run"
+  ],
+  "port": [
+   "specstride",
+   "reverse",
+   "<WORK>",
+   "--dry-run"
+  ]
+ },
+ "environment": {},
+ "stubs": {},
+ "workdirTemplate": "workdir",
+ "expectedExit": 0,
+ "surfaces": [
+  "exit",
+  "stdout",
+  "stderr",
+  "tree",
+  "state"
+ ],
+ "proves": [
+  "B-1520"
+ ],
+ "os": [
+  "linux"
+ ],
+ "prerequisites": [
+  "bash 4 or later, flock, setsid, GNU stat and date",
+  "python3 3.10 to 3.13",
+  "the Specstride reference tree at 9cab15d in scratch (ORACLE_REF_SPECSTRIDE)"
+ ]
+}

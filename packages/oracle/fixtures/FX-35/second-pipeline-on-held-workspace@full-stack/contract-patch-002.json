@@ -1,0 +1,46 @@
+{
+  "stages": [
+    {
+      "id": "implement-farewell",
+      "kind": "specstride",
+      "depends_on": [],
+      "cwd": ".",
+      "action": {
+        "argv": [
+          "specstride",
+          "run",
+          "-w",
+          ".",
+          "-s",
+          "specs/002-farewell/tasks.md",
+          "--spec-format",
+          "speckit-tasks",
+          "--feature",
+          "002-farewell"
+        ],
+        "timeout_seconds": 3600
+      },
+      "preconditions": [
+        {
+          "type": "file_exists",
+          "path": "approvals/release-approval.json",
+          "timing": "preflight"
+        },
+        {
+          "type": "command_available",
+          "name": "specstride",
+          "timing": "preflight"
+        }
+      ],
+      "postconditions": [
+        {
+          "type": "dir_exists",
+          "path": ".specstride"
+        }
+      ],
+      "evidence": [
+        ".specstride"
+      ]
+    }
+  ]
+}

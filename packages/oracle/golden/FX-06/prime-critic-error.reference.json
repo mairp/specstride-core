@@ -1,0 +1,2916 @@
+{
+ "schema": "urn:specstride:schema:internal:141:oracle-golden/1",
+ "fixture": "FX-06/prime-critic-error",
+ "side": "reference",
+ "suite": "first",
+ "layer": "off",
+ "system": "specstride",
+ "commit": "9cab15d2d08f6c54644985f7251700bbdbcab282",
+ "surfaces": {
+  "exit": {
+   "exitCode": 1,
+   "perCommand": [
+    1
+   ],
+   "signals": [
+    null
+   ]
+  },
+  "stdout": {
+   "text": "\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : prime-critic-error   (state: .specstride/features/prime-critic-error/)\n  proposer : dsh\n  critic   : prime\n  max-rej  : 5   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n----- proposer: phase 1 attempt 1/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 1 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 1/5 -----\n>>> critic returned no usable verdict (MALFORMED 1/3)\n----- diagnostician: phase 1 attempt 1 (unmet set changed) -----\ncritic: diagnostician call failed: Prime Agent critic exit 1: file://<ORACLE>/stubs/lib/harness/index.ts:281\n    throw new HarnessStubError(\n          ^\n\nHarnessStubError: the scenario has no script for the diagnostician role of the prime stub, and the stub was called in it (<RUN>/stub-scripts\n----- proposer: phase 1 attempt 2/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 2 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 2/5 -----\n>>> critic returned no usable verdict (MALFORMED 2/3)\n----- proposer: phase 1 attempt 3/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 3 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 3/5 -----\n>>> critic returned no usable verdict (MALFORMED 3/3)\n\n############################################################\n# HALT — the critic is not answering (exit 1).\n#   3 consecutive attempts on phase 1 ended in a MALFORMED\n#   verdict: the critic timed out, was unreachable, or returned no verdict\n#   line. No feedback was produced, so every further proposer attempt would\n#   run blind and the phase can never be approved. This is a CRITIC\n#   AVAILABILITY problem, not a code gap — do not edit the spec.\n#   critic backend  : prime (timeout <duration>)\n#   latest verdicts : specstride verdicts -w <WORK> --feature prime-critic-error\n#   Options:\n#     - raise the critic timeout: SPECSTRIDE_CRITIC_TIMEOUT=900 specstride resume -w <WORK>\n#     - point at a reachable critic: specstride resume -w <WORK> --critic <backend>\n#     - raise the tolerance:      SPECSTRIDE_CRITIC_MALFORMED_LIMIT=5 specstride resume -w <WORK>\n############################################################\n"
+  },
+  "stderr": {
+   "text": ""
+  },
+  "tree": {
+   "root": "<WORK>",
+   "entries": [
+    {
+     "path": ".specstride",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/events.jsonl",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/prime-critic-error/runs/<run-id-1>/events.jsonl"
+    },
+    {
+     "path": ".specstride/features",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt1",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt1/GATE1-EVIDENCE.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "the evidence of the phase, written by the proposer stub\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt1/GATE1-FEEDBACK.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt1/verdict.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 1\nprovider: prime\nnonce: <nonce-1>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-1>: APPROVED\nor\n    VERDICT <nonce-1>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 1\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-1>: APPROVED` or\n`VERDICT <nonce-1>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt2",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt2/GATE1-EVIDENCE.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "the evidence of the phase, written by the proposer stub\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt2/GATE1-FEEDBACK.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt2/verdict.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 2\nprovider: prime\nnonce: <nonce-2>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-2>: APPROVED\nor\n    VERDICT <nonce-2>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 2\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-2>: APPROVED` or\n`VERDICT <nonce-2>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt3",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt3/GATE1-EVIDENCE.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "the evidence of the phase, written by the proposer stub\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt3/GATE1-FEEDBACK.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/attempts/phase1/attempt3/verdict.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 3\nprovider: prime\nnonce: <nonce-3>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-3>: APPROVED\nor\n    VERDICT <nonce-3>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 3\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-3>: APPROVED` or\n`VERDICT <nonce-3>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/debug",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/gates",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/gates/.diagnosed-phase1",
+     "type": "file",
+     "mode": "0644",
+     "content": "text:<hash-impl-1>",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/gates/proofs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=prime-critic-error\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=prime\nMAX_REJECTS=5\nMAX_ITER=3\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/prime-critic-error/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<IMPL>/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/proposer-prompt.phase1.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## A PRIOR ATTEMPT WAS REJECTED — this is attempt 3 of 5\nThe critic rejected your last evidence. Read the feedback below and address\nEVERY point before re-writing .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md. Do not merely\nreassert; fix the actual gaps.\n\n### Critic feedback (.specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md)\n# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n\n### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes\n- attempt1: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n- attempt2: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt3-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/runs",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/runs/<run-id-1>",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/runs/<run-id-1>/events.jsonl",
+     "type": "file",
+     "mode": "0644",
+     "content": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"prime-critic-error\",\"proposer\":\"dsh\",\"critic\":\"prime\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/prime-critic-error/runs/<run-id-1>/verification/verification-plan.json\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-4>\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"backend\":\"dsh\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 1, \"provider\": \"prime\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 1, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"streak\":\"1\",\"limit\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"diagnostician_trigger\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"diagnostician_start\", \"phase\": 1, \"attempt\": 1, \"provider\": \"prime\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"diagnostician_error\", \"phase\": 1, \"attempt\": 1, \"error\": \"Prime Agent critic exit 1: file://<ORACLE>/stubs/lib/harness/index.ts:281\\n    throw new HarnessStubError(\\n          ^\\n\\nHarnessStubError: the scenario has no script for the diagnostician role of the prime stub, and the stub was called in it (<RUN>/stub-scripts\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt1\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"backend\":\"dsh\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 2, \"provider\": \"prime\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 2, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"streak\":\"2\",\"limit\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt2\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"backend\":\"dsh\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 3, \"provider\": \"prime\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}\n{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 3, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"streak\":\"3\",\"limit\":\"3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt3\"}\n{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"reason\":\"critic_unavailable\",\"phase\":\"1\",\"attempts\":\"3\",\"streak\":\"3\"}\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/runs/<run-id-1>/run.log",
+     "type": "file",
+     "mode": "0644",
+     "content": "  .====+====+====-\n  |                   specstride\n  '====+====+====.    From specs to tested code.\n                 |    Every step, signed off.\n  -====+====+===='\n\n  ====+----\n      1 now\n\nspecstride orchestrator start <time>\n  workdir  : <WORK>\n  specs    : <WORK>/SPECS.md  (1 phases: 1)\n  feature  : prime-critic-error   (state: .specstride/features/prime-critic-error/)\n  proposer : dsh\n  critic   : prime\n  max-rej  : 5   max-iter/phase: 3\n  timeouts : proposer <duration>  critic <duration>   wall: 0min\n  git      : off\n  telemetry: off (loki export not configured)\n  verify   : off\n  resume   : phase 1\n  run_id   : <run-id-1>\n  stop with: touch <WORK>/.specstride/stop.flag\n  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n\n\n===== PHASE 1 — The only phase  (<time>) =====\n----- proposer: phase 1 attempt 1/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 1 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 1/5 -----\n>>> critic returned no usable verdict (MALFORMED 1/3)\n----- diagnostician: phase 1 attempt 1 (unmet set changed) -----\ncritic: diagnostician call failed: Prime Agent critic exit 1: file://<ORACLE>/stubs/lib/harness/index.ts:281\n    throw new HarnessStubError(\n          ^\n\nHarnessStubError: the scenario has no script for the diagnostician role of the prime stub, and the stub was called in it (<RUN>/stub-scripts\n----- proposer: phase 1 attempt 2/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 2 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 2/5 -----\n>>> critic returned no usable verdict (MALFORMED 2/3)\n----- proposer: phase 1 attempt 3/5 (dsh) -----\n      pass ceiling: <duration> (global); yield poll: <duration> (override)\n----- proposer pass 1/3  <time> -----\npass-loop: evidence appeared after pass 1 (<WORK>/.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md).\n----- critic: phase 1 attempt 3 (prime) -----\nMALFORMED\n----- phase 1 REJECTED on attempt 3/5 -----\n>>> critic returned no usable verdict (MALFORMED 3/3)\n\n############################################################\n# HALT — the critic is not answering (exit 1).\n#   3 consecutive attempts on phase 1 ended in a MALFORMED\n#   verdict: the critic timed out, was unreachable, or returned no verdict\n#   line. No feedback was produced, so every further proposer attempt would\n#   run blind and the phase can never be approved. This is a CRITIC\n#   AVAILABILITY problem, not a code gap — do not edit the spec.\n#   critic backend  : prime (timeout <duration>)\n#   latest verdicts : specstride verdicts -w <WORK> --feature prime-critic-error\n#   Options:\n#     - raise the critic timeout: SPECSTRIDE_CRITIC_TIMEOUT=900 specstride resume -w <WORK>\n#     - point at a reachable critic: specstride resume -w <WORK> --critic <backend>\n#     - raise the tolerance:      SPECSTRIDE_CRITIC_MALFORMED_LIMIT=5 specstride resume -w <WORK>\n############################################################\n  ====+----\n      1 rej\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/runs/<run-id-1>/verification",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/verdicts",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/verdicts/phase1.attempt1.<time>.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 1\nprovider: prime\nnonce: <nonce-1>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-1>: APPROVED\nor\n    VERDICT <nonce-1>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 1\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-1>: APPROVED` or\n`VERDICT <nonce-1>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/verdicts/phase1.attempt2.<time>.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 2\nprovider: prime\nnonce: <nonce-2>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-2>: APPROVED\nor\n    VERDICT <nonce-2>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 2\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-2>: APPROVED` or\n`VERDICT <nonce-2>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/verdicts/phase1.attempt3.<time>.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Specstride critic transcript\nphase: 1\nattempt: 3\nprovider: prime\nnonce: <nonce-3>\nverdict: MALFORMED\nparse: critic call error: Prime Agent critic exit 1: the prime critic failed this call\n\n\n═══════════ PROMPT ═══════════\nYou are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-3>: APPROVED\nor\n    VERDICT <nonce-3>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 3\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-3>: APPROVED` or\n`VERDICT <nonce-3>: REJECTED` and nothing after it.\n\n═══════════ REPLY ═══════════\n(empty)\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/features/prime-critic-error/yield",
+     "type": "directory",
+     "mode": "0755"
+    },
+    {
+     "path": ".specstride/last-run.conf",
+     "type": "file",
+     "mode": "0644",
+     "content": "# specstride last-run config — resolved values (<time>, run <run-id-1>)\n# consumed by: specstride resume  (flags passed to resume override these)\nWORKDIR=<WORK>\nSPECS=<WORK>/SPECS.md\nSPEC_FORMAT=native\nFEATURE=prime-critic-error\nPROPOSER_BACKEND=dsh\nCRITIC_BACKEND=prime\nMAX_REJECTS=5\nMAX_ITER=3\nPROPOSER_TIMEOUT=1800\nPROPOSER_TIMEOUT_PHASES=''\nTELEMETRY=false\nLOKI_URL=http://127.0.0.1:1\nOTEL=false\nOTEL_URL=http://127.0.0.1:1\nVERIFICATION=off\nTEST_PLAN=''\nGENERATE_TESTS=''\nVERIFICATION_PLAN=<WORK>/.specstride/features/prime-critic-error/runs/<run-id-1>/verification/verification-plan.json\nVERIFICATION_COMMANDS=''\nLONG_JOB_PHASE=''\nLONG_JOB_CMD=''\nGIT_COMMITS=off\nORCHESTRATOR=<IMPL>/<component:engine>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/lock",
+     "type": "file",
+     "mode": "0644",
+     "content": "<run-id-1> <time>\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": ".specstride/run.log",
+     "type": "symlink",
+     "mode": "0777",
+     "linkTarget": "features/prime-critic-error/runs/<run-id-1>/run.log"
+    },
+    {
+     "path": "SPECS.md",
+     "type": "file",
+     "mode": "0644",
+     "content": "# Critic transport failure\n\nThe critic call fails on its transport.\n\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n",
+     "contentEncoding": "utf8"
+    },
+    {
+     "path": "one.txt",
+     "type": "file",
+     "mode": "0644",
+     "content": "attempt 3\n",
+     "contentEncoding": "utf8"
+    }
+   ]
+  },
+  "state": {
+   "entries": []
+  },
+  "events": {
+   "files": [
+    "events.jsonl"
+   ],
+   "byWriterClass": {
+    "critic": [
+     {
+      "file": "events.jsonl",
+      "line": 8,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "critic",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "text,result",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 21,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "critic",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "text,result",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 31,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"agent_observability\", \"mode\": \"structured\", \"reason\": \"Prime JSON schema v3 selected\", \"provider_format\": \"prime-v3\", \"role\": \"critic\", \"supported_signals\": \"text,result\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "agent_observability",
+        "type": "string"
+       },
+       {
+        "key": "mode",
+        "value": "structured",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "Prime JSON schema v3 selected",
+        "type": "string"
+       },
+       {
+        "key": "provider_format",
+        "value": "prime-v3",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "critic",
+        "type": "string"
+       },
+       {
+        "key": "supported_signals",
+        "value": "text,result",
+        "type": "string"
+       }
+      ]
+     }
+    ],
+    "orchestrator": [
+     {
+      "file": "events.jsonl",
+      "line": 1,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"workdir\":\"<WORK>\",\"phases\":\"1\",\"feature\":\"prime-critic-error\",\"proposer\":\"dsh\",\"critic\":\"prime\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"<WORK>/.specstride/features/prime-critic-error/runs/<run-id-1>/verification/verification-plan.json\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "workdir",
+        "value": "<WORK>",
+        "type": "string"
+       },
+       {
+        "key": "phases",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "proposer",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "critic",
+        "value": "prime",
+        "type": "string"
+       },
+       {
+        "key": "resume",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "states",
+        "value": "C",
+        "type": "string"
+       },
+       {
+        "key": "verification",
+        "value": "off",
+        "type": "string"
+       },
+       {
+        "key": "verification_plan",
+        "value": "<WORK>/.specstride/features/prime-critic-error/runs/<run-id-1>/verification/verification-plan.json",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 2,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"phase_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"title\":\"The only phase\",\"total\":\"1\",\"shape\":\"<nonce-4>\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "phase_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "total",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "shape",
+        "value": "<nonce-4>",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 3,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"backend\":\"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 5,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 6,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "file",
+        "value": "GATE1-EVIDENCE.md",
+        "type": "string"
+       },
+       {
+        "key": "iters",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 7,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 1, \"provider\": \"prime\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "provider",
+        "value": "prime",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 9,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 1, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "MALFORMED",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "critic call error: Prime Agent critic exit 1: the prime critic failed this call\n",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "max_rejects",
+        "value": 5,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 10,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "reject",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 11,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"streak\":\"1\",\"limit\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_malformed",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "streak",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "limit",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 12,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"diagnostician_trigger\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "diagnostician_trigger",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 13,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"diagnostician_start\", \"phase\": 1, \"attempt\": 1, \"provider\": \"prime\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "diagnostician_start",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "provider",
+        "value": "prime",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 14,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"diagnostician_error\", \"phase\": 1, \"attempt\": 1, \"error\": \"Prime Agent critic exit 1: file://<ORACLE>/stubs/lib/harness/index.ts:281\\n    throw new HarnessStubError(\\n          ^\\n\\nHarnessStubError: the scenario has no script for the diagnostician role of the prime stub, and the stub was called in it (<RUN>/stub-scripts\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "diagnostician_error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "error",
+        "value": "Prime Agent critic exit 1: file://<ORACLE>/stubs/lib/harness/index.ts:281\n    throw new HarnessStubError(\n          ^\n\nHarnessStubError: the scenario has no script for the diagnostician role of the prime stub, and the stub was called in it (<RUN>/stub-scripts",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 15,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "attempt_archived",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "dir",
+        "value": "<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 16,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"backend\":\"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 18,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 19,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "file",
+        "value": "GATE1-EVIDENCE.md",
+        "type": "string"
+       },
+       {
+        "key": "iters",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 20,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 2, \"provider\": \"prime\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "provider",
+        "value": "prime",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 22,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 2, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 2,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "MALFORMED",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "critic call error: Prime Agent critic exit 1: the prime critic failed this call\n",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "max_rejects",
+        "value": 5,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 23,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "reject",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 24,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"streak\":\"2\",\"limit\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_malformed",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "streak",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "limit",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 25,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt2\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "attempt_archived",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "dir",
+        "value": "<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt2",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 26,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"backend\":\"dsh\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "dsh",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 28,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"iter_start\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"iter\":\"1\",\"max_iter\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "iter_start",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "iter",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "max_iter",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 29,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"evidence_written\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"file\":\"GATE1-EVIDENCE.md\",\"iters\":\"1\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "evidence_written",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "file",
+        "value": "GATE1-EVIDENCE.md",
+        "type": "string"
+       },
+       {
+        "key": "iters",
+        "value": "1",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 30,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"critic_start\", \"phase\": 1, \"attempt\": 3, \"provider\": \"prime\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_start",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "provider",
+        "value": "prime",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 32,
+      "raw": "{\"ts\": \"<time>\", \"time\": \"<time>\", \"event\": \"verdict\", \"phase\": 1, \"attempt\": 3, \"result\": \"MALFORMED\", \"reason\": \"critic call error: Prime Agent critic exit 1: the prime critic failed this call\\n\", \"title\": \"The only phase\", \"max_rejects\": 5}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "verdict",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": 1,
+        "type": "number"
+       },
+       {
+        "key": "attempt",
+        "value": 3,
+        "type": "number"
+       },
+       {
+        "key": "result",
+        "value": "MALFORMED",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "critic call error: Prime Agent critic exit 1: the prime critic failed this call\n",
+        "type": "string"
+       },
+       {
+        "key": "title",
+        "value": "The only phase",
+        "type": "string"
+       },
+       {
+        "key": "max_rejects",
+        "value": 5,
+        "type": "number"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 33,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"reject\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "reject",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 34,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"critic_malformed\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"streak\":\"3\",\"limit\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "critic_malformed",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "streak",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "limit",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 35,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"attempt_archived\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"dir\":\"<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "attempt_archived",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "dir",
+        "value": "<WORK>/.specstride/features/prime-critic-error/attempts/phase1/attempt3",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 36,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"run_stop\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"reason\":\"critic_unavailable\",\"phase\":\"1\",\"attempts\":\"3\",\"streak\":\"3\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "run_stop",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "reason",
+        "value": "critic_unavailable",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempts",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "streak",
+        "value": "3",
+        "type": "string"
+       }
+      ]
+     }
+    ],
+    "proposer": [
+     {
+      "file": "events.jsonl",
+      "line": 4,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"1\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "global",
+        "type": "string"
+       },
+       {
+        "key": "arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "override",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "tamper_bracket",
+        "value": "",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 17,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"2\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "2",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "global",
+        "type": "string"
+       },
+       {
+        "key": "arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "override",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "tamper_bracket",
+        "value": "",
+        "type": "string"
+       }
+      ]
+     },
+     {
+      "file": "events.jsonl",
+      "line": 27,
+      "raw": "{\"ts\":\"<time>\",\"time\":\"<time>\",\"event\":\"proposer_cap\",\"run_id\":\"<run-id-1>\",\"task\":\"work\",\"backend\":\"prop:dsh/crit:prime\",\"feature\":\"prime-critic-error\",\"phase\":\"1\",\"attempt\":\"3\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}",
+      "pairs": [
+       {
+        "key": "ts",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "time",
+        "value": "<time>",
+        "type": "string"
+       },
+       {
+        "key": "event",
+        "value": "proposer_cap",
+        "type": "string"
+       },
+       {
+        "key": "run_id",
+        "value": "<run-id-1>",
+        "type": "string"
+       },
+       {
+        "key": "task",
+        "value": "work",
+        "type": "string"
+       },
+       {
+        "key": "backend",
+        "value": "prop:dsh/crit:prime",
+        "type": "string"
+       },
+       {
+        "key": "feature",
+        "value": "prime-critic-error",
+        "type": "string"
+       },
+       {
+        "key": "phase",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "attempt",
+        "value": "3",
+        "type": "string"
+       },
+       {
+        "key": "role",
+        "value": "proposer",
+        "type": "string"
+       },
+       {
+        "key": "seconds",
+        "value": "<duration>",
+        "type": "string"
+       },
+       {
+        "key": "source",
+        "value": "global",
+        "type": "string"
+       },
+       {
+        "key": "arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll",
+        "value": "1",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_source",
+        "value": "override",
+        "type": "string"
+       },
+       {
+        "key": "yield_poll_arm",
+        "value": "baseline",
+        "type": "string"
+       },
+       {
+        "key": "tamper_bracket",
+        "value": "",
+        "type": "string"
+       }
+      ]
+     }
+    ]
+   },
+   "orderComparedInside": "each class of writer"
+  },
+  "transcript": [
+   {
+    "role": "critic",
+    "harness": "prime",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_INVOCATION_DIR",
+     "SPECSTRIDE_INVOCATION_ID",
+     "SPECSTRIDE_ITERATION",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_ROLE",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-1>: APPROVED\nor\n    VERDICT <nonce-1>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 1\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-1>: APPROVED` or\n`VERDICT <nonce-1>: REJECTED` and nothing after it.",
+    "given": {
+     "mode": "text"
+    },
+    "step": {
+     "verbs": [
+      "exit"
+     ]
+    }
+   },
+   {
+    "role": "critic",
+    "harness": "prime",
+    "call": 2,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_INVOCATION_DIR",
+     "SPECSTRIDE_INVOCATION_ID",
+     "SPECSTRIDE_ITERATION",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_ROLE",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-2>: APPROVED\nor\n    VERDICT <nonce-2>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 2\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-2>: APPROVED` or\n`VERDICT <nonce-2>: REJECTED` and nothing after it.",
+    "given": {
+     "mode": "text"
+    },
+    "step": {
+     "verbs": [
+      "exit"
+     ]
+    }
+   },
+   {
+    "role": "critic",
+    "harness": "prime",
+    "call": 3,
+    "envNames": [
+     "CLICOLOR",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_INVOCATION_DIR",
+     "SPECSTRIDE_INVOCATION_ID",
+     "SPECSTRIDE_ITERATION",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_ROLE",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the CRITIC (an automated approval gate). Be adversarial, not helpful.\nA proposer agent claims it has completed Phase 1 of a spec. Your job is to\ndecide — strictly — whether the EVIDENCE actually satisfies EVERY acceptance\ncriterion in the SPEC below. This is the only thing standing between unverified\nwork and it being marked done, so do not give the benefit of the doubt.\n\nRules:\n- Check each acceptance criterion individually. If ANY criterion is unmet, unclear,\n  or only asserted without support, the verdict is REJECTED.\n- The evidence is the proposer grading its own homework. Trust the GROUNDING\n  SNAPSHOT (verified on-disk state) over the evidence's prose when they conflict.\n  A criterion \"proven\" only by a claim about a file that the snapshot shows is\n  missing or empty is NOT met.\n- A snapshot entry reading \"content excerpt omitted — grounding byte budget\n  reached; file verified present\" is a TOOLING limitation, NOT evidence of absence:\n  the file EXISTS and was verified on disk; only its excerpt was elided for length.\n  You MUST NOT count a criterion unmet solely because that file's excerpt was\n  elided. If you genuinely cannot judge a criterion because the content you need is\n  not in the snapshot, say so explicitly in your feedback as\n  `NEEDS-GROUNDING:<path>` (name the file whose content you need) rather than\n  rejecting it as unimplemented. Criterion-named files are shown with anchored\n  excerpts (±lines around each named symbol, line-numbered) and are never elided.\n- The DESIGN CONTEXT (if present) is background only — never an extra criterion.\n- Do not be talked into approving by confident language. Substance only.\n\nIf REJECTED, first list the specific unmet criteria and exactly what is missing —\nthis text becomes the feedback the proposer must address, so be concrete and\nactionable (name the criterion, name the gap).\n\nEnd your reply with EXACTLY ONE line, on its own, verbatim (copy the token):\n    VERDICT <nonce-3>: APPROVED\nor\n    VERDICT <nonce-3>: REJECTED\n\n════════════════════════ SPEC — Phase 1 ════════════════════════\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n════════════════════════ EVIDENCE (proposer-written) ════════════════════════\nthe evidence of the phase, written by the proposer stub\n\n\n## Grounding snapshot (verified by the critic, read-only)\nThe following is the ACTUAL on-disk state of files the evidence cites.\nClaims about files that do not exist, are empty, or contradict this snapshot are NOT substantiated — weigh them accordingly.\n\n- `one.txt` — exists, 10 bytes, mtime <time>\n  ```\n       1\tattempt 3\n  ```\n  (complete file, line-numbered)\n════════════════════════ END ════════════════════════\nRemember: end with the single line `VERDICT <nonce-3>: APPROVED` or\n`VERDICT <nonce-3>: REJECTED` and nothing after it.",
+    "given": {
+     "mode": "text"
+    },
+    "step": {
+     "verbs": [
+      "exit"
+     ]
+    }
+   },
+   {
+    "role": "proposer",
+    "harness": "dsh",
+    "call": 1,
+    "envNames": [
+     "CLICOLOR",
+     "DSH_HOME",
+     "DSH_PERMISSION_MODE",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt1-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one.",
+    "given": {
+     "permissionMode": "workspace-write"
+    },
+    "step": {
+     "verbs": [
+      "write",
+      "evidence"
+     ]
+    },
+    "argv": [
+     "--profile",
+     "headless",
+     "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt1-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one."
+    ]
+   },
+   {
+    "role": "proposer",
+    "harness": "dsh",
+    "call": 2,
+    "envNames": [
+     "CLICOLOR",
+     "DSH_HOME",
+     "DSH_PERMISSION_MODE",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## A PRIOR ATTEMPT WAS REJECTED — this is attempt 2 of 5\nThe critic rejected your last evidence. Read the feedback below and address\nEVERY point before re-writing .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md. Do not merely\nreassert; fix the actual gaps.\n\n### Critic feedback (.specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md)\n# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n\n### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes\n- attempt1: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt2-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one.",
+    "given": {
+     "permissionMode": "workspace-write"
+    },
+    "step": {
+     "verbs": [
+      "write",
+      "evidence"
+     ]
+    },
+    "argv": [
+     "--profile",
+     "headless",
+     "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## A PRIOR ATTEMPT WAS REJECTED — this is attempt 2 of 5\nThe critic rejected your last evidence. Read the feedback below and address\nEVERY point before re-writing .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md. Do not merely\nreassert; fix the actual gaps.\n\n### Critic feedback (.specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md)\n# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n\n### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes\n- attempt1: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt2-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one."
+    ]
+   },
+   {
+    "role": "proposer",
+    "harness": "dsh",
+    "call": 3,
+    "envNames": [
+     "CLICOLOR",
+     "DSH_HOME",
+     "DSH_PERMISSION_MODE",
+     "GIT_AUTHOR_DATE",
+     "GIT_AUTHOR_EMAIL",
+     "GIT_AUTHOR_NAME",
+     "GIT_COMMITTER_DATE",
+     "GIT_COMMITTER_EMAIL",
+     "GIT_COMMITTER_NAME",
+     "GIT_CONFIG_GLOBAL",
+     "GIT_CONFIG_SYSTEM",
+     "HOME",
+     "IS_SANDBOX",
+     "LANG",
+     "LC_ALL",
+     "LOCK_FD",
+     "LONG_JOB_CMD",
+     "LONG_JOB_PHASE",
+     "NO_COLOR",
+     "OLDPWD",
+     "OPENAI_API_KEY",
+     "OPENAI_BASE_URL",
+     "ORACLE_ENGINE_FEATURE",
+     "ORACLE_FIXTURE_DIR",
+     "ORACLE_STATE_PATHS",
+     "ORACLE_STUB_HARNESS",
+     "ORACLE_STUB_ROLE",
+     "ORACLE_STUB_SCRIPT",
+     "ORACLE_STUB_SCRIPT_DIR",
+     "ORACLE_STUB_STATE_DIR",
+     "ORACLE_STUB_TRANSCRIPT",
+     "PATH",
+     "PWD",
+     "PYTHONDONTWRITEBYTECODE",
+     "SHLVL",
+     "SPECSTRIDE_BACKEND_LABEL",
+     "SPECSTRIDE_CLAUDE_CRITIC_API_KEY",
+     "SPECSTRIDE_CLAUDE_CRITIC_BASE_URL",
+     "SPECSTRIDE_CRITIC",
+     "SPECSTRIDE_CRITIC_MALFORMED_LIMIT",
+     "SPECSTRIDE_EVENTS",
+     "SPECSTRIDE_FEATURE",
+     "SPECSTRIDE_GIT_COMMITS",
+     "SPECSTRIDE_LIVE",
+     "SPECSTRIDE_LOKI_URL",
+     "SPECSTRIDE_MAX_ITER",
+     "SPECSTRIDE_MAX_REJECTS",
+     "SPECSTRIDE_MAX_WALL_MIN",
+     "SPECSTRIDE_OTEL_ENABLED",
+     "SPECSTRIDE_OTEL_SHIP",
+     "SPECSTRIDE_OTEL_STATE_DIR",
+     "SPECSTRIDE_OTEL_URL",
+     "SPECSTRIDE_PROPOSER",
+     "SPECSTRIDE_RUN_ID",
+     "SPECSTRIDE_RUN_START_EPOCH",
+     "SPECSTRIDE_SHIP",
+     "SPECSTRIDE_SPEC_FORMAT",
+     "SPECSTRIDE_TASK",
+     "SPECSTRIDE_TELEMETRY",
+     "SPECSTRIDE_TELEMETRY_ENABLED",
+     "SPECSTRIDE_TRACE_ID",
+     "SPECSTRIDE_VERIFICATION",
+     "SPECSTRIDE_WATCHDOG_TICK",
+     "SPECSTRIDE_YIELD_POLL",
+     "TERM",
+     "TMPDIR",
+     "TZ",
+     "XDG_CACHE_HOME",
+     "XDG_CONFIG_HOME",
+     "XDG_DATA_HOME",
+     "XDG_RUNTIME_DIR",
+     "XDG_STATE_HOME",
+     "_"
+    ],
+    "prompt": "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## A PRIOR ATTEMPT WAS REJECTED — this is attempt 3 of 5\nThe critic rejected your last evidence. Read the feedback below and address\nEVERY point before re-writing .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md. Do not merely\nreassert; fix the actual gaps.\n\n### Critic feedback (.specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md)\n# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n\n### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes\n- attempt1: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n- attempt2: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt3-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one.",
+    "given": {
+     "permissionMode": "workspace-write"
+    },
+    "step": {
+     "verbs": [
+      "write",
+      "evidence"
+     ]
+    },
+    "argv": [
+     "--profile",
+     "headless",
+     "You are the PROPOSER in an automated spec-driven loop. Do the work for\nONE phase, then write its evidence and STOP.\n\n## Working directory\nYou are operating in: <WORK>\nMaintain your progress notes in .specstride/features/prime-critic-error/PROGRESS.md (done / verified /\nblocked / next). Read it FIRST each pass; never redo verified work. Keep the\nworkdir ROOT clean — all your bookkeeping goes under .specstride/features/prime-critic-error/, not here\n(gate evidence/feedback files live in .specstride/features/prime-critic-error/gates/).\n\n## Your task: Phase 1 — The only phase\nImplement everything the phase requires so that EVERY acceptance criterion\nbelow is genuinely satisfied. A separate automated critic will verify your\nevidence against these criteria and will reject unsupported claims.\n\n## When (and only when) the phase is truly done\nWrite your evidence to .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (path relative to the\nworkdir; the .specstride/features/prime-critic-error/gates/ folder already exists). Write it ATOMICALLY: write\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md.tmp first, then `mv` it onto\n.specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md (mv within the same folder is atomic, so the\ngate never sees a half file).\nThe evidence must, for EACH acceptance criterion, state concretely how it is\nmet and cite the exact files/paths that prove it. Do NOT write the evidence\nfile until the work is actually complete — its mere existence ends this phase.\n\n## Evidence contract — READ THIS or your evidence will be rejected despite correct code\nA separate automated CRITIC judges ONLY (a) this evidence file and (b) a\nread-only grounding snapshot of the files you CITE. It cannot browse the repo.\nSo for EVERY acceptance criterion that names a file and/or a symbol:\n  1. Cite THAT exact file path in your evidence (a workdir-relative path with a\n     slash, e.g. `packages/sdk/src/resilience.ts`, not a bare method name).\n  2. Stage a LINE-NUMBERED proof slice of that file showing the exact symbols\n     the criterion names, under .specstride/features/prime-critic-error/gates/proofs/ (e.g.\n     `sed -n '52,78p' packages/sdk/src/resilience.ts` piped through `nl -ba`,\n     or `grep -n`), and cite the proof file. Quote the symbol, not just its\n     surrounding function — the critic greps your cited file for that symbol.\nHow the critic's snapshot works (write evidence it can actually ground):\n  - Files your criteria NAME are shown with ANCHORED excerpts: ±15 line-numbered\n    lines around each named symbol. So naming the symbol in the criterion (and\n    ensuring it appears verbatim in the cited file) is what makes it verifiable —\n    a mid-file implementation IS reachable this way; a vague citation is not.\n  - There is a per-snapshot byte budget. A snapshot line 'content excerpt\n    omitted — grounding byte budget reached' means the file was VERIFIED PRESENT;\n    it is NOT a missing file. Criterion-named files are never omitted, so cite\n    the precise path the criterion is about rather than dozens of tangential ones.\n  - Cite files by real relative paths. Do NOT cite RPC method names (`jobs.run`,\n    `events.subscribe@v1`) as if they were files — they are not, and the critic\n    ignores them.\n\n## Acceptance criteria (the phase spec)\n## Phase 1 — The only phase\n\nWrite `one.txt` into the working directory.\n\n### Acceptance criteria\n\n- [ ] T001 A file `one.txt` exists in the working directory.\n\n## A PRIOR ATTEMPT WAS REJECTED — this is attempt 3 of 5\nThe critic rejected your last evidence. Read the feedback below and address\nEVERY point before re-writing .specstride/features/prime-critic-error/gates/GATE1-EVIDENCE.md. Do not merely\nreassert; fix the actual gaps.\n\n### Critic feedback (.specstride/features/prime-critic-error/gates/GATE1-FEEDBACK.md)\n# Phase 1 — critic feedback (MALFORMED)\n\n> The critic reply was malformed (critic call error: Prime Agent critic exit 1: the prime critic failed this call\n), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\nThe following must be addressed before re-writing GATE1-EVIDENCE.md:\n\n(no critic output)\n\n### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes\n- attempt1: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n- attempt2: ), so this phase is treated as REJECTED (fail-safe: an ambiguous verdict never auto-approves).\n\n## If this phase depends on a job that cannot finish inside one pass: YIELD\nDo NOT sleep, poll, tail, or `until ... done` your way through a long job.\nWaiting inside a pass costs a full context rebuild per pass and gets the pass\nkilled at the ceiling — which also kills the job, because a job you start from\nyour own Bash tool lives in the pass's process tree.\nInstead, END THE PASS and let specstride do the waiting with no model session open.\nWrite this file ATOMICALLY (tmp then `mv`), then STOP without writing evidence:\n  <WORK>/.specstride/features/prime-critic-error/yield/phase1-attempt3-<run-id-1>.json\n```json\n{\"contract\": \"specstride-pass-yield/v1\",\n \"reason\": \"one line: what you are waiting on and why the evidence needs it\",\n \"job\": {\"mode\": \"launch\", \"argv\": [\"/usr/bin/make\", \"live\"], \"cwd\": \"<WORK>\"},\n \"resume_when\": {\"kind\": \"exit_code_file\"},\n \"deadline_sec\": 7200,\n \"on_resume\": \"exactly what the next pass should do with the result\"}\n```\n- `job.mode`: \"launch\" (PREFERRED — specstride starts it in its own session, where no\n  pass kill can reach it) or \"adopt\" with `pid: N` if you already started it\n  under `setsid`. An adopt naming a pid in this pass's own session is REFUSED.\n- `resume_when.kind`: exit_code_file (defaults to the rc file specstride writes for a\n  job it launched) | pid (defaults to the job it launched) | file_exists |\n  file_stable (+ `stable_sec`) | grep (+ `path`, `pattern`).\n- `deadline_sec` is REQUIRED — the run holds this workdir for the whole wait.\n- `on_resume` is handed back to you verbatim next pass, with the job's exit code\n  and a bounded slice of its log. Say what you will do with them.\nA yield is not a failure: it does not count as an error, it is not a stall, and\nby default it does not even burn an iteration. Yielding on a 90-minute job is\nthe CORRECT move; waiting for it inside the pass is the expensive one."
+    ]
+   }
+  ],
+  "processes": {
+   "count": 0,
+   "entries": []
+  },
+  "home": {
+   "home": [],
+   "temporaryDirectory": [
+    {
+     "path": "otel-state",
+     "type": "directory"
+    }
+   ]
+  }
+ },
+ "missing": {},
+ "counts": {
+  "N-01": 25,
+  "N-02": 0,
+  "N-03": 71,
+  "N-04": 127,
+  "N-05": 6,
+  "N-06": 12,
+  "N-07": 0,
+  "N-08": 0,
+  "N-09": 1,
+  "N-10": 0,
+  "N-11": 1,
+  "N-12": 0,
+  "N-13": 36,
+  "N-14": 36,
+  "N-15": 5,
+  "N-16": 0,
+  "N-17": 0,
+  "N-18": 0,
+  "N-19": 35,
+  "N-20": 1,
+  "N-21": 0,
+  "N-22": 0,
+  "N-23": 0,
+  "N-24": 6,
+  "N-25": 0,
+  "N-26": 0,
+  "N-27": 53,
+  "N-28": 0,
+  "N-29": 0
+ }
+}
