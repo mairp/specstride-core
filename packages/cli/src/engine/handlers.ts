@@ -85,6 +85,24 @@ export async function launchHandler(call: RoutedCall): Promise<number> {
 }
 
 /**
+ * `specstride unlock --stale`: the safe recovery of the stale workspace
+ * lock (the bug of 2026-11-08), over the control plane the router
+ * resolved. The verb itself reads the lock through the provider of EP-13
+ * and moves only a lock whose owner is provably dead.
+ */
+export async function unlockHandler(call: RoutedCall): Promise<number> {
+  const { unlockCommand } = await import("../commands/unlock.ts");
+  const result = await unlockCommand([...call.extras], {
+    print: (line: string): void => {
+      call.io.out(`${line}\n`);
+    },
+    controlRoot: call.controlPlane.stateDir,
+    workspaceRealPath: call.workdir,
+  });
+  return result.exit;
+}
+
+/**
  * `specstride stop`: the request into the inbox of the workspace (F102-FR-001,
  * F102-FR-002), `--now` ending the owned processes under the identity check
  * (F102-FR-006, F102-FR-007). The control root here is the one the ENGINE

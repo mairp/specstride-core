@@ -76,6 +76,14 @@ export const VERBS: readonly VerbRow[] = Object.freeze([
     exitCodes: [0, 1, 2, 3],
   },
   {
+    verb: "unlock",
+    what: "With `--stale`: moves a workspace lock whose owner is provably dead into the backups; never touches a live or foreign lock.",
+    owner: "107",
+    readOnly: false,
+    inspect: false,
+    exitCodes: [0, 2, 3, 24],
+  },
+  {
     verb: "resume",
     what: "Continues a run from the records on disk.",
     owner: "102",

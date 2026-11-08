@@ -51,6 +51,12 @@ import {
   runLaunchChecks,
   type LaunchCheckContext,
 } from "../../../pipeline/src/launch-checks/checks.ts";
+import {
+  describeLockState,
+  nextForLockState,
+  workspaceLockState,
+  type WorkspaceLockState,
+} from "../../../pipeline/src/launch-checks/lock-state.ts";
 import { validateInOrder } from "../../../pipeline/src/contract/validate/order.ts";
 import {
   DEFAULT_CHECKS,
@@ -187,7 +193,7 @@ function launchCheckContextOf(input: {
   readonly root: string;
   readonly launcherPath: string;
   readonly contractPath: string;
-  readonly lockHeld: boolean;
+  readonly lock: WorkspaceLockState;
 }): LaunchCheckContext {
   let validation: ReturnType<typeof validateInOrder> | undefined;
   try {
@@ -245,7 +251,7 @@ function launchCheckContextOf(input: {
       };
     },
     flags: {},
-    lockHeld: input.lockHeld,
+    lock: input.lock,
   };
 }
 
@@ -292,6 +298,28 @@ function refuseLine(reason: string, next: string): string {
 }
 
 /**
+ * The attach lines of F123-FR-022: a HELD lock does not refuse — the launch
+ * attaches to the run that owns the lock and says which run it is. The bug
+ * of 2026-11-08 sent the user to `specstride wait` for a run that did not
+ * exist; the attach lines name the run the lock's owner record carries.
+ */
+function attachLines(lock: WorkspaceLockState): readonly string[] {
+  return [
+    `[SPECSTRIDE-ATTACH] action=launch run=${lock.runId ?? "unknown"} owner=${lock.owner ?? "unknown"}${lock.pid === undefined ? "" : ` pid=${String(lock.pid)}`} next=${JSON.stringify("`specstride wait --until-change` watches this run")}`,
+    `[SPECSTRIDE-ATTACH] detail=${describeLockState(lock)}`,
+  ];
+}
+
+/** What the lock state decides for a launch mode: extra lines and an exit. */
+function lockVerdict(lock: WorkspaceLockState): { lines: readonly string[]; exit: number } {
+  if (lock.state === "free") return { lines: [], exit: 0 };
+  if (lock.state === "held") return { lines: attachLines(lock), exit: 0 };
+  const reason = lock.state === "stale" ? "stale-lock" : "foreign-lock";
+  const next = nextForLockState(lock) ?? "resolve the lock and try again";
+  return { lines: [refuseLine(reason, next)], exit: 24 };
+}
+
+/**
  * Run the command `launch` on the arguments that follow its word; the exit
  * code is the result.
  */
@@ -319,9 +347,18 @@ export async function launchCommand(
     // `next:` line that names `contract derive`), launches nothing and writes
     // nothing: no handshake call, no launch record, no comment record.
     const run = deps.dryRun ?? dryRun;
+    // The contract of the dry run is the one the mode `run` would launch: the
+    // newest contract under the state of the control plane.
+    const dryRoot = deps.dryRunInput?.root ?? deps.workspaceRealPath ?? process.cwd();
+    const dryControlRoot = deps.controlRoot ?? controlPlaneOf(dryRoot).stateDir;
+    const dryPipelineId = newestPipelineId(dryControlRoot);
     const outcome = await run({
-      contractFile: deps.dryRunInput?.contractFile ?? "",
-      root: deps.dryRunInput?.root ?? deps.workspaceRealPath ?? process.cwd(),
+      contractFile:
+        deps.dryRunInput?.contractFile ??
+        (dryPipelineId === null
+          ? ""
+          : join(dryControlRoot, "state", "pipeline", dryPipelineId, "contract")),
+      root: dryRoot,
       ...(deps.dryRunInput?.parallelUnits !== undefined
         ? { parallelUnits: deps.dryRunInput.parallelUnits }
         : {}),
@@ -334,10 +371,22 @@ export async function launchCommand(
         ? { launchChecks: deps.dryRunInput.launchChecks }
         : {}),
     });
-    for (const line of outcome.lines) print(line);
+    // Check 6 in the dry run TOO (the bug of 2026-11-08): a dry run that
+    // passes must mean the launch passes, so the lock state is read the
+    // same way the mode `run` reads it. Injected context wins, so a test
+    // pins the lock; a contract that cannot be resolved to a pipeline has
+    // no control plane to read a lock from, and the report already refused.
+    const dryLock =
+      deps.launchCheckContext?.lock ??
+      (dryPipelineId === null
+        ? ({ state: "free" } as WorkspaceLockState)
+        : await workspaceLockState({ controlRoot: dryControlRoot, workspaceRealPath: dryRoot }));
+    const verdict = lockVerdict(dryLock);
+    const lines = [...outcome.lines, ...verdict.lines];
+    for (const line of lines) print(line);
     return {
-      lines: outcome.lines,
-      exit: outcome.exit,
+      lines,
+      exit: verdict.exit !== 0 && outcome.exit === 0 ? verdict.exit : outcome.exit,
       mode,
       handshakeCalled: false,
       launchRecordWritten: false,
@@ -374,9 +423,18 @@ export async function launchCommand(
       root,
       launcherPath,
       contractPath: join(controlRoot, "state", "pipeline", pipelineId, "contract"),
-      lockHeld: existsSync(join(controlRoot, "lock")),
+      // Through the lock provider of EP-13, never `existsSync`: a stale or
+      // foreign lock is not a live run (the bug of 2026-11-08).
+      lock: await workspaceLockState({ controlRoot, workspaceRealPath: root }),
     });
   const checks = runLaunchChecks(checkContext);
+  // F123-FR-022 — a held lock ATTACHES: the launch prints the run it
+  // attached to and exits 0; it neither launches a second run nor refuses.
+  if (checks.decision === "attach") {
+    const lines = attachLines(checkContext.lock);
+    for (const line of lines) print(line);
+    return { lines, exit: 0, mode, handshakeCalled: false, launchRecordWritten: false };
+  }
   if (checks.decision !== "launch") {
     const reason = checks.reason ?? "refused";
     print(
@@ -384,7 +442,7 @@ export async function launchCommand(
         reason,
         reason === "already-running"
           ? "another launch owns this run; `specstride wait` watches it"
-          : "run contract render and try again",
+          : (nextForLockState(checkContext.lock) ?? "run contract render and try again"),
       ),
     );
     return {

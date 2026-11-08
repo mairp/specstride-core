@@ -8,8 +8,11 @@
  * (feature 100, annex X §X.6, row 13) and a detail. The decision is `refuse`
  * for every failure except `already-running`, where it is `attach`; the
  * decision is `launch` when all six pass. The check `run-directory-free`
- * reads the workspace lock through the lock provider of EP-13; a held lock
- * gives the decision `attach` (F123-FR-022).
+ * reads the workspace lock through the lock provider of EP-13: a held lock
+ * gives the decision `attach` (F123-FR-022), a stale one refuses
+ * `stale-lock` and a foreign one refuses `foreign-lock` — never a bare
+ * `existsSync`, which refused on the stale lock of the bash orchestrator
+ * (the bug of 2026-11-08) with `already-running` while nothing ran.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -17,6 +20,11 @@ import { createHash } from "node:crypto";
 import { dirname } from "node:path";
 import { contentHash } from "@specstride/kernel";
 import { launchCheckRefusals } from "@specstride/contracts";
+import {
+  describeLockState,
+  nextForLockState,
+  type WorkspaceLockState,
+} from "./lock-state.ts";
 
 /** A name of one of the six checks of §R.5. */
 export type LaunchCheckName =
@@ -79,12 +87,12 @@ export const LAUNCH_CHECKS: readonly LaunchCheckSpec[] = Object.freeze([
   Object.freeze({
     order: 6 as const,
     name: "run-directory-free" as const,
-    reasons: ["already-running"] as const,
+    reasons: ["already-running", "stale-lock", "foreign-lock"] as const,
     decision: "attach" as const,
   }),
 ]);
 
-/** The 11 refusal reasons of §R.5, in the fixed order of the table. */
+/** The 13 refusal reasons of §R.5, in the fixed order of the table. */
 export const LAUNCH_CHECK_REFUSALS: readonly string[] = Object.freeze(
   LAUNCH_CHECKS.flatMap((check) => [...check.reasons]),
 );
@@ -94,7 +102,7 @@ export function decisionOfRefusal(reason: string): Exclude<LaunchDecision, "laun
   return reason === "already-running" ? "attach" : "refuse";
 }
 
-/** True when the reason is one of the 11 of the closed set of row 13. */
+/** True when the reason is one of the 13 of the closed set of row 13. */
 export function isLaunchCheckRefusal(reason: string): boolean {
   return launchCheckRefusals.has(reason);
 }
@@ -124,8 +132,8 @@ export type LaunchCheckContext = {
   ) => { exitCode: number; output: string } | { timedOut: true };
   /** The flags of the launch, passed through to the dry run. */
   readonly flags: { readonly implement?: boolean; readonly smoke?: boolean };
-  /** The workspace lock, through the lock provider of EP-13. */
-  readonly lockHeld: boolean;
+  /** The workspace lock, read through the lock provider of EP-13. */
+  readonly lock: WorkspaceLockState;
 };
 
 /** One outcome of one check, as §R.8 `[MOL-GATE]` prints it. */
@@ -315,17 +323,38 @@ export function checkLauncherDryRun(ctx: LaunchCheckContext): LaunchCheckOutcome
   return { order: 5, name: "launcher-dry-run", status: "pass" };
 }
 
-/** Check 6 — `run-directory-free`: the workspace lock is free (a held lock attaches). */
+/**
+ * Check 6 — `run-directory-free`: the workspace lock, read through the lock
+ * provider of EP-13 (F123-FR-021, F123-FR-022). A HELD lock gives the
+ * decision `attach` — never a bare `existsSync`: the stale lock of the bash
+ * orchestrator (the bug of 2026-11-08) must not refuse with
+ * `already-running`. A STALE lock refuses `stale-lock` and names
+ * `specstride unlock --stale`; a FOREIGN lock refuses `foreign-lock` and
+ * names the manual fix; both are rows of the closed set of row 13.
+ */
 export function checkRunDirectoryFree(ctx: LaunchCheckContext): LaunchCheckOutcome {
-  if (ctx.lockHeld) {
+  const lock = ctx.lock;
+  if (lock.state === "free") {
+    return { order: 6, name: "run-directory-free", status: "pass" };
+  }
+  const detail = cap(describeLockState(lock));
+  if (lock.state === "held") {
     return {
       order: 6,
       name: "run-directory-free",
       status: "fail",
       reason: "already-running",
+      detail,
     };
   }
-  return { order: 6, name: "run-directory-free", status: "pass" };
+  const next = nextForLockState(lock);
+  return {
+    order: 6,
+    name: "run-directory-free",
+    status: "fail",
+    reason: lock.state === "stale" ? "stale-lock" : "foreign-lock",
+    detail: next === undefined ? detail : `${detail}; next: ${next}`,
+  };
 }
 
 const PROBES: readonly ((ctx: LaunchCheckContext) => LaunchCheckOutcome)[] = Object.freeze([

@@ -132,7 +132,7 @@
     {
       "number": 13,
       "name": "Launch-check refusals",
-      "members": "`launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`",
+      "members": "`launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`, `stale-lock`, `foreign-lock`",
       "literals": [
         "launcher-not-found",
         "launcher-edited",
@@ -144,7 +144,9 @@
         "unauthorized-root",
         "launcher-syntax-error",
         "dry-run-failed",
-        "already-running"
+        "already-running",
+        "stale-lock",
+        "foreign-lock"
       ],
       "owner": "123",
       "closedBy": "Design",

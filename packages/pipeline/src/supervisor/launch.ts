@@ -74,6 +74,11 @@ export const PIPELINE_REFUSAL_EXITS: Readonly<Record<string, number>> = Object.f
   "stale-sources": 23,
   "lock-conflict": 24,
   "already-running": 24,
+  // The two lock states the launch check reads through the provider of
+  // EP-13 (the bug of 2026-11-08): both are lock refusals, so both carry
+  // the code of the held lock, and never the generic 20.
+  "stale-lock": 24,
+  "foreign-lock": 24,
 });
 
 /** The exit code of a handshake outcome (F123-FR-024). */
