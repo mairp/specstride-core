@@ -518,7 +518,7 @@
         [
           "13",
           "Launch-check refusals",
-          "`launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`",
+          "`launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`, `stale-lock`, `foreign-lock`",
           "123",
           "Design",
           "Refusal"

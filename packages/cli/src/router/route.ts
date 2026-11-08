@@ -348,7 +348,13 @@ async function dispatch(argv: readonly string[], d: DispatchDeps): Promise<numbe
     return mounted(verb, d.handlers, callOf(verb, rest, cp, d.io, d.mode));
   }
 
-  if (verb === "spec" || verb === "verify" || verb === "launch" || verb === "wait") {
+  if (
+    verb === "spec" ||
+    verb === "verify" ||
+    verb === "launch" ||
+    verb === "wait" ||
+    verb === "unlock"
+  ) {
     // F119-FR-013 — public verbs of their owners; the front door adds no
     // check and passes the code of their row through (F119-FR-011).
     return mounted(verb, d.handlers, callOf(verb, rest, cp, d.io, d.mode));
@@ -487,6 +493,7 @@ async function composedHandler(verb: string, call: RoutedCall): Promise<number> 
   if (verb === "verify") return composed.verifyHandler(call.extras, call.io);
   if (verb === "launch") return composed.launchHandler(call);
   if (verb === "wait") return composed.waitHandler(call);
+  if (verb === "unlock") return composed.unlockHandler(call);
   if (verb === "stop") return composed.stopHandler(call);
   const refusal = composed.NOT_IN_THIS_BUILD[verb];
   if (refusal === undefined) throw new VerbNotMountedError(verb);

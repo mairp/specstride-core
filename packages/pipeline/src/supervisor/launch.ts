@@ -74,6 +74,8 @@ export const PIPELINE_REFUSAL_EXITS: Readonly<Record<string, number>> = Object.f
   "stale-sources": 23,
   "lock-conflict": 24,
   "already-running": 24,
+  "stale-lock": 24,
+  "foreign-lock": 24,
 });
 
 /** The exit code of a handshake outcome (F123-FR-024). */

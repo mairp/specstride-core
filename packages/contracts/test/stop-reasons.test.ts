@@ -352,8 +352,11 @@ test("CT-100-250: the closed families that are not stop reasons keep their as-is
 
   // The launch-check refusals (row 13) and the relaunch refusals with the
   // approval `classified-transient` (row 14).
-  assert.equal(LAUNCH_CHECK_REFUSALS.length, 11);
+  assert.equal(LAUNCH_CHECK_REFUSALS.length, 13);
   assert.ok(LAUNCH_CHECK_REFUSALS.includes("stale-sources"));
+  // Check 6 tells a dead owner's lock and a foreign lock from a live run.
+  assert.ok(LAUNCH_CHECK_REFUSALS.includes("stale-lock"));
+  assert.ok(LAUNCH_CHECK_REFUSALS.includes("foreign-lock"));
   assert.ok(RELAUNCH_REFUSALS.includes(APPROVAL_CLASSIFIED_TRANSIENT));
   assert.equal(APPROVAL_CLASSIFIED_TRANSIENT, "classified-transient");
   assert.ok(RELAUNCH_REFUSALS.includes("relaunch-observe"));

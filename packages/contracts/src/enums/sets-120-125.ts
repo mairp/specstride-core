@@ -36,7 +36,7 @@ export { pipelineExitReasonSet as pipelineExitReasons } from "../codes/stop-reas
 /**
  * Row 13 — Launch-check refusals.
  *
- * Members: `launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`
+ * Members: `launcher-not-found`, `launcher-edited`, `learning-decisions-changed`, `stale-sources`, `open-blocker`, `draft-contract`, `invalid-contract`, `unauthorized-root`, `launcher-syntax-error`, `dry-run-failed`, `already-running`, `stale-lock`, `foreign-lock`
  * Owner: 123. Closed by: Design.
  * Unknown value: Refusal
  */
@@ -52,6 +52,8 @@ export const launchCheckRefusals = defineClosedSet(13, [
   "launcher-syntax-error",
   "dry-run-failed",
   "already-running",
+  "stale-lock",
+  "foreign-lock",
 ] as const);
 
 /**

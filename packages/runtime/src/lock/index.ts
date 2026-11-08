@@ -16,3 +16,4 @@ export * from "./probe.ts";
 export * from "./reclaim.ts";
 export * from "./directory-lock.ts";
 export * from "./workspace-record.ts";
+export * from "./inspect.ts";

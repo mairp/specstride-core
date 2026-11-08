@@ -35,7 +35,13 @@ import {
   REFUSAL_OF_AN_UNKNOWN_MODE,
   type LaunchArgs,
 } from "../../../pipeline/src/contract/launch/modes.ts";
-import { runLaunchHandshake, type LaunchHandshakeOutcome } from "./launch-handshake.ts";
+import {
+  LAUNCH_LABEL,
+  runLaunchHandshake,
+  type LaunchHandshakeOutcome,
+} from "./launch-handshake.ts";
+import { printLine } from "@specstride/contracts/grammar/line-keys";
+import { exitOfLaunch } from "@specstride/contracts/state/handshake";
 import {
   dryRun,
   type DryRunInput,
@@ -69,6 +75,11 @@ import {
   RUNTIME_LOG_LOGICAL_NAME,
 } from "../../../runtime/src/detach/spawn-detached.ts";
 import { mintLeaseToken } from "../../../runtime/src/procs/run-token.ts";
+import {
+  inspectWorkspaceLock,
+  lockDetail,
+  type WorkspaceLockInspection,
+} from "../../../runtime/src/lock/inspect.ts";
 import { controlPlaneOf } from "../router/guards.ts";
 
 export { LAUNCH_MODES, parseLaunchArgs, LAUNCH_REFUSED_EXIT, REFUSAL_OF_AN_UNKNOWN_MODE };
@@ -187,7 +198,7 @@ function launchCheckContextOf(input: {
   readonly root: string;
   readonly launcherPath: string;
   readonly contractPath: string;
-  readonly lockHeld: boolean;
+  readonly lock: NonNullable<LaunchCheckContext["lock"]>;
 }): LaunchCheckContext {
   let validation: ReturnType<typeof validateInOrder> | undefined;
   try {
@@ -245,7 +256,7 @@ function launchCheckContextOf(input: {
       };
     },
     flags: {},
-    lockHeld: input.lockHeld,
+    lock: input.lock,
   };
 }
 
@@ -272,6 +283,14 @@ export type LaunchCommandDeps = {
    * pass or fail without a repository on disk.
    */
   launchCheckContext?: LaunchCheckContext;
+  /**
+   * The reading of the workspace lock (check 6, EP-13); the real inspector by
+   * default. A test hands in its own lock without a live owner on disk.
+   */
+  inspectLock?(place: {
+    controlRoot: string;
+    workspaceRealPath: string;
+  }): Promise<WorkspaceLockInspection>;
 };
 
 /** The result of one invocation of the verb: the printed lines and the exit. */
@@ -289,6 +308,40 @@ export type LaunchCommandResult = {
 /** The refusal line of annex G §G.3: `[SPECSTRIDE-REFUSE] action=launch ...`. */
 function refuseLine(reason: string, next: string): string {
   return `[SPECSTRIDE-REFUSE] action=launch reason=${reason} next=${JSON.stringify(next)}`;
+}
+
+/** The `next=` of a refusal of check 6, by reason. */
+const LOCK_NEXT: Readonly<Record<string, string>> = Object.freeze({
+  "stale-lock":
+    "the owner of the lock is dead; `specstride unlock --stale` moves it to .specstride/backups/",
+  "foreign-lock":
+    "the lock was not written by this engine; `specstride unlock --stale` moves it aside once its writer is gone",
+});
+
+/** The refusal line of check 6, with the facts of the lock (F123-FR-021). */
+function lockRefusalLine(reason: string, detail: string | undefined): string {
+  const facts = detail === undefined || detail === "" ? "" : ` ${detail}`;
+  return `[SPECSTRIDE-REFUSE] action=launch reason=${reason}${facts} next=${JSON.stringify(
+    LOCK_NEXT[reason] ?? "run contract render and try again",
+  )}`;
+}
+
+/**
+ * F123-FR-022 — a lock held by a live owner attaches: the launch starts
+ * nothing and prints the run that lives, as the handshake's `attached` does.
+ */
+function attachedLine(inspection: WorkspaceLockInspection): string {
+  return printLine(LAUNCH_LABEL, { run: inspection.run ?? "unknown", state: "running" });
+}
+
+/** Read the workspace lock for check 6, through the inspector of EP-13. */
+async function readLaunchLock(
+  deps: LaunchCommandDeps,
+  controlRoot: string,
+  workspaceRealPath: string,
+): Promise<WorkspaceLockInspection> {
+  const inspect = deps.inspectLock ?? inspectWorkspaceLock;
+  return inspect({ controlRoot, workspaceRealPath });
 }
 
 /**
@@ -344,6 +397,35 @@ export async function launchCommand(
         : {}),
     });
     for (const line of outcome.lines) print(line);
+    // Check 6 in the dry run too, the same way as the mode `run`, so a dry
+    // run that passes means the launch passes (F123-FR-021).
+    if (outcome.exit === 0) {
+      const lock = await readLaunchLock(deps, dryControlRoot, dryRoot);
+      if (lock.state === "held") {
+        const line = `${attachedLine(lock)} dry-run=attach`;
+        print(line);
+        return {
+          lines: [...outcome.lines, line],
+          // The code the mode `run` gives `attached` (F100-FR-160).
+          exit: exitOfLaunch("attached"),
+          mode,
+          handshakeCalled: false,
+          launchRecordWritten: false,
+        };
+      }
+      if (lock.state !== "free") {
+        const reason = lock.state === "stale" ? "stale-lock" : "foreign-lock";
+        const line = lockRefusalLine(reason, lockDetail(lock));
+        print(line);
+        return {
+          lines: [...outcome.lines, line],
+          exit: PIPELINE_REFUSAL_EXITS[reason] ?? 24,
+          mode,
+          handshakeCalled: false,
+          launchRecordWritten: false,
+        };
+      }
+    }
     return {
       lines: outcome.lines,
       exit: outcome.exit,
@@ -377,24 +459,51 @@ export async function launchCommand(
   }
   const launcherPath = resolved.launcher;
 
+  // Check 6 reads the lock through EP-13, never `existsSync`: a dead owner's
+  // lock and the bash orchestrator's one-line file are not a live run.
+  // An injected context that states its own lock keeps it (a test of the
+  // checks alone); otherwise the lock is read here, the same way as the dry run.
+  const injected = deps.launchCheckContext;
+  const ownsLock =
+    injected !== undefined && (injected.lock !== undefined || injected.lockHeld !== undefined);
+  const lock = ownsLock ? undefined : await readLaunchLock(deps, controlRoot, root);
+  const lockReading = {
+    state: lock?.state ?? "free",
+    ...(lock === undefined ? {} : { detail: lockDetail(lock) }),
+  } as const;
   const checkContext =
-    deps.launchCheckContext ??
-    launchCheckContextOf({
-      root,
-      launcherPath,
-      contractPath: join(controlRoot, "state", "pipeline", pipelineId, "contract"),
-      lockHeld: existsSync(join(controlRoot, "lock")),
-    });
+    injected === undefined
+      ? launchCheckContextOf({
+          root,
+          launcherPath,
+          contractPath: join(controlRoot, "state", "pipeline", pipelineId, "contract"),
+          lock: lockReading,
+        })
+      : ownsLock
+        ? injected
+        : { ...injected, lock: lockReading };
   const checks = runLaunchChecks(checkContext);
+  if (checks.decision === "attach") {
+    // F123-FR-022 — a held lock attaches to the run that owns it.
+    const line =
+      lock === undefined
+        ? printLine(LAUNCH_LABEL, { run: "unknown", state: "running" })
+        : attachedLine(lock);
+    print(line);
+    return {
+      lines: [line],
+      exit: exitOfLaunch("attached"),
+      mode,
+      handshakeCalled: false,
+      launchRecordWritten: false,
+    };
+  }
   if (checks.decision !== "launch") {
     const reason = checks.reason ?? "refused";
     print(
-      refuseLine(
-        reason,
-        reason === "already-running"
-          ? "another launch owns this run; `specstride wait` watches it"
-          : "run contract render and try again",
-      ),
+      reason === "stale-lock" || reason === "foreign-lock"
+        ? lockRefusalLine(reason, checks.detail)
+        : refuseLine(reason, "run contract render and try again"),
     );
     return {
       lines: [],

@@ -71,7 +71,7 @@ export function registerLaunchChecks(registry: DoctorRegistry): readonly DoctorC
   return checks;
 }
 
-/** The 11 refusal reasons the registered checks may report. */
+/** The 13 refusal reasons the registered checks may report. */
 export const registeredRefusalReasons: readonly string[] = LAUNCH_CHECK_REFUSALS;
 
 /**

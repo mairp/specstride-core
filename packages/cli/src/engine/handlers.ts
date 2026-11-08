@@ -26,6 +26,7 @@ import {
 } from "../../../pipeline/src/contract/layout.ts";
 import { contractId, resolveFeatures } from "../../../pipeline/src/contract/inventory/features.ts";
 import { launchCommand } from "../commands/launch.ts";
+import { unlockCommand } from "../commands/unlock.ts";
 import { runStop } from "../commands/stop.ts";
 import { controlRootOfWorkspace } from "./workspace-control-root.ts";
 import { entriesOfTheSupervisionRegistry } from "../run-control/supervision-registry-entries.ts";
@@ -82,6 +83,17 @@ export async function launchHandler(call: RoutedCall): Promise<number> {
     workspaceRealPath: call.workdir,
   });
   return result.exit;
+}
+
+/** `specstride unlock --stale` (F123-FR-021): moves a lock no run owns aside. */
+export async function unlockHandler(call: RoutedCall): Promise<number> {
+  return unlockCommand(
+    [...call.extras],
+    { controlRoot: call.controlPlane.stateDir, workspaceRealPath: call.workdir },
+    (line: string): void => {
+      call.io.out(`${line}\n`);
+    },
+  );
 }
 
 /**

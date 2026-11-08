@@ -4,12 +4,16 @@
  *
  * The six checks run in a fixed order. The first failure decides; the later
  * checks are reported `not-evaluated` and are not run. Each failure names its
- * refusal reason from the 11 of the closed set "Launch-check refusals"
+ * refusal reason from the 13 of the closed set "Launch-check refusals"
  * (feature 100, annex X §X.6, row 13) and a detail. The decision is `refuse`
  * for every failure except `already-running`, where it is `attach`; the
  * decision is `launch` when all six pass. The check `run-directory-free`
- * reads the workspace lock through the lock provider of EP-13; a held lock
- * gives the decision `attach` (F123-FR-022).
+ * reads the workspace lock through the lock provider of EP-13
+ * (`runtime/src/lock/inspect.ts`): a lock held by a live owner gives the
+ * decision `attach` (F123-FR-022); a lock whose owner is dead is
+ * `stale-lock`, and a lock this provider did not write (the bash
+ * orchestrator's one-line file, another host's lock, an unreadable owner
+ * record) is `foreign-lock`. Neither of those two is ever `already-running`.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -79,12 +83,12 @@ export const LAUNCH_CHECKS: readonly LaunchCheckSpec[] = Object.freeze([
   Object.freeze({
     order: 6 as const,
     name: "run-directory-free" as const,
-    reasons: ["already-running"] as const,
+    reasons: ["already-running", "stale-lock", "foreign-lock"] as const,
     decision: "attach" as const,
   }),
 ]);
 
-/** The 11 refusal reasons of §R.5, in the fixed order of the table. */
+/** The 13 refusal reasons of §R.5, in the fixed order of the table. */
 export const LAUNCH_CHECK_REFUSALS: readonly string[] = Object.freeze(
   LAUNCH_CHECKS.flatMap((check) => [...check.reasons]),
 );
@@ -94,7 +98,7 @@ export function decisionOfRefusal(reason: string): Exclude<LaunchDecision, "laun
   return reason === "already-running" ? "attach" : "refuse";
 }
 
-/** True when the reason is one of the 11 of the closed set of row 13. */
+/** True when the reason is one of the 13 of the closed set of row 13. */
 export function isLaunchCheckRefusal(reason: string): boolean {
   return launchCheckRefusals.has(reason);
 }
@@ -124,8 +128,19 @@ export type LaunchCheckContext = {
   ) => { exitCode: number; output: string } | { timedOut: true };
   /** The flags of the launch, passed through to the dry run. */
   readonly flags: { readonly implement?: boolean; readonly smoke?: boolean };
-  /** The workspace lock, through the lock provider of EP-13. */
-  readonly lockHeld: boolean;
+  /**
+   * The workspace lock, through the lock provider of EP-13. `lock` wins when
+   * both are given; `lockHeld` alone reads `true` as `held`.
+   */
+  readonly lockHeld?: boolean;
+  readonly lock?: LaunchLockReading;
+};
+
+/** The state of the workspace lock as check 6 reads it (`runtime/src/lock/inspect.ts`). */
+export type LaunchLockReading = {
+  readonly state: "free" | "held" | "stale" | "foreign";
+  /** `key=value` facts of the lock (owner, run, pid, age) for the refusal. */
+  readonly detail?: string;
 };
 
 /** One outcome of one check, as §R.8 `[MOL-GATE]` prints it. */
@@ -317,15 +332,17 @@ export function checkLauncherDryRun(ctx: LaunchCheckContext): LaunchCheckOutcome
 
 /** Check 6 — `run-directory-free`: the workspace lock is free (a held lock attaches). */
 export function checkRunDirectoryFree(ctx: LaunchCheckContext): LaunchCheckOutcome {
-  if (ctx.lockHeld) {
-    return {
-      order: 6,
-      name: "run-directory-free",
-      status: "fail",
-      reason: "already-running",
-    };
-  }
-  return { order: 6, name: "run-directory-free", status: "pass" };
+  const state = ctx.lock?.state ?? (ctx.lockHeld === true ? "held" : "free");
+  if (state === "free") return { order: 6, name: "run-directory-free", status: "pass" };
+  const reason =
+    state === "held" ? "already-running" : state === "stale" ? "stale-lock" : "foreign-lock";
+  return {
+    order: 6,
+    name: "run-directory-free",
+    status: "fail",
+    reason,
+    ...(ctx.lock?.detail === undefined ? {} : { detail: ctx.lock.detail }),
+  };
 }
 
 const PROBES: readonly ((ctx: LaunchCheckContext) => LaunchCheckOutcome)[] = Object.freeze([
