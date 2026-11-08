@@ -5,7 +5,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { unlockCommand } from "../../src/commands/unlock.ts";
@@ -121,4 +121,47 @@ test("a move that leaves the workspace locked is reported as a refusal, not a su
   });
   assert.equal(result.exit, 24);
   assert.match(lines[0] ?? "", /reason=still-locked/);
+});
+
+const ORCHESTRATOR_LINE = "20261106-232038-3905018 2026-11-06T23:20:38+04:00\n";
+
+/** A workspace whose lock is the bash orchestrator's one-line file. */
+function orchestratorWorkspace(): string {
+  const root = mkdtempSync(join(tmpdir(), "specstride-unlock-orch-"));
+  const controlRoot = join(root, ".specstride");
+  mkdirSync(controlRoot, { recursive: true });
+  writeFileSync(join(controlRoot, "lock"), ORCHESTRATOR_LINE);
+  return controlRoot;
+}
+
+test("an orchestrator lock whose pid still lives is refused and kept (exit 24)", async () => {
+  const lines: string[] = [];
+  const controlRoot = orchestratorWorkspace();
+  const result = await unlockCommand(["--stale"], {
+    print: (line) => lines.push(line),
+    controlRoot,
+    workspaceRealPath: join(controlRoot, ".."),
+    pidAlive: (pid) => pid === 3905018,
+  });
+  assert.equal(result.exit, 24);
+  assert.match(lines[0] ?? "", /reason=owner-alive/);
+  assert.match(lines[0] ?? "", /3905018/);
+  assert.ok(existsSync(join(controlRoot, "lock")));
+});
+
+test("an orchestrator lock whose pid is dead is MOVED into the backups (the bug of 2026-11-08)", async () => {
+  const lines: string[] = [];
+  const controlRoot = orchestratorWorkspace();
+  const result = await unlockCommand(["--stale"], {
+    print: (line) => lines.push(line),
+    controlRoot,
+    workspaceRealPath: join(controlRoot, ".."),
+    pidAlive: () => false,
+  });
+  assert.equal(result.exit, 0, lines.join("\n"));
+  assert.ok(!existsSync(join(controlRoot, "lock")));
+  const moved = /moved=(\S+)/.exec(lines.join("\n"))?.[1] ?? "";
+  assert.ok(moved.startsWith(join(controlRoot, "backups")), moved);
+  assert.equal(readFileSync(moved, "utf8"), ORCHESTRATOR_LINE, "the lock is kept, not deleted");
+  assert.match(lines.join("\n"), /owner=orchestrator pid=3905018 run=20261106-232038-3905018/);
 });

@@ -44,11 +44,23 @@ export type UnlockCommandDeps = {
    * disk; the real probe still answers the post-move check through the same
    * port.
    */
+  /** Whether a pid lives on this machine; `kill(pid, 0)` by default. */
+  pidAlive?(pid: number): boolean;
   lockState?(place: {
     controlRoot: string;
     workspaceRealPath: string;
   }): Promise<ReturnType<typeof workspaceLockState>>;
 };
+
+/** `kill(pid, 0)`: `EPERM` means the process exists and belongs to someone else. */
+function pidAliveByKill(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
 
 /** The refusal line of the verb: `[SPECSTRIDE-REFUSE] action=unlock ...`. */
 function refuseLine(reason: string, next: string): string {
@@ -88,7 +100,23 @@ export async function unlockCommand(
     print(line);
     return { lines: [line], exit: 24 };
   }
-  if (lock.state === "foreign") {
+  // The bash orchestrator's lock names the pid that wrote it: once that pid is
+  // dead the lock is provably stale, and it is moved aside like ours. Any
+  // other foreign lock, or one whose pid still lives, is left where it is.
+  const orchestratorGone =
+    lock.state === "foreign" &&
+    lock.owner === "orchestrator" &&
+    lock.pid !== undefined &&
+    !(deps.pidAlive ?? pidAliveByKill)(lock.pid);
+  if (lock.state === "foreign" && !orchestratorGone) {
+    if (lock.owner === "orchestrator" && lock.pid !== undefined) {
+      const line = refuseLine(
+        "owner-alive",
+        `the orchestrator process ${String(lock.pid)} that wrote the lock still lives; stop it first`,
+      );
+      print(line);
+      return { lines: [line], exit: 24 };
+    }
     const line = refuseLine(
       "foreign-lock",
       nextForLockState(lock) ?? "move the lock aside by hand",
@@ -96,7 +124,8 @@ export async function unlockCommand(
     print(line);
     return { lines: [line], exit: 24 };
   }
-  // Stale: move the lock into the backups, never delete it.
+  // Stale, or an orchestrator lock whose pid is dead: move the lock into the
+  // backups, never delete it.
   const paths = lockPathsOf({ controlRoot, workspaceRealPath: root });
   const backups = join(controlRoot, "backups");
   const moved = join(backups, `lock-${new Date().toISOString().replace(/[:.]/g, "-")}`);
