@@ -106,7 +106,9 @@ export function nextForLockState(lock: WorkspaceLockState): string | undefined {
   if (lock.state === "stale")
     return "run `specstride unlock --stale` to move the dead owner's lock aside";
   if (lock.state === "foreign") {
-    return "the lock is another engine's format; move it aside by hand (mv into the backups directory)";
+    return lock.owner === "orchestrator" && lock.pid !== undefined
+      ? "the lock is the bash orchestrator's; `specstride unlock --stale` moves it aside once its pid is dead"
+      : "the lock is another engine's format; move it aside by hand (mv into the backups directory)";
   }
   return undefined;
 }
@@ -150,9 +152,12 @@ function foreignIdentityOf(
     });
   }
   const age = ageSince(match[2], outcome);
+  // The orchestrator's run id ends with the pid of the process that wrote it.
+  const pid = /-(\d+)$/.exec(match[1] ?? "")?.[1];
   return Object.freeze({
     owner: "orchestrator",
     runId: match[1],
+    ...(pid === undefined ? {} : { pid: Number(pid) }),
     ...(age === undefined ? {} : { ageSeconds: age }),
     detail: "a foreign lock format (the bash orchestrator's one-line lock file)",
   });

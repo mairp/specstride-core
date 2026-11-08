@@ -108,7 +108,9 @@ test("a lock whose owner record cannot be read is FOREIGN, with the orchestrator
     assert.equal(lock.owner, "orchestrator");
     assert.equal(lock.runId, "20261106-232038-3905018");
     assert.equal(typeof lock.ageSeconds, "number");
-    assert.match(nextForLockState(lock) ?? "", /by hand/);
+    // The run id ends with the writer's pid, so `unlock --stale` can check it.
+    assert.equal(lock.pid, 3905018);
+    assert.match(nextForLockState(lock) ?? "", /specstride unlock --stale/);
     assert.match(describeLockState(lock), /owner=orchestrator/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
