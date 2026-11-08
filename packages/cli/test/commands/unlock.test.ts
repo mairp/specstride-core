@@ -53,7 +53,8 @@ test("a live lock is refused and kept (exit 24)", async () => {
   const result = await unlockCommand(["--stale"], {
     print: (line) => lines.push(line),
     controlRoot,
-    lockState: async () => ({ state: "held", owner: "directory-lock", pid: 1 }) as WorkspaceLockState,
+    lockState: async () =>
+      ({ state: "held", owner: "directory-lock", pid: 1 }) as WorkspaceLockState,
   });
   assert.equal(result.exit, 24);
   assert.match(lines[0] ?? "", /reason=lock-held/);

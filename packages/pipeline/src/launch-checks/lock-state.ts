@@ -25,7 +25,11 @@
  */
 import { readFileSync, statSync } from "node:fs";
 import { lockPathsOf, type LockPlace } from "../../../runtime/src/lock/paths.ts";
-import { probeLock, ACQUIRED_AT_FIELD, type ProbeOutcome } from "../../../runtime/src/lock/probe.ts";
+import {
+  probeLock,
+  ACQUIRED_AT_FIELD,
+  type ProbeOutcome,
+} from "../../../runtime/src/lock/probe.ts";
 
 /** The four states a reader of the workspace lock acts on. */
 export type LockStateName = "held" | "stale" | "foreign" | "free";
@@ -46,7 +50,8 @@ export type WorkspaceLockState = {
 };
 
 /** The orchestrator's lock line: `<run id> <iso-8601 date>`, one line, nothing else. */
-const ORCHESTRATOR_LOCK_LINE = /^(\S+)[ \t]+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z))(?:\s*)$/;
+const ORCHESTRATOR_LOCK_LINE =
+  /^(\S+)[ \t]+(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z))(?:\s*)$/;
 
 /**
  * The state a probe outcome maps to. `unknown` from a FAILED read of a lock
@@ -98,7 +103,8 @@ export function describeLockState(lock: WorkspaceLockState): string {
 
 /** The fix a stale or foreign lock names in its `next=`. */
 export function nextForLockState(lock: WorkspaceLockState): string | undefined {
-  if (lock.state === "stale") return "run `specstride unlock --stale` to move the dead owner's lock aside";
+  if (lock.state === "stale")
+    return "run `specstride unlock --stale` to move the dead owner's lock aside";
   if (lock.state === "foreign") {
     return "the lock is another engine's format; move it aside by hand (mv into the backups directory)";
   }

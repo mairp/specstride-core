@@ -175,9 +175,7 @@ test("check 6 attaches on a held lock, refuses stale and foreign, passes on free
   assert.match(held.detail ?? "", /run=run-h/);
 
   const stale = checkRunDirectoryFree(
-    contextWith(
-      lockStateOfProbe(outcomeOf("stale-owner-dead", { owner: ownerOf(6, "run-s") })),
-    ),
+    contextWith(lockStateOfProbe(outcomeOf("stale-owner-dead", { owner: ownerOf(6, "run-s") }))),
   );
   assert.equal(stale.status, "fail");
   assert.equal(stale.reason, "stale-lock");
@@ -211,8 +209,6 @@ test("the two new reasons are rows of the closed set of row 13", () => {
   for (const reason of ["already-running", "stale-lock", "foreign-lock"]) {
     assert.ok(isLaunchCheckRefusal(reason), `${reason} is a launch-check refusal`);
   }
-  const outcomes: LaunchCheckOutcome[] = runLaunchChecks(
-    contextWith({ state: "foreign" }),
-  ).checks;
+  const outcomes: LaunchCheckOutcome[] = runLaunchChecks(contextWith({ state: "foreign" })).checks;
   assert.equal(outcomes.find((one) => one.name === "run-directory-free")?.reason, "foreign-lock");
 });

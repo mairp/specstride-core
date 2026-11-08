@@ -291,8 +291,7 @@ export function completeDraft(input: CompletionInput): CompletionResult {
       return {
         ...entry,
         disposition: settled ? (choice as CoverageEntry["disposition"]) : entry.disposition,
-        producer:
-          choice === "mapped" && stageId !== undefined ? `stage:${stageId}` : "judgment",
+        producer: choice === "mapped" && stageId !== undefined ? `stage:${stageId}` : "judgment",
         timing: choice.startsWith("specstride-phase:") ? choice : entry.timing,
         stage_ids: stageId !== undefined ? [stageId] : entry.stage_ids,
       };

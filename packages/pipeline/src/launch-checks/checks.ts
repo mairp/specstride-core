@@ -20,11 +20,7 @@ import { createHash } from "node:crypto";
 import { dirname } from "node:path";
 import { contentHash } from "@specstride/kernel";
 import { launchCheckRefusals } from "@specstride/contracts";
-import {
-  describeLockState,
-  nextForLockState,
-  type WorkspaceLockState,
-} from "./lock-state.ts";
+import { describeLockState, nextForLockState, type WorkspaceLockState } from "./lock-state.ts";
 
 /** A name of one of the six checks of §R.5. */
 export type LaunchCheckName =

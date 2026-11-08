@@ -44,9 +44,10 @@ export type UnlockCommandDeps = {
    * disk; the real probe still answers the post-move check through the same
    * port.
    */
-  lockState?(place: { controlRoot: string; workspaceRealPath: string }): Promise<
-    ReturnType<typeof workspaceLockState>
-  >;
+  lockState?(place: {
+    controlRoot: string;
+    workspaceRealPath: string;
+  }): Promise<ReturnType<typeof workspaceLockState>>;
 };
 
 /** The refusal line of the verb: `[SPECSTRIDE-REFUSE] action=unlock ...`. */
