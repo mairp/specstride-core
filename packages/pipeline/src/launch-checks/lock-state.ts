@@ -166,7 +166,7 @@ function rawLockText(lockPath: string | undefined): string | null {
 }
 
 /** Age in seconds since an iso-8601 instant, where one can be parsed. */
-function ageSince(takenAt: string | undefined, outcome: ProbeOutcome): number | undefined {
+function ageSince(takenAt: string | undefined, _outcome: ProbeOutcome): number | undefined {
   if (typeof takenAt !== "string" || takenAt === "") return undefined;
   const at = Date.parse(takenAt);
   if (!Number.isFinite(at)) return undefined;
