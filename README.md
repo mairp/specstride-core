@@ -1,5 +1,8 @@
 # Specstride core
 
+[![CI](https://github.com/mairp/specstride-core/actions/workflows/ci.yml/badge.svg)](https://github.com/mairp/specstride-core/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 **The engine behind Specstride: loop engineering and governance for coding agents.**
 
 An agent that grades its own work says "done" when it isn't. Specstride takes a Spec Kit feature to
