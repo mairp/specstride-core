@@ -354,6 +354,14 @@ async function dispatch(argv: readonly string[], d: DispatchDeps): Promise<numbe
     return mounted(verb, d.handlers, callOf(verb, rest, cp, d.io, d.mode));
   }
 
+  if (verb === "unlock") {
+    // The recovery of the stale lock (the bug of 2026-11-08): NO state
+    // guard, because the state a stale lock leaves behind is exactly what
+    // this verb exists to clear; it reads the lock through the provider of
+    // EP-13 and refuses on anything whose owner is not provably dead.
+    return mounted(verb, d.handlers, callOf(verb, rest, cp, d.io, d.mode));
+  }
+
   // The inspection verbs of this feature, and `status` (owner 129,
   // compatibility output: 119). Guards first, then the handler.
   const slug = resolveSlug(inspectionArgs, cp, verb, inspect);
@@ -486,6 +494,7 @@ async function composedHandler(verb: string, call: RoutedCall): Promise<number> 
   if (verb === "spec") return composed.specHandler(call.extras, call.workdir, call.io);
   if (verb === "verify") return composed.verifyHandler(call.extras, call.io);
   if (verb === "launch") return composed.launchHandler(call);
+  if (verb === "unlock") return composed.unlockHandler(call);
   if (verb === "wait") return composed.waitHandler(call);
   if (verb === "stop") return composed.stopHandler(call);
   const refusal = composed.NOT_IN_THIS_BUILD[verb];

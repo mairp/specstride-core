@@ -241,7 +241,9 @@ export function completeDraft(input: CompletionInput): CompletionResult {
     if (stage === undefined) continue;
     stage.preconditions.push({
       id: `pre-${candidate.id.toLowerCase()}`,
-      check: "file_exists",
+      // A directory prerequisite (`src/`) is checked as a directory: the
+      // strict rule refuses `file_exists` on one (F107-FR-016).
+      check: candidate.resolved.endsWith("/") ? "dir_exists" : "file_exists",
       timing: "preflight",
       target: candidate.resolved,
       cwd: draft.repository.root,
@@ -276,14 +278,20 @@ export function completeDraft(input: CompletionInput): CompletionResult {
         verification_ids: verificationIdsOf(task.phase),
       };
     }
-    const choice = classifyAnswers.get(entry.source.anchor);
+    // The item of a `classify-obligation` is anchored on the COVERAGE id
+    // (`judgmentItemsOf`), not on the task anchor of its source.
+    const choice = classifyAnswers.get(entry.id) ?? classifyAnswers.get(entry.source.anchor);
     if (choice !== undefined && choice !== "keep-blocker") {
       const slug = entry.source.path.split("/").slice(-2, -1)[0] ?? "";
       const stageId = stageOfFeature.get(slug);
+      // The choices of the item are dispositions themselves (`mapped`,
+      // `optional`, `out-of-scope`): the answer settles the entry. A mapped
+      // entry is produced by the stage of its feature.
+      const settled = ["mapped", "optional", "out-of-scope"].includes(choice);
       return {
         ...entry,
-        disposition: choice === "optional" ? "unsupported" : entry.disposition,
-        producer: "judgment",
+        disposition: settled ? (choice as CoverageEntry["disposition"]) : entry.disposition,
+        producer: choice === "mapped" && stageId !== undefined ? `stage:${stageId}` : "judgment",
         timing: choice.startsWith("specstride-phase:") ? choice : entry.timing,
         stage_ids: stageId !== undefined ? [stageId] : entry.stage_ids,
       };
