@@ -335,7 +335,7 @@ export async function runStartup(input: {
     const contract = (read.ok ? read.record : raw) as { id?: string };
     const plan = await planDryRun({
       contractId: String(raw["id"] ?? contract.id ?? "(no id)"),
-      stages: Array.isArray(raw["stages"]) ? (raw["stages"] as Stage[]) : [],
+      stages: Array.isArray(raw["stages"]) ? (raw["stages"] as Stage[]).map(withCheckParams) : [],
       implement: input.args.implement,
       smoke: input.args.smoke,
       checks: input.checks,
@@ -364,6 +364,39 @@ export async function runStartup(input: {
 /** The time the start-up events carry, in seconds. */
 function nowSeconds(): number {
   return Date.now() / 1_000;
+}
+
+/**
+ * A condition of the contract AS WRITTEN (`{check, timing, target, cwd}`) as
+ * the executor reads it (`{check, timing, params}`, `target` → `path`) — the
+ * same mapping as the runtime root's `conditionOf`. A condition that already
+ * carries `params` is kept.
+ */
+function conditionWithParams(raw: unknown): Stage["preconditions"][number] {
+  const record = (raw ?? {}) as Record<string, unknown>;
+  if (record["params"] !== undefined && typeof record["params"] === "object") {
+    return record as unknown as Stage["preconditions"][number];
+  }
+  const params: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "check" || key === "timing") continue;
+    params[key === "target" ? "path" : key] = value;
+  }
+  return {
+    check: String(record["check"] ?? ""),
+    timing: (record["timing"] ?? "preflight") as Stage["preconditions"][number]["timing"],
+    params,
+  };
+}
+
+/** A stage of the raw contract with its conditions mapped for the executor. */
+function withCheckParams(stage: Stage): Stage {
+  const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+  return {
+    ...stage,
+    preconditions: list(stage.preconditions).map(conditionWithParams),
+    postconditions: list(stage.postconditions).map(conditionWithParams),
+  };
 }
 
 /** Whether the launcher the stages call is pinned in the environment. */

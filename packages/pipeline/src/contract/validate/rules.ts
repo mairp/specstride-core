@@ -113,7 +113,9 @@ export function resolveContractPath(root: string, path: string): ResolvedPath {
   // The names feature 107 defines (the verification-commands document) are
   // logical names of THIS feature's layout, not rows of the annex B table of
   // feature 100 — the table check holds for the others only (F107-FR-026).
-  if (!path.startsWith("feature:") && !holdsLogicalName(candidate)) {
+  // The annex B table holds the TEMPLATE of a name (`pipeline:<pipelineId>:
+  // contract`), so the filled name is masked before the lookup.
+  if (!path.startsWith("feature:") && !holdsLogicalName(maskName(candidate))) {
     return {
       ok: false,
       message: `unknown logical name: ${path} is not a logical name of the state layout (annex B §B.5; F107-FR-026)`,

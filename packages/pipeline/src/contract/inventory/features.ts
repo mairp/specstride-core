@@ -180,6 +180,12 @@ export function countingPhaseNumberOf(heading: string): number | undefined {
   if (numbered === undefined) return undefined;
   const digits = numbered.replace(/:$/, "");
   if (!/^\d+$/.test(digits)) return undefined;
+  // The COLON form is the heading the old grammar read
+  // (`PHASE_HEADING_OF_THE_OLD_GRAMMAR`: `## Phase N: <title>`), whatever the
+  // title holds — `## Phase 3: User Story 1 — The tab…` counts: its em-dash
+  // is part of the title, not the separator.
+  const colonForm = numbered.endsWith(":") || tokens[3] === ":" || tokens[3]?.startsWith(":");
+  if (colonForm) return Number.parseInt(digits, 10);
   // The em-dash form is the heading the OLD grammar could not read (DV-060):
   // no phase, and its tasks stay unclassified.
   if (tokens.some((token) => token.includes("—"))) return undefined;

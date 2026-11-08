@@ -319,9 +319,18 @@ export async function launchCommand(
     // `next:` line that names `contract derive`), launches nothing and writes
     // nothing: no handshake call, no launch record, no comment record.
     const run = deps.dryRun ?? dryRun;
+    // The contract of the dry run is the one the mode `run` would launch: the
+    // newest contract under the state of the control plane.
+    const dryRoot = deps.dryRunInput?.root ?? deps.workspaceRealPath ?? process.cwd();
+    const dryControlRoot = deps.controlRoot ?? controlPlaneOf(dryRoot).stateDir;
+    const dryPipelineId = newestPipelineId(dryControlRoot);
     const outcome = await run({
-      contractFile: deps.dryRunInput?.contractFile ?? "",
-      root: deps.dryRunInput?.root ?? deps.workspaceRealPath ?? process.cwd(),
+      contractFile:
+        deps.dryRunInput?.contractFile ??
+        (dryPipelineId === null
+          ? ""
+          : join(dryControlRoot, "state", "pipeline", dryPipelineId, "contract")),
+      root: dryRoot,
       ...(deps.dryRunInput?.parallelUnits !== undefined
         ? { parallelUnits: deps.dryRunInput.parallelUnits }
         : {}),
