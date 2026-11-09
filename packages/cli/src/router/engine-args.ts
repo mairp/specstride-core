@@ -44,12 +44,16 @@ export const ENGINE_HELP_EXIT = 0 as const;
  * The flags the engine call knows. The value-less flags are the run flags the
  * verb table documents (F119-FR-001, the `run` row: `--detach`, `--new-run`,
  * `--reset-counts`); `-w`/`--workdir` is the front door's own flag
- * (F119-FR-006). Everything else is an unknown argument.
+ * (F119-FR-006). `--verbose` is the front door's verbosity flag (exit.ts
+ * reads it off the same argv): it is accepted here and ignored by the engine,
+ * so the stack of an uncaught `run` error stays reachable. Everything else is
+ * an unknown argument.
  */
 export const ENGINE_FLAGS_WITHOUT_VALUE: readonly string[] = Object.freeze([
   "--detach",
   "--new-run",
   "--reset-counts",
+  "--verbose",
 ]);
 
 /** The engine flags that take a value. */
@@ -63,7 +67,7 @@ export const CAPABILITY_MODE_SENTENCE =
 /** The engine usage (F119-FR-005). */
 export function engineUsageText(): string {
   return [
-    "usage: specstride run [-w DIR] [--detach] [--new-run] [--reset-counts]",
+    "usage: specstride run [-w DIR] [--detach] [--new-run] [--reset-counts] [--verbose]",
     "",
     "Runs the engine in the foreground in the start mode standalone.",
     CAPABILITY_MODE_SENTENCE,
