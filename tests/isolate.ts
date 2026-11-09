@@ -37,9 +37,23 @@ const [command, args] = wanted
   ? ["unshare", ["--fork", "--pid", "--mount-proc", "--kill-child", "--", ...init, ...argv]]
   : [argv[0], argv.slice(1)];
 
+// The tests are hermetic: the run-selection variables of the host (the engine
+// sets them for its own passes) must not choose a feature, a model or a critic
+// inside a test that builds its own fixture.
+const env: NodeJS.ProcessEnv = { ...process.env };
+for (const name of [
+  "SPECSTRIDE_FEATURE",
+  "SPECSTRIDE_MODEL",
+  "SPECSTRIDE_CRITIC",
+  "SPECSTRIDE_PROPOSER",
+  "SPECSTRIDE_BIN",
+]) {
+  delete env[name];
+}
+
 const result = spawnSync(command, args, {
   stdio: "inherit",
-  env: wanted ? { ...process.env, SPECSTRIDE_TEST_ISOLATED: "1" } : process.env,
+  env: wanted ? { ...env, SPECSTRIDE_TEST_ISOLATED: "1" } : env,
 });
 
 if (result.error) {
