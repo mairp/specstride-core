@@ -105,6 +105,12 @@
         "^x-": {}
       }
     },
+    "time_limit_sec": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400,
+      "description": "The time limit of one stage attempt, in seconds (F107-FR-015; the stage bound of F107-FR-025 reads it). A derived specstride stage writes the resolved derive.stageTimeoutSec, default 86,400 (F107-FR-041a (a)); absent, the runner's default of 3,600 applies"
+    },
     "evidence": {
       "type": "array",
       "uniqueItems": true,
