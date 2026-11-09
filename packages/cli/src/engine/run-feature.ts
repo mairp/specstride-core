@@ -89,7 +89,7 @@ import {
 } from "./learning-loop.ts";
 import { phaseShapesOfSpec } from "../learn.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
-import { START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
+import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
 import { readBetweenPasses, runPassLoop } from "../../../core/src/pass-loop/loop.ts";
 import { announcementOf } from "../../../core/src/pass-loop/announce.ts";
 import type { Announcement } from "../../../core/src/pass-loop/announce.ts";
@@ -294,17 +294,22 @@ export function criticOf(value: string | undefined): { readonly dshModel: string
 }
 
 /** One pass of the implementer through `dsh`, on the provider and model the consumer names. */
-async function passOnDsh(
+export async function passOnDsh(
   model: string,
   prompt: string,
   cwd: string,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void,
   limitMs: number | undefined = PROPOSER_LIMIT_MS,
+  runToken?: string,
 ): Promise<HarnessReply> {
   const run = await runDshProposerAsync({
     prompt,
     cwd,
-    env: process.env,
+    // The run token rides in the pass's environment: `stop --now` ends a
+    // recorded pass only after `signal-owned` reads this token back from
+    // /proc/<pid>/environ and matches the hash the registry holds. Without it
+    // every `stop --now` said "not running — nothing to kill" about a live pass.
+    env: runToken === undefined ? process.env : { ...process.env, [RUN_TOKEN_VAR]: runToken },
     model: { flag: model },
     timeoutMs: limitMs,
     onStart,
@@ -360,9 +365,13 @@ function callClaude(
   onLine: (line: string) => void,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void = () =>
     undefined,
+  runToken?: string,
 ): Promise<HarnessReply> {
   return new Promise((done) => {
-    const child = spawn("claude", [...argv], { cwd, stdio: ["pipe", "pipe", "pipe"] });
+    // See `passOnDsh`: the token is what lets `stop --now` prove the pass is ours.
+    const env =
+      runToken === undefined ? process.env : { ...process.env, [RUN_TOKEN_VAR]: runToken };
+    const child = spawn("claude", [...argv], { cwd, env, stdio: ["pipe", "pipe", "pipe"] });
     onStart(child.pid, (signal) => child.kill(signal));
     let held = "";
     let stderr = "";
@@ -2177,6 +2186,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               proposerLimitMsOf(ceiling.seconds, killGraceMs),
               say,
               onPassStart,
+              runId,
             )
           : await passOnDsh(
               implementer,
@@ -2184,6 +2194,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               workdir,
               onPassStart,
               proposerLimitMsOf(ceiling.seconds, killGraceMs),
+              runId,
             );
       clearInterval(watchdog);
       if (escalation !== undefined) clearTimeout(escalation);
