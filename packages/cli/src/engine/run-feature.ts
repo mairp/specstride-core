@@ -64,6 +64,7 @@ import {
   specDocsBlock,
   specDocsChange,
 } from "./spec-docs.ts";
+import { addedLinesAgainstHead, isAddedLine } from "./commit-lines.ts";
 import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
 import { theParallelHomeOfARun } from "./parallel-group.ts";
@@ -1647,7 +1648,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     scan: (files: readonly string[]) => {
       const present = files.filter((file) => existsSync(join(workdir, file)));
       const found = ingress.scanCommit(present, workdir);
-      const hits = found.hits.filter((hit) => hit.pattern !== THE_SHAPE_OF_ORDINARY_CODE);
+      // A line HEAD already holds is not the commit's to answer for (commit-lines.ts).
+      const added = addedLinesAgainstHead(workdir, present);
+      const hits = found.hits.filter(
+        (hit) => hit.pattern !== THE_SHAPE_OF_ORDINARY_CODE && isAddedLine(added, hit),
+      );
       const blocked = hits.length > 0;
       if (blocked) {
         commitsBlocked += 1;
