@@ -425,13 +425,25 @@ function stageOf(stage: RawStage, index: number, slugs: readonly string[], root:
   const action = actionOf(stage["action"], cwd, root);
   const resume = actionOf(stage["resume"] ?? stage["resume_action"], cwd, root);
   const recovery = recoveryOf(stage["recovery"]);
+  // F107-FR-015 — the stage-level `time_limit_sec` is the time limit of the
+  // stage runner. Validation reads it (the stage bound of F107-FR-025), but
+  // the runner never did: without an action-record override every stage ran
+  // under the runner's own default of 3,600 s and was killed with exit 124
+  // mid-campaign. An explicit action limit still wins.
+  const stageLimit = stage["time_limit_sec"];
+  const hasStageLimit =
+    typeof stageLimit === "number" && Number.isFinite(stageLimit) && stageLimit > 0;
+  const withStageLimit = (one: Action | undefined): Action | undefined =>
+    one === undefined || one.timeLimitSeconds !== undefined || !hasStageLimit
+      ? one
+      : { ...one, timeLimitSeconds: stageLimit as number };
   return {
     id,
     kind,
     dependencies: stringsOf(stage["depends_on"] ?? stage["dependencies"]),
     ...(cwd === undefined ? {} : { cwd }),
-    ...(action === undefined ? {} : { action }),
-    ...(resume === undefined ? {} : { resumeAction: resume }),
+    ...(action === undefined ? {} : { action: withStageLimit(action) }),
+    ...(resume === undefined ? {} : { resumeAction: withStageLimit(resume) }),
     preconditions: conditionsOf(stage["preconditions"]),
     postconditions: conditionsOf(stage["postconditions"]),
     ...(recovery === undefined ? {} : { recovery }),
