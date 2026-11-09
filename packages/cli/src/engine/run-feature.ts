@@ -100,6 +100,7 @@ import {
 } from "../../../core/src/pass-loop/request.ts";
 import {
   DEFAULT_LIMITS,
+  MAX_ERRORS_DEFAULT,
   ZERO_COUNTERS,
   type Counters,
 } from "../../../core/src/pass-loop/accounting.ts";
@@ -282,7 +283,10 @@ const DSH_CRITIC_WINDOW_DEFAULT = 200_000;
  */
 export function criticOf(value: string | undefined): { readonly dshModel: string | null } {
   if (value === undefined || value === "" || value === "claude") return { dshModel: null };
-  const match = /^dsh:(\S+\/\S+)$/.exec(value);
+  // The bare `<provider>/<model>` form is accepted as well, as the harness
+  // registry's role grammar (`harnesses/roles/names.ts`) spells it: the two
+  // grammars must agree, or a value one layer accepts throws here.
+  const match = /^(?:dsh:)?(\S+\/\S+)$/.exec(value);
   if (match === null) {
     throw new Error(`a role must be claude or dsh:<provider>/<model>, got ${value}`);
   }
@@ -313,8 +317,17 @@ async function passOnDsh(
         sessionId: null,
         stderr: run.stderr,
         costUsd: run.costUsd,
+        apiError: null,
       }
-    : { exit: 1, reply: "", tools: null, sessionId: null, stderr: run.message, costUsd: 0 };
+    : {
+        exit: 1,
+        reply: "",
+        tools: null,
+        sessionId: null,
+        stderr: run.message,
+        costUsd: 0,
+        apiError: null,
+      };
 }
 
 /** The registry of critic strategies refuses a second registration in one process. */
@@ -329,6 +342,13 @@ type HarnessReply = {
   readonly stderr: string;
   /** What the call cost, as the executable reported it; zero where it did not. */
   readonly costUsd: number;
+  /**
+   * The harness's own API-error name, where the stream's result record named
+   * one (`api_error`, e.g. `usage_limit_reached`); null where it did not.
+   * Surfaced on the errored line so a spent quota is never reported as an
+   * anonymous agent error.
+   */
+  readonly apiError: string | null;
 };
 
 /** Runs `claude` with the prompt on standard input and reads its JSON stream. */
@@ -350,6 +370,7 @@ function callClaude(
     let tools: readonly string[] | null = null;
     let sessionId: string | null = null;
     let costUsd = 0;
+    let apiError: string | null = null;
     // No limit (SPECSTRIDE_LIMITS=off): no timer at all.
     const timer =
       limitMs === undefined ? undefined : setTimeout(() => child.kill("SIGTERM"), limitMs);
@@ -364,6 +385,9 @@ function callClaude(
         if (record.type === "result" && typeof record.result === "string") reply = record.result;
         if (record.type === "result" && typeof record.total_cost_usd === "number") {
           costUsd = record.total_cost_usd;
+        }
+        if (record.type === "result" && typeof record.api_error === "string") {
+          apiError = record.api_error;
         }
       } catch {
         onLine(line);
@@ -387,12 +411,13 @@ function callClaude(
         sessionId: null,
         stderr: error.message,
         costUsd: 0,
+        apiError: null,
       });
     });
     child.on("close", (code) => {
       clearTimeout(timer);
       readLine(held);
-      done({ exit: code ?? 1, reply, tools, sessionId, stderr, costUsd });
+      done({ exit: code ?? 1, reply, tools, sessionId, stderr, costUsd, apiError });
     });
     child.stdin.end(prompt);
   });
@@ -2166,6 +2191,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       registry.remove(passInFlight);
       // The pass has ended; its guard has nothing left to watch.
       passGuard?.kill("SIGKILL");
+      // A failed pass names WHY on its own line: the API error the harness
+      // reported (a spent quota among them) or the first line of stderr.
+      // Without it a permanent harness failure is logged as an anonymous
+      // `agent_error` and the run retries it without a visible cause.
+      if (reply.exit !== 0) {
+        const detail =
+          reply.apiError ??
+          (reply.stderr.trim() !== ""
+            ? reply.stderr.trim().split("\n")[0] ?? ""
+            : (reply.reply.trim() !== "" ? reply.reply.trim().split("\n")[0] : "") || "");
+        say(`[${slug}] the pass failed: ${detail === "" ? `exit ${String(reply.exit)}` : detail}`);
+      }
       // Whatever the pass deleted of the engine's own state under .specstride/
       // is put back before the engine writes there again (the cost line below
       // appends to .specstride/cost.log); the next pass is told.
@@ -2381,8 +2418,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             },
             limits: limitsAreOff()
               ? {
+                  // F119 — limits off removes the TIME ceilings and the
+                  // cap breaker, not the consecutive-error breaker: a
+                  // harness that fails on every pass (a spent quota, a
+                  // missing executable) must fail the phase instead of
+                  // retrying forever with no ceiling and no detail.
                   ...DEFAULT_LIMITS,
-                  maxErrors: Number.MAX_SAFE_INTEGER,
+                  maxErrors: MAX_ERRORS_DEFAULT,
                   maxNoProgress: 0,
                   maxCapKills: 0,
                 }
