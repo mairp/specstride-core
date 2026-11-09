@@ -1,16 +1,10 @@
-# Mergify merges PRs into main once CI is green.
-# Opt out of auto-merge on a PR by labelling it `do-not-merge`.
+# Mergify merges a PR into main once CI is green.
+# Opt out on a PR by labelling it `do-not-merge` or keeping it a draft.
 # Head branches are deleted by GitHub's "automatically delete head branches"
 # repo setting; main's branch protection requires lint + test.
-merge_protections_settings:
-  auto_merge_conditions:
-    - base = main
-    - -draft
-    - label != do-not-merge
-
-queue_rules:
-  - name: default
-    queue_conditions:
+pull_request_rules:
+  - name: merge when CI passes
+    conditions:
       - base = main
       - -draft
       - -conflict
@@ -23,10 +17,6 @@ queue_rules:
       - check-success = no-session-links
       - -title ~= (?i)claude[.]ai
       - -body ~= (?i)claude[.]ai
-    merge_conditions:
-      - check-success = no-session-links
-      - -title ~= (?i)claude[.]ai
-      - -body ~= (?i)claude[.]ai
-      - check-success = lint
-      - check-success = test
-    merge_method: squash
+    actions:
+      merge:
+        method: merge
