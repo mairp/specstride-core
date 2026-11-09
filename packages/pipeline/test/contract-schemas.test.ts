@@ -350,6 +350,7 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
       "preconditions",
       "recovery",
       "resume",
+      "time_limit_sec",
       "writes",
     ].sort(),
     "the members of a stage are not the ones of data-model.md",
