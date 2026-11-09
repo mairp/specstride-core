@@ -240,6 +240,18 @@ function declaredCommandsOfTheCompletion(
 }
 
 /**
+ * `derive.stageTimeoutSec` from the environment (`SPECSTRIDE_DERIVE_STAGE_TIMEOUT_SEC`):
+ * a whole number of seconds from 1 to 86,400, else undefined (the default
+ * applies). The environment is one of the three sources F107-FR-025 accepts;
+ * the comment is never one.
+ */
+export function stageTimeoutFromEnvironment(raw: string | undefined): number | undefined {
+  if (raw === undefined || !/^\d+$/.test(raw.trim())) return undefined;
+  const value = Number.parseInt(raw.trim(), 10);
+  return value >= 1 && value <= 86_400 ? value : undefined;
+}
+
+/**
  * Run the completion (F107-FR-041) inside an exchange call: write the
  * completed draft back to the draft file and every verification-commands
  * document the completion returns under its physical path, relative to the
@@ -251,9 +263,13 @@ function runTheCompletion(
 ):
   | { readonly ok: true; readonly draft: LaunchContractDraft }
   | { readonly ok: false; readonly refusal: DeriveResult } {
+  const stageTimeoutSec = stageTimeoutFromEnvironment(
+    process.env.SPECSTRIDE_DERIVE_STAGE_TIMEOUT_SEC,
+  );
   const result = completeWhenSettled(draft, {
     registry: new StageKindRegistry(DEFAULT_STAGE_KINDS, "contract-derive-judgment"),
     declaredCommands: declaredCommandsOfTheCompletion(input, draft),
+    ...(stageTimeoutSec === undefined ? {} : { stageTimeoutSec }),
   });
   const failure = writeExchangeDraft(input.output, result.draft);
   if (failure !== undefined) return { ok: false, refusal: failure };
