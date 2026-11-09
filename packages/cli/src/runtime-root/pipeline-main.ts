@@ -609,6 +609,7 @@ const STAGE_ENVIRONMENT_ENTRIES: readonly ActionEnvironmentEntry[] = Object.free
   { name: "SPECSTRIDE_PROPOSER", required: false },
   { name: "SPECSTRIDE_CRITIC", required: false },
   { name: "SPECSTRIDE_PROPOSER_TIMEOUT_SEC", required: false },
+  { name: "SPECSTRIDE_LIMITS", required: false },
   { name: "SPECSTRIDE_CRITIC_TIMEOUT_SEC", required: false },
   { name: "SPECSTRIDE_PROPOSER_MAX_ERRORS", required: false },
   { name: "HOME", required: false },

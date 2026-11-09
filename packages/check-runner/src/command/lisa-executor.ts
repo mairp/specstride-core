@@ -26,6 +26,7 @@
  *   already writes `import type`.
  */
 import { spawnSync } from "node:child_process";
+import { limitsAreOff } from "@specstride/kernel/limits";
 import process from "node:process";
 import { Buffer } from "node:buffer";
 import type { VerificationCommand, VerificationGate, VerificationPlanV1 } from "./lisa-plan.ts";
@@ -79,7 +80,8 @@ export function execute(
     cwd: command.cwd,
     shell: false,
     encoding: "utf8",
-    timeout: command.timeoutSec * 1_000,
+    // SPECSTRIDE_LIMITS=off: the command runs with no time limit.
+    ...(limitsAreOff() ? {} : { timeout: command.timeoutSec * 1_000 }),
     maxBuffer: Math.max(maxOutputBytes * 2, 1_048_576),
     env: process.env,
   });

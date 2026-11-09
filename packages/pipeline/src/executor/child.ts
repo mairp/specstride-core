@@ -19,6 +19,7 @@
  * seconds; the child code is 124 and the stage reason `timeout`. An action
  * that cannot start has the child code 127 and the reason `exec-error:`.
  */
+import { limitsAreOff } from "@specstride/kernel/limits";
 import { spawn, type ChildProcess } from "node:child_process";
 
 /** The kill grace after the termination signal, in seconds. */
@@ -140,10 +141,13 @@ export async function runStageChild(input: {
   const limitMs = (input.timeLimitSeconds ?? DEFAULT_TIME_LIMIT_SECONDS) * 1_000;
   let timedOut = false;
   let killer: NodeJS.Timeout | undefined;
-  const timer = setTimeout(() => {
-    timedOut = true;
-    killer = signalTimedOutChild(child, (pid, signal) => process.kill(pid, signal));
-  }, limitMs);
+  // SPECSTRIDE_LIMITS=off: the stage runs with no time limit at all.
+  const timer = limitsAreOff()
+    ? undefined
+    : setTimeout(() => {
+        timedOut = true;
+        killer = signalTimedOutChild(child, (pid, signal) => process.kill(pid, signal));
+      }, limitMs);
 
   if (mode === "pipe") {
     const strip = (text: string): string =>
@@ -183,7 +187,7 @@ export async function runStageChild(input: {
     });
   });
 
-  clearTimeout(timer);
+  if (timer !== undefined) clearTimeout(timer);
   if (killer !== undefined) clearTimeout(killer);
   return { ...result, warn };
 }

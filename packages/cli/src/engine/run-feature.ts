@@ -64,6 +64,7 @@ import {
   specDocsBlock,
   specDocsChange,
 } from "./spec-docs.ts";
+import { countLimit, limitsAreOff, timeLimitMs } from "@specstride/kernel/limits";
 import { addedLinesAgainstHead, isAddedLine } from "./commit-lines.ts";
 import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
@@ -247,7 +248,8 @@ const PROPOSER_LIMIT_MS = 45 * 60 * 1000;
  * kept the fixed 45 minutes, so a ceiling set higher never took effect and
  * every pass of a long phase was cut at 45 minutes (152 phase 3, 2026-11-09).
  */
-export function proposerLimitMsOf(ceilingSec: number, killGraceMs: number): number {
+export function proposerLimitMsOf(ceilingSec: number, killGraceMs: number): number | undefined {
+  if (limitsAreOff()) return undefined;
   const ceilingMs = Number.isFinite(ceilingSec) && ceilingSec > 0 ? ceilingSec * 1000 : 0;
   return Math.max(PROPOSER_LIMIT_MS, ceilingMs + killGraceMs);
 }
@@ -293,7 +295,7 @@ async function passOnDsh(
   prompt: string,
   cwd: string,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void,
-  limitMs: number = PROPOSER_LIMIT_MS,
+  limitMs: number | undefined = PROPOSER_LIMIT_MS,
 ): Promise<HarnessReply> {
   const run = await runDshProposerAsync({
     prompt,
@@ -334,7 +336,7 @@ function callClaude(
   argv: readonly string[],
   prompt: string,
   cwd: string,
-  limitMs: number,
+  limitMs: number | undefined,
   onLine: (line: string) => void,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void = () =>
     undefined,
@@ -348,7 +350,9 @@ function callClaude(
     let tools: readonly string[] | null = null;
     let sessionId: string | null = null;
     let costUsd = 0;
-    const timer = setTimeout(() => child.kill("SIGTERM"), limitMs);
+    // No limit (SPECSTRIDE_LIMITS=off): no timer at all.
+    const timer =
+      limitMs === undefined ? undefined : setTimeout(() => child.kill("SIGTERM"), limitMs);
     const readLine = (line: string): void => {
       if (line.trim() === "") return;
       try {
@@ -1503,7 +1507,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         cwd: workdir,
         env: process.env,
         model: { flag: critic.dshModel },
-        timeoutMs: CRITIC_LIMIT_MS,
+        timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
         contextTokens: diagnosticianEntry.contextWindow,
       });
       if (!run.ok) throw new Error(run.message);
@@ -1520,7 +1524,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       }),
       request.prompt,
       workdir,
-      CRITIC_LIMIT_MS,
+      timeLimitMs(CRITIC_LIMIT_MS),
       () => undefined,
     );
     if (answer.exit !== 0 && answer.reply === "") {
@@ -1759,8 +1763,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     });
     const tickMs = Number(process.env.SPECSTRIDE_WATCHDOG_TICK_MS) || 15_000;
     const killGraceMs = Number(process.env.SPECSTRIDE_KILL_GRACE_MS) || 5_000;
-    const passLimit =
-      Number(process.env.SPECSTRIDE_PROPOSER_MAX_ITER) || REQUEST_DEFAULTS.passLimit;
+    const passLimit = countLimit(
+      Number(process.env.SPECSTRIDE_PROPOSER_MAX_ITER) || REQUEST_DEFAULTS.passLimit,
+    );
     const pauseEnv = Number(process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC);
     const pauseSec =
       Number.isFinite(pauseEnv) && pauseEnv >= 0 ? pauseEnv : REQUEST_DEFAULTS.pauseSec;
@@ -2099,7 +2104,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       // loop goes on (F118-FR-006, F118-FR-010).
       let tickNo = 0;
       const watchdog = setInterval(() => {
-        if (ceilingReached || passPid <= 0) return;
+        if (ceilingReached || passPid <= 0 || limitsAreOff()) return;
         const tick = runWatchdogTick(++tickNo, {
           hard_cap: () =>
             hardCapCheck({
@@ -2374,7 +2379,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               const fields = row.asIsFields ?? (announcement as { fields?: unknown }).fields ?? {};
               emit(row.asIsName, fields as Record<string, unknown>);
             },
-            limits: DEFAULT_LIMITS,
+            limits: limitsAreOff()
+              ? {
+                  ...DEFAULT_LIMITS,
+                  maxErrors: Number.MAX_SAFE_INTEGER,
+                  maxNoProgress: 0,
+                  maxCapKills: 0,
+                }
+              : DEFAULT_LIMITS,
             counters: countersOnEntry,
             hooks: {
               // F118-FR-011 — the cap breaker: after too many kills of the
@@ -2458,7 +2470,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             attemptId: `${engineStartId}-a${String(ordinal)}`,
             phase,
             ordinal,
-            rejectLimit: REJECT_LIMIT_DEFAULT,
+            rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
             // F101-FR-025 — the accelerator runs on the proposer's harness.
             harness: harnessOfTheAccelerator(
               process.env.SPECSTRIDE_ACCELERATOR_HARNESS,
@@ -2470,7 +2482,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             prompt: {
               phase,
               ordinal,
-              rejectLimit: REJECT_LIMIT_DEFAULT,
+              rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
               hint: readIfThere(hintPathOf(phase)),
               feedback: newest?.text ?? "",
               phaseSection: sectionOf(phase),
@@ -2578,7 +2590,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           workdir,
           phase,
           ordinal,
-          rejectLimit: REJECT_LIMIT_DEFAULT,
+          rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
           critic: criticHarness,
           specFormat: "speckit-tasks",
           featureSlug: slug,
@@ -2614,7 +2626,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               workdir,
               phase,
               ordinal,
-              rejectLimit: REJECT_LIMIT_DEFAULT,
+              rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
               critic: criticHarness,
               specFormat: "speckit-tasks",
               featureSlug: slug,
@@ -2640,7 +2652,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                       cwd: workdir,
                       env: process.env,
                       model: { flag: critic.dshModel },
-                      timeoutMs: CRITIC_LIMIT_MS,
+                      timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
                       contextTokens:
                         Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || DSH_CRITIC_WINDOW_DEFAULT,
                     });
@@ -2670,7 +2682,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                     }),
                     criticPrompt,
                     workdir,
-                    CRITIC_LIMIT_MS,
+                    timeLimitMs(CRITIC_LIMIT_MS),
                     () => undefined,
                   );
                   if (answer.exit !== 0 && answer.reply === "") {
@@ -3029,8 +3041,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         phase,
         ordinal,
         kind,
-        rejectLimit: REJECT_LIMIT_DEFAULT,
-        malformedLimit: MALFORMED_LIMIT_DEFAULT,
+        rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+        malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
         feedbackRecords: records,
         taskIds: { knownTaskIds },
         signatures,
@@ -3100,8 +3112,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       phases: phaseNumbers,
       runId,
       engineStartId,
-      rejectLimit: REJECT_LIMIT_DEFAULT,
-      malformedLimit: MALFORMED_LIMIT_DEFAULT,
+      rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+      malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
       gitCommits: "auto",
       launchReason: "first",
     },
