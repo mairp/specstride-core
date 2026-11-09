@@ -64,3 +64,22 @@ test("every derived specstride stage declares time_limit_sec: the default, or th
     43_200,
   );
 });
+
+test("the strict validator accepts the time limit a derived stage declares, and refuses one out of range", async () => {
+  const { validateComposed } = await import("../src/contract/validate/compose.ts");
+  const registry = new StageKindRegistry(DEFAULT_STAGE_KINDS, "test");
+  const completed = completeDraft({ draft: draft("/w"), registry, declaredCommands: [] })
+    .draft as unknown as Record<string, unknown>;
+  const stageErrors = (value: unknown) => {
+    const result = validateComposed(value);
+    return result.ok ? [] : result.errors.filter((e) => JSON.stringify(e).includes("/stages/"));
+  };
+  assert.deepEqual(
+    stageErrors(completed),
+    [],
+    "a derived stage with time_limit_sec passes the stage schema",
+  );
+  const stages = completed["stages"] as Record<string, unknown>[];
+  const tooLong = { ...completed, stages: [{ ...stages[0], time_limit_sec: 86_401 }] };
+  assert.ok(stageErrors(tooLong).length > 0, "above 86,400 s is refused");
+});
