@@ -20,34 +20,45 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { phasesOf } from "../../../spec-formats/src/adapters/speckit-tasks.ts";
 
 /** A spec document above this size is not snapshotted. */
 export const SPEC_DOC_CAP_BYTES = 512 * 1024;
 
-const TASK_LINE = /^(\s*[-*]\s+\[)([ xX])(\]\s+)(T\d+[a-z]?)\b/;
+/** Every task of a task list, by id, with its tick — read by the one grammar (F104-SC-001). */
+function ticksOf(text: string): Map<string, { ticked: boolean; line: number }> {
+  const out = new Map<string, { ticked: boolean; line: number }>();
+  for (const phase of phasesOf(text, "tasks.md")) {
+    for (const task of phase.tasks) out.set(task.id, { ticked: task.ticked, line: task.line });
+  }
+  return out;
+}
 
 /**
  * The text of `current` with the tick of every task put back to its state in
- * `before`: a task line keeps whatever the pass wrote after its id, but its
- * checkbox is the one `before` had (a task `before` did not have keeps its
- * own). Every other line of `current` is kept as it is.
+ * `before`: a task line keeps whatever the pass wrote, but its checkbox is the
+ * one `before` had (a task `before` did not have keeps its own). Every other
+ * line of `current` is kept as it is. The task lines are found by the
+ * spec-format package; this only flips the box on the line it names.
  */
 export function keepTicksOf(current: string, before: string): string {
-  const ticks = new Map<string, string>();
-  for (const line of before.split("\n")) {
-    const m = TASK_LINE.exec(line);
-    if (m !== null) ticks.set(m[4] as string, m[2] as string);
+  const wanted = ticksOf(before);
+  const lines = current.split("\n");
+  for (const [id, now] of ticksOf(current)) {
+    const want = wanted.get(id);
+    if (want === undefined || want.ticked === now.ticked) continue;
+    const index = now.line - 1;
+    const line = lines[index];
+    if (line === undefined) continue;
+    const boxes = want.ticked ? ["[ ]"] : ["[x]", "[X]"];
+    const at = boxes
+      .map((box) => line.indexOf(box))
+      .filter((i) => i >= 0)
+      .sort((x, y) => x - y)[0];
+    if (at === undefined) continue;
+    lines[index] = `${line.slice(0, at)}${want.ticked ? "[x]" : "[ ]"}${line.slice(at + 3)}`;
   }
-  return current
-    .split("\n")
-    .map((line) => {
-      const m = TASK_LINE.exec(line);
-      if (m === null) return line;
-      const tick = ticks.get(m[4] as string);
-      if (tick === undefined || tick === m[2]) return line;
-      return `${m[1] as string}${tick}${line.slice((m[1] as string).length + 1)}`;
-    })
-    .join("\n");
+  return lines.join("\n");
 }
 
 /** True when git ignores the directory (its documents never reach `git diff`). */
