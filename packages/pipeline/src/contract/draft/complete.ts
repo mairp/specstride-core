@@ -77,6 +77,12 @@ export type CompletionResult = {
 export type CompletionInput = {
   readonly draft: LaunchContractDraft;
   readonly registry: StageKindRegistry;
+  /**
+   * The resolved value of `derive.stageTimeoutSec` (user configuration, the
+   * environment or a flag — never the comment, F107-FR-035), in seconds;
+   * absent → the default of 86,400 (F107-FR-041a (a)).
+   */
+  readonly stageTimeoutSec?: number;
   readonly declaredCommands: readonly {
     readonly id: string;
     readonly argv: readonly string[];
@@ -117,6 +123,24 @@ export const STAGE_ACTION: readonly string[] = Object.freeze(["specstride", "run
 
 /** The recovery of a `specstride` stage: one attempt (F107-FR-041a). */
 export const STAGE_RECOVERY = Object.freeze({ max_attempts: 1 } as const);
+
+/** The default time limit of a derived `specstride` stage: 86,400 s (F107-FR-041a (a)). */
+export const DEFAULT_STAGE_TIME_LIMIT_SEC = 86_400;
+
+/**
+ * The time limit a derived `specstride` stage declares (F107-FR-041a (a): "its
+ * time limit is the resolved value of `derive.stageTimeoutSec` (default 86,400
+ * seconds)"). A value that is not a whole number of seconds from 1 to 86,400
+ * falls back to the default.
+ */
+export function stageTimeLimitOf(resolved: number | undefined): number {
+  return typeof resolved === "number" &&
+    Number.isInteger(resolved) &&
+    resolved >= 1 &&
+    resolved <= DEFAULT_STAGE_TIME_LIMIT_SEC
+    ? resolved
+    : DEFAULT_STAGE_TIME_LIMIT_SEC;
+}
 
 /**
  * The physical path of a feature's verification-commands document, relative
@@ -189,8 +213,10 @@ export function completeDraft(input: CompletionInput): CompletionResult {
     preconditions: Record<string, unknown>[];
     postconditions: Record<string, unknown>[];
     recovery: Record<string, unknown>;
+    time_limit_sec: number;
     evidence: string[];
   }[] = [];
+  const timeLimitSec = stageTimeLimitOf(input.stageTimeoutSec);
   const featureByPath = new Map(draft.features.map((one) => [one.path, one]));
   for (const feature of draft.features) {
     const document = documents.find((one) => one.feature === feature.slug);
@@ -215,6 +241,9 @@ export function completeDraft(input: CompletionInput): CompletionResult {
             { check: "dir_exists", timing: "stage", target: ".specstride" },
       ],
       recovery: { ...STAGE_RECOVERY },
+      // Written, never left to the runner's own 3,600 s default: a campaign
+      // stage runs every phase of a feature, which takes hours (F107-FR-041a (a)).
+      time_limit_sec: timeLimitSec,
       evidence: [
         document !== undefined
           ? verificationCommandsLogicalName(feature.slug)
