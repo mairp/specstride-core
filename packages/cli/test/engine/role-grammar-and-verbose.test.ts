@@ -12,10 +12,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { criticOf } from "../../src/engine/run-feature.ts";
-import {
-  ENGINE_FLAGS_WITHOUT_VALUE,
-  parseEngineArgs,
-} from "../../src/router/engine-args.ts";
+import { ENGINE_FLAGS_WITHOUT_VALUE, parseEngineArgs } from "../../src/router/engine-args.ts";
 
 test("criticOf: the dsh-prefixed form names the model", () => {
   assert.deepEqual(criticOf("dsh:zai/glm-5.3-flash"), { dshModel: "zai/glm-5.3-flash" });

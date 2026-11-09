@@ -2199,7 +2199,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         const detail =
           reply.apiError ??
           (reply.stderr.trim() !== ""
-            ? reply.stderr.trim().split("\n")[0] ?? ""
+            ? (reply.stderr.trim().split("\n")[0] ?? "")
             : (reply.reply.trim() !== "" ? reply.reply.trim().split("\n")[0] : "") || "");
         say(`[${slug}] the pass failed: ${detail === "" ? `exit ${String(reply.exit)}` : detail}`);
       }
