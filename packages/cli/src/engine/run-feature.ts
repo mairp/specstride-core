@@ -237,8 +237,20 @@ import { routeIfEngaged } from "../../../layer-micro/src/router/route.ts";
 /** The model both roles run on unless the consumer names another. */
 const DEFAULT_MODEL = "sonnet";
 
-/** The time limit of one proposer pass, in milliseconds. */
+/** The time limit of one proposer pass, in milliseconds, where no longer ceiling is set. */
 const PROPOSER_LIMIT_MS = 45 * 60 * 1000;
+
+/**
+ * The time limit the harness call of one pass gets: the pass ceiling the
+ * watchdog enforces (SPECSTRIDE_PROPOSER_TIMEOUT_SEC, F118-FR-006) plus the
+ * kill grace, never less than the fixed 45 minutes. Before, the harness call
+ * kept the fixed 45 minutes, so a ceiling set higher never took effect and
+ * every pass of a long phase was cut at 45 minutes (152 phase 3, 2026-11-09).
+ */
+export function proposerLimitMsOf(ceilingSec: number, killGraceMs: number): number {
+  const ceilingMs = Number.isFinite(ceilingSec) && ceilingSec > 0 ? ceilingSec * 1000 : 0;
+  return Math.max(PROPOSER_LIMIT_MS, ceilingMs + killGraceMs);
+}
 
 /** The time limit of one critic call, in milliseconds. */
 const CRITIC_LIMIT_MS = 5 * 60 * 1000;
@@ -281,13 +293,14 @@ async function passOnDsh(
   prompt: string,
   cwd: string,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void,
+  limitMs: number = PROPOSER_LIMIT_MS,
 ): Promise<HarnessReply> {
   const run = await runDshProposerAsync({
     prompt,
     cwd,
     env: process.env,
     model: { flag: model },
-    timeoutMs: PROPOSER_LIMIT_MS,
+    timeoutMs: limitMs,
     onStart,
   });
   return run.ok
@@ -2131,11 +2144,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               }),
               promptOfThisPass,
               workdir,
-              PROPOSER_LIMIT_MS,
+              proposerLimitMsOf(ceiling.seconds, killGraceMs),
               say,
               onPassStart,
             )
-          : await passOnDsh(implementer, promptOfThisPass, workdir, onPassStart);
+          : await passOnDsh(
+              implementer,
+              promptOfThisPass,
+              workdir,
+              onPassStart,
+              proposerLimitMsOf(ceiling.seconds, killGraceMs),
+            );
       clearInterval(watchdog);
       if (escalation !== undefined) clearTimeout(escalation);
       rmSync(passPidPath, { force: true });
