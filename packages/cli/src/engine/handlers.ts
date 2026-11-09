@@ -33,7 +33,11 @@ import { runWait, digestLineOfThePipeline, type WaitOptions } from "../status/wa
 // The read model of `wait` is a PARAMETER and not a package import (R-129-04):
 // the CLI holds no dependency on `@specstride/view`, so the sources are
 // reached by relative path — the pattern of `commands/supervise.ts` (LR-1).
-import { project, renderLine } from "../../../view/src/index.ts";
+import { project, renderLine, renderView } from "../../../view/src/index.ts";
+import { runStatus, type StatusOptions } from "../status/status.ts";
+import { probeLock } from "../../../runtime/src/lock/probe.ts";
+import { pipelineSectionLines } from "../status/pipeline-section.ts";
+import { featureOfTheLastRun } from "../router/inspect-args.ts";
 import type { RouteIo, RoutedCall } from "../router/route.ts";
 
 /** The exit of a verb this build refuses (annex G: a usage error). */
@@ -166,6 +170,105 @@ export function waitHandler(call: RoutedCall): number {
     });
     if (digest !== null) call.io.out(`${digest}\n`);
   }
+  return run.exit;
+}
+
+/**
+ * `specstride status` in default output — the read model of feature 129 over
+ * the control plane the router resolved. Before this was mounted, the default
+ * output of `status` threw `VerbNotMountedError`, which the front door turned
+ * into `reason="internal"` exit 70 on EVERY workspace, run or no run.
+ */
+export async function statusDefaultHandler(call: RoutedCall): Promise<number> {
+  const place = { controlRoot: call.controlPlane.stateDir, workspaceRealPath: call.workdir };
+  // EP-13: the REAL lock provider of feature 122. Without it the read model
+  // sees no lease and calls a live run `none`. A probe that fails is no
+  // observation (the view reads that as unknown), never an uncaught error.
+  let outcome: Awaited<ReturnType<typeof probeLock>> | null = null;
+  try {
+    outcome = existsSync(place.controlRoot) ? await probeLock(place) : null;
+  } catch {
+    outcome = null;
+  }
+  const lock: StatusOptions["lock"] = {
+    probe: (runId: string) => {
+      if (outcome === null) return null;
+      const owner = outcome.reading.owner as Readonly<Record<string, unknown>> | null;
+      const ownerRun = owner?.["runId"];
+      // The workspace lock belongs to ONE run; another run's view sees it free.
+      if (typeof ownerRun === "string" && ownerRun !== runId)
+        return { result: "free", lease: null };
+      return { result: outcome.result, lease: owner };
+    },
+  };
+  // The feature the router resolved when none was passed (newest launch, or
+  // the only feature): hand it on, so the view and the pipeline section read
+  // the same feature the guard checked.
+  const argv = [...call.extras];
+  if (!argv.some((a) => a === "--feature" || a.startsWith("--feature="))) {
+    const slug = featureOfTheLastRun(call.controlPlane.stateDir);
+    if (slug !== undefined) argv.push("--feature", slug);
+  }
+  // Collect the view's text so a pipeline launch can replace the bare
+  // `st=none` line the view gives when the pipeline wrote no run record.
+  const viewOut: string[] = [];
+  const run = runStatus(argv, {
+    lock,
+    project: project as StatusOptions["project"],
+    renderLine: renderLine as unknown as StatusOptions["renderLine"],
+    renderView: renderView as unknown as StatusOptions["renderView"],
+    place,
+    now: (): string => new Date().toISOString(),
+    write: (text: string): void => {
+      viewOut.push(text);
+    },
+    writeError: (text: string): void => {
+      call.io.err(text);
+    },
+  });
+  // Default TEXT output only: `--json` and `--line` keep their schemas.
+  const extras = argv;
+  const isText = !extras.includes("--json") && !extras.includes("--line");
+  let section: readonly string[] = [];
+  if (run.exit === 0 && isText) {
+    const at = extras.indexOf("--feature");
+    const eq = extras.find((a) => a.startsWith("--feature="));
+    const feature = at >= 0 ? (extras[at + 1] ?? null) : eq !== undefined ? eq.slice(10) : null;
+    let home: string | null = null;
+    try {
+      home = controlRootOfWorkspace(call.workdir);
+    } catch {
+      home = null;
+    }
+    const owner = outcome?.reading.owner as Readonly<Record<string, unknown>> | null | undefined;
+    const pid = typeof owner?.["pid"] === "number" ? (owner["pid"] as number) : null;
+    section = pipelineSectionLines(
+      { controlRoot: place.controlRoot, homeControlRoot: home },
+      feature,
+      outcome === null ? null : { result: outcome.result, pid },
+    );
+  }
+  // `--line` on a pipeline launch: the view's `st=none` would hide a live
+  // run from the host hook shim; print the pipeline's own state instead.
+  if (run.exit === 0 && extras.includes("--line")) {
+    const full = pipelineSectionLines(
+      { controlRoot: place.controlRoot, homeControlRoot: null },
+      null,
+      outcome === null ? null : { result: outcome.result, pid: null },
+    );
+    const head = full[0];
+    const text = viewOut.join("");
+    if (head !== undefined && /^st=none\b/.test(text)) {
+      const state = /state (\S+)/.exec(head)?.[1] ?? "unknown";
+      const phase = full.find((l) => l.startsWith("phase: "))?.match(/^phase: (\d+)/)?.[1];
+      call.io.out(`st=${state}${phase !== undefined ? ` ph=${phase}` : ""} pipeline\n`);
+      return run.exit;
+    }
+  }
+  const viewText = viewOut.join("");
+  const viewSaysNothing = /^st=none\b/.test(viewText) || /no run is recorded yet/.test(viewText);
+  if (!(section.length > 0 && viewSaysNothing)) call.io.out(viewText);
+  for (const line of section) call.io.out(`${line}\n`);
   return run.exit;
 }
 
