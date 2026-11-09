@@ -57,6 +57,7 @@ import {
 import { engineExitOf } from "@specstride/contracts/codes/stop-reasons";
 import { canonicalRecordHash } from "@specstride/kernel/hasher";
 import { startPassGuard, writePassGuardScript } from "./pass-guard.ts";
+import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
 import { theParallelHomeOfARun } from "./parallel-group.ts";
 import {
@@ -1671,6 +1672,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         ` what you did, the files with line ranges, and the test output you saw. Cite only what` +
         ` you verified; a critic that cannot see this conversation will check it.` +
         ` Do not tick tasks.md and do not commit: the engine does both.`,
+      `\n# The engine's state\n.specstride/ belongs to the engine (its lock, its launch records,` +
+        ` its run state). Never delete, move or rewrite anything under it; write there only the` +
+        ` files this prompt names. To undo a stray write of your own, remove exactly that path,` +
+        ` never a directory of .specstride/.`,
       `\nThis is attempt ${String(ordinal)}.`,
     ].join("\n");
   };
@@ -1745,6 +1750,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     let killBlock = "";
     let killNotePath = "";
     let nudgeBlock = "";
+    // The note the next pass carries when this one deleted the engine's state.
+    let stateBlock = "";
     let capConsec = 0;
     let shortConsec = 0;
     let capHalting: { readonly exit_code: number } | undefined;
@@ -1973,6 +1980,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         prompt,
         nudgeBlock,
         killNoteBlock,
+        stateBlock,
         microRepairBlock,
         contractBlock,
         unitLine,
@@ -1980,10 +1988,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         .filter((block) => block !== undefined && block !== "")
         .join("\n\n");
       nudgeBlock = "";
+      stateBlock = "";
       microRepairBlock = "";
       lastMicroOutcome = undefined;
       const startedAtMs = supervisionClock.nowMs();
       const porcelainAtStart = git(workdir, ["status", "--porcelain"]).out;
+      // The engine's records in the workspace, as they stand before the pass
+      // (taken after the micro layer removed a stale checkpoint, so nothing
+      // the pass is asked to write is in it).
+      const stateAtStart = snapshotWorkspaceState(join(workdir, ".specstride"), {
+        exclude: [`features/${slug}/evidence`, `features/${slug}/outbox`],
+      });
       let passPid = 0;
       // The start time of the pass, read ONCE at the spawn: every later
       // identity check — the stop ladder's target, the guard, the leftover
@@ -2107,6 +2122,23 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       registry.remove(passInFlight);
       // The pass has ended; its guard has nothing left to watch.
       passGuard?.kill("SIGKILL");
+      // Whatever the pass deleted of the engine's own state under .specstride/
+      // is put back before the engine writes there again (the cost line below
+      // appends to .specstride/cost.log); the next pass is told.
+      const restoredState = restoreMissingState(stateAtStart);
+      if (restoredState.length > 0) {
+        say(
+          `[${slug}] the pass deleted ${String(restoredState.length)} file(s) of the engine's state under .specstride/; restored`,
+        );
+        emit("integrity.noted", {
+          type: "integrity.noted",
+          kind: "state-restored",
+          phase,
+          count: restoredState.length,
+          paths: restoredState.slice(0, 20),
+        } as never);
+        stateBlock = stateRestoredNote(restoredState);
+      }
       spend(reply.costUsd);
       // Whatever a pass ticked, only an approval may keep: the engine restores
       // the task list pass by pass, as it did attempt by attempt before.
