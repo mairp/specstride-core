@@ -57,6 +57,13 @@ import {
 import { engineExitOf } from "@specstride/contracts/codes/stop-reasons";
 import { canonicalRecordHash } from "@specstride/kernel/hasher";
 import { startPassGuard, writePassGuardScript } from "./pass-guard.ts";
+import {
+  isIgnored,
+  keepTicksOf,
+  snapshotSpecDocs,
+  specDocsBlock,
+  specDocsChange,
+} from "./spec-docs.ts";
 import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
 import { theParallelHomeOfARun } from "./parallel-group.ts";
@@ -456,7 +463,7 @@ function excludeTheStateDirectory(workdir: string): void {
  * CONTENT of the new ones, because a diff shows no untracked file. A cut is
  * stated, so that a critic never takes a shortened change for the whole.
  */
-function changeOf(workdir: string): string {
+function changeOf(workdir: string, specDocs = ""): string {
   const parts = [git(workdir, ["diff", "HEAD"]).out];
   const added = git(workdir, ["ls-files", "--others", "--exclude-standard"])
     .out.split("\n")
@@ -471,6 +478,8 @@ function changeOf(workdir: string): string {
       parts.push(`\n--- new file ${name}\n${bytes.toString("utf8")}\n`);
     }
   }
+  // The feature's documents when git does not track them (spec-docs.ts).
+  if (specDocs !== "") parts.push(specDocs);
   const change = parts.join("");
   return change.length <= CHANGE_CAP_BYTES
     ? change
@@ -1689,6 +1698,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // Call by call, so that what a killed run spent is still on record.
     writeFileSync(join(workdir, ".specstride", "cost.log"), `${String(costUsd)}\n`, { flag: "a" });
   };
+  let specDocsAtAttemptStart: Map<string, string> | undefined;
   const runOneAttempt = async (phase: number, ordinal: number) => {
     const evidencePath = evidencePathOf(phase);
     rmSync(evidencePath, { force: true });
@@ -1700,6 +1710,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     sessionsOfThePhase.set(phase, held);
     // The task list is the engine's: only an approval ticks it, whatever a pass did to it.
     const tasksPathBeforeTheAttempt = readFileSync(tasksPath, "utf8");
+    // The feature's documents as the attempt starts, when git ignores them:
+    // the critic reads their change from this (spec-docs.ts).
+    specDocsAtAttemptStart = isIgnored(workdir, featureDirectory)
+      ? snapshotSpecDocs(featureDirectory)
+      : undefined;
     const implementer = implementerOfTheRun;
 
     /* --- the kind of this attempt (the recovery cycle, step 2) -------- *
@@ -2141,8 +2156,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       }
       spend(reply.costUsd);
       // Whatever a pass ticked, only an approval may keep: the engine restores
-      // the task list pass by pass, as it did attempt by attempt before.
-      writeFileSync(tasksPath, tasksPathBeforeTheAttempt);
+      // the TICKS of the task list pass by pass. The rest of the text a pass
+      // wrote (a deviation note a task asks for) is kept (spec-docs.ts).
+      writeFileSync(
+        tasksPath,
+        existsSync(tasksPath)
+          ? keepTicksOf(readFileSync(tasksPath, "utf8"), tasksPathBeforeTheAttempt)
+          : tasksPathBeforeTheAttempt,
+      );
       const elapsedSec = Math.round((supervisionClock.nowMs() - startedAtMs) / 1000);
       const evidenceAfterThePass = existsSync(evidencePath);
 
@@ -2670,7 +2691,21 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                           taskOrder: taskIdsOfThePhase(phase),
                         })}`
                       : "",
-                    `\n# The change in the working tree\n${redacted(changeOf(workdir))}`,
+                    `\n# The change in the working tree\n${redacted(
+                      changeOf(
+                        workdir,
+                        specDocsAtAttemptStart === undefined
+                          ? ""
+                          : specDocsBlock(
+                              specDocsChange(
+                                featureDirectory,
+                                specDocsAtAttemptStart,
+                                relative(workdir, featureDirectory),
+                              ),
+                              relative(workdir, featureDirectory),
+                            ),
+                      ),
+                    )}`,
                     `\n# End of the data`,
                     `\n${demand}`,
                     `\n${unmetReportInstruction()} End with exactly one line:` +
