@@ -18,3 +18,14 @@ test("the default ceiling (30 minutes) and nonsense keep the fixed 45 minutes", 
   assert.equal(proposerLimitMsOf(Number.NaN, 5_000), MIN45);
   assert.equal(proposerLimitMsOf(0, 5_000), MIN45);
 });
+
+test("SPECSTRIDE_LIMITS=off: the pass has no time limit at all", () => {
+  const before = process.env.SPECSTRIDE_LIMITS;
+  process.env.SPECSTRIDE_LIMITS = "off";
+  try {
+    assert.equal(proposerLimitMsOf(14_400, 5_000), undefined);
+  } finally {
+    if (before === undefined) delete process.env.SPECSTRIDE_LIMITS;
+    else process.env.SPECSTRIDE_LIMITS = before;
+  }
+});

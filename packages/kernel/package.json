@@ -12,6 +12,7 @@
     ".": "./src/index.ts",
     "./atomic-write": "./src/atomic-write/index.ts",
     "./hasher": "./src/hasher/index.ts",
+    "./limits": "./src/limits/index.ts",
     "./redactor": "./src/redactor/index.ts",
     "./redactor/patterns": "./src/redactor/patterns.ts",
     "./redactor/rules": "./src/redactor/rules.ts",

@@ -17,6 +17,7 @@
  * compatibility projection prints the as-is key names `max_relaunches` and
  * `wall_clock_seconds`.
  */
+import { limitsAreOff } from "@specstride/kernel/limits";
 
 /** The default maximum of relaunches (F123-FR-031). */
 export const RELAUNCH_BUDGET_DEFAULT = 2;
@@ -150,6 +151,25 @@ export function consumeRelaunch(
  * `wall_clock_seconds`); a contract that declares nothing reads the default.
  */
 export function budgetFromContract(input: {
+  contract: Record<string, unknown>;
+  launchTime: number;
+  declaredPipelineSeconds: number;
+}): RelaunchBudget {
+  const budget = declaredBudgetOf(input);
+  if (!limitsAreOff()) return budget;
+  // SPECSTRIDE_LIMITS=off: no relaunch count and no deadline (a hundred
+  // years stands for "never", so the deadline stays a valid time).
+  const neverSeconds = 100 * 365 * 24 * 3600;
+  return {
+    ...budget,
+    maximum: Number.MAX_SAFE_INTEGER,
+    remaining: Number.MAX_SAFE_INTEGER,
+    wallClockSeconds: neverSeconds,
+    deadline: input.launchTime + neverSeconds * 1000,
+  };
+}
+
+function declaredBudgetOf(input: {
   contract: Record<string, unknown>;
   launchTime: number;
   declaredPipelineSeconds: number;
