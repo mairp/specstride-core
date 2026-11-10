@@ -205,6 +205,7 @@ import {
   REJECT_LIMIT_DEFAULT,
   type Counts,
 } from "../../../core/src/gate/limits.ts";
+import { startWasRefused } from "../../../core/src/approval/ticked-without-record.ts";
 import { approvalRecordPath, writeApprovalRecord } from "../../../core/src/approval/record.ts";
 import {
   INTEGRITY_EVENT_KIND,
@@ -3563,6 +3564,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       },
     },
   );
+  // F101-FR-032 — a refused START is named on the product output: before this
+  // fix the run ended exit 3 with the `[LOOP]` and `[DIGEST]` lines alone, so
+  // the operator learned neither which phases were refused nor the remedy the
+  // refusal carries (found in the field 2026-11-10: a rebase took the bound
+  // approval commits out of the history and every later `run` exited 3
+  // silently). One line, before the `[LOOP]` line; the message names the
+  // phases and the `state export` / `state import` / `state adopt` remedy.
+  if (startWasRefused(result.end)) {
+    const line = `[${slug}] refused (${result.end.refusal}): ${result.end.message}`;
+    say(line);
+    engineLog(line);
+  }
   // The `[LOOP]` line, before the digest and in default output only
   // (F115-FR-038): the counts of the run with the layer on, or the classic
   // line with the fallback reason where the layer is off by rule.
