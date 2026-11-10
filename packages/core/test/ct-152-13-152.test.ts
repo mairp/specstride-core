@@ -4,11 +4,23 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { atomicWrite } from "@specstride/kernel/atomic-write";
-import { blockRecordPath, writeBlockRecord, readBlockRecord } from "../src/post-approval/commit-gate.ts";
+import {
+  blockRecordPath,
+  writeBlockRecord,
+  readBlockRecord,
+} from "../src/post-approval/commit-gate.ts";
 
 function record() {
   return {
@@ -59,7 +71,8 @@ test("the block record: atomic write, right path, valid against the schema, nonc
 
     // The record validates against specstride.commit-gate-block/1 (the reader).
     const read = await readBlockRecord(3, 2, {
-      readControl: (path) => (existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : null),
+      readControl: (path) =>
+        existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : null,
     });
     assert.ok(read !== null);
     assert.deepEqual(read.hits, [{ rule: "cg-bearer", file: "src/a.ts", line: 3 }]);

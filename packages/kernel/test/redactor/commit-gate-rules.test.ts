@@ -182,7 +182,11 @@ test("a reason the redactor changes is refused", () => {
 
 test("an unknown pattern is refused", () => {
   assert.throws(
-    () => parseCommitGateRules(rulesTextOf([ruleOf({ match: { pattern: "no-such-pattern" } })]), "engine"),
+    () =>
+      parseCommitGateRules(
+        rulesTextOf([ruleOf({ match: { pattern: "no-such-pattern" } })]),
+        "engine",
+      ),
     CommitGateRulesError,
   );
 });
@@ -216,7 +220,10 @@ test("the matcher decides by the kind of the hit", () => {
   assert.equal(blockingRuleOf({ matched: "pattern", pattern: "bearer" }, engine), "cg-bearer");
 
   // the carve-out of ordinary code exempts: no rule holds the commit back.
-  assert.equal(blockingRuleOf({ matched: "pattern", pattern: "key-name-then-value" }, engine), null);
+  assert.equal(
+    blockingRuleOf({ matched: "pattern", pattern: "key-name-then-value" }, engine),
+    null,
+  );
 
   // a registered secret is its own rule.
   assert.equal(blockingRuleOf({ matched: "registered-secret" }, engine), "cg-registered-secret");
@@ -226,5 +233,8 @@ test("the matcher decides by the kind of the hit", () => {
 
   // a pattern no rule names yet fails closed, and never matches `unmatched`
   // directly: the fallback is the only way `cg-unmatched-hit` is reached.
-  assert.equal(blockingRuleOf({ matched: "pattern", pattern: "no-rule-yet" }, engine), "cg-unmatched-hit");
+  assert.equal(
+    blockingRuleOf({ matched: "pattern", pattern: "no-rule-yet" }, engine),
+    "cg-unmatched-hit",
+  );
 });

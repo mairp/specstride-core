@@ -109,7 +109,9 @@ export const COMMIT_GATE_HALT_TABLE: CommitGateHaltTable = deepFreeze({
  * (annex X §X.3), the way the bump table is loaded. A table that does not
  * pass the check is invalid at load, never mid-run.
  */
-export function loadTheCommitGateHaltTable(table: CommitGateHaltTable = COMMIT_GATE_HALT_TABLE): LoadedTable {
+export function loadTheCommitGateHaltTable(
+  table: CommitGateHaltTable = COMMIT_GATE_HALT_TABLE,
+): LoadedTable {
   return loadTable(table as never);
 }
 

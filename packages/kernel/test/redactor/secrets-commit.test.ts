@@ -297,9 +297,6 @@ test("an overlay is scanned in place of the file", () => {
     JSON.stringify(result.hits),
   );
   // The witness on disk: the file was never written.
-  assert.ok(
-    !readFileSync(file, "utf8").includes("ghp_"),
-    "the overlay must never reach the tree",
-  );
+  assert.ok(!readFileSync(file, "utf8").includes("ghp_"), "the overlay must never reach the tree");
   rmSync(root, { recursive: true, force: true });
 });

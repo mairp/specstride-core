@@ -67,7 +67,7 @@ test("a long name is capped (F152-FR-011)", () => {
   const quoted = quotedPath(long);
   const chars = [...quoted];
   assert.ok(chars.length <= 160 + 2, String(chars.length)); // + the two quotes
-  assert.ok(quoted.endsWith("…\""), quoted.slice(-3));
+  assert.ok(quoted.endsWith('…"'), quoted.slice(-3));
 });
 
 test("a path the redactor changes is shown as the placeholder (F152-FR-010)", () => {

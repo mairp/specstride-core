@@ -19,7 +19,11 @@ test("a block counts as a rejection", () => {
     malformedLimit: 3,
   });
   assert.deepEqual(
-    { rejectCount: counts.rejectCount, phaseAttemptOrdinal: counts.phaseAttemptOrdinal, malformedStreak: counts.malformedStreak },
+    {
+      rejectCount: counts.rejectCount,
+      phaseAttemptOrdinal: counts.phaseAttemptOrdinal,
+      malformedStreak: counts.malformedStreak,
+    },
     { rejectCount: 1, phaseAttemptOrdinal: 1, malformedStreak: 0 },
   );
 });

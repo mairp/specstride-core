@@ -62,22 +62,12 @@ test("no work tree, commits off, or no changes: not entered (F152-FR-001, XVII)"
   const scan = () => {
     throw new Error("the scan port must never be called");
   };
-  assert.deepEqual(
-    commitGate({ ...inputs(), commits: "off" }, { scan }),
-    { entered: false },
-  );
-  assert.deepEqual(
-    commitGate({ ...inputs(), commits: false }, { scan }),
-    { entered: false },
-  );
-  assert.deepEqual(
-    commitGate({ ...inputs(), insideAWorkTree: false }, { scan }),
-    { entered: false },
-  );
-  assert.deepEqual(
-    commitGate({ ...inputs(), changedPaths: [] }, { scan }),
-    { entered: false },
-  );
+  assert.deepEqual(commitGate({ ...inputs(), commits: "off" }, { scan }), { entered: false });
+  assert.deepEqual(commitGate({ ...inputs(), commits: false }, { scan }), { entered: false });
+  assert.deepEqual(commitGate({ ...inputs(), insideAWorkTree: false }, { scan }), {
+    entered: false,
+  });
+  assert.deepEqual(commitGate({ ...inputs(), changedPaths: [] }, { scan }), { entered: false });
 });
 
 test("the ticked task list is scanned through the overlay (research D8)", () => {

@@ -251,7 +251,7 @@ test("CT-100-111: every schema file has a required schema property (LR-11)", () 
   assert.ok(files.length >= 30, "the package holds the record schemas");
   for (const file of files) {
     const schema = JSON.parse(readFileSync(join(SCHEMAS, file), "utf8")) as {
-      "$id"?: string;
+      $id?: string;
       "x-schema-id"?: string;
       required?: string[];
       properties?: Record<string, { "x-required"?: string }>;

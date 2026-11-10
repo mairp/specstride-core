@@ -77,7 +77,10 @@ export type CommitGateScanResult = {
  */
 export type CommitGatePorts = {
   /** Scan the given files, reading `overlay[path]` in place of any file text. */
-  readonly scan: (files: readonly string[], overlay: Record<string, string>) => CommitGateScanResult;
+  readonly scan: (
+    files: readonly string[],
+    overlay: Record<string, string>,
+  ) => CommitGateScanResult;
 };
 
 /** The inputs of one run of the gate. */

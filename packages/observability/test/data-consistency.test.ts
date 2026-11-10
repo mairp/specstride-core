@@ -503,7 +503,11 @@ test("T002: the catalogue parses: five columns, 124 rows, every type once", () =
   for (const row of ROWS) {
     // The name is lower-case words, in one or two parts (`blocked`,
     // `run.started`); the full form of a name is CT-111-101 (T003).
-    assert.match(row.type, /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/, `the name of ${row.type}`);
+    assert.match(
+      row.type,
+      /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/,
+      `the name of ${row.type}`,
+    );
   }
 });
 

@@ -83,12 +83,7 @@ function dottedPath(instancePath: string): string {
   const parts = instancePath.split("/").filter((part) => part !== "");
   if (parts.length === 0) return "(record)";
   const [first, ...rest] = parts;
-  return (
-    first +
-    rest
-      .map((part) => (/^\d+$/.test(part) ? `[${part}]` : `.${part}`))
-      .join("")
-  );
+  return first + rest.map((part) => (/^\d+$/.test(part) ? `[${part}]` : `.${part}`)).join("");
 }
 
 /**
@@ -99,10 +94,7 @@ function dottedPath(instancePath: string): string {
  * A PROJECT document may never name `unreadable` or `unmatched` and may never
  * exempt: failing closed is the engine's alone.
  */
-export function parseCommitGateRules(
-  text: string,
-  origin: CommitGateRulesOrigin,
-): CommitGateRules {
+export function parseCommitGateRules(text: string, origin: CommitGateRulesOrigin): CommitGateRules {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -134,9 +126,7 @@ export function parseCommitGateRules(
 
   // T020 — a pattern a rule names must be a value pattern of the widened set.
   const widened = loadWidenedPatternSet();
-  const names = new Set(
-    (widened.ok ? widened.loaded.values : []).map((entry) => entry.name),
-  );
+  const names = new Set((widened.ok ? widened.loaded.values : []).map((entry) => entry.name));
 
   for (const [index, rule] of rules.rules.entries()) {
     const at = `rules[${String(index)}]`;
@@ -248,10 +238,7 @@ export const UNMATCHED_HIT_RULE = "cg-unmatched-hit" as const;
  * kind `pattern` that no other rule matched, so the commit fails closed when
  * the rule data does not name a pattern yet.
  */
-export function blockingRuleOf(
-  hit: CommitGateHit,
-  rules: CommitGateRules,
-): string | null {
+export function blockingRuleOf(hit: CommitGateHit, rules: CommitGateRules): string | null {
   const matches = (rule: CommitGateRule): boolean => {
     const match = rule.match;
     return hit.matched === "pattern"
