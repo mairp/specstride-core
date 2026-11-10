@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.corrective-block-input/1",
+  "x-schema-id": "specstride.corrective-block-input/1",
+  "title": "Input of feedbackOfTheCommitGate (F152-FR-009 to F152-FR-012)",
+  "$comment": "The ONLY values the template may interpolate. There is deliberately no field for matched text, file content, tool output or model text. The rendered text is fixed by data-model.md E3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "ordinal",
+    "nonce",
+    "rejectCount",
+    "rejectLimit",
+    "hits",
+    "hitsOmitted"
+  ],
+  "properties": {
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ordinal": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9]{8,64}$"
+    },
+    "rejectCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rejectLimit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hits": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule",
+          "reason",
+          "file",
+          "line"
+        ],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,48}$"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 280
+          },
+          "file": {
+            "type": "string",
+            "maxLength": 160,
+            "$comment": "already escaped and capped; quoted as data in the template"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "$comment": "0 for a hit of kind 'unreadable' (the file could not be read); rendered as 'line unknown'"
+          }
+        }
+      }
+    },
+    "hitsOmitted": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -221,6 +221,7 @@ export const IGNORED_TYPES: readonly string[] = Object.freeze([
   "learning.knob_evaluated",
   "event.dropped",
   "redaction.commit_blocked",
+  "commit_gate.blocked",
   "redaction.dropped",
   "microloop.inert",
   "checkpoint.accepted",

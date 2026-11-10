@@ -32,6 +32,9 @@ export * from "./verdict-parser.ts";
 export * from "./nonce.ts";
 export * from "./writers.ts";
 export * from "./feedback.ts";
+// T072 — the corrective block of the commit gate is reachable from the
+// package barrel: the engine's CLI wiring imports it from here.
+export { feedbackOfTheCommitGate } from "./feedback.ts";
 export * as events from "./events.ts";
 export * as lines from "./lines.ts";
 export * from "./verdict-record.ts";

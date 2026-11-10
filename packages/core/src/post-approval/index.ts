@@ -16,3 +16,4 @@
 export * from "./order.ts";
 export * from "./tick.ts";
 export * from "./commit.ts";
+export * from "./commit-gate.ts";

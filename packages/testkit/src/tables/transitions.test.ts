@@ -203,10 +203,10 @@ test("F100-SC-009: every transition and every blocked reason has a test of its o
   assert.equal(TRANSITIONS.length, DATA.transitions.length);
   assert.equal(transitionsAsserted, DATA.transitions.length, "18 transitions, 18 tests");
 
-  assert.equal(DATA.blockedReasons.length, 6);
+  assert.equal(DATA.blockedReasons.length, 7);
   assert.equal(BLOCKED_REASONS.length, DATA.blockedReasons.length);
   assert.equal(blockedReasonRows.length, DATA.blockedReasons.length);
-  assert.equal(blockedAsserted, DATA.blockedReasons.length, "6 blocked reasons, 6 tests");
+  assert.equal(blockedAsserted, DATA.blockedReasons.length, "7 blocked reasons, 7 tests");
 
   // The states table is covered too: ten written states and `dead`.
   assert.equal(DATA.states.length, 11);

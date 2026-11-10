@@ -145,6 +145,17 @@ export function compatibilityFeedOf(input: CompatibilityFeedInput): Compatibilit
     layout: { runId: input.runId, slug: input.slug, engineStart: 1 },
     roots: { control: input.controlRoot },
   });
+  // Test-only fault injection for F152-FR-020: with the switch on, the
+  // projection's `project` throws on every call, so the engine's best-effort
+  // sink path is exercised against a failing sink. Off (the default), the
+  // projection is the real one and no behaviour changes.
+  if (input.environment.SPECSTRIDE_PROJECTION_FAULT === "on") {
+    // The projection's own members are readonly and private, so the fault
+    // hook goes through a double cast; this is a test-only fault injection.
+    (projection as unknown as { project: () => never }).project = () => {
+      throw new Error("injected projection fault (SPECSTRIDE_PROJECTION_FAULT=on)");
+    };
+  }
   return Object.freeze({
     projection,
     eventsFile: projection.eventsFile,

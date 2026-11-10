@@ -331,6 +331,7 @@ export const ATTEMPT_OUTCOMES = [
   "rejected",
   "malformed",
   "gate-failed",
+  "commit-blocked",
   "config-error",
   "no-verdict",
 ] as const;
@@ -379,7 +380,17 @@ export function attemptEndedTheRun(end: AttemptEnd): end is AttemptEndedTheRun {
 /** What the handler of a rejection decides (F101-FR-017, user story 2). */
 export type AfterARejection =
   | { readonly go: "next-attempt" }
-  | { readonly go: "halt"; readonly exitCode: number; readonly stopReason: string };
+  | {
+      readonly go: "halt";
+      readonly exitCode: number;
+      readonly stopReason: string;
+      /**
+       * F152-FR-006 — set only where the halt is the blocked path of the
+       * commit-gate table (CGH-1): the blocked reason `commit-gate` and what
+       * the run needs. Every other halt leaves it absent.
+       */
+      readonly blocked?: { readonly reason: string; readonly needs: string } | undefined;
+    };
 
 /** What the loop over phase attempts reports back. */
 export type PhaseOutcome =
@@ -389,6 +400,8 @@ export type PhaseOutcome =
       readonly ordinal: number;
       readonly exitCode: number;
       readonly stopReason: string;
+      /** The blocked reason and its `needs`, where the halt is a blocked path. */
+      readonly blocked?: { readonly reason: string; readonly needs: string } | undefined;
     };
 
 /**
@@ -434,6 +447,7 @@ export async function runPhaseAttempts(
         ordinal,
         exitCode: decision.exitCode,
         stopReason: decision.stopReason,
+        ...(decision.blocked === undefined ? {} : { blocked: decision.blocked }),
       });
     }
     ordinal += 1;

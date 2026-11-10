@@ -241,13 +241,17 @@ test("CT-100-111: every schema file has a required schema property (LR-11)", () 
   // descriptor); the fragments of an envelope record (the `:` part of
   // the schema id) carry the field of the envelope, which is checked on
   // the envelope; the rows of the stream dialect table are rows, not
-  // records, and carry their required `schemaVersions`.
+  // records, and carry their required `schemaVersions`; an input schema
+  // (an `$id` of the form `…-input/1`, as `specstride.corrective-block-input/1`
+  // of feature 152) describes the values a function takes, not a file of the
+  // control plane, and carries no envelope field of its own.
   const files = readdirSync(SCHEMAS)
     .filter((f) => f.endsWith(".schema.json"))
     .sort();
   assert.ok(files.length >= 30, "the package holds the record schemas");
   for (const file of files) {
     const schema = JSON.parse(readFileSync(join(SCHEMAS, file), "utf8")) as {
+      $id?: string;
       "x-schema-id"?: string;
       required?: string[];
       properties?: Record<string, { "x-required"?: string }>;
@@ -263,6 +267,7 @@ test("CT-100-111: every schema file has a required schema property (LR-11)", () 
     const hasDescriptorVersion = required.includes("descriptorVersion");
     const isFragment = id.includes(":");
     const isDialectRow = id === "specstride.stream-dialect/1";
+    const isInput = (schema["$id"] ?? "").endsWith("-input/1");
     const envelopeOk = (() => {
       if (!isFragment || !id.includes("specstride.lease/1:")) return true;
       // the owner record is a fragment of the lease: the lease carries
@@ -277,7 +282,8 @@ test("CT-100-111: every schema file has a required schema property (LR-11)", () 
         hasContract ||
         hasDescriptorVersion ||
         (isFragment && envelopeOk) ||
-        isDialectRow,
+        isDialectRow ||
+        isInput,
       `the schema file ${file} (${id}) must declare a required schema property (or the schema-id field the annex names)`,
     );
     if (isDialectRow) {

@@ -157,6 +157,19 @@ export function redactText(
   return Object.freeze({ text: out, replacements, redacted: replacements > 0 });
 }
 
+/**
+ * Whether the redactor would change this text (F152-FR-010): a boolean view of
+ * `redactText` for callers that must not hold the redaction itself, such as the
+ * quoted paths of the commit gate's corrective block. It lives here so that the
+ * redaction decision stays in the redactor (F111-FR-023, CT-111-123).
+ */
+export function textWouldBeRedacted(
+  text: string,
+  values: readonly PatternEntry[] = patternSetInForce()?.values ?? BASELINE_SECRET_VALUE_PATTERNS,
+): boolean {
+  return redactText(text, values).redacted;
+}
+
 /** What a replacement over a whole value did. */
 export type ValueRedaction = {
   readonly value: unknown;

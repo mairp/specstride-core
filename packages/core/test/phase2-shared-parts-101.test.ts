@@ -369,7 +369,9 @@ test("T014: this module holds no task-line grammar of its own (F104-SC-001)", ()
   );
   // Every import of the module, from the code and not from the prose.
   const imported = [...code.matchAll(/from\s+"([^"]+)"/g)].map((m) => m[1] as string);
-  assert.deepEqual(imported, ["@specstride/kernel/hasher"]);
+  // Feature 152 adds the corrective block, which quotes paths against the
+  // redactor of the kernel (T069 of that feature).
+  assert.deepEqual(imported, ["@specstride/kernel/hasher", "@specstride/kernel/redactor/rules"]);
   const graph = JSON.parse(
     readFileSync(join(import.meta.dirname, "../../contracts/data/package-graph.json"), "utf8"),
   ) as { packages: { name: string; mayImport?: string[]; forbidden?: string[] }[] };

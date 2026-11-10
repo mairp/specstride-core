@@ -71,14 +71,36 @@ function fixture(verdict: string): { readonly dir: string; readonly restore: () 
   ]) {
     spawnSync("git", ["-C", work, ...argv]);
   }
-  const before = { HOME: process.env.HOME, PATH: process.env.PATH };
+  const before = {
+    HOME: process.env.HOME,
+    PATH: process.env.PATH,
+    FEATURE: process.env.SPECSTRIDE_FEATURE,
+    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
+    CRITIC: process.env.SPECSTRIDE_CRITIC,
+    PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+  };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
+  // A leaked launch environment (SPECSTRIDE_FEATURE, and a dsh: proposer or
+  // critic of the engine's own run) would point the run away from this
+  // fixture's stub, so the fixture clears what it pins and restores it.
+  delete process.env.SPECSTRIDE_FEATURE;
+  process.env.SPECSTRIDE_PROPOSER = "claude";
+  process.env.SPECSTRIDE_CRITIC = "claude";
+  process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
   return {
     dir: work,
     restore: () => {
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
+      if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE;
+      else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
+      if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER;
+      else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
+      if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC;
+      else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
+      if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
+      else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
       rmSync(dir, { recursive: true, force: true });
     },
   };
@@ -132,35 +154,26 @@ test("the state directory is not committed", async () => {
   }
 });
 
-test("a secret in the change blocks the commit and is not shown to the critic", async () => {
-  const { dir, restore } = fixture("APPROVED");
-  const secret = `ghp_${"a1B2c3D4e5".repeat(4)}`;
-  process.env.STUB_NEW_FILE = `token=${secret}\\n`;
-  try {
-    // The run still approves the phase, and its commit stays blocked — so the
-    // run no longer exits 0: its work sits uncommitted. Owner ruling
-    // 2026-11-04 (commit-gate false positive), part A item 2; this test is the
-    // pin of exit 0 with a blocked commit that the ruling replaces.
-    assert.equal(await runFeature({ argv: [], workdir: dir }), 1);
-    assert.equal(commits(dir), 1);
-    assert.doesNotMatch(readFileSync(join(dir, "seen-by-critic.txt"), "utf8"), new RegExp(secret));
-    assert.match(readFileSync(join(dir, "seen-by-critic.txt"), "utf8"), /--- new file made\.txt/);
-  } finally {
-    delete process.env.STUB_NEW_FILE;
-    restore();
-  }
-});
-
 test("a run with a blocked commit exits 1 and says so on the digest and the console", async () => {
   const { dir, restore } = fixture("APPROVED");
   // A hit the gate never excuses: an address with embedded credentials, which
   // the narrowed url-embedded-credentials pattern still matches.
   process.env.STUB_NEW_FILE = 'const u = "https://user:pass@host";';
+  // The as-is behaviour this test pins (the exit-1 rule of 2026-11-04, part A
+  // item 2) is now the switch-off behaviour of feature 152 (F152-FR-022,
+  // CQ-152-05 A): with the switch off the run goes on and exits 1,
+  // byte-identically. The switch-on halt is CT-152-6's, in
+  // commit-gate-halt.test.ts.
+  process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
   const chunks: string[] = [];
   const originalWrite = process.stdout.write;
+  // The collector passes every chunk through to the real stdout as well: the
+  // test runner reports results on the same stream, and a silent interception
+  // would swallow the result line of the test before this one, so the runner
+  // would count one test fewer.
   process.stdout.write = ((chunk: unknown): boolean => {
     if (typeof chunk === "string") chunks.push(chunk);
-    return true;
+    return originalWrite.call(process.stdout, chunk);
   }) as typeof process.stdout.write;
   try {
     assert.equal(await runFeature({ argv: [], workdir: dir }), 1);
@@ -176,6 +189,7 @@ test("a run with a blocked commit exits 1 and says so on the digest and the cons
   } finally {
     process.stdout.write = originalWrite;
     delete process.env.STUB_NEW_FILE;
+    delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
     restore();
   }
 });
@@ -200,6 +214,33 @@ test("a stop request ends a sequential run exit 6 before any pass, and is consum
     assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
     assert.equal(commits(dir), 2);
   } finally {
+    restore();
+  }
+});
+
+test("a secret in the change blocks the commit and is not shown to the critic", async () => {
+  const { dir, restore } = fixture("APPROVED");
+  const secret = `ghp_${"a1B2c3D4e5".repeat(4)}`;
+  process.env.STUB_NEW_FILE = `token=${secret}\\n`;
+  // The stub plants the secret on every attempt, so with the switch on the
+  // gate would block every attempt and the run would end at the reject limit.
+  // This test pins the switch-off behaviour (F152-FR-022), so it runs with the
+  // switch off, like the sibling test below.
+  const beforeSwitch = process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+  process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
+  try {
+    // The run still approves the phase, and its commit stays blocked — so the
+    // run no longer exits 0: its work sits uncommitted. Owner ruling
+    // 2026-11-04 (commit-gate false positive), part A item 2; this test is the
+    // pin of exit 0 with a blocked commit that the ruling replaces.
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 1);
+    assert.equal(commits(dir), 1);
+    assert.doesNotMatch(readFileSync(join(dir, "seen-by-critic.txt"), "utf8"), new RegExp(secret));
+    assert.match(readFileSync(join(dir, "seen-by-critic.txt"), "utf8"), /--- new file made\.txt/);
+  } finally {
+    delete process.env.STUB_NEW_FILE;
+    if (beforeSwitch === undefined) delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+    else process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = beforeSwitch;
     restore();
   }
 });

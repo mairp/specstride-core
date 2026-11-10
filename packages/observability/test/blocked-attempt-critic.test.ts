@@ -3,7 +3,7 @@
  * and the critic-class call (F111-FR-009, F111-FR-010, F111-FR-011).
  *
  * F111-FR-009: *A run that needs a human MUST be told by `blocked`, with a
- * reason of the six of annex E §E.2, what is needed, and, for
+ * reason of the seven of annex E §E.2, what is needed, and, for
  * `source-changed`, which of `spec`, `plan` or `tasks` changed and its logical
  * name. `unblocked` MUST carry who answered, in the field `by`, and
  * `latencyMs` ... `by` is no closed set: it is kept as text and is a marked
@@ -61,8 +61,12 @@ import {
  * CT-111-109 — blocked and unblocked.
  * ------------------------------------------------------------------ */
 
-test("CT-111-109 `blocked` carries a reason of the six of annex E §E.2", () => {
-  assert.equal(BLOCKED_REASONS.length, 6, "six reasons, as the annex has them");
+test("CT-111-109 `blocked` carries a reason of the seven of annex E §E.2", () => {
+  assert.equal(
+    BLOCKED_REASONS.length,
+    7,
+    "seven reasons, as the annex has them (six of the baseline and the commit-gate of feature 152)",
+  );
   const schema = refinedDataSchemaOf("blocked");
   assert.ok(schema);
   assert.deepEqual(schema.properties.reason?.enum, BLOCKED_REASONS);

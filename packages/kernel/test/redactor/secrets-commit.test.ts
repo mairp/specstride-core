@@ -273,3 +273,30 @@ test("CT-111-131: the scan uses THE SAME redactor as the ingress", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/* ------------------------------------------------------------------ *
+ * Phase 2 — the scan reads an overlay in place of the file (T027).
+ * ------------------------------------------------------------------ */
+
+test("an overlay is scanned in place of the file", () => {
+  const root = workdir();
+  const file = join(root, "tasks.md");
+  // The file on DISK is clean: the hit can only have come from the overlay.
+  writeFileSync(file, "nothing here but ordinary prose\n", "utf8");
+  const redactor = createRedactor();
+  const result = scanCommitFiles(["tasks.md"], {
+    root,
+    redactor,
+    overlay: { "tasks.md": `token: ghp_${"a".repeat(36)}\n` },
+  });
+  assert.ok(result.blocked, "the overlay's hit must block");
+  assert.deepEqual(result.files, ["tasks.md"]);
+  // Several patterns can claim one line; the github prefix is among them.
+  assert.ok(
+    result.hits.some((hit) => hit.matched === "pattern" && hit.pattern === "github-prefix"),
+    JSON.stringify(result.hits),
+  );
+  // The witness on disk: the file was never written.
+  assert.ok(!readFileSync(file, "utf8").includes("ghp_"), "the overlay must never reach the tree");
+  rmSync(root, { recursive: true, force: true });
+});

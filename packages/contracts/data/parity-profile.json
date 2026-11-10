@@ -1986,6 +1986,21 @@
       "registerRows": [
         "DV-117"
       ]
+    },
+    {
+      "number": 134,
+      "switch": "The commit gate holds an approval commit back on a hit of the scan (F152-FR-021)",
+      "key": "commit.backpressure",
+      "keys": [
+        "commit.backpressure"
+      ],
+      "keyNote": "`commit.backpressure`",
+      "default": "on",
+      "parity": "off: the approval commit is made with no gate of its own (DV-121)",
+      "owner": "152",
+      "registerRows": [
+        "DV-121"
+      ]
     }
   ]
 }

@@ -1,0 +1,1 @@
+{"rule":"RF-152-01","owner":"152","requirement":"F152-FR-023","from":["packages/core/src/post-approval/commit-gate.ts"],"forbid":["node:child_process","@specstride/cli","@specstride/cli/**"],"reason":"the commit gate decides in core over ports; it never spawns a process and never reads the composition root"}

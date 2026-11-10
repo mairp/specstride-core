@@ -111,6 +111,10 @@ tools/import-boundary/test/gate-writers-149.test.ts
 packages/testkit/src/conformance/EP-18/ep18.conformance.test.ts
 packages/testkit/test/acceptance-core.test.ts
 packages/spec-formats/test/static/macos-and-prerequisites.test.ts
+# Feature 152: the halt table is asserted byte-equal against the private
+# corpus (specs/152-commit-backpressure/contracts/commit-gate-halt-table.json).
+packages/core/test/ct-152-6-152.test.ts
+
 # Failed on a CI runner and pass in the full tree on this host: the corpus or the host.
 packages/adapter-prime/tests/conformance/suite.test.ts
 packages/harness/test/generic/memory.test.ts

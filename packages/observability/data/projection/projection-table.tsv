@@ -130,6 +130,7 @@ learning.knob_evaluated		knob_evaluated	learning	learning	event,ts,knob,phase,la
 telemetry.delivery		telemetry_delivery	python	engine	sink,batch_id,event_count,status,http_status,reason_code (local file only)
 event.dropped		-	none	engine	no as-is equivalent
 redaction.commit_blocked		-	none	engine	no as-is equivalent
+commit_gate.blocked		-	none	engine	no as-is equivalent
 redaction.dropped		-	none	engine	no as-is equivalent
 parallel.plan		-	none	engine	DV-088
 parallel.admission		-	none	engine	DV-088

@@ -5,7 +5,7 @@
  *
  * The one rule this module enforces is the one the task names: every STOP
  * REASON and every EXIT CODE the table holds is a member of a closed set of
- * feature 100 — row 3 of annex X §X.6 (`stopReasonSet`, the 15 literals of
+ * feature 100 — row 3 of annex X §X.6 (`stopReasonSet`, the 16 literals of
  * annex E §E.3) and row 6 (`engineExitCodeSet`, the codes of annex E §E.4).
  * Because the data is read at load, a table that names a stop reason or an exit
  * code outside those sets fails the import, not some later run: `GATE_HALTS`

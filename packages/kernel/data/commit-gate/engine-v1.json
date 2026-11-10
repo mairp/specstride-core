@@ -1,0 +1,196 @@
+{
+  "schema": "specstride.commit-gate-rules/1",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule": "cg-registered-secret",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value that matches a secret registered in the workspace must not be committed",
+      "effect": "block",
+      "match": {
+        "registeredSecret": true
+      }
+    },
+    {
+      "rule": "cg-unreadable",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a file of the commit could not be read, so it cannot be checked",
+      "effect": "block",
+      "match": {
+        "unreadable": true
+      }
+    },
+    {
+      "rule": "cg-unmatched-hit",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a check matched that the rule data does not name yet, so the commit is held back until a rule names it",
+      "effect": "block",
+      "match": {
+        "unmatched": true
+      }
+    },
+    {
+      "rule": "cg-bearer",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern bearer must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "bearer"
+      }
+    },
+    {
+      "rule": "cg-sk-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern sk-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "sk-prefix"
+      }
+    },
+    {
+      "rule": "cg-github-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern github-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "github-prefix"
+      }
+    },
+    {
+      "rule": "cg-key-name-then-value",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern key-name-then-value must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "key-name-then-value"
+      }
+    },
+    {
+      "rule": "cg-private-key-block",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern private-key-block must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "private-key-block"
+      }
+    },
+    {
+      "rule": "cg-jwt",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern jwt must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "jwt"
+      }
+    },
+    {
+      "rule": "cg-aws-access-key-id",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern aws-access-key-id must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "aws-access-key-id"
+      }
+    },
+    {
+      "rule": "cg-google-access-key-id",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern google-access-key-id must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "google-access-key-id"
+      }
+    },
+    {
+      "rule": "cg-url-embedded-credentials",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern url-embedded-credentials must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "url-embedded-credentials"
+      }
+    },
+    {
+      "rule": "cg-slack-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern slack-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "slack-prefix"
+      }
+    },
+    {
+      "rule": "cg-google-api-key-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern google-api-key-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "google-api-key-prefix"
+      }
+    },
+    {
+      "rule": "cg-gitlab-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern gitlab-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "gitlab-prefix"
+      }
+    },
+    {
+      "rule": "cg-npm-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern npm-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "npm-prefix"
+      }
+    },
+    {
+      "rule": "cg-huggingface-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern huggingface-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "huggingface-prefix"
+      }
+    },
+    {
+      "rule": "cg-digitalocean-prefix",
+      "owner": "152",
+      "requirement": "F152-FR-016",
+      "reason": "a value of the shape of the credential pattern digitalocean-prefix must not be committed",
+      "effect": "block",
+      "match": {
+        "pattern": "digitalocean-prefix"
+      }
+    },
+    {
+      "rule": "cg-ordinary-code",
+      "owner": "152",
+      "requirement": "F152-FR-019",
+      "reason": "a key name beside a value is the shape of ordinary code, as the carve-out pattern itself names, and only a pattern of a real credential holds a commit back",
+      "effect": "exempt",
+      "match": {
+        "pattern": "key-name-then-value"
+      }
+    }
+  ]
+}

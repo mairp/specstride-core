@@ -1,7 +1,7 @@
 /**
  * T080 — the stop-reason enumeration (annex E, §E.3; F100-FR-148).
  *
- * The 15 stop reasons of `data/stop-reasons.json` as a closed set registered
+ * The 16 stop reasons of `data/stop-reasons.json` as a closed set registered
  * through T070: the literal, who writes it, the engine exit code, the
  * attribute `transient`, the rule for `retryable` in the terminal record, and
  * the rule for a value outside the set.
@@ -35,7 +35,7 @@ type RawStopReason = {
 
 const RAW = (data as { stopReasons: RawStopReason[] }).stopReasons;
 
-/** The 15 literals of §E.3, in the order of the annex. */
+/** The 16 literals of §E.3, in the order of the annex (16th: feature 152). */
 export const STOP_REASONS = [
   "stop_flag",
   "wall_budget",
@@ -52,20 +52,21 @@ export const STOP_REASONS = [
   "max_rejects",
   "release_verification",
   "paused_quota_ceiling",
+  "commit_gate",
 ] as const;
 
 /** A member of the closed enumeration of stop reasons (annex E, §E.3). */
 export type StopReason = (typeof STOP_REASONS)[number];
 
-/** The count the annex pins: 14 literals of the baseline and one new one. */
-export const STOP_REASON_COUNT: 15 = STOP_REASONS.length;
+/** The count the annex pins: 14 literals of the baseline and two new ones. */
+export const STOP_REASON_COUNT: 16 = STOP_REASONS.length;
 
 /** Row 3 of §X.6 — stop reasons, registered through T070 from here. */
 export const stopReasonSet: SetByReference<StopReason> = defineByReference(3, STOP_REASONS);
 
 /** One row of the table of §E.3. */
 export type StopReasonRow = {
-  /** The number of the row, 1 to 15. */
+  /** The number of the row, 1 to 16. */
   readonly number: number;
   /** The literal the terminal record carries. */
   readonly literal: StopReason;

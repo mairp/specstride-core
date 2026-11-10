@@ -44,6 +44,14 @@ export type LoopConfiguration = {
   readonly source: "configured" | "default";
   /** The configured value, as the configuration named it, when one did. */
   readonly configuredValue: unknown;
+  /**
+   * The raw value the merge resolved for `commit.backpressure` (feature 152,
+   * row 134 of annex X §X.7), or `undefined` where no source held it. The
+   * composition root passes it to `commitBackpressureIsOn`, whose default is
+   * ON, so the key not held keeps the gate on and the `parity` profile's
+   * annotated off switches it off.
+   */
+  readonly backpressureValue: unknown;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
 };
@@ -231,6 +239,7 @@ export function loopConfigurationOf(input: {
     caps,
     source: configured ? ("configured" as const) : ("default" as const),
     configuredValue: configured ? strategy.value : undefined,
+    backpressureValue: valueOf("commit.backpressure").value,
     parallel: parallelConfigurationOf(resolved),
   });
 }

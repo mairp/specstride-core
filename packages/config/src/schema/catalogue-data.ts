@@ -38,7 +38,7 @@ export interface CatalogueDataRow {
 }
 
 /** The number of keys the catalogue holds (T004). */
-export const CATALOGUE_SIZE = 259;
+export const CATALOGUE_SIZE = 260;
 
 /** Every row of the catalogue, in the order of §K.3 to §K.6b. */
 export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
@@ -1241,6 +1241,18 @@ export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
     confirmedOrCorrected: "confirmed",
     layers: "F E P U",
     profileRow: "128",
+  },
+  {
+    key: "commit.backpressure",
+    typeAndRange: "on, off",
+    default: "on",
+    valueUnderParity: "off",
+    trustClass: "N off (snap p)",
+    ownerFeature: "152",
+    proposedBy: "152",
+    confirmedOrCorrected: "confirmed",
+    layers: "F E P U",
+    profileRow: "134",
   },
   {
     key: "harnesses.<id>.tiers",

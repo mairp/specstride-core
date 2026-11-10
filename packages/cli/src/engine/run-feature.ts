@@ -91,6 +91,7 @@ import { phaseShapesOfSpec } from "../learn.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
 import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
 import { readBetweenPasses, runPassLoop } from "../../../core/src/pass-loop/loop.ts";
+import { setAsideBlockRecords } from "../../../core/src/post-approval/commit-gate.ts";
 import { announcementOf } from "../../../core/src/pass-loop/announce.ts";
 import type { Announcement } from "../../../core/src/pass-loop/announce.ts";
 import {
@@ -152,7 +153,7 @@ import { runDshCriticAsync } from "../../../adapter-dsh/src/critic/index.ts";
 import { runDshProposerAsync } from "../../../adapter-dsh/src/proposer/index.ts";
 import { createIngress } from "../../../observability/src/ingress/ingress.ts";
 import { GRAMMARS } from "../../../spec-formats/src/adapters/index.ts";
-import { tickFile } from "../../../spec-formats/src/tick.ts";
+import { tickFile, tickText } from "../../../spec-formats/src/tick.ts";
 import { buildCriticArgv, buildProposerArgv } from "../../../adapter-claude/src/invoke-proposer.ts";
 import { runEngine } from "../../../core/src/engine/index.ts";
 import {
@@ -212,6 +213,20 @@ import {
 } from "../../../core/src/approval/verify.ts";
 import { registerSingleCriticStrategy } from "../../../core/src/ep18/critic-strategy.ts";
 import { stepsAfterAnApproval } from "../../../core/src/post-approval/order.ts";
+import {
+  commitBackpressureIsOn,
+  commitGate,
+  readBlockRecord,
+  writeBlockRecord,
+} from "../../../core/src/post-approval/commit-gate.ts";
+import { feedbackOfTheCommitGate, quotedPath } from "../../../core/src/gate/feedback.ts";
+import { newNonce } from "../../../core/src/gate/nonce.ts";
+import { COMMIT_GATE_BLOCKED_EVENT_TYPE } from "../../../core/src/gate/events.ts";
+import {
+  hashOfCommitGateRules,
+  loadEngineCommitGateRules,
+} from "../../../kernel/src/redactor/commit-gate-rules.ts";
+import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
 import {
@@ -959,6 +974,32 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     writeFileSync(path, text);
   };
   const say = (line: string): void => void process.stdout.write(`${line}\n`);
+
+  // F152-FR-015 — a `--reset-counts` launch sets the block records of the
+  // commit gate aside ONCE, before the first phase attempt: every file at the
+  // top level of `commit-gate/` moves by rename into `commit-gate/reset-<at>/`,
+  // so no record of a block is read or counted after the reset. (T159: where a
+  // later change wires `resetRecordsOfLaunch`, this call moves right after it.)
+  if (resetCounts) {
+    const gatePorts = {
+      readControl: (path: string): string | null => {
+        const file = inControl(path);
+        return existsSync(file) ? readFileSync(file, "utf8") : null;
+      },
+      listControl: (dir: string): readonly string[] => {
+        const folder = inControl(dir);
+        return existsSync(folder) ? readdirSync(folder) : [];
+      },
+      moveControl: (from: string, to: string): void => {
+        renameSync(inControl(from), inControl(to));
+      },
+      makeDirectoryControl: (dir: string): void => {
+        mkdirSync(inControl(dir), { recursive: true });
+      },
+    };
+    void setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
+  }
+
   const events = inControl(join("runs", runId, "events.jsonl"));
   const emit = (type: string, data: Readonly<Record<string, unknown>>): void => {
     const at = new Date().toISOString();
@@ -1408,6 +1449,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   /* --- the redactor: the prompt of the critic and the commit share it - */
 
   const ingress = createIngress();
+  // F111-FR-030 — a value the environment names is registered with the ONE
+  // redactor before the work starts, so a fixture can drive the
+  // registered-secret path of the commit gate without a runtime that resolves
+  // secrets. No fixture value is printed and none is written to the tree.
+  const preRegistered = process.env.SPECSTRIDE_PREREGISTERED_SECRET;
+  if (preRegistered !== undefined && preRegistered !== "") ingress.register(preRegistered);
   const redacted = (text: string): string => {
     const result = ingress.document(text, CHANGE_CAP_BYTES * 2);
     return result.dropped ? "[content dropped: the redactor cannot run]" : result.text;
@@ -1695,6 +1742,38 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // has no row of its own for a blocked commit). See the decision at the exit.
   const COMMIT_BLOCKED_EXIT_CODE = 1;
   let commitsBlocked = 0;
+  // T160 — the runs of the 2026-11-04 safety net (F152-FR-022): how many
+  // blocks left the work of their phase uncommitted. With the switch off it
+  // equals `commitsBlocked`, so the as-is exit and output are unchanged; with
+  // the switch on, a block that F152-FR-002 turned into a new attempt is not
+  // one of these, and the end-of-run rule below reads this count only.
+  let commitsLeftUncommitted = 0;
+  // T077 — the switch of F152-FR-021, read from the configuration the merge
+  // of feature 110 resolved (row 134: on by default, off under `parity`).
+  const commitBackpressureOn = commitBackpressureIsOn({
+    "commit.backpressure": loopConfig.backpressureValue,
+  });
+  // T077 — the rule data of the gate, the engine's (the project file joins it
+  // at T140), loaded once for the run.
+  const commitGateRules = loadEngineCommitGateRules();
+  const commitGateRuleDataHash = hashOfCommitGateRules(commitGateRules, null);
+  const reasonOfTheRule = (rule: string): string =>
+    commitGateRules.rules.find((candidate) => candidate.rule === rule)?.reason ?? "";
+  // T078 — the corrective feedback of a blocked attempt goes through the same
+  // writer the critic's feedback uses (redacted, on the control plane, in the
+  // phase's feedback list), and is marked so the proposer prompt renders it
+  // with its own heading and no critic-rejection heading (T080).
+  const commitGateFeedbackOfThePhase = new Map<number, number>();
+  const writeFeedbackFor = (phase: number, ordinal: number, text: string): void => {
+    write(
+      inControl(join("features", slug, "feedback", `phase${String(phase)}.${String(ordinal)}.md`)),
+      redacted(text),
+    );
+    const held = feedback.get(phase) ?? [];
+    held.push({ ordinal, text, live: true });
+    feedback.set(phase, held);
+    commitGateFeedbackOfThePhase.set(phase, ordinal);
+  };
   const scanBeforeTheCommit = {
     scan: (files: readonly string[]) => {
       const present = files.filter((file) => existsSync(join(workdir, file)));
@@ -1707,6 +1786,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       const blocked = hits.length > 0;
       if (blocked) {
         commitsBlocked += 1;
+        // T160 — the safety-net count rises with the switch OFF only; with the
+        // switch on, the step-6 path is defensive and a void (a later phase)
+        // raises this count, never the pre-commit scan here.
+        if (!commitBackpressureOn) commitsLeftUncommitted += 1;
         say(
           `[${slug}] commit blocked: possible secret in ${[...new Set(hits.map((hit) => hit.file))].join(", ")}`,
         );
@@ -1729,7 +1812,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       `\n# The tasks of this phase\n${sectionOf(phase)}`,
       last === undefined
         ? ""
-        : `\n# The critic rejected attempt ${String(last.ordinal)}\n${last.text}\nFix what it names.`,
+        : // T080 — a commit-gate block carries its own heading (E3); the
+          // critic-rejection heading is not printed over it. The critic never
+          // sees any of this (F152-FR-009): only the proposer prompt does.
+          commitGateFeedbackOfThePhase.get(phase) === last.ordinal
+          ? `\n${last.text}\nFix what it names.`
+          : `\n# The critic rejected attempt ${String(last.ordinal)}\n${last.text}\nFix what it names.`,
       hint === ""
         ? ""
         : `\n# The hint of the diagnostician\n${hint}\nIt is one reading of why the last attempt failed; act on it.`,
@@ -2923,6 +3011,122 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
 
     if (outcome.outcome === "approved") {
+      // T075 — the change set the approval commit would hold, computed at the
+      // top of the approved branch, BEFORE any record of the approval is
+      // written, so the commit gate can run in front of it (F152-FR-001).
+      const insideAWorkTree = git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0;
+      // File by file: a whole new directory is one line of `git status`.
+      const changed = [
+        ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+        ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+      ].filter((name) => name !== "");
+      // T076 — the task list as the tick of the approval would leave it, IN
+      // MEMORY ONLY: nothing is written here, only the engine's later tick is.
+      const tickedTasksText = tickText(
+        {
+          text: readFileSync(tasksPath, "utf8"),
+          format: "speckit-tasks",
+          request: { phase },
+          file: tasksPath,
+        },
+        grammar,
+      ).text;
+      // T077 — the commit gate, in front of the bound record and the approval
+      // record. With the switch off it is not entered at all, and the as-is
+      // path below runs unchanged (F152-FR-021, `parity`).
+      if (commitBackpressureOn) {
+        const gate = commitGate(
+          {
+            commits: "auto",
+            insideAWorkTree,
+            changedPaths: changed,
+            tasksPath: relative(workdir, tasksPath),
+            tickedTasksText,
+            rules: commitGateRules,
+          },
+          {
+            // The scan answers hits in the shape of the redactor (a `matched`
+            // discriminant); the gate reads the kind off the explicit fields,
+            // so the port translates — and carries no match text.
+            scan: (files, overlay) => {
+              const result = ingress.scanCommit(files, workdir, overlay);
+              return {
+                hits: result.hits.map((hit) =>
+                  hit.matched === "registered-secret"
+                    ? { file: hit.file, line: hit.line, registeredSecret: true as const }
+                    : hit.matched === "unreadable"
+                      ? { file: hit.file, line: hit.line, unreadable: true as const }
+                      : { file: hit.file, line: hit.line, pattern: hit.pattern },
+                ),
+              };
+            },
+          },
+        );
+        if (gate.entered && gate.blocked) {
+          // T078 — a block writes the block record and the corrective
+          // feedback, emits its events, counts the digest line, and returns
+          // `commit-blocked`. NO bound record and NO approval record are
+          // written, so no approval of this attempt counts anywhere
+          // (F152-FR-001, F152-FR-013).
+          const nonce = newNonce();
+          await writeBlockRecord(
+            {
+              schema: "specstride.commit-gate-block/1",
+              feature: slug,
+              phase,
+              ordinal,
+              runId,
+              engineStartId,
+              verdictId,
+              hits: gate.hits,
+              hitsOmitted: 0,
+              signature: gate.signature,
+              ruleDataHash: commitGateRuleDataHash,
+              nonce,
+              at: new Date().toISOString(),
+              path: "pre-scan",
+            },
+            {
+              atomicWrite: (file, text) => atomicWrite(file, text, { createDirectory: true }),
+              inControl,
+            },
+          );
+          writeFeedbackFor(
+            phase,
+            ordinal,
+            feedbackOfTheCommitGate({
+              phase,
+              ordinal,
+              nonce,
+              rejectCount: (feedback.get(phase) ?? []).length + 1,
+              rejectLimit: REJECT_LIMIT_DEFAULT,
+              hits: gate.hits.map((hit) => ({
+                rule: hit.rule,
+                reason: reasonOfTheRule(hit.rule),
+                file: quotedPath(hit.file),
+                line: hit.line,
+              })),
+              hitsOmitted: 0,
+            }),
+          );
+          emit(COMMIT_GATE_BLOCKED_EVENT_TYPE, {
+            phase,
+            attempt: ordinal,
+            rules: [...new Set(gate.hits.map((hit) => hit.rule))],
+            fileCount: new Set(gate.hits.map((hit) => hit.file)).size,
+            signature: gate.signature,
+          });
+          emit(COMMIT_BLOCKED_EVENT_TYPE, {
+            files: [...new Set(gate.hits.map((hit) => hit.file))],
+            counts: gate.hits.map((hit) => hit.line),
+          });
+          commitsBlocked += 1;
+          say(
+            `[${slug}] phase ${String(phase)} attempt ${String(ordinal)}: the commit gate blocked the approval commit`,
+          );
+          return "commit-blocked" as const;
+        }
+      }
       const evidence = readFileSync(evidencePath, "utf8");
       const evidenceHash = createHash("sha256").update(evidence).digest("hex");
       const now = new Date().toISOString();
@@ -2969,11 +3173,6 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       if (outcomeOfAnApprovedVerdict(phase, readApproval as never).outcome === "rejected")
         return "rejected" as const;
 
-      // File by file: a whole new directory is one line of `git status`.
-      const changed = [
-        ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
-        ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
-      ].filter((name) => name !== "");
       stepsAfterAnApproval({ phase, ordinal, title: titleOf(phase) }, {
         // F101-FR-033 step 1 — the feedback, the hint and the acceleration
         // note of the phase are set aside, so none of them reaches a later
@@ -3030,9 +3229,27 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         commit: {
           commits: "auto",
           insideAWorkTree: git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0,
-          changedPaths: changed,
+          // Read lazily, AT step 6: the change set has moved since the gate
+          // read it at the top of the branch — the tick of step 4 is itself a
+          // change, and a blocked earlier attempt had its tasks unticked again
+          // — so the gate's snapshot must not decide what the commit holds.
+          get changedPaths() {
+            return [
+              ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+              ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+            ]
+              .filter((name) => name !== "")
+              .sort();
+          },
           // The commit stages every change, so every change is scanned.
-          pathsTheRuntimeWrote: changed,
+          get pathsTheRuntimeWrote() {
+            return [
+              ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+              ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+            ]
+              .filter((name) => name !== "")
+              .sort();
+          },
         },
         commitPorts: {
           scan: scanBeforeTheCommit,
@@ -3111,7 +3328,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         ? "malformed"
         : outcome === "gate-failed"
           ? "gate-failed"
-          : "rejected";
+          : // T079 — a blocked approval commit re-enters the loop through the
+            // same order after a rejection, as its own kind (F152-FR-002).
+            outcome === "commit-blocked"
+            ? "commit-blocked"
+            : "rejected";
     const records = feedback.get(phase) ?? [];
     // The ids of the one grammar owner: the signature of unmet criteria names
     // the tasks the phase holds, and only those (F101-FR-019).
@@ -3151,6 +3372,44 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         phase,
         ordinal,
         kind,
+        // F152-FR-006 — the signatures come from the block records on the
+        // control plane, never from a count held in memory (F152-FR-015):
+        // the block just written, and the block of ordinal k−1 where it
+        // exists. Only the attempt just before counts (data-model.md E6).
+        ...(kind === "commit-blocked"
+          ? await (async () => {
+              const record = await readBlockRecord(phase, ordinal, {
+                readControl: (path: string) => {
+                  const file = inControl(path);
+                  return existsSync(file) ? readFileSync(file, "utf8") : null;
+                },
+              });
+              const previous = await readBlockRecord(phase, ordinal - 1, {
+                readControl: (path: string) => {
+                  const file = inControl(path);
+                  return existsSync(file) ? readFileSync(file, "utf8") : null;
+                },
+              });
+              return {
+                blockSignature: (record?.signature as string | undefined) ?? undefined,
+                previousBlockSignature: (previous?.signature as string | undefined | null) ?? null,
+                blockRuleIds: [
+                  ...new Set(
+                    ((record?.hits as readonly { rule: string }[] | undefined) ?? []).map(
+                      (hit) => hit.rule,
+                    ),
+                  ),
+                ],
+                blockFiles: [
+                  ...new Set(
+                    ((record?.hits as readonly { file: string }[] | undefined) ?? []).map(
+                      (hit) => hit.file,
+                    ),
+                  ),
+                ],
+              };
+            })()
+          : {}),
         rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
         malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
         feedbackRecords: records,
@@ -3200,10 +3459,28 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       }
       return { go: "next-attempt" as const };
     }
+    // F152-FR-006 — the halt of the commit-gate table is a BLOCKED path: the
+    // event `blocked` carries the closed-set reason and what the run needs,
+    // and the run ends blocked on a human, never relaunched (row O-33).
+    if (decision.blocked !== undefined) {
+      emit("blocked", {
+        reason: decision.blocked.reason,
+        needs: decision.blocked.needs,
+      });
+      say(`[${slug}] blocked: ${decision.blocked.reason}: ${decision.blocked.needs}`);
+    }
     return {
       go: "halt" as const,
       exitCode: decision.exitCode,
       stopReason: decision.stopReason,
+      ...(decision.blocked === undefined
+        ? {}
+        : {
+            blocked: {
+              reason: decision.blocked.reason,
+              needs: decision.blocked.needs,
+            },
+          }),
     };
   };
 
@@ -3318,19 +3595,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   }
   // A commit the secret gate held back (F111-FR-031) leaves the work of its
   // phase uncommitted, and a run that ends over uncommitted work is not
-  // `done`. Annex E gives this cause no exit code of its own — §E.4's table
-  // has no row for it and §E.3 no member — so the composition root picks the
-  // termination the vocabulary of §E.4 leaves for a run that did not finish
-  // its own duty: 1, internal. A run that halted on its own keeps that halt's
-  // code, which is already non-zero; what must never happen again is the
-  // step-5 long drive's `exit=0 … commits_blocked=4` with phases 3–8 sitting
-  // uncommitted. Owner ruling 2026-11-04 (commit-gate false positive),
-  // part A item 2.
+  // `done`. ... Owner ruling 2026-11-04 (commit-gate false positive),
+  // part A item 2. F152-FR-022 — the rule reads `commitsLeftUncommitted`: a
+  // block the backpressure turned into a new attempt left nothing behind, and
+  // only a block whose work stayed uncommitted fires the net.
   const exitCode =
-    commitsBlocked > 0 && result.exitCode === 0 ? COMMIT_BLOCKED_EXIT_CODE : result.exitCode;
-  if (commitsBlocked > 0) {
+    commitsLeftUncommitted > 0 && result.exitCode === 0
+      ? COMMIT_BLOCKED_EXIT_CODE
+      : result.exitCode;
+  if (commitsLeftUncommitted > 0) {
     say(
-      `[${slug}] ${String(commitsBlocked)} commit(s) were blocked by the secret gate; ` +
+      `[${slug}] ${String(commitsLeftUncommitted)} commit(s) were blocked by the secret gate; ` +
         `the work of those phases stays uncommitted` +
         (exitCode !== result.exitCode ? ` — the run exits ${String(exitCode)}, not 0` : ""),
     );

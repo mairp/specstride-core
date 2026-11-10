@@ -154,3 +154,9 @@ vendor/
 
 # Captured fixtures stay as captured
 tests/fixtures/
+# The stand-in `claude` executables of feature 152's commit-gate fixtures are
+# test doubles the tests copy byte for byte into a stub `bin` directory (the
+# oracle keeps its own equivalents as symlinks, which the walker skips).
+packages/cli/test/fixtures/commit-gate/*/stub-claude
+# Fixture data of feature 152 the tests copy and assert against byte for byte.
+packages/core/test/fixtures/152/

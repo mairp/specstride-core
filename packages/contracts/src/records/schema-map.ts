@@ -473,6 +473,104 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     "x-unknown-field": "ignored by a reader (annex B, §B.4)",
     "x-different-major": "refused (annex B, §B.4)",
   },
+  "specstride.commit-gate-block/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "specstride.commit-gate-block/1",
+    "x-schema-id": "specstride.commit-gate-block/1",
+    title: "Block record of the commit gate (F152-FR-013; data-model.md E1)",
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "schema",
+      "feature",
+      "phase",
+      "ordinal",
+      "runId",
+      "engineStartId",
+      "verdictId",
+      "hits",
+      "hitsOmitted",
+      "signature",
+      "ruleDataHash",
+      "nonce",
+      "at",
+      "path",
+    ],
+    properties: {
+      schema: {
+        const: "specstride.commit-gate-block/1",
+      },
+      feature: {
+        type: "string",
+      },
+      phase: {
+        type: "integer",
+        minimum: 1,
+      },
+      ordinal: {
+        type: "integer",
+        minimum: 1,
+      },
+      runId: {
+        type: "string",
+      },
+      engineStartId: {
+        type: "string",
+      },
+      verdictId: {
+        type: "string",
+      },
+      hits: {
+        type: "array",
+        maxItems: 200,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["rule", "file", "line"],
+          properties: {
+            rule: {
+              type: "string",
+              pattern: "^[a-z0-9-]{1,48}$",
+            },
+            file: {
+              type: "string",
+            },
+            line: {
+              type: "integer",
+              minimum: 0,
+              $comment:
+                "0 for a hit of kind 'unreadable' (the file could not be read); rendered as 'line unknown'",
+            },
+          },
+        },
+      },
+      hitsOmitted: {
+        type: "integer",
+        minimum: 0,
+      },
+      signature: {
+        type: "string",
+        pattern: "^[0-9a-f]{64}$",
+      },
+      ruleDataHash: {
+        type: "string",
+        pattern: "^[0-9a-f]{64}$",
+      },
+      nonce: {
+        type: "string",
+        pattern: "^[a-f0-9]{16}$",
+        $comment:
+          "newNonce() of gate/nonce.ts, stored so that a resume renders the same corrective block (data-model.md E1, E3)",
+      },
+      at: {
+        type: "string",
+        format: "date-time",
+      },
+      path: {
+        enum: ["pre-scan", "step-6", "resume"],
+      },
+    },
+  },
   "specstride.spec-format/1:model": {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     $id: "urn:specstride:schema:specstride.spec-format/1:model",
@@ -864,6 +962,106 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     "x-unknown-field": "ignored by a reader",
     "x-different-major": "refused",
   },
+  "specstride.commit-gate-rules/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "specstride.commit-gate-rules/1",
+    "x-schema-id": "specstride.commit-gate-rules/1",
+    title: "Rule data of the commit gate (F152-FR-016 to F152-FR-019)",
+    type: "object",
+    additionalProperties: false,
+    required: ["schema", "version", "rules"],
+    properties: {
+      schema: {
+        const: "specstride.commit-gate-rules/1",
+      },
+      version: {
+        type: "string",
+        pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      },
+      rules: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["rule", "owner", "requirement", "reason", "effect", "match"],
+          properties: {
+            rule: {
+              type: "string",
+              pattern: "^[a-z0-9-]{1,48}$",
+            },
+            owner: {
+              type: "string",
+              pattern: "^[0-9]{3}$",
+            },
+            requirement: {
+              type: "string",
+              pattern: "^F[0-9]{3}-FR-[0-9]{3}$",
+            },
+            reason: {
+              type: "string",
+              minLength: 1,
+              maxLength: 280,
+            },
+            effect: {
+              enum: ["block", "exempt"],
+            },
+            match: {
+              oneOf: [
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["pattern"],
+                  properties: {
+                    pattern: {
+                      type: "string",
+                      pattern: "^[a-z0-9-]{1,64}$",
+                    },
+                  },
+                },
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["registeredSecret"],
+                  properties: {
+                    registeredSecret: {
+                      const: true,
+                    },
+                  },
+                },
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["unreadable"],
+                  properties: {
+                    unreadable: {
+                      const: true,
+                    },
+                  },
+                  $comment:
+                    "a hit with matched 'unreadable': a file of the commit the scan could not read (F111-FR-024, fail closed); an engine rule only",
+                },
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["unmatched"],
+                  properties: {
+                    unmatched: {
+                      const: true,
+                    },
+                  },
+                  $comment:
+                    "the fallback: a hit that no other rule matches (a version skew between the pattern set and the rule data); an engine rule only",
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    $comment:
+      "Loader rules beyond the schema: rule ids are unique across the engine and project files; engine ids start with 'cg-'; a project file may hold only effect 'block' (an 'exempt' rule, an id starting 'cg-', or a pattern that is not a name of the 'values' list of widened-v1.json, or a match 'unreadable' or 'unmatched' refuses the launch with exit 3); a reason the redactor changes is refused.",
+  },
   "specstride.config/1": {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     $id: "urn:specstride:schema:specstride.config/1",
@@ -900,6 +1098,73 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     },
     "x-unknown-field": "refused, except keys under x-",
     "x-different-major": "refused (annex B, §B.4)",
+  },
+  "specstride.corrective-block-input/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "specstride.corrective-block-input/1",
+    "x-schema-id": "specstride.corrective-block-input/1",
+    title: "Input of feedbackOfTheCommitGate (F152-FR-009 to F152-FR-012)",
+    $comment:
+      "The ONLY values the template may interpolate. There is deliberately no field for matched text, file content, tool output or model text. The rendered text is fixed by data-model.md E3.",
+    type: "object",
+    additionalProperties: false,
+    required: ["phase", "ordinal", "nonce", "rejectCount", "rejectLimit", "hits", "hitsOmitted"],
+    properties: {
+      phase: {
+        type: "integer",
+        minimum: 1,
+      },
+      ordinal: {
+        type: "integer",
+        minimum: 1,
+      },
+      nonce: {
+        type: "string",
+        pattern: "^[A-Za-z0-9]{8,64}$",
+      },
+      rejectCount: {
+        type: "integer",
+        minimum: 1,
+      },
+      rejectLimit: {
+        type: "integer",
+        minimum: 1,
+      },
+      hits: {
+        type: "array",
+        maxItems: 20,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["rule", "reason", "file", "line"],
+          properties: {
+            rule: {
+              type: "string",
+              pattern: "^[a-z0-9-]{1,48}$",
+            },
+            reason: {
+              type: "string",
+              maxLength: 280,
+            },
+            file: {
+              type: "string",
+              maxLength: 160,
+              $comment: "already escaped and capped; quoted as data in the template",
+            },
+            line: {
+              type: "integer",
+              minimum: 0,
+              $comment:
+                "0 for a hit of kind 'unreadable' (the file could not be read); rendered as 'line unknown'",
+            },
+          },
+        },
+      },
+      hitsOmitted: {
+        type: "integer",
+        minimum: 0,
+      },
+    },
   },
   "specstride.doctor/1": {
     $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -1889,6 +2154,204 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     },
     required: ["schema", "rules"],
     additionalProperties: false,
+  },
+  "specstride.invocation/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "urn:specstride:schema:specstride.invocation/1",
+    title: "Invocation record",
+    description:
+      "Annex B §B.20; logical name pass:<passId>:invocation. F126-FR-028. The compatibility form carries the as-is literal specstride-invocation/v1 and the as-is field names.",
+    type: "object",
+    properties: {
+      schema: {
+        const: "specstride.invocation/1",
+      },
+      runId: {
+        type: "string",
+        description: "The logical run (as-is run_id)",
+      },
+      feature: {
+        type: "string",
+      },
+      role: {
+        type: "string",
+        description: "A role of the role registry",
+      },
+      harness: {
+        type: "string",
+        description:
+          "The harness label (as-is backend). A value only; never tested in control flow (F126-FR-039)",
+      },
+      phase: {
+        type: "integer",
+        minimum: 0,
+      },
+      attempt: {
+        type: "integer",
+        minimum: 1,
+      },
+      iteration: {
+        type: "integer",
+        minimum: 0,
+        description:
+          "At least 1 for a proposer or accelerator, at least 0 for a critic (F126-FR-012)",
+      },
+      invocationId: {
+        type: "string",
+      },
+      observabilityMode: {
+        enum: ["structured", "raw-text", "degraded"],
+      },
+      providerFormat: {
+        type: ["string", "null"],
+      },
+      expectedEvidence: {
+        type: ["string", "null"],
+        description: "Absolute path, home expanded, links resolved",
+      },
+      createdAt: {
+        type: "string",
+        format: "date-time",
+      },
+    },
+    required: [
+      "schema",
+      "runId",
+      "feature",
+      "role",
+      "harness",
+      "phase",
+      "attempt",
+      "iteration",
+      "invocationId",
+      "observabilityMode",
+      "providerFormat",
+      "expectedEvidence",
+      "createdAt",
+    ],
+    additionalProperties: false,
+  },
+  "specstride.invocation-result/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "urn:specstride:schema:specstride.invocation-result/1",
+    title: "Result of an invocation",
+    description:
+      "Annex B §B.20; logical name pass:<passId>:result. Written once. F126-FR-032. Every other non-null key of the provider terminal and of the extra metrics is copied onto the record, so other properties are allowed. As-is literal specstride-invocation-result/v1 in the compatibility form.",
+    type: "object",
+    properties: {
+      schema: {
+        const: "specstride.invocation-result/1",
+      },
+      runId: {
+        type: "string",
+        description: "The logical run (as-is run_id)",
+      },
+      feature: {
+        type: "string",
+      },
+      role: {
+        type: "string",
+        description: "A role of the role registry",
+      },
+      harness: {
+        type: "string",
+        description:
+          "The harness label (as-is backend). A value only; never tested in control flow (F126-FR-039)",
+      },
+      phase: {
+        type: "integer",
+        minimum: 0,
+      },
+      attempt: {
+        type: "integer",
+        minimum: 1,
+      },
+      iteration: {
+        type: "integer",
+        minimum: 0,
+        description:
+          "At least 1 for a proposer or accelerator, at least 0 for a critic (F126-FR-012)",
+      },
+      invocationId: {
+        type: "string",
+      },
+      status: {
+        enum: ["success", "error", "timeout", "cancelled", "degraded"],
+      },
+      is_error: {
+        type: "boolean",
+      },
+      reason_code: {
+        type: "string",
+      },
+      reason: {
+        type: ["string", "null"],
+      },
+      source: {
+        enum: ["synthesized", "reconciled"],
+      },
+      provider_status: {
+        type: ["string", "null"],
+      },
+      provider_stop_reason: {
+        type: ["string", "null"],
+      },
+      producer_exit_code: {
+        type: ["integer", "null"],
+      },
+      producer_signal: {
+        type: ["integer", "null"],
+      },
+      parser_exit_code: {
+        type: ["integer", "null"],
+      },
+      timed_out: {
+        type: "boolean",
+      },
+      duration_ms: {
+        type: "integer",
+        minimum: 0,
+      },
+      finalized_at: {
+        type: "string",
+        format: "date-time",
+        description: "UTC, with microseconds",
+      },
+      noActivity: {
+        type: "boolean",
+      },
+      kill_reason: {
+        type: "string",
+      },
+      kill_class: {
+        type: "string",
+      },
+    },
+    required: [
+      "schema",
+      "runId",
+      "feature",
+      "role",
+      "harness",
+      "phase",
+      "attempt",
+      "iteration",
+      "invocationId",
+      "status",
+      "is_error",
+      "reason_code",
+      "reason",
+      "source",
+      "provider_status",
+      "provider_stop_reason",
+      "producer_exit_code",
+      "producer_signal",
+      "parser_exit_code",
+      "timed_out",
+      "duration_ms",
+      "finalized_at",
+    ],
+    additionalProperties: true,
   },
   "specstride.launch-contract/1": {
     $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -3360,6 +3823,48 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     "x-unknown-field": "ignored by a reader (annex B, §B.4)",
     "x-different-major": "refused (annex B, §B.4)",
   },
+  "specstride.producer-status/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "urn:specstride:schema:specstride.producer-status/1",
+    title: "Producer status",
+    description:
+      "Annex B §B.20; logical name pass:<passId>:producer-status. F126-FR-030. As-is literal specstride-producer-status/v1 in the compatibility form.",
+    type: "object",
+    properties: {
+      schema: {
+        const: "specstride.producer-status/1",
+      },
+      producer_exit_code: {
+        type: ["integer", "null"],
+      },
+      producer_signal: {
+        type: ["integer", "null"],
+      },
+      parser_exit_code: {
+        type: ["integer", "null"],
+      },
+      timed_out: {
+        type: "boolean",
+      },
+      launch_failed: {
+        type: "boolean",
+      },
+      duration_ms: {
+        type: ["integer", "null"],
+        minimum: 0,
+      },
+    },
+    required: [
+      "schema",
+      "producer_exit_code",
+      "producer_signal",
+      "parser_exit_code",
+      "timed_out",
+      "launch_failed",
+      "duration_ms",
+    ],
+    additionalProperties: false,
+  },
   "specstride.protected-set/1": {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     $id: "urn:specstride:schema:specstride.protected-set/1",
@@ -3509,6 +4014,28 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
     additionalProperties: true,
     "x-unknown-field": "ignored by a reader",
     "x-different-major": "refused",
+  },
+  "specstride.provider-terminal/1": {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: "urn:specstride:schema:specstride.provider-terminal/1",
+    title: "Provider terminal",
+    description:
+      "Annex B §B.20; logical name pass:<passId>:provider-terminal. F126-FR-031. As-is literal specstride-provider-terminal/v1 in the compatibility form.",
+    type: "object",
+    properties: {
+      schema: {
+        const: "specstride.provider-terminal/1",
+      },
+      provider_terminal: {
+        type: ["object", "null"],
+        description: "The last terminal record of the stream, or null",
+      },
+      malformed_stream: {
+        type: "boolean",
+      },
+    },
+    required: ["schema", "provider_terminal", "malformed_stream"],
+    additionalProperties: false,
   },
   "specstride.recovery-markers/1": {
     $schema: "https://json-schema.org/draft/2020-12/schema",

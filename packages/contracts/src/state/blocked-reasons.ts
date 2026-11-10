@@ -30,7 +30,9 @@ const RAW = (machine as { blockedReasons: RawBlockedReason[] }).blockedReasons;
 
 const bare = (cell: string): string => cell.replace(/`/g, "").trim();
 
-/** The six blocked reasons of §E.2, in the order of the annex. */
+/** The six blocked reasons of §E.2, in the order of the annex, with the
+ * seventh of feature 152 (CQ-152-01 A): the halt on two consecutive blocked
+ * approval commits of one phase with the same signature (F152-FR-006). */
 export const BLOCKED_REASONS = [
   "declared-block",
   "quota-credit",
@@ -38,7 +40,11 @@ export const BLOCKED_REASONS = [
   "budget-cap",
   "quota-wait-ceiling",
   "source-changed",
+  "commit-gate",
 ] as const;
+
+/** The blocked reason of the commit-gate halt (feature 152, CQ-152-01 A). */
+export const COMMIT_GATE = "commit-gate" as const;
 
 /** A member of the closed set of blocked reasons (annex E, §E.2). */
 export type BlockedReason = (typeof BLOCKED_REASONS)[number];

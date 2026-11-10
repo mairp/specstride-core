@@ -270,6 +270,15 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The stand-in `claude` executables of feature 152's commit-gate
+      // fixtures are test doubles run from a stub `bin` directory, not source
+      // of the product, and no published package ships them.
+      if (
+        path.startsWith("packages/cli/test/fixtures/commit-gate/") &&
+        path.endsWith("/stub-claude")
+      ) {
+        continue;
+      }
       const name = path.slice(path.lastIndexOf("/") + 1);
       if (name === ".gitkeep" || name.endsWith(".md")) continue;
       const dot = name.lastIndexOf(".");

@@ -643,6 +643,15 @@ export const COUNT_NAMESPACE = "core" as const;
 export const VERDICTS_THAT_COUNT_TOWARDS_K: readonly Verdict[] = Object.freeze(["REJECTED"]);
 
 /**
+ * F152-FR-007 (CQ-152-03 A) — a blocked approval commit does NOT count
+ * towards K. No logic is needed for it: the attempt a block ends had its
+ * verdict APPROVED and its verification gate passed, so
+ * `rejectionCountsTowardsK` already leaves it out. This constant names the
+ * premise, so a change that breaks it fails loudly in review.
+ */
+export const A_BLOCKED_COMMIT_COUNTS_TOWARDS_K = false as const;
+
+/**
  * The count of the bump and the count of the escalation of the micro-loop layer
  * are SEPARATE, and neither reads or changes the other (F149-FR-006;
  * F100-FR-140). The escalation's count belongs to feature 115 and lives in the
