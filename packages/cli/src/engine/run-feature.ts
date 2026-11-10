@@ -2019,7 +2019,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         stopReason: "stop_flag",
       };
     };
-    if (parallelWiring === undefined && takeTheStopRequest()) return stopTheRun("attempt-top");
+    // THE STOP POLLS UNCONDITIONALLY (F102-FR-003): the request is honoured
+    // at the attempt top whatever the wiring of the attempt is. A dsh
+    // implementer defines the parallel wiring even where no group ever runs,
+    // and the group honours a request only while a group run is LIVE; with
+    // the guard on, a plain pass loop never polled and `specstride stop`
+    // stood unread in the inbox to the end of the run (feature 152,
+    // 2026-11-09: a `stop --now` sat in the inbox through pass boundaries).
+    // The poll cannot steal a request from a live group: while the group
+    // runs the main line waits, so this line executes only at boundaries
+    // where no group is in flight.
+    if (takeTheStopRequest()) return stopTheRun("attempt-top");
     if (parallelWiring !== undefined) {
       await parallelWiring.startIfTheBoundaryIsClean();
       /* ---- THE STOP TAKES EFFECT (F143-FR-026): a request that stood in
@@ -2477,7 +2487,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               // F118-FR-011 — the cap breaker: after too many kills of the
               // ceiling in a row the loop ends with the cap result.
               killCheck: () => capHalting,
-              stopRequested: () => parallelWiring === undefined && takeTheStopRequest(),
+              // The poll is unconditional (see the attempt top above): a
+              // wiring without a live group must not silence the stop.
+              stopRequested: () => takeTheStopRequest(),
               // F115-FR-027 — the loop layer at `afterPass`: a pass the layer
               // gave back raises no pass count (the core loop returns the
               // pass number after the evidence check).
