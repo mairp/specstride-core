@@ -262,7 +262,7 @@
     {
       "Blocked reason": "`commit-gate`",
       "When": "Two consecutive blocked approval commits of one phase with the same signature",
-      "Stop reason": "`max_rejects`",
+      "Stop reason": "`commit_gate`",
       "Engine exit": "2",
       "`retryable`": "No"
     }

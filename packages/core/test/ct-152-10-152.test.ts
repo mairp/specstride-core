@@ -4,7 +4,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -125,8 +125,7 @@ function renderForHits(
     rejectLimit: 3,
     hits: hits.map((hit) => ({
       rule: hit.rule,
-      reason:
-        RULES.rules.find((rule) => rule.rule === hit.rule)?.reason ?? "the rule's reason",
+      reason: RULES.rules.find((rule) => rule.rule === hit.rule)?.reason ?? "the rule's reason",
       file: `"${hit.file}"`,
       line: hit.line,
     })),
@@ -151,9 +150,7 @@ test("no match text: a planted secret never reaches the block (F152-SC-004)", ()
         writeFileSync(planted, `const x = 1;\nconst value = "${secret}";\n`, "utf8");
         const scan = scanCommitFiles(["planted.ts"], { root, redactor });
         const blocked = scan.hits
-          .map((hit) =>
-            blockingRuleOf({ matched: hit.matched, pattern: hit.pattern }, RULES),
-          )
+          .map((hit) => blockingRuleOf({ matched: hit.matched, pattern: hit.pattern }, RULES))
           .filter((rule): rule is string => rule !== null);
         if (entry.name === "key-name-then-value") {
           // The carve-out: the hit is exempt, so there is no block at all.
@@ -161,9 +158,7 @@ test("no match text: a planted secret never reaches the block (F152-SC-004)", ()
           continue;
         }
         assert.ok(blocked.length > 0, `the pattern ${entry.name} did not block`);
-        const text = renderForHits(
-          blocked.map((rule) => ({ rule, file: "planted.ts", line: 2 })),
-        );
+        const text = renderForHits(blocked.map((rule) => ({ rule, file: "planted.ts", line: 2 })));
         assert.ok(text !== null);
         for (const probe of probesOf(secret)) {
           assert.ok(!text!.includes(probe), `${entry.name}: ${probe}`);
@@ -182,9 +177,7 @@ test("no match text: a planted secret never reaches the block (F152-SC-004)", ()
         .filter((rule): rule is string => rule !== null);
       assert.ok(blocked.length > 0, "a registered secret must block");
       checked += 1;
-      const text = renderForHits(
-        blocked.map((rule) => ({ rule, file: "planted.ts", line: 2 })),
-      );
+      const text = renderForHits(blocked.map((rule) => ({ rule, file: "planted.ts", line: 2 })));
       assert.ok(text !== null);
       for (const probe of probesOf(secret)) {
         assert.ok(!text!.includes(probe), probe);

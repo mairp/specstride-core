@@ -154,9 +154,9 @@ test("CT-100-243: the fields F100-FR-143 names, `productVersions`, and one write
 
 test("CT-100-244: every blocked reason has a stop reason and an exit code", () => {
   const raw = (machine as { blockedReasons: Record<string, string>[] }).blockedReasons;
-  assert.equal(raw.length, 6);
-  assert.equal(BLOCKED_REASONS.length, 6);
-  assert.equal(blockedReasonRows.length, 6);
+  assert.equal(raw.length, 7);
+  assert.equal(BLOCKED_REASONS.length, 7);
+  assert.equal(blockedReasonRows.length, 7);
   assert.deepEqual([...blockedReasonSet.members], [...BLOCKED_REASONS]);
   assert.equal(blockedReasonSet.number, 4);
 

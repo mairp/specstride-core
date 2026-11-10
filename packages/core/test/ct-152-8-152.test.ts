@@ -5,7 +5,7 @@
  * Static proof: `commitGate` is imported only by the composition root
  * (`run-feature.ts`, the approved branch of the phase attempt) and re-exported
  * by the barrel of `post-approval/`. Neither loop layer imports it, so no
- * unit of the micro-loop layer or of the parallel layer can spend a count of
+ * unit of either loop layer can spend a count of
  * this feature, add an exit code or add a stop reason for it.
  */
 import { test } from "node:test";
@@ -28,13 +28,12 @@ function sourcesOf(dir: string): string[] {
 
 const IMPORTERS = sourcesOf(join(ROOT, "core", "src"))
   .concat(sourcesOf(join(ROOT, "cli", "src")))
-  .filter((file) => /import\s*\{[^}]*\bcommitGate\b[^}]*\}\s*from/.test(readFileSync(file, "utf8")));
+  .filter((file) =>
+    /import\s*\{[^}]*\bcommitGate\b[^}]*\}\s*from/.test(readFileSync(file, "utf8")),
+  );
 
 test("only the phase attempt (the composition root) imports commitGate", () => {
-  assert.ok(
-    IMPORTERS.length > 0,
-    "the scan found no importer at all — the scan itself is broken",
-  );
+  assert.ok(IMPORTERS.length > 0, "the scan found no importer at all — the scan itself is broken");
   for (const file of IMPORTERS) {
     assert.ok(
       file.endsWith(join("cli", "src", "engine", "run-feature.ts")) ||

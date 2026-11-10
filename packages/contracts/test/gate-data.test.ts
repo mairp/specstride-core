@@ -9,7 +9,7 @@
  *
  * | Row of annex X §X.6 | Set | What is read against it |
  * |---|---|---|
- * | 3 | Stop reasons (the 15 literals of annex E §E.3) | `stopReason` of every row |
+ * | 3 | Stop reasons (the 16 literals of annex E §E.3) | `stopReason` of every row |
  * | 6 | Engine exit codes (annex E §E.4) | `exitCode` of every row |
  *
  * The copy in the package is asserted byte for byte against the contract file

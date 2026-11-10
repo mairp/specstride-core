@@ -58,7 +58,7 @@ function fixture(name: string): Fixture {
   mkdirSync(scratch);
   mkdirSync(join(work, "specs", "001-one"), { recursive: true });
   copyFileSync(join(source, "tasks.md"), join(work, "specs", "001-one", "tasks.md"));
-  writeFileSync(join(work, "package.json"), JSON.stringify({ scripts: { test: "node -e \"\"" } }));
+  writeFileSync(join(work, "package.json"), JSON.stringify({ scripts: { test: 'node -e ""' } }));
   copyFileSync(join(source, "stub-claude"), join(bin, "claude"));
   chmodSync(join(bin, "claude"), 0o755);
   for (const argv of [
@@ -158,14 +158,18 @@ test("T090 the same secret every attempt halts blocked on a human after two atte
     // Exactly two phase attempts, then the halt (F152-SC-003).
     assert.deepEqual(attemptsOf(fx), [1, 2]);
     assert.equal(exit, 2);
-    // The terminal facts: stop reason `max_rejects`, engine exit 2, and the
+    // The terminal facts: stop reason `commit_gate`, engine exit 2, and the
     // row of the closed set says `retryable: No` — the shape of a terminal
     // record a reader derives `blocked-on-human` from (CQ-152-01 A).
-    const digest = fx.out().split("\n").find((line) => line.includes("DIGEST")) ?? "";
-    assert.match(digest, /DIGEST exit=2 stop=max_rejects /);
+    const digest =
+      fx
+        .out()
+        .split("\n")
+        .find((line) => line.includes("DIGEST")) ?? "";
+    assert.match(digest, /DIGEST exit=2 stop=commit_gate /);
     const row = blockedReasonRow("commit-gate");
     assert.ok(row !== undefined, "the blocked reason `commit-gate` is in the closed set");
-    assert.equal(row?.stopReason, "max_rejects");
+    assert.equal(row?.stopReason, "commit_gate");
     assert.equal(row?.engineExit, 2);
     assert.equal(row?.retryable, false);
     assert.match(row?.when ?? "", /same signature/i);
@@ -175,7 +179,9 @@ test("T090 the same secret every attempt halts blocked on a human after two atte
     const blocked = events
       .split("\n")
       .filter((line) => line.trim() !== "")
-      .map((line) => JSON.parse(line) as { type: string; data: { reason?: string; needs?: string } })
+      .map(
+        (line) => JSON.parse(line) as { type: string; data: { reason?: string; needs?: string } },
+      )
       .find((event) => event.type === "blocked" && event.data.reason === "commit-gate");
     assert.ok(blocked !== undefined, "the run emitted a `blocked` event with reason commit-gate");
     assert.match(blocked?.data.needs ?? "", /phase 1/);
@@ -195,7 +201,11 @@ test("T091 signatures that differ run into the reject limit, not the halt", asyn
     // Three attempts — the reject limit — not two, and no commit-gate halt.
     assert.deepEqual(attemptsOf(fx), [1, 2, 3]);
     assert.equal(exit, 2);
-    const digest = fx.out().split("\n").find((line) => line.includes("DIGEST")) ?? "";
+    const digest =
+      fx
+        .out()
+        .split("\n")
+        .find((line) => line.includes("DIGEST")) ?? "";
     assert.match(digest, /DIGEST exit=2 stop=max_rejects /);
     const events = eventsOf(fx);
     const commitGateBlocked = events.split("\n").some((line) => {
@@ -211,9 +221,11 @@ test("T091 signatures that differ run into the reject limit, not the halt", asyn
     // Three block records, three distinct signatures.
     const signatures = [1, 2, 3].map(
       (ordinal) =>
-        (JSON.parse(
-          readFileSync(fx.control("commit-gate", `phase1.${String(ordinal)}.block.json`), "utf8"),
-        ) as { signature: string }).signature,
+        (
+          JSON.parse(
+            readFileSync(fx.control("commit-gate", `phase1.${String(ordinal)}.block.json`), "utf8"),
+          ) as { signature: string }
+        ).signature,
     );
     assert.equal(new Set(signatures).size, 3, "each block held a different signature");
   } finally {
@@ -258,7 +270,10 @@ test("T165 fix and resume after the halt", async () => {
     // the proof that the counts survived the halt (F152-FR-015).
     assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
     const attempts = attemptsOf(fx);
-    assert.ok(attempts.includes(3), `the resume continued at attempt 3: ${JSON.stringify(attempts)}`);
+    assert.ok(
+      attempts.includes(3),
+      `the resume continued at attempt 3: ${JSON.stringify(attempts)}`,
+    );
     // Attempt 3 carried the corrective block of attempt 2 in its prompt.
     const prompt3 = readFileSync(join(fx.scratch, "seen-by-proposer-3.txt"), "utf8");
     assert.match(prompt3, /commit gate blocked/);

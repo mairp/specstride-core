@@ -21,11 +21,7 @@ import {
   HALT_RULE,
   GO_RULE,
 } from "../src/gate/commit-gate-halt-table.ts";
-import {
-  NO_COUNTS,
-  afterARejection,
-  type LedgerCounts,
-} from "../src/gate/limits.ts";
+import { NO_COUNTS, afterARejection, type LedgerCounts } from "../src/gate/limits.ts";
 
 test("CGH-1: the same signature twice halts, recorded with its rule id", () => {
   const decision = decideAfterABlock({ sameSignature: true });
@@ -41,7 +37,10 @@ test("CGH-2: a signature that differs (or no previous block) goes on", () => {
     const decision = decideAfterABlock({ sameSignature });
     assert.equal(decision.decision, "go");
     assert.equal(decision.ruleId, GO_RULE);
-    assert.ok(decision.ruleId.startsWith("CGH-2"), `the rule id of the default row: ${decision.ruleId}`);
+    assert.ok(
+      decision.ruleId.startsWith("CGH-2"),
+      `the rule id of the default row: ${decision.ruleId}`,
+    );
   }
 });
 
@@ -108,7 +107,7 @@ test("a repeated block on the last allowed attempt ends `commit-gate`, not `max_
   });
   assert.equal(outcome.go, "halt");
   assert.equal(outcome.blocked?.reason, "commit-gate");
-  assert.equal(outcome.stopReason, "max_rejects");
+  assert.equal(outcome.stopReason, "commit_gate");
   assert.equal(outcome.exitCode, 2);
 });
 

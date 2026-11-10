@@ -461,6 +461,7 @@ export function quotedPath(
   wouldRedact: (text: string) => boolean = textWouldBeRedacted,
 ): string {
   if (wouldRedact(path)) return REDACTED_PATH;
+  // eslint-disable-next-line no-control-regex -- stripping control characters is the point
   const clean = path.replace(/[\u0000-\u001f\u007f]/g, "");
   let capped = clean;
   if ([...capped].length > CORRECTIVE_PATH_CAP) {
