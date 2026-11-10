@@ -1760,10 +1760,20 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     rmSync(evidencePath, { force: true });
     mkdirSync(dirname(evidencePath), { recursive: true });
     say(`[${slug}] phase ${String(phase)} attempt ${String(ordinal)}: proposer started`);
-    const proposerSession = randomUUID();
+    // ONE CLAUDE SESSION PER PASS. `claude --session-id <id>` refuses an id it
+    // has seen ("Session ID … is already in use"), so an attempt-wide id made
+    // every second pass of a claude attempt fail at once — and three such
+    // failures ended the phase with no evidence (2026-11-10, mairp.ai phase 3).
+    // Every id of the attempt is held, for the critic's session-diversity test.
+    const attemptSessions: string[] = [];
     const held = sessionsOfThePhase.get(phase) ?? [];
-    held.push(proposerSession);
     sessionsOfThePhase.set(phase, held);
+    const newPassSession = (): string => {
+      const id = randomUUID();
+      attemptSessions.push(id);
+      held.push(id);
+      return id;
+    };
     // The task list is the engine's: only an approval ticks it, whatever a pass did to it.
     const tasksPathBeforeTheAttempt = readFileSync(tasksPath, "utf8");
     // The feature's documents as the attempt starts, when git ignores them:
@@ -2218,7 +2228,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 profile: "default",
                 authTier: 2,
                 model,
-                sessionId: proposerSession,
+                sessionId: newPassSession(),
                 sessionMode: "fresh",
                 allowedTools: PROPOSER_TOOLS,
                 streamOn: true,
@@ -2855,7 +2865,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 criticModel,
                 // The same model on both sides raises the warning of the diversity test.
                 modelsThatProducedPasses: [model],
-                sessionIdsOfThePasses: [proposerSession],
+                sessionIdsOfThePasses: [...attemptSessions],
                 sessionIdIsTakenFromTheCaller: critic.dshModel === null,
                 testedHarnessAdapter: true,
                 verdictId,

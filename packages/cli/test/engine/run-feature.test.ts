@@ -203,3 +203,38 @@ test("a stop request ends a sequential run exit 6 before any pass, and is consum
     restore();
   }
 });
+
+// REGRESSION — one claude session per PASS. The stub refuses a session id it
+// has seen, as `claude --session-id` does ("Session ID … is already in use"),
+// and writes the phase evidence only on its SECOND proposer pass. With one id
+// per attempt, pass 2 failed at once, the error breaker ended the loop and
+// the phase halted with no evidence (mairp.ai, 2026-11-10).
+test("every proposer pass gets its own claude session id", async () => {
+  const { dir, restore } = fixture("APPROVED");
+  try {
+    const stub = join(dir, "..", "bin", "claude");
+    const original = readFileSync(stub, "utf8");
+    writeFileSync(
+      stub,
+      original.replace(
+        'const critic = argv.includes("--max-turns");',
+        `const critic = argv.includes("--max-turns");
+const seenFile = path.join(${JSON.stringify(join(dir, ".."))}, "sessions-seen.txt");
+const seen = fs.existsSync(seenFile) ? fs.readFileSync(seenFile, "utf8").split("\\n") : [];
+if (seen.includes(session)) { console.error("Error: Session ID " + session + " is already in use."); process.exit(1); }
+fs.appendFileSync(seenFile, session + "\\n");
+const passFile = path.join(${JSON.stringify(join(dir, ".."))}, "proposer-passes.txt");
+if (!critic && !prompt.includes("Diagnostician")) {
+  const n = (fs.existsSync(passFile) ? Number(fs.readFileSync(passFile, "utf8")) : 0) + 1;
+  fs.writeFileSync(passFile, String(n));
+  if (n === 1) { console.log(JSON.stringify({ type: "result", result: "not done yet" })); process.exit(0); }
+}`,
+      ),
+    );
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+    assert.equal(readFileSync(join(dir, "..", "proposer-passes.txt"), "utf8"), "2");
+    assert.equal(commits(dir), 2);
+  } finally {
+    restore();
+  }
+});
