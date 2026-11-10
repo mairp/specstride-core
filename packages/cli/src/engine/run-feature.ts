@@ -89,7 +89,7 @@ import {
 } from "./learning-loop.ts";
 import { phaseShapesOfSpec } from "../learn.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
-import { START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
+import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
 import { readBetweenPasses, runPassLoop } from "../../../core/src/pass-loop/loop.ts";
 import { announcementOf } from "../../../core/src/pass-loop/announce.ts";
 import type { Announcement } from "../../../core/src/pass-loop/announce.ts";
@@ -100,6 +100,7 @@ import {
 } from "../../../core/src/pass-loop/request.ts";
 import {
   DEFAULT_LIMITS,
+  MAX_ERRORS_DEFAULT,
   ZERO_COUNTERS,
   type Counters,
 } from "../../../core/src/pass-loop/accounting.ts";
@@ -282,7 +283,10 @@ const DSH_CRITIC_WINDOW_DEFAULT = 200_000;
  */
 export function criticOf(value: string | undefined): { readonly dshModel: string | null } {
   if (value === undefined || value === "" || value === "claude") return { dshModel: null };
-  const match = /^dsh:(\S+\/\S+)$/.exec(value);
+  // The bare `<provider>/<model>` form is accepted as well, as the harness
+  // registry's role grammar (`harnesses/roles/names.ts`) spells it: the two
+  // grammars must agree, or a value one layer accepts throws here.
+  const match = /^(?:dsh:)?(\S+\/\S+)$/.exec(value);
   if (match === null) {
     throw new Error(`a role must be claude or dsh:<provider>/<model>, got ${value}`);
   }
@@ -290,17 +294,22 @@ export function criticOf(value: string | undefined): { readonly dshModel: string
 }
 
 /** One pass of the implementer through `dsh`, on the provider and model the consumer names. */
-async function passOnDsh(
+export async function passOnDsh(
   model: string,
   prompt: string,
   cwd: string,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void,
   limitMs: number | undefined = PROPOSER_LIMIT_MS,
+  runToken?: string,
 ): Promise<HarnessReply> {
   const run = await runDshProposerAsync({
     prompt,
     cwd,
-    env: process.env,
+    // The run token rides in the pass's environment: `stop --now` ends a
+    // recorded pass only after `signal-owned` reads this token back from
+    // /proc/<pid>/environ and matches the hash the registry holds. Without it
+    // every `stop --now` said "not running — nothing to kill" about a live pass.
+    env: runToken === undefined ? process.env : { ...process.env, [RUN_TOKEN_VAR]: runToken },
     model: { flag: model },
     timeoutMs: limitMs,
     onStart,
@@ -313,8 +322,17 @@ async function passOnDsh(
         sessionId: null,
         stderr: run.stderr,
         costUsd: run.costUsd,
+        apiError: null,
       }
-    : { exit: 1, reply: "", tools: null, sessionId: null, stderr: run.message, costUsd: 0 };
+    : {
+        exit: 1,
+        reply: "",
+        tools: null,
+        sessionId: null,
+        stderr: run.message,
+        costUsd: 0,
+        apiError: null,
+      };
 }
 
 /** The registry of critic strategies refuses a second registration in one process. */
@@ -329,6 +347,13 @@ type HarnessReply = {
   readonly stderr: string;
   /** What the call cost, as the executable reported it; zero where it did not. */
   readonly costUsd: number;
+  /**
+   * The harness's own API-error name, where the stream's result record named
+   * one (`api_error`, e.g. `usage_limit_reached`); null where it did not.
+   * Surfaced on the errored line so a spent quota is never reported as an
+   * anonymous agent error.
+   */
+  readonly apiError: string | null;
 };
 
 /** Runs `claude` with the prompt on standard input and reads its JSON stream. */
@@ -340,9 +365,13 @@ function callClaude(
   onLine: (line: string) => void,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void = () =>
     undefined,
+  runToken?: string,
 ): Promise<HarnessReply> {
   return new Promise((done) => {
-    const child = spawn("claude", [...argv], { cwd, stdio: ["pipe", "pipe", "pipe"] });
+    // See `passOnDsh`: the token is what lets `stop --now` prove the pass is ours.
+    const env =
+      runToken === undefined ? process.env : { ...process.env, [RUN_TOKEN_VAR]: runToken };
+    const child = spawn("claude", [...argv], { cwd, env, stdio: ["pipe", "pipe", "pipe"] });
     onStart(child.pid, (signal) => child.kill(signal));
     let held = "";
     let stderr = "";
@@ -350,6 +379,7 @@ function callClaude(
     let tools: readonly string[] | null = null;
     let sessionId: string | null = null;
     let costUsd = 0;
+    let apiError: string | null = null;
     // No limit (SPECSTRIDE_LIMITS=off): no timer at all.
     const timer =
       limitMs === undefined ? undefined : setTimeout(() => child.kill("SIGTERM"), limitMs);
@@ -364,6 +394,9 @@ function callClaude(
         if (record.type === "result" && typeof record.result === "string") reply = record.result;
         if (record.type === "result" && typeof record.total_cost_usd === "number") {
           costUsd = record.total_cost_usd;
+        }
+        if (record.type === "result" && typeof record.api_error === "string") {
+          apiError = record.api_error;
         }
       } catch {
         onLine(line);
@@ -387,12 +420,13 @@ function callClaude(
         sessionId: null,
         stderr: error.message,
         costUsd: 0,
+        apiError: null,
       });
     });
     child.on("close", (code) => {
       clearTimeout(timer);
       readLine(held);
-      done({ exit: code ?? 1, reply, tools, sessionId, stderr, costUsd });
+      done({ exit: code ?? 1, reply, tools, sessionId, stderr, costUsd, apiError });
     });
     child.stdin.end(prompt);
   });
@@ -1726,10 +1760,20 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     rmSync(evidencePath, { force: true });
     mkdirSync(dirname(evidencePath), { recursive: true });
     say(`[${slug}] phase ${String(phase)} attempt ${String(ordinal)}: proposer started`);
-    const proposerSession = randomUUID();
+    // ONE CLAUDE SESSION PER PASS. `claude --session-id <id>` refuses an id it
+    // has seen ("Session ID … is already in use"), so an attempt-wide id made
+    // every second pass of a claude attempt fail at once — and three such
+    // failures ended the phase with no evidence (2026-11-10, mairp.ai phase 3).
+    // Every id of the attempt is held, for the critic's session-diversity test.
+    const attemptSessions: string[] = [];
     const held = sessionsOfThePhase.get(phase) ?? [];
-    held.push(proposerSession);
     sessionsOfThePhase.set(phase, held);
+    const newPassSession = (): string => {
+      const id = randomUUID();
+      attemptSessions.push(id);
+      held.push(id);
+      return id;
+    };
     // The task list is the engine's: only an approval ticks it, whatever a pass did to it.
     const tasksPathBeforeTheAttempt = readFileSync(tasksPath, "utf8");
     // The feature's documents as the attempt starts, when git ignores them:
@@ -1954,6 +1998,48 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             onHandoff: () => {},
           })
         : undefined;
+    // THE STOP OF THE SEQUENTIAL LOOP (F102-FR-003/-004): the request the
+    // `stop` command writes was read by the parallel group only, so a
+    // classic or micro run ignored `specstride stop` to the end of the run.
+    // Read at the top of the attempt and before/after every pass (the
+    // `stopRequested` hook of the pass loop); REMOVED FIRST, so a rerun goes on.
+    const sequentialStopPath = resolveLogicalName(
+      "inbox:stop",
+      {},
+      rootPathsOf({
+        home: homedir(),
+        workspaceRealPath: workdir,
+        workspaceId,
+        controlRoot,
+        workerRoot: "",
+      }),
+    );
+    const takeTheStopRequest = (): boolean => {
+      if (!existsSync(sequentialStopPath)) return false;
+      rmSync(sequentialStopPath, { force: true });
+      return true;
+    };
+    const stopTheRun = (foundAt: "attempt-top" | "pass-loop") => {
+      const exit = engineExitOf("stop_flag") ?? 6;
+      say(`[${slug}] stop requested (${foundAt}): the run ends exit ${String(exit)} stop_flag`);
+      return {
+        endsTheRun: true as const,
+        because: "owner-lost" as const,
+        exitCode: exit,
+        stopReason: "stop_flag",
+      };
+    };
+    // THE STOP POLLS UNCONDITIONALLY (F102-FR-003): the request is honoured
+    // at the attempt top whatever the wiring of the attempt is. A dsh
+    // implementer defines the parallel wiring even where no group ever runs,
+    // and the group honours a request only while a group run is LIVE; with
+    // the guard on, a plain pass loop never polled and `specstride stop`
+    // stood unread in the inbox to the end of the run (feature 152,
+    // 2026-11-09: a `stop --now` sat in the inbox through pass boundaries).
+    // The poll cannot steal a request from a live group: while the group
+    // runs the main line waits, so this line executes only at boundaries
+    // where no group is in flight.
+    if (takeTheStopRequest()) return stopTheRun("attempt-top");
     if (parallelWiring !== undefined) {
       await parallelWiring.startIfTheBoundaryIsClean();
       /* ---- THE STOP TAKES EFFECT (F143-FR-026): a request that stood in
@@ -2142,7 +2228,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 profile: "default",
                 authTier: 2,
                 model,
-                sessionId: proposerSession,
+                sessionId: newPassSession(),
                 sessionMode: "fresh",
                 allowedTools: PROPOSER_TOOLS,
                 streamOn: true,
@@ -2152,6 +2238,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               proposerLimitMsOf(ceiling.seconds, killGraceMs),
               say,
               onPassStart,
+              runId,
             )
           : await passOnDsh(
               implementer,
@@ -2159,6 +2246,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               workdir,
               onPassStart,
               proposerLimitMsOf(ceiling.seconds, killGraceMs),
+              runId,
             );
       clearInterval(watchdog);
       if (escalation !== undefined) clearTimeout(escalation);
@@ -2166,6 +2254,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       registry.remove(passInFlight);
       // The pass has ended; its guard has nothing left to watch.
       passGuard?.kill("SIGKILL");
+      // A failed pass names WHY on its own line: the API error the harness
+      // reported (a spent quota among them) or the first line of stderr.
+      // Without it a permanent harness failure is logged as an anonymous
+      // `agent_error` and the run retries it without a visible cause.
+      if (reply.exit !== 0) {
+        const detail =
+          reply.apiError ??
+          (reply.stderr.trim() !== ""
+            ? (reply.stderr.trim().split("\n")[0] ?? "")
+            : (reply.reply.trim() !== "" ? reply.reply.trim().split("\n")[0] : "") || "");
+        say(`[${slug}] the pass failed: ${detail === "" ? `exit ${String(reply.exit)}` : detail}`);
+      }
       // Whatever the pass deleted of the engine's own state under .specstride/
       // is put back before the engine writes there again (the cost line below
       // appends to .specstride/cost.log); the next pass is told.
@@ -2381,8 +2481,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             },
             limits: limitsAreOff()
               ? {
+                  // F119 — limits off removes the TIME ceilings and the
+                  // cap breaker, not the consecutive-error breaker: a
+                  // harness that fails on every pass (a spent quota, a
+                  // missing executable) must fail the phase instead of
+                  // retrying forever with no ceiling and no detail.
                   ...DEFAULT_LIMITS,
-                  maxErrors: Number.MAX_SAFE_INTEGER,
+                  maxErrors: MAX_ERRORS_DEFAULT,
                   maxNoProgress: 0,
                   maxCapKills: 0,
                 }
@@ -2392,6 +2497,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               // F118-FR-011 — the cap breaker: after too many kills of the
               // ceiling in a row the loop ends with the cap result.
               killCheck: () => capHalting,
+              // The poll is unconditional (see the attempt top above): a
+              // wiring without a live group must not silence the stop.
+              stopRequested: () => takeTheStopRequest(),
               // F115-FR-027 — the loop layer at `afterPass`: a pass the layer
               // gave back raises no pass count (the core loop returns the
               // pass number after the evidence check).
@@ -2562,6 +2670,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     if (theLoopResult.exit_code !== 0) {
       say(`[${slug}] pass loop ended: exit ${String(theLoopResult.exit_code)}`);
     }
+    // A stop ends the run here: nothing is scored, no critic is called.
+    if (theLoopResult.exit_code === 6) return stopTheRun("pass-loop");
 
     // The closing check of the layer (F115-FR-028): on phase evidence, the
     // inner set runs once more on the final tree, unless the last check
@@ -2755,7 +2865,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 criticModel,
                 // The same model on both sides raises the warning of the diversity test.
                 modelsThatProducedPasses: [model],
-                sessionIdsOfThePasses: [proposerSession],
+                sessionIdsOfThePasses: [...attemptSessions],
                 sessionIdIsTakenFromTheCaller: critic.dshModel === null,
                 testedHarnessAdapter: true,
                 verdictId,

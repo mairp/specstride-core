@@ -147,6 +147,9 @@ function parseArgv(argv: readonly string[]): ParsedArgv {
       feature = value;
     } else if (arg.startsWith("--feature=")) {
       feature = arg.slice("--feature=".length);
+    } else if (arg === "--verbose") {
+      // The front door's global flag (stack traces on the uncaught path); the
+      // router hands it through in the extras, so it must not be a usage error.
     } else if (arg === "--workspace" || arg.startsWith("--workspace=")) {
       // The working tree is fixed by the place; the flag is accepted and read
       // where a caller hands no place (the control root names its workspace).

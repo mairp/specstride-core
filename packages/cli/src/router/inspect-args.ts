@@ -185,7 +185,7 @@ export function featureOfTheLastRun(stateDir: string): string | undefined {
       }
     }
   }
-  if (newest === undefined) return undefined;
+  if (newest === undefined) return featureOfTheNewestLaunch(stateDir, dirs);
   try {
     const text = readFileSync(
       join(features, newest.slug, "runs", runName(newest.slug, features), "snapshot"),
@@ -278,4 +278,44 @@ function specOfTheLastRun(stateDir: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The TS engine writes no as-is `snapshot`: its runs are named by the launch
+ * records under `<control>/launches/`. The feature of the newest one
+ * (`feature`, or `request.pipeline` for a pipeline launch) that has state;
+ * failing that, the ONLY feature with state. Without this, every inspection
+ * verb called without `--feature` on a TS-engine workspace refused with
+ * `no feature 'default'` although the workspace holds exactly one feature.
+ */
+function featureOfTheNewestLaunch(stateDir: string, known: readonly string[]): string | undefined {
+  const launches = join(stateDir, "launches");
+  let best: { readonly slug: string; readonly at: number } | undefined;
+  let names: string[] = [];
+  try {
+    names = readdirSync(launches);
+  } catch {
+    names = [];
+  }
+  for (const name of names) {
+    try {
+      const path = join(launches, name, "launch.json");
+      const record = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+      const request = (record["request"] ?? {}) as Record<string, unknown>;
+      const slug =
+        typeof record["feature"] === "string"
+          ? record["feature"]
+          : typeof request["pipeline"] === "string"
+            ? request["pipeline"]
+            : undefined;
+      if (slug === undefined || !known.includes(slug)) continue;
+      const parsed = Date.parse(String(record["createdAt"] ?? ""));
+      const at = Number.isNaN(parsed) ? statSync(path).mtimeMs : parsed;
+      if (best === undefined || at > best.at) best = { slug, at };
+    } catch {
+      continue;
+    }
+  }
+  if (best !== undefined) return best.slug;
+  return known.length === 1 ? known[0] : undefined;
 }

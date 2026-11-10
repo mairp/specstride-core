@@ -20,6 +20,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
+import { controlRootOfWorkspace } from "../../src/engine/workspace-control-root.ts";
 
 const STUB = (verdict: string): string => `#!/usr/bin/env node
 const fs = require("node:fs"), path = require("node:path");
@@ -175,6 +176,65 @@ test("a run with a blocked commit exits 1 and says so on the digest and the cons
   } finally {
     process.stdout.write = originalWrite;
     delete process.env.STUB_NEW_FILE;
+    restore();
+  }
+});
+
+// REGRESSION — `specstride stop` on a SEQUENTIAL run. The inbox request was
+// read by the parallel group only, so a classic run never stopped: it went
+// on to the critic and to the next phase as if nothing had been asked.
+test("a stop request ends a sequential run exit 6 before any pass, and is consumed", async () => {
+  const { dir, restore } = fixture("APPROVED");
+  try {
+    const inbox = join(controlRootOfWorkspace(dir), "inbox");
+    mkdirSync(inbox, { recursive: true });
+    const request = join(inbox, "stop.request");
+    writeFileSync(
+      request,
+      JSON.stringify({ schema: "specstride.inbox/1", type: "stop", at: new Date().toISOString() }),
+    );
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 6);
+    assert.equal(existsSync(request), false, "the request is removed first, so a rerun goes on");
+    assert.equal(existsSync(join(dir, "made.txt")), false, "no pass ran");
+    assert.equal(commits(dir), 1);
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+    assert.equal(commits(dir), 2);
+  } finally {
+    restore();
+  }
+});
+
+// REGRESSION — one claude session per PASS. The stub refuses a session id it
+// has seen, as `claude --session-id` does ("Session ID … is already in use"),
+// and writes the phase evidence only on its SECOND proposer pass. With one id
+// per attempt, pass 2 failed at once, the error breaker ended the loop and
+// the phase halted with no evidence (mairp.ai, 2026-11-10).
+test("every proposer pass gets its own claude session id", async () => {
+  const { dir, restore } = fixture("APPROVED");
+  try {
+    const stub = join(dir, "..", "bin", "claude");
+    const original = readFileSync(stub, "utf8");
+    writeFileSync(
+      stub,
+      original.replace(
+        'const critic = argv.includes("--max-turns");',
+        `const critic = argv.includes("--max-turns");
+const seenFile = path.join(${JSON.stringify(join(dir, ".."))}, "sessions-seen.txt");
+const seen = fs.existsSync(seenFile) ? fs.readFileSync(seenFile, "utf8").split("\\n") : [];
+if (seen.includes(session)) { console.error("Error: Session ID " + session + " is already in use."); process.exit(1); }
+fs.appendFileSync(seenFile, session + "\\n");
+const passFile = path.join(${JSON.stringify(join(dir, ".."))}, "proposer-passes.txt");
+if (!critic && !prompt.includes("Diagnostician")) {
+  const n = (fs.existsSync(passFile) ? Number(fs.readFileSync(passFile, "utf8")) : 0) + 1;
+  fs.writeFileSync(passFile, String(n));
+  if (n === 1) { console.log(JSON.stringify({ type: "result", result: "not done yet" })); process.exit(0); }
+}`,
+      ),
+    );
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+    assert.equal(readFileSync(join(dir, "..", "proposer-passes.txt"), "utf8"), "2");
+    assert.equal(commits(dir), 2);
+  } finally {
     restore();
   }
 });

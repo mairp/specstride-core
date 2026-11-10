@@ -26,7 +26,7 @@ import {
   parseInspectArgs,
   sanitizeFeature,
 } from "../router/inspect-args.ts";
-import { VerbNotMountedError, type RoutedCall } from "../router/route.ts";
+import type { RoutedCall } from "../router/route.ts";
 import {
   deliveryStatusSink,
   observabilitySectionLines,
@@ -365,13 +365,17 @@ export async function statusHandler(call: RoutedCall, deps: StatusDeps = {}): Pr
     const statusAll = await import("./status-all.ts");
     return statusAll.statusAllHandler(call, deps);
   }
-  // The default output of `status` belongs to feature 129 (out of scope).
-  if (call.mode !== "compat") throw new VerbNotMountedError("status");
+  // The default output of `status` is feature 129's read model, mounted at
+  // the composition root (it used to throw here → reason="internal" exit 70).
+  if (call.mode !== "compat") {
+    const composed = await import("../engine/handlers.ts");
+    return composed.statusDefaultHandler(call);
+  }
   const cp = call.controlPlane;
   const slug =
     args.feature !== undefined
       ? sanitizeFeature(args.feature)
-      : ((args.extras[0] !== undefined
+      : ((args.extras[0] !== undefined && !args.extras[0].startsWith("-")
           ? sanitizeFeature(args.extras[0])
           : featureOfTheLastRun(cp.stateDir)) ?? DEFAULT_FEATURE);
   const probe = probeLeaseOf(cp);

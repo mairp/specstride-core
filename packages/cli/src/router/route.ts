@@ -407,7 +407,7 @@ function resolveSlug(
   inspect: typeof import("./inspect-args.ts"),
 ): string {
   if (args.feature !== undefined) return inspect.sanitizeFeature(args.feature);
-  if (verb === "status" && args.extras[0] !== undefined) {
+  if (verb === "status" && args.extras[0] !== undefined && !args.extras[0].startsWith("-")) {
     // `status <feature>`: the positional feature of the call (the guard and
     // the handler must read the same slug).
     return inspect.sanitizeFeature(args.extras[0]);

@@ -15,7 +15,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ControlPlane } from "../router/guards.ts";
-import { VerbNotMountedError, type RoutedCall } from "../router/route.ts";
+import type { RoutedCall } from "../router/route.ts";
 import {
   readTextOf,
   snapshotSettingsOf,
@@ -149,8 +149,8 @@ export async function statusAllLines(cp: ControlPlane): Promise<readonly string[
 
 /** The handler of `status --all` (F119-FR-027): compatibility output, exit 0. */
 export async function statusAllHandler(call: RoutedCall, deps: StatusDeps = {}): Promise<number> {
-  // The default output of `status` belongs to feature 129 (out of scope).
-  if (call.mode !== "compat") throw new VerbNotMountedError("status");
+  // `--all` has no 129 rendering; it prints the compatibility table in every
+  // mode rather than throwing (which surfaced as reason="internal" exit 70).
   void deps;
   const cp = call.controlPlane;
   call.io.out(`${statusAllHeadline(cp.workdir)}\n`);
