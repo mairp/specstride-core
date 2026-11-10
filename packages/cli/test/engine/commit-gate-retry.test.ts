@@ -61,7 +61,7 @@ function fixture(name: string): Fixture {
   // A declared test command, so the verification gate runs and says so (the
   // gate's own line is CT-152-3's proof that attempt 2 ran it again).
   writeFileSync(join(work, "package.json"), JSON.stringify({ scripts: { test: "node -e \"\"" } }));
-  copyFileSync(join(source, "stub-claude.ts"), join(bin, "claude"));
+  copyFileSync(join(source, "stub-claude"), join(bin, "claude"));
   chmodSync(join(bin, "claude"), 0o755);
   for (const argv of [
     ["init", "-q"],

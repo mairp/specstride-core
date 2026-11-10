@@ -59,7 +59,7 @@ function fixture(name: string): Fixture {
   mkdirSync(join(work, "specs", "001-one"), { recursive: true });
   copyFileSync(join(source, "tasks.md"), join(work, "specs", "001-one", "tasks.md"));
   writeFileSync(join(work, "package.json"), JSON.stringify({ scripts: { test: "node -e \"\"" } }));
-  copyFileSync(join(source, "stub-claude.ts"), join(bin, "claude"));
+  copyFileSync(join(source, "stub-claude"), join(bin, "claude"));
   chmodSync(join(bin, "claude"), 0o755);
   for (const argv of [
     ["init", "-q"],
@@ -246,7 +246,7 @@ test("T165 fix and resume after the halt", async () => {
     // The consumer fixes the file: the stub now REMOVES the secret from the
     // second attempt on (the attempt-2 behaviour of `secret-removed-on-retry`).
     copyFileSync(
-      join(FIXTURES, "secret-removed-on-retry", "stub-claude.ts"),
+      join(FIXTURES, "secret-removed-on-retry", "stub-claude"),
       join(fx.home, "bin", "claude"),
     );
     chmodSync(join(fx.home, "bin", "claude"), 0o755);
