@@ -437,7 +437,14 @@ export function contractDeriveHandler(argv: readonly string[], io: RouteIo): num
   // The draft the exchange loads is the file `--output` names (F107-FR-009):
   // `--answer <draft> …` names the same file positionally, so it takes the
   // place of `--output` for that call.
-  const draftFile = answer === undefined ? output : answer.draft;
+  // Either names the file by path or by its logical name
+  // (`pipeline:<id>:contract`, F107-FR-039), as `contract validate|promote|
+  // render` accept it; a logical name resolves under the state of `--repo`.
+  const named = answer === undefined ? output : answer.draft;
+  const draftFile =
+    named !== undefined && CONTRACT_NAME_PATTERN.test(named)
+      ? physicalPathOfLogicalName(root, named)
+      : named;
   const picks: { readonly item: string; readonly choice: string }[] = [];
   if (answer !== undefined) {
     for (const one of answer.choices) {
