@@ -497,13 +497,13 @@ test("T002: the package ships the catalogue, byte-identical with the contract so
   );
 });
 
-test("T002: the catalogue parses: five columns, 123 rows, every type once", () => {
-  assert.deepEqual(readCatalogue(CATALOGUE_TEXT).length, 123);
+test("T002: the catalogue parses: five columns, 124 rows, every type once", () => {
+  assert.deepEqual(readCatalogue(CATALOGUE_TEXT).length, 124);
   assert.equal(new Set(ROWS.map((row) => row.type)).size, ROWS.length, "no type twice");
   for (const row of ROWS) {
     // The name is lower-case words, in one or two parts (`blocked`,
     // `run.started`); the full form of a name is CT-111-101 (T003).
-    assert.match(row.type, /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9_]*)*$/, `the name of ${row.type}`);
+    assert.match(row.type, /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/, `the name of ${row.type}`);
   }
 });
 

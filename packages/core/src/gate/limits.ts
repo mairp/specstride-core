@@ -45,9 +45,15 @@ import type {
   Verdict,
 } from "@specstride/contracts/ep/critic-strategy";
 import { CORE_NAMESPACE, LEDGER_LOGICAL_NAME } from "../ep18/history.ts";
+import { blockedReasonRow } from "@specstride/contracts/state/blocked-reasons";
 import { criticMalformedEvent, rejectEvent } from "./events.ts";
 import { criticNoUsableVerdict, phaseRejected } from "./lines.ts";
 import { haltOf, type Halt } from "./halts.ts";
+import {
+  decideAfterABlock,
+  COMMIT_GATE_HALT_TABLE_ID,
+  COMMIT_GATE_HALT_TABLE_VERSION,
+} from "./commit-gate-halt-table.ts";
 import {
   checkForOscillation,
   OSCILLATION_THRESHOLD_DEFAULT,
@@ -107,7 +113,12 @@ export const OPERATION_OF_THE_ATTEMPT_PLANNER = "next" as const;
  * three emit the as-is rejection event and write the as-is line of the
  * rejection (B-0105).
  */
-export const KINDS_OF_A_REJECTION = ["rejected", "malformed", "gate-failed"] as const;
+export const KINDS_OF_A_REJECTION = [
+  "rejected",
+  "malformed",
+  "gate-failed",
+  "commit-blocked",
+] as const;
 export type KindOfARejection = (typeof KINDS_OF_A_REJECTION)[number];
 
 /**
@@ -271,6 +282,19 @@ export type AfterARejectionOutcome =
       readonly printTheHaltBanner: boolean;
       readonly rejection: RejectionRecord;
       readonly oscillation: OscillationOutcome | undefined;
+      /**
+       * F152-FR-006 — set only for the halt of the commit-gate table
+       * (CGH-1): the blocked reason of §E.2, what the run needs, and the
+       * rule id of the table row that decided it. Every other halt leaves
+       * it absent, which is how a reader tells the two halts apart.
+       */
+      readonly blocked?:
+        | {
+            readonly reason: string;
+            readonly needs: string;
+            readonly ruleId: string;
+          }
+        | undefined;
     };
 
 /** The as-is event and line every rejection writes (F101-FR-014). */
@@ -319,6 +343,24 @@ export type AfterARejectionInputs = {
   /** The two facts of the recovery cycle the seam is handed (annex E §E.1). */
   readonly diagnosisWasMadeForTheNewestSignature?: boolean | undefined;
   readonly anAcceleratedPhaseAttemptIsDue?: boolean | undefined;
+  /**
+   * F152-FR-006 — the signature of the block record just written for this
+   * attempt, where the kind is `commit-blocked`. Absent for any other kind.
+   */
+  readonly blockSignature?: string | undefined;
+  /**
+   * F152-FR-006 — the signature of the block record of ordinal k−1 of the
+   * phase, read by the engine from the control plane, or `null` where there
+   * is none (the attempt just before was rejected by the critic, and only
+   * that attempt counts: data-model.md E6).
+   */
+  readonly previousBlockSignature?: string | null | undefined;
+  /**
+   * F152-FR-006 — the rule ids and the files of the block, for the `needs`
+   * text of the `commit-gate` halt.
+   */
+  readonly blockRuleIds?: readonly string[] | undefined;
+  readonly blockFiles?: readonly string[] | undefined;
 };
 
 /** What the handler calls. */
@@ -485,6 +527,58 @@ export async function afterARejection(
       rejection,
       oscillation,
     });
+  }
+
+  /* --- the halt table of the commit gate (F152-FR-006; CQ-152-01 A) --- */
+  // A block whose signature is the same as the block just before it will not
+  // change by retrying, so the engine halts blocked on a human before the
+  // reject-limit step is even consulted: a repeated block on the last allowed
+  // attempt ends `commit-gate`, never `max_rejects`. Signatures that differ
+  // go on, and the reject limit alone bounds the retries (F152-FR-005).
+  // Only the attempt JUST BEFORE counts: where it was rejected by the critic
+  // it has no block record, and the table sees no repeated signature however
+  // many earlier blocks the phase holds (data-model.md E6).
+  if (inputs.kind === "commit-blocked") {
+    const sameSignature =
+      inputs.previousBlockSignature != null &&
+      inputs.previousBlockSignature === inputs.blockSignature;
+    const decisionOfTheTable = decideAfterABlock({ sameSignature });
+    if (decisionOfTheTable.decision === "halt-commit-gate") {
+      const row = blockedReasonRow("commit-gate");
+      if (row === undefined) {
+        throw new Error("`commit-gate` is no blocked reason of annex E §E.2 (F152-FR-006)");
+      }
+      const needs =
+        `phase ${String(inputs.phase)}: rules ${(inputs.blockRuleIds ?? []).join(", ")}; ` +
+        `files ${(inputs.blockFiles ?? []).join(", ")}`;
+      const halt = haltOf("reject-limit");
+      return Object.freeze({
+        go: "halt" as const,
+        counts,
+        stepsRun: Object.freeze([...stepsRun]),
+        diagnosis,
+        halt,
+        exitCode: row.engineExit,
+        stopReason: row.stopReason,
+        stopFields: Object.freeze({
+          phase: inputs.phase,
+          attempts: counts.phaseAttemptOrdinal,
+          blockedReason: "commit-gate",
+          tableId: COMMIT_GATE_HALT_TABLE_ID,
+          tableVersion: COMMIT_GATE_HALT_TABLE_VERSION,
+          ruleId: decisionOfTheTable.ruleId,
+        }),
+        archiveBeforeTheHalt: false,
+        printTheHaltBanner: false,
+        rejection,
+        oscillation,
+        blocked: Object.freeze({
+          reason: "commit-gate",
+          needs,
+          ruleId: decisionOfTheTable.ruleId,
+        }),
+      });
+    }
   }
 
   /* --- place 4: the reject limit (F101-FR-014) ----------------------- */

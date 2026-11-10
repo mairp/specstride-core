@@ -101,7 +101,7 @@ describe("CT-110-118 — `--set` reaches every key, from the command line only (
       reached += 1;
     }
     assert.equal(reached, CATALOGUE_SIZE);
-    assert.equal(reached, 259);
+    assert.equal(reached, 260);
   });
 
   it("`--set` reaches a key of the class widening", () => {

@@ -315,9 +315,31 @@ export class Ingress {
       : Object.freeze({ text: result.text, dropped: false });
   }
 
-  /** The scan before a commit (F111-FR-031), with the one redactor. */
-  scanCommit(files: readonly string[], root: string): CommitScanResult {
-    return scanCommitFiles(files, { root, redactor: this.#redactor });
+  /**
+   * Register a resolved secret with the ONE redactor, so that the scan before
+   * a commit and every redaction see it as a registered secret (F111-FR-030).
+   * The same redactor the commit gate scans with holds the value, and no
+   * second registry exists.
+   */
+  register(secret: string): void {
+    return this.#redactor.register(secret);
+  }
+
+  /**
+   * The scan before a commit (F111-FR-031), with the one redactor. Where an
+   * overlay is given, the text it holds for a path is scanned in place of the
+   * file's (the plumbing of F152-FR-021), and the tree is never written.
+   */
+  scanCommit(
+    files: readonly string[],
+    root: string,
+    overlay?: Readonly<Record<string, string>>,
+  ): CommitScanResult {
+    return scanCommitFiles(files, {
+      root,
+      redactor: this.#redactor,
+      ...(overlay === undefined ? {} : { overlay }),
+    });
   }
 
   /**

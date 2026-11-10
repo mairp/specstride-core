@@ -1336,6 +1336,16 @@
       ],
       "note": "The launch contract's `schema` stands for the as-is `schema_version: \"1.0\"`; the pair is in the key-name map of the launch contract (feature 100, annex X §X.8, `launchContractKeyMap` of `data/normalization.json`), and the message of B-2521 is compared through it on FX-32 (feature 107, F107-FR-005, F107-FR-012). Added 2026-09-30.",
       "registerText": "**Mapped**: the key-name map of the launch contract (annex X §X.8) gains the pair `schema_version` and `schema` with their two values, and the message of B-2521 is compared through it"
+    },
+    {
+      "row": "DV-121",
+      "handling": [
+        "not observable"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "The switch `commit.backpressure` (row 134 of annex X §X.7) defaults on and the `parity` profile holds it off, so the oracle run makes the approval commit with no gate of its own; the block path is observed by the own test of feature 152 (CT-152-21). Added 2026-11-09.",
+      "registerText": "**Not observable** as a difference: the switch `commit.backpressure` is off under `parity` (row 134), so the oracle never runs the block path; the switch is pinned by the own test of feature 152 (CT-152-21)"
     }
   ]
 }

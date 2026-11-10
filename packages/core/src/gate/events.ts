@@ -47,6 +47,7 @@
  */
 import type { EventEnvelope } from "@specstride/contracts/envelope/event";
 import { MAJOR, SCHEMA } from "@specstride/contracts/envelope/event";
+import { theRedactorWouldReplace } from "@specstride/kernel/redactor/commit-gate-rules";
 import { throughTheIngress, type Ingress, type OutsideTextKind } from "./lines.ts";
 
 /** F101-FR-038 — an event holds a nonce, a prompt or a reply in full. */
@@ -403,6 +404,28 @@ export function projectToAsIs(
 /** The keys an event's `data` may never hold (F101-FR-038, threat T-05). */
 export const FORBIDDEN_KEYS = ["nonce", "prompt", "reply", "promptText", "replyText"] as const;
 
+/* ------------------------------------------------------------------ *
+ * F152-FR-020 — the event of a blocked approval commit.
+ * ------------------------------------------------------------------ */
+
+/** The catalogue type of a block of the commit gate. */
+export const COMMIT_GATE_BLOCKED_EVENT_TYPE = "commit_gate.blocked" as const;
+
+/**
+ * The data of `commit_gate.blocked`: the phase, the attempt ordinal, the ids of
+ * the rules of the block's signature, the number of files and the hash of the
+ * signature. NO file name and NO match — the same line F111-FR-031 draws for
+ * `redaction.commit_blocked`; a rule id is a name of versioned data, never the
+ * text a hit carried.
+ */
+export type CommitGateBlockedEventData = {
+  readonly phase: number;
+  readonly attempt: number;
+  readonly rules: readonly string[];
+  readonly fileCount: number;
+  readonly signature: string;
+};
+
 /**
  * True when the `data` of an event holds a nonce, a prompt or a reply. The check
  * is over the KEYS, and over a value that is a nonce in the form F101-FR-006
@@ -415,6 +438,18 @@ export function holdsForbiddenContent(data: Readonly<Record<string, unknown>>): 
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === "string" && /^[0-9a-f]{16}$/.test(value.trim())) {
       return `${key} (a value in the form of a nonce)`;
+    }
+    // A LIST in the data is content-bearing (F152-FR-020): a list of rule ids
+    // is ids of versioned data, so a member the redactor would replace is a
+    // secret smuggled under an id, and the event is refused rather than
+    // redacted and hoped over (F101-FR-038). Scalar values keep the check they
+    // have always had.
+    if (Array.isArray(value)) {
+      for (const member of value) {
+        if (typeof member === "string" && theRedactorWouldReplace(member)) {
+          return `${key} (a member the redactor would replace)`;
+        }
+      }
     }
   }
   return undefined;

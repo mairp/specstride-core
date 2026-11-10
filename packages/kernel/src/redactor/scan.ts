@@ -80,6 +80,12 @@ export type CommitScanOptions = {
   readonly redactor: SpecstrideRedactor;
   /** The value patterns to scan for. Absent: the redactor's own. */
   readonly values?: readonly PatternEntry[];
+  /**
+   * The text to scan IN PLACE OF a file: where a path is a key of the overlay,
+   * its text is scanned instead of the file's, and the tree is neither read
+   * nor written for that path.
+   */
+  readonly overlay?: Readonly<Record<string, string>>;
 };
 
 function hitsOfLine(
@@ -128,13 +134,20 @@ export function scanCommitFiles(
 
   for (const file of files) {
     const path = isAbsolute(file) ? file : join(options.root, file);
+    // The overlay substitutes the text for the exact path key, and nothing is
+    // read from the tree for that path.
+    const overlaid = options.overlay !== undefined ? options.overlay[file] : undefined;
     let text: string;
-    try {
-      text = readFileSync(path, "utf8");
-    } catch {
-      hits.push(Object.freeze({ file, line: 0, matched: "unreadable" }));
-      perFile.set(file, (perFile.get(file) ?? 0) + 1);
-      continue;
+    if (overlaid !== undefined) {
+      text = overlaid;
+    } else {
+      try {
+        text = readFileSync(path, "utf8");
+      } catch {
+        hits.push(Object.freeze({ file, line: 0, matched: "unreadable" }));
+        perFile.set(file, (perFile.get(file) ?? 0) + 1);
+        continue;
+      }
     }
     const lines = text.split("\n");
     for (const [index, line] of lines.entries()) {

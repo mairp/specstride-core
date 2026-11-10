@@ -25,6 +25,7 @@ export type { RedactResult, Redactor };
 /* The rules, the pattern set, the registration and the scan (T040, T042, T044). */
 export * from "./patterns.ts";
 export * from "./rules.ts";
+export * from "./commit-gate-rules.ts";
 export * from "./redactor.ts";
 export * from "./register.ts";
 export * from "./scan.ts";

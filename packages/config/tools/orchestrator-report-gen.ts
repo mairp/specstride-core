@@ -7,7 +7,7 @@
  * Nothing in part A of the report is written by hand. It is derived from:
  *
  *   - `specs/110-config-and-terms/contracts/config-keys.tsv` — the catalogue of
- *     259 keys with the owner of each, the feature that proposed it and the old
+ *     260 keys with the owner of each, the feature that proposed it and the old
  *     spelling of every correction (§K.9);
  *   - `packages/contracts/data/parity-profile.json` — the rows of annex X §X.7
  *     that feature 100 ships, so that the rows §X.7 still needs are computed and
@@ -69,7 +69,7 @@ export const REQUESTS: readonly Request[] = Object.freeze([
     id: "R-110-02",
     ask:
       "Rule on the count difference: the tables of §K.3 to §K.6b hold 263 keys and the catalogue " +
-      "carries 259, because T004's acceptance fixes the count at 259 and the four keys of feature " +
+      "carries 260, because T004's acceptance fixes the count at 260 and the four keys of feature " +
       "107 that §K.6 also lists belong to feature 107's own contract. They are named in " +
       "`EXCLUDED_KEYS` of the generator with that reason, and the exclusion is checked in both " +
       "directions. The register rows W-ORC-01 to W-ORC-03 carry the difference.",

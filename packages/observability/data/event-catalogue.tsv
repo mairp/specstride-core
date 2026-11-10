@@ -101,6 +101,7 @@ learning.knob_evaluated	instant		knob,phase,label,action,reset,costR,costMde,wal
 telemetry.delivery	instant		sink,batchId,eventCount,status,httpStatus,reasonCode	
 event.dropped	instant		count,reason	
 redaction.commit_blocked	instant		files,counts	files:target
+commit_gate.blocked	instant		phase,attempt,rules,fileCount,signature	
 redaction.dropped	instant		ingressClass,mark,count	
 parallel.plan	instant		groupId,hash	
 parallel.admission	instant		groupId,taskId,check,result	

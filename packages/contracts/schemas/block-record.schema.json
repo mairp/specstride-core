@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "specstride.commit-gate-block/1",
+  "x-schema-id": "specstride.commit-gate-block/1",
   "title": "Block record of the commit gate (F152-FR-013; data-model.md E1)",
   "type": "object",
   "additionalProperties": false,

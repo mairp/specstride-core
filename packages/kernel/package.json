@@ -19,6 +19,7 @@
     "./redactor/redactor": "./src/redactor/redactor.ts",
     "./redactor/register": "./src/redactor/register.ts",
     "./redactor/scan": "./src/redactor/scan.ts",
+    "./redactor/commit-gate-rules": "./src/redactor/commit-gate-rules.ts",
     "./data/*": "./data/*"
   },
   "scripts": {

@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "specstride.commit-gate-rules/1",
+  "x-schema-id": "specstride.commit-gate-rules/1",
   "title": "Rule data of the commit gate (F152-FR-016 to F152-FR-019)",
   "type": "object",
   "additionalProperties": false,

@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "specstride.corrective-block-input/1",
+  "x-schema-id": "specstride.corrective-block-input/1",
   "title": "Input of feedbackOfTheCommitGate (F152-FR-009 to F152-FR-012)",
   "$comment": "The ONLY values the template may interpolate. There is deliberately no field for matched text, file content, tool output or model text. The rendered text is fixed by data-model.md E3.",
   "type": "object",

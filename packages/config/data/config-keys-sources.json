@@ -709,6 +709,13 @@
       "note": ""
     },
     {
+      "key": "commit.backpressure",
+      "proposed_by": "152",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 134 of annex X §X.7; the commit gate of F152-FR-021"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",

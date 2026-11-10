@@ -78,7 +78,7 @@ export const EXCLUDED_KEYS: readonly string[] = [
 ];
 
 /** The number of keys `contracts/config-keys.tsv` holds, per T004. */
-export const CATALOGUE_KEY_COUNT = 259;
+export const CATALOGUE_KEY_COUNT = 260;
 
 /** A row of `contracts/config-keys.tsv`. */
 export interface CatalogueRow {
