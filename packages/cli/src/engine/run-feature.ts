@@ -1988,6 +1988,38 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             onHandoff: () => {},
           })
         : undefined;
+    // THE STOP OF THE SEQUENTIAL LOOP (F102-FR-003/-004): the request the
+    // `stop` command writes was read by the parallel group only, so a
+    // classic or micro run ignored `specstride stop` to the end of the run.
+    // Read at the top of the attempt and before/after every pass (the
+    // `stopRequested` hook of the pass loop); REMOVED FIRST, so a rerun goes on.
+    const sequentialStopPath = resolveLogicalName(
+      "inbox:stop",
+      {},
+      rootPathsOf({
+        home: homedir(),
+        workspaceRealPath: workdir,
+        workspaceId,
+        controlRoot,
+        workerRoot: "",
+      }),
+    );
+    const takeTheStopRequest = (): boolean => {
+      if (!existsSync(sequentialStopPath)) return false;
+      rmSync(sequentialStopPath, { force: true });
+      return true;
+    };
+    const stopTheRun = (foundAt: "attempt-top" | "pass-loop") => {
+      const exit = engineExitOf("stop_flag") ?? 6;
+      say(`[${slug}] stop requested (${foundAt}): the run ends exit ${String(exit)} stop_flag`);
+      return {
+        endsTheRun: true as const,
+        because: "owner-lost" as const,
+        exitCode: exit,
+        stopReason: "stop_flag",
+      };
+    };
+    if (parallelWiring === undefined && takeTheStopRequest()) return stopTheRun("attempt-top");
     if (parallelWiring !== undefined) {
       await parallelWiring.startIfTheBoundaryIsClean();
       /* ---- THE STOP TAKES EFFECT (F143-FR-026): a request that stood in
@@ -2445,6 +2477,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               // F118-FR-011 — the cap breaker: after too many kills of the
               // ceiling in a row the loop ends with the cap result.
               killCheck: () => capHalting,
+              stopRequested: () => parallelWiring === undefined && takeTheStopRequest(),
               // F115-FR-027 — the loop layer at `afterPass`: a pass the layer
               // gave back raises no pass count (the core loop returns the
               // pass number after the evidence check).
@@ -2615,6 +2648,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     if (theLoopResult.exit_code !== 0) {
       say(`[${slug}] pass loop ended: exit ${String(theLoopResult.exit_code)}`);
     }
+    // A stop ends the run here: nothing is scored, no critic is called.
+    if (theLoopResult.exit_code === 6) return stopTheRun("pass-loop");
 
     // The closing check of the layer (F115-FR-028): on phase evidence, the
     // inner set runs once more on the final tree, unless the last check
