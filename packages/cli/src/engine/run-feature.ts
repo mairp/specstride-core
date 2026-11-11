@@ -102,6 +102,7 @@ import {
 import {
   DEFAULT_LIMITS,
   MAX_ERRORS_DEFAULT,
+  MAX_NO_PROGRESS_DEFAULT,
   ZERO_COUNTERS,
   type Counters,
 } from "../../../core/src/pass-loop/accounting.ts";
@@ -2575,9 +2576,21 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   // harness that fails on every pass (a spent quota, a
                   // missing executable) must fail the phase instead of
                   // retrying forever with no ceiling and no detail.
+                  //
+                  // The no-progress breaker stays too (152 phase 1,
+                  // 2026-11-11): with the switch off, every pass of phase 1
+                  // was cut by an external backend wall, produced nothing,
+                  // and the loop retried the same doomed pass twelve times
+                  // (twelve × 45 minutes, zero output) because the one
+                  // breaker that counts non-producing passes was disabled.
+                  // It is not a time ceiling and not a cap breaker: it fires
+                  // only after MAX_NO_PROGRESS_DEFAULT passes in a row that
+                  // wrote no evidence and changed no file, so a productive
+                  // campaign never trips it and a doomed one halts with the
+                  // result 8 detail instead of burning without end.
                   ...DEFAULT_LIMITS,
                   maxErrors: MAX_ERRORS_DEFAULT,
-                  maxNoProgress: 0,
+                  maxNoProgress: MAX_NO_PROGRESS_DEFAULT,
                   maxCapKills: 0,
                 }
               : DEFAULT_LIMITS,
