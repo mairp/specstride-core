@@ -4,9 +4,15 @@
  * `SPECSTRIDE_LIMITS=off` in the environment of the launch: no stage time
  * limit, no pass time limit or pass ceiling (so no cap breaker), no critic or
  * diagnostician time limit, no time limit on the verification command, no
- * pass count, no no-progress halt, no reject limit and no malformed-verdict
- * limit. A run then ends only when its phases are approved, when it is
- * stopped, or when it fails for a reason that is not a limit.
+ * pass count, no reject limit and no malformed-verdict limit. The
+ * consecutive-error breaker and the no-progress breaker STAY: they bound
+ * passes that produce nothing, not passes that take long, so a campaign
+ * whose every pass is productive never trips either one, and a run whose
+ * every pass is cut by an external wall (a backend session cap) halts with
+ * detail instead of retrying the same doomed pass forever (152 phase 1,
+ * 2026-11-11: twelve passes × 45 minutes, zero output). A run then ends when
+ * its phases are approved, when it is stopped, or when it fails or blocks
+ * for a reason that is not a time limit.
  *
  * The owner's ruling (2026-11-09): campaigns run without any ceiling, cap or
  * limit. Absent or any other value: every limit holds as before.
