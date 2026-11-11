@@ -27,7 +27,11 @@ function aRepository(): string {
   mkdirSync(feature, { recursive: true });
   execFileSync("git", ["init", "-q"], { cwd: repo });
   writeFileSync(join(repo, "README.md"), "# made\n", "utf8");
-  writeFileSync(join(feature, "spec.md"), "# Feature Specification: Made\n\n- **FR-001**: it makes.\n", "utf8");
+  writeFileSync(
+    join(feature, "spec.md"),
+    "# Feature Specification: Made\n\n- **FR-001**: it makes.\n",
+    "utf8",
+  );
   writeFileSync(
     join(feature, "plan.md"),
     [
@@ -85,17 +89,23 @@ test("a fully answered draft with no kept blocker validates and promotes", () =>
     //    `keep-blocker` on purpose: its answer writes a finding that carries
     //    the answer's provenance (F107-FR-010).
     for (let round = 0; round < 32; round += 1) {
-      const served = derive({ repo, feature: ["specs/001-made"], output: draftPath, nextBatch: true });
+      const served = derive({
+        repo,
+        feature: ["specs/001-made"],
+        output: draftPath,
+        nextBatch: true,
+      });
       assert.equal(served.exitCode, 0, `${served.stdout}${served.stderr}`);
       const batch = JSON.parse(served.stdout) as BatchRecord;
       if (batch.items.length === 0) break;
       const picks = batch.items.map((item) => ({
         item: item.id,
-        choice: item.kind === "settle-prerequisite"
-          ? "optional"
-          : item.kind === "resolve-blocker"
-            ? "accepted"
-            : "specstride-phase:1",
+        choice:
+          item.kind === "settle-prerequisite"
+            ? "optional"
+            : item.kind === "resolve-blocker"
+              ? "accepted"
+              : "specstride-phase:1",
       }));
       const answered = derive({
         repo,
@@ -132,8 +142,12 @@ test("a fully answered draft with no kept blocker validates and promotes", () =>
 
     // 6. Strict plain validation of the validated contract passes.
     const strict = validateContract({ file: draftPath, root: repo });
-    assert.equal(strict.exitCode, 0, `strict validation refused: ${JSON.stringify(strict, null, 2)}
-`);
+    assert.equal(
+      strict.exitCode,
+      0,
+      `strict validation refused: ${JSON.stringify(strict, null, 2)}
+`,
+    );
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -146,7 +160,12 @@ test("a kept blocker carries the answer provenance, schema-clean, and strict val
     const base: DeriveArgs = { repo, feature: ["specs/001-made"], output: draftPath };
     assert.equal(derive(base).exitCode, 0);
     for (let round = 0; round < 32; round += 1) {
-      const served = derive({ repo, feature: ["specs/001-made"], output: draftPath, nextBatch: true });
+      const served = derive({
+        repo,
+        feature: ["specs/001-made"],
+        output: draftPath,
+        nextBatch: true,
+      });
       assert.equal(served.exitCode, 0, `${served.stdout}${served.stderr}`);
       const batch = JSON.parse(served.stdout) as BatchRecord;
       if (batch.items.length === 0) break;
@@ -190,9 +209,16 @@ test("a kept blocker carries the answer provenance, schema-clean, and strict val
     // provenance schema error (the old deadlock: `batch_id` required, extra
     // `batch` refused).
     const validated = validateContract({ file: draftPath, root: repo });
-    assert.equal(validated.exitCode, 20, `validation accepted an open blocker: ${JSON.stringify(validated, null, 2)}`);
+    assert.equal(
+      validated.exitCode,
+      20,
+      `validation accepted an open blocker: ${JSON.stringify(validated, null, 2)}`,
+    );
     assert.ok(validated.stderr.includes("is an open blocker"), validated.stderr);
-    assert.ok(!validated.stderr.includes("provenance"), `provenance schema noise: ${validated.stderr}`);
+    assert.ok(
+      !validated.stderr.includes("provenance"),
+      `provenance schema noise: ${validated.stderr}`,
+    );
     assert.ok(!validated.stderr.includes("additional properties"), validated.stderr);
   } finally {
     rmSync(repo, { recursive: true, force: true });
