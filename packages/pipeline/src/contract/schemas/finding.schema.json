@@ -71,13 +71,13 @@
           "type": ["string", "null"],
           "description": "The named harness of a delegated answer; null for the host model"
         },
-        "batch_id": {
+        "batch": {
           "type": "string",
           "minLength": 1,
           "description": "The id of the batch the answer closed"
         }
       },
-      "required": ["who", "route", "batch_id"],
+      "required": ["who", "route", "batch"],
       "additionalProperties": false,
       "patternProperties": {
         "^x-": {}

@@ -582,7 +582,7 @@ test("CT-107-schemas: the finding schema accepts the bootstrap finding and refus
   const judged = {
     ...bootstrap,
     status: "resolved",
-    provenance: { who: "the host", route: "host-model", batch_id: "B-0001" },
+    provenance: { who: "the host", route: "host-model", batch: "B-0001" },
   };
   assert.ok(isFinding(judged), "a finding the answer wrote, with its provenance, is refused");
   assert.ok(
@@ -593,7 +593,7 @@ test("CT-107-schemas: the finding schema accepts the bootstrap finding and refus
   assert.ok(
     !isFinding({
       ...judged,
-      provenance: { who: "the host", route: "telepathy", batch_id: "B-0001" },
+      provenance: { who: "the host", route: "telepathy", batch: "B-0001" },
     }),
     "a route that is no member of the closed set of row 260 is accepted",
   );
