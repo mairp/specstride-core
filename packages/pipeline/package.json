@@ -22,6 +22,7 @@
     "./relaunch/observe-table": "./src/relaunch/observe-table.ts",
     "./contract/commands": "./src/contract/commands/index.ts",
     "./contract/launch/modes": "./src/contract/launch/modes.ts",
+    "./contract/launch/integrity": "./src/contract/launch/integrity.ts",
     "./contract/validate/compose": "./src/contract/validate/compose.ts",
     "./contract/kernel": "./src/contract/kernel.ts",
     "./contract/ports": "./src/contract/ports.ts"
