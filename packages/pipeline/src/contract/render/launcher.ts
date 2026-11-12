@@ -76,9 +76,7 @@ export function launcherBody(input: LauncherInput): string {
     `const mode = ${JSON.stringify(input.mode)};`,
     "const args = process.argv.slice(2);",
     "const integrity = require_(process.env.SPECSTRIDE_LAUNCH_INTEGRITY_MODULE ?? " +
-      JSON.stringify(
-        input.integrityModule ?? "@specstride/pipeline/contract/launch/integrity",
-      ) +
+      JSON.stringify(input.integrityModule ?? "@specstride/pipeline/contract/launch/integrity") +
       ");",
     "// The integrity check of F107-FR-031 runs at EVERY start of the launcher,",
     "// before anything else; a refusal is exit 20 and one line.",
@@ -98,7 +96,7 @@ export function launcherBody(input: LauncherInput): string {
     "  process.stderr.write(`launcher: SPECSTRIDE_PIPELINE_ENTRY is not set — start the launcher through the launch command, or set the pipeline entry module of this build\\n`);",
     "  process.exit(1);",
     "}",
-    'const pipeline = require_(process.env.SPECSTRIDE_PIPELINE_ENTRY);',
+    "const pipeline = require_(process.env.SPECSTRIDE_PIPELINE_ENTRY);",
     "pipeline.main({ bundleLogicalName, bundleHash, mode, args });",
     "",
   ].join("\n");

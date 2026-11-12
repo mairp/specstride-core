@@ -48,7 +48,7 @@ test("a missing SPECSTRIDE_PIPELINE_ENTRY is a one-line refusal, not a stack", (
     "the refusal exits 1 before the unresolved require_",
   );
   assert.ok(
-    !body.includes("?? \"@specstride/pipeline/src/"),
+    !body.includes('?? "@specstride/pipeline/src/'),
     "no unresolvable /src/ fallback specifier remains",
   );
 });
