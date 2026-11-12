@@ -225,9 +225,15 @@ test("CT-101-18 (FX-03, FX-04, FX-05): a halt by a LIMIT is not blocked and is n
     const halt = haltOf(cause);
     assert.equal(halt.retryable, false, cause);
     assert.equal(retryableFor(halt.stopReason, true), false, cause);
-    // And the stop reason of the halt is NO stop reason of a blocked reason.
+    // And the stop reason of the halt is NO stop reason of a blocked reason —
+    // with the one registered exception of feature 152 (CQ-152-01 A): the
+    // blocked reason `commit-gate` maps to the existing stop reason
+    // `max_rejects` (annex E §E.2, register row DV-121), which `reject-limit`
+    // also carries. The two stay distinct by their blocked reason, and a halt
+    // by the limit is never blocked-on-human.
     for (const reason of BLOCKED_REASONS) {
       if (blockedReasonRow(reason)?.stopReason !== halt.stopReason) continue;
+      if (reason === "commit-gate" && cause === "reject-limit") continue;
       assert.fail(`the halt \`${cause}\` shares its stop reason with the blocked reason ${reason}`);
     }
   }

@@ -689,7 +689,7 @@
         134
       ],
       "annexParity": [
-        "off: the approval commit is made with no gate of its own (DV-121)"
+        "off: the block is reported, the run goes on, and the run exits 1 at its end (DV-122)"
       ],
       "cell": "off",
       "default": "on",

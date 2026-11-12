@@ -226,9 +226,15 @@ for (const how of EVERY_WAY) {
 test("CT-101-14: every member of row 255 is reached by a way of forging", () => {
   const reached = new Set(EVERY_WAY.map((how) => verifyApprovalRecord(forged(how)).failed));
   for (const member of APPROVAL_FAILURES) {
+    // `voided` — the ninth member of row 255, added by the closed-set delta of
+    // feature 152 (annex X §X.6 row 255, amendment approved 2026-11-09) — is
+    // reached not by a way of FORGING but by the engine's void marker over an
+    // approval whose commit the commit gate blocked (F152-FR-014). Its read
+    // path in `verify.ts` and its test are CT-152-14 (US3 of feature 152).
+    if (member === "voided") continue;
     assert.ok(reached.has(member), `no way of forging reaches \`${member}\``);
   }
-  assert.equal(reached.size, APPROVAL_FAILURES.length);
+  assert.equal(reached.size, APPROVAL_FAILURES.length - 1);
 });
 
 test("CT-101-14: a record signed with ANOTHER key of the same shape does not verify", () => {

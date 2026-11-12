@@ -166,18 +166,19 @@ test("T090 the same secret every attempt halts blocked on a human after two atte
     // Exactly two phase attempts, then the halt (F152-SC-003).
     assert.deepEqual(attemptsOf(fx), [1, 2]);
     assert.equal(exit, 2);
-    // The terminal facts: stop reason `commit_gate`, engine exit 2, and the
-    // row of the closed set says `retryable: No` — the shape of a terminal
-    // record a reader derives `blocked-on-human` from (CQ-152-01 A).
+    // The terminal facts: the commit-gate halt maps to the existing stop
+    // reason `max_rejects` (CQ-152-01), engine exit 2, and the row of the
+    // closed set says `retryable: No` — the shape of a terminal record a
+    // reader derives `blocked-on-human` from (CQ-152-01 A).
     const digest =
       fx
         .out()
         .split("\n")
         .find((line) => line.includes("DIGEST")) ?? "";
-    assert.match(digest, /DIGEST exit=2 stop=commit_gate /);
+    assert.match(digest, /DIGEST exit=2 stop=max_rejects /);
     const row = blockedReasonRow("commit-gate");
     assert.ok(row !== undefined, "the blocked reason `commit-gate` is in the closed set");
-    assert.equal(row?.stopReason, "commit_gate");
+    assert.equal(row?.stopReason, "max_rejects");
     assert.equal(row?.engineExit, 2);
     assert.equal(row?.retryable, false);
     assert.match(row?.when ?? "", /same signature/i);
