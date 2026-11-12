@@ -94,7 +94,9 @@ test("a hung pass is SIGTERMed at the time limit and ends", async () => {
 });
 
 test("a pass that ignores SIGTERM is SIGKILLed after the grace period", async () => {
-  // The stub catches SIGTERM with a handler, so only SIGKILL can end it.
+  // The stub catches SIGTERM with a handler, so only SIGKILL can end it. The
+  // limit is generous so that the stub's node start-up (slow under load)
+  // always finishes before the limit and the handler is installed in time.
   const fixture = stage(
     `#!/bin/sh\nexec "${process.execPath}" -e "process.on('SIGTERM', () => {}); setInterval(() => {}, 500)"\n`,
   );
@@ -104,7 +106,7 @@ test("a pass that ignores SIGTERM is SIGKILLed after the grace period", async ()
       cwd: fixture.workdir,
       path: fixture.binDir,
       env: { ...fixture.env },
-      timeoutMs: 200,
+      timeoutMs: 2_000,
       killGraceMs: 200,
     });
     assert.ok(run.ok, JSON.stringify(run));

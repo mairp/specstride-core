@@ -1,3 +1,4 @@
 schema: 1
-"roles.proposer.harness": "dsh:compass-gpt5-high/gpt-5"
+"roles.proposer.harness": "dsh:zai/glm-5.3-flash"
 "roles.proposer.effort": "max"
+"roles.critic.harness": "dsh:compass-gpt5-high/gpt-5"

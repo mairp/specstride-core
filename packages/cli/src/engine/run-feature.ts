@@ -999,7 +999,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         mkdirSync(inControl(dir), { recursive: true });
       },
     };
-    void setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
+    await setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
   }
 
   const events = inControl(join("runs", runId, "events.jsonl"));
