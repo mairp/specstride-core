@@ -463,7 +463,7 @@ export const casesOfADiagnosis = defineClosedSet(252, [
 /**
  * Row 255 — What failed in an approval record.
  *
- * Members: `schema`, `signature`, `key-unknown`, `verdict`, `evidence-hash`, `verification-hash`, `missing`, `marker-only`
+ * Members: `schema`, `signature`, `key-unknown`, `verdict`, `evidence-hash`, `verification-hash`, `missing`, `marker-only`, `voided`
  * Owner: 101. Closed by: Design.
  * Unknown value: The record counts as not approved
  */
@@ -476,6 +476,7 @@ export const whatFailedInAnApprovalRecord = defineClosedSet(255, [
   "verification-hash",
   "missing",
   "marker-only",
+  "voided",
 ] as const);
 
 /**

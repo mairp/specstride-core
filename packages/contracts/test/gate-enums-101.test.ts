@@ -120,6 +120,7 @@ test("T003: row 255 — what failed in an approval record, unknown value is not 
       "verification-hash",
       "missing",
       "marker-only",
+      "voided",
     ],
   );
   for (const member of row.literals) assert.equal(gate.isApprovalFailure(member), true);
