@@ -39,7 +39,14 @@ const [command, args] = wanted
 
 // The tests are hermetic: the run-selection variables of the host (the engine
 // sets them for its own passes) must not choose a feature, a model or a critic
-// inside a test that builds its own fixture.
+// inside a test that builds its own fixture. The limits switch belongs in the
+// same company: `SPECSTRIDE_LIMITS=off` is a ruling of the OPERATOR's launch —
+// under it the engine refuses to arm its pass watchdog by contract
+// (`packages/kernel/src/limits`) — and a test that verifies the watchdog must
+// not inherit the operator's launch. Without the strip, every campaign that
+// runs under limits-off (the owner's ruling) fails its own verification suite
+// on the ceiling-enforcement tests forever (152 phase 1, 2026-11-11: three
+// attempts × `npm test -> failed`, the hung-pass stub never signalled).
 const env: NodeJS.ProcessEnv = { ...process.env };
 for (const name of [
   "SPECSTRIDE_FEATURE",
@@ -47,6 +54,7 @@ for (const name of [
   "SPECSTRIDE_CRITIC",
   "SPECSTRIDE_PROPOSER",
   "SPECSTRIDE_BIN",
+  "SPECSTRIDE_LIMITS",
 ]) {
   delete env[name];
 }

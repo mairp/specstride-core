@@ -30,6 +30,41 @@ import {
 /** The strategies of the closed set of row 55 (`classic`, `micro`). */
 export type LoopStrategy = "micro" | "classic";
 
+/** The key of annex X §X.7 row 36 that names the proposer (F124-FR-026). */
+export const PROPOSER_NAME_KEY = "roles.proposer.harness";
+
+/**
+ * F124-FR-026 — the name of the proposer of a run: the as-is variable
+ * `SPECSTRIDE_PROPOSER` (an alias of the row-36 key, read at rank 4 by the
+ * merge), the key `roles.proposer.harness` in the project file (rank 5; the
+ * key's trust class is neutral, §K.1 row 36), or the same key in the user
+ * configuration (rank 6). The ranks of F110-FR-014 decide between them.
+ * Nothing here reads `SPECSTRIDE_CONFIG`: the launch allow list of §F.6 may
+ * carry that name across, but no reader of the product consumes it — this
+ * function reads the ordinary files instead (`user:config` and the workspace
+ * `specstride.yaml`).
+ */
+export function proposerNameOf(input: {
+  readonly home: string;
+  readonly workdir: string;
+  readonly environment: NodeJS.ProcessEnv;
+}): string | undefined {
+  const files = loadConfigFiles({
+    home: input.home,
+    workspaceRealPath: realpathSync(input.workdir),
+    startDir: input.workdir,
+  });
+  const resolved = resolveConfiguration({
+    ...(files.user === undefined ? {} : { user: files.user }),
+    ...(files.project === undefined ? {} : { project: files.project }),
+    environment: input.environment,
+    aliasTable: true,
+  });
+  const merged = resolved.values.get(PROPOSER_NAME_KEY);
+  const value = merged?.value;
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
 /** The loop configuration of a run, as the composition root reads it. */
 export type LoopConfiguration = {
   /** The strategy in force (`micro` by default, F115-FR-001). */

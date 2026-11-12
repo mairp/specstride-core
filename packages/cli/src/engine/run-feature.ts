@@ -68,6 +68,7 @@ import { countLimit, limitsAreOff, timeLimitMs } from "@specstride/kernel/limits
 import { addedLinesAgainstHead, isAddedLine } from "./commit-lines.ts";
 import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
+import { proposerNameOf } from "./loop-config.ts";
 import { theParallelHomeOfARun } from "./parallel-group.ts";
 import {
   parallelLoopLineField,
@@ -951,8 +952,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const critic = criticOf(process.env.SPECSTRIDE_CRITIC);
   const criticModel = critic.dshModel ?? process.env.SPECSTRIDE_CRITIC_MODEL ?? model;
   const criticHarness = critic.dshModel === null ? "claude" : "dsh";
-  // The implementer of the passes: `claude`, or the dsh model the consumer names.
-  const implementerOfTheRun = criticOf(process.env.SPECSTRIDE_PROPOSER).dshModel;
+  // The implementer of the passes: `claude`, or the dsh model the consumer names —
+  // through the as-is variable `SPECSTRIDE_PROPOSER` or the row-36 key
+  // `roles.proposer.harness` of the user configuration (F124-FR-026), with the
+  // ranks of F110-FR-014 deciding between them (the variable wins).
+  const implementerOfTheRun = criticOf(
+    proposerNameOf({ home: homedir(), workdir, environment: process.env }),
+  ).dshModel;
   const tasksPath = join(featureDirectory, "tasks.md");
   const grammar = GRAMMARS["speckit-tasks"];
   const tasksText = readFileSync(tasksPath, "utf8");
