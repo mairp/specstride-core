@@ -2,205 +2,183 @@
  "schema": "specstride.table/1",
  "id": "specstride.router-rules",
  "version": "1.0.0",
- "note": "Shipped router rule table of feature 115 (EP-06), as data: translated from specs/115-micro-loop-layer/contracts/router-table.json, whose predicates are given in words; this file is the one the table evaluator of @specstride/kernel loads and every predicate is built from the closed set of nine operators of annex X §X.3 (equal, not equal, less, greater, member of, present, and, or, not). Where this file and the contract in specs/ differ, spec.md stands. Signals the spec gives in prose that the evaluator reads as one value are stated here as boolean signals the caller computes: commandDurationOverLimit (the measured duration exceeds the configured time limit of the command), commandSlowest (the command is the slowest of the set), unresolvedOverCap (unresolvedUnits is not less than the cap), unitCoversPhaseAtFirstUnit (unitTasks equals phaseTasks at the first unit).",
- "signalSources": "All signals come from the ledger, the check manifest and the read-only view of the phase attempt; none is task prose, output of a check or anything a model wrote (spec.md, 'The shipped router table').",
- "points": {
-  "tools": {
-   "signals": {
-    "commandFlaky": "boolean",
-    "commandDuration": "number",
-    "commandDurationOverLimit": "boolean",
-    "checkShare": "number",
-    "cycle": "number",
-    "commandSlowest": "boolean"
-   },
-   "choices": ["run", "exclude:flaky", "exclude:slow", "exclude:budget"]
-  },
-  "loop": {
-   "signals": {
-    "integrityKind": "string",
-    "checkError": "string",
-    "cyclesLeft": "number",
-    "unresolvedUnits": "number",
-    "unresolvedOverCap": "boolean",
-    "innerCount": "number",
-    "uncheckedStreak": "number",
-    "phaseTasks": "number",
-    "unitTasks": "number",
-    "unitCoversPhaseAtFirstUnit": "boolean"
-   },
-   "choices": ["stay", "off:micro"]
-  },
-  "escalation": {
-   "signals": {
-    "escalationOn": "boolean",
-    "conditions": "array",
-    "integrityKind": "string",
-    "commandFlaky": "boolean",
-    "signatureRepeated": "boolean",
-    "repairsUsed": "number",
-    "escalationsTask": "number",
-    "escalationsAttempt": "number",
-    "nextTier": "string",
-    "targetIsCriticModel": "boolean",
-    "targetSharesCriticModel": "boolean",
-    "targetQuotaExhausted": "boolean",
-    "budgetAllows": "boolean"
-   },
-   "choices": ["next-tier", "skip:off", "skip:integrity", "skip:flaky", "skip:not-due", "skip:cap", "skip:no-ladder", "skip:critic-collision", "skip:quota", "skip:budget"]
-  }
+ "note": "Data of feature 115. spec.md stands where the two differ. Predicates are given in words; the implementation writes them with the nine operators of feature 100 annex X §X.3.",
+ "choiceSets": {
+  "tools": [
+   "run",
+   "exclude:flaky",
+   "exclude:slow",
+   "exclude:budget"
+  ],
+  "loop": [
+   "stay",
+   "off:<registered layer>"
+  ],
+  "escalation": [
+   "next-tier",
+   "skip:<skip reason>"
+  ]
  },
+ "signals": [
+  {
+   "signals": "routingOn, escalationOn",
+   "meaning": "The two switches"
+  },
+  {
+   "signals": "engaged",
+   "meaning": "A checkpoint was accepted in the phase attempt"
+  },
+  {
+   "signals": "innerCount",
+   "meaning": "Commands left in the inner set"
+  },
+  {
+   "signals": "phaseTasks, unitTasks",
+   "meaning": "Tasks of the phase at launch; tasks the unit named"
+  },
+  {
+   "signals": "cyclesLeft, unresolvedUnits, uncheckedStreak",
+   "meaning": "Counters of the layer"
+  },
+  {
+   "signals": "integrityKind",
+   "meaning": "Kind of the newest integrity event of the phase attempt, or absent"
+  },
+  {
+   "signals": "checkError",
+   "meaning": "Error of the check runner, or absent"
+  },
+  {
+   "signals": "commandFlaky, commandDuration, checkShare, cycle",
+   "meaning": "Per command: flagged flaky; measured duration. Per phase attempt: share of time in inner checks; ordinal of the cycle"
+  },
+  {
+   "signals": "signatureRepeated",
+   "meaning": "The failure signature equals that of the proposal before"
+  },
+  {
+   "signals": "conditions",
+   "meaning": "Conditions of the failed result"
+  },
+  {
+   "signals": "repairsUsed, escalationsTask, escalationsAttempt",
+   "meaning": "Counts per task id and per phase attempt"
+  },
+  {
+   "signals": "nextTier, targetIsCriticModel, targetSharesCriticModel, targetQuotaExhausted, budgetAllows",
+   "meaning": "The next rung of the pinned ladder or absent; whether it equals a critic-class call of the run in model and in effort (true only when both are equal); whether it shares the model of a critic-class call and differs in effort; whether its quota is exhausted; whether the budget of the role allows it"
+  },
+  {
+   "signals": "parallelOn",
+   "meaning": "The layer of parallel units is registered and on"
+  }
+ ],
  "rows": {
   "tools": [
    {
     "ruleId": "tools.flaky",
-    "when": { "op": "equal", "signal": "commandFlaky", "value": true },
+    "when": "commandFlaky",
     "choice": "exclude:flaky"
    },
    {
     "ruleId": "tools.slow",
-    "when": { "op": "equal", "signal": "commandDurationOverLimit", "value": true },
+    "when": "commandDuration greater than the time limit of the command",
     "choice": "exclude:slow"
    },
    {
     "ruleId": "tools.budget",
-    "when": {
-     "op": "and",
-     "of": [
-      { "op": "greater", "signal": "cycle", "value": 2 },
-      { "op": "greater", "signal": "checkShare", "value": 15 },
-      { "op": "equal", "signal": "commandSlowest", "value": true }
-     ]
-    },
+    "when": "cycle greater than 2, checkShare greater than the cap, and the command is the slowest of the set",
     "choice": "exclude:budget"
    },
    {
     "ruleId": "tools.default",
+    "when": null,
     "choice": "run"
    }
   ],
   "loop": [
    {
     "ruleId": "loop.integrity",
-    "when": {
-     "op": "and",
-     "of": [
-      { "op": "present", "signal": "integrityKind" },
-      { "op": "not", "of": [{ "op": "equal", "signal": "integrityKind", "value": "changed-during-check" }] }
-     ]
-    },
+    "when": "integrityKind present and not changed-during-check",
     "choice": "off:micro"
    },
    {
     "ruleId": "loop.check-error",
-    "when": { "op": "equal", "signal": "checkError", "value": "cannot-start" },
+    "when": "checkError is cannot-start",
     "choice": "off:micro"
    },
    {
     "ruleId": "loop.caps",
-    "when": {
-     "op": "or",
-     "of": [
-      { "op": "equal", "signal": "cyclesLeft", "value": 0 },
-      { "op": "equal", "signal": "unresolvedOverCap", "value": true }
-     ]
-    },
+    "when": "cyclesLeft equal 0, or unresolvedUnits not less than the cap",
     "choice": "off:micro"
    },
    {
     "ruleId": "loop.no-check",
-    "when": {
-     "op": "and",
-     "of": [
-      { "op": "equal", "signal": "innerCount", "value": 0 },
-      { "op": "greater", "signal": "uncheckedStreak", "value": 1 }
-     ]
-    },
+    "when": "innerCount equal 0 and uncheckedStreak not less than 2",
     "choice": "off:micro"
    },
    {
     "ruleId": "loop.single-unit",
-    "when": {
-     "op": "or",
-     "of": [
-      { "op": "equal", "signal": "phaseTasks", "value": 1 },
-      { "op": "equal", "signal": "unitCoversPhaseAtFirstUnit", "value": true }
-     ]
-    },
+    "when": "phaseTasks equal 1, or unitTasks equal phaseTasks at the first unit",
     "choice": "off:micro"
    },
    {
     "ruleId": "loop.default",
+    "when": null,
     "choice": "stay"
    }
   ],
   "escalation": [
    {
     "ruleId": "esc.off",
-    "when": { "op": "equal", "signal": "escalationOn", "value": false },
+    "when": "not escalationOn",
     "choice": "skip:off"
    },
    {
     "ruleId": "esc.integrity",
-    "when": {
-     "op": "or",
-     "of": [
-      { "op": "member of", "signal": "conditions", "value": ["tainted", "cached"] },
-      { "op": "present", "signal": "integrityKind" }
-     ]
-    },
+    "when": "conditions holds tainted or cached, or integrityKind present",
     "choice": "skip:integrity"
    },
    {
     "ruleId": "esc.flaky",
-    "when": { "op": "equal", "signal": "commandFlaky", "value": true },
+    "when": "commandFlaky for a failed command",
     "choice": "skip:flaky"
    },
    {
     "ruleId": "esc.not-due",
-    "when": {
-     "op": "or",
-     "of": [
-      { "op": "not", "of": [{ "op": "equal", "signal": "signatureRepeated", "value": true }] },
-      { "op": "not", "of": [{ "op": "equal", "signal": "repairsUsed", "value": 1 }] }
-     ]
-    },
+    "when": "not signatureRepeated, or repairsUsed not equal 1",
     "choice": "skip:not-due"
    },
    {
     "ruleId": "esc.cap",
-    "when": {
-     "op": "or",
-     "of": [
-      { "op": "greater", "signal": "escalationsTask", "value": 0 },
-      { "op": "greater", "signal": "escalationsAttempt", "value": 1 }
-     ]
-    },
+    "when": "escalationsTask not less than 1, or escalationsAttempt not less than 2",
     "choice": "skip:cap"
    },
    {
     "ruleId": "esc.no-ladder",
-    "when": { "op": "not", "of": [{ "op": "present", "signal": "nextTier" }] },
+    "when": "nextTier absent",
     "choice": "skip:no-ladder"
    },
    {
     "ruleId": "esc.critic-collision",
-    "when": { "op": "equal", "signal": "targetIsCriticModel", "value": true },
+    "when": "targetIsCriticModel (equal in model and in effort)",
     "choice": "skip:critic-collision"
    },
    {
     "ruleId": "esc.quota",
-    "when": { "op": "equal", "signal": "targetQuotaExhausted", "value": true },
+    "when": "targetQuotaExhausted",
     "choice": "skip:quota"
    },
    {
     "ruleId": "esc.budget",
-    "when": { "op": "not", "of": [{ "op": "equal", "signal": "budgetAllows", "value": true }] },
+    "when": "not budgetAllows",
     "choice": "skip:budget"
    },
    {
     "ruleId": "esc.default",
-    "choice": "next-tier"
+    "when": null,
+    "choice": "next-tier",
+    "warning": "critic-diversity warning, raised and recorded when targetSharesCriticModel is true (F115-FR-034; F100-FR-130; assumption: CQ-191)"
    }
   ]
  },

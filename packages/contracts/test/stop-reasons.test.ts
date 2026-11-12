@@ -65,25 +65,25 @@ import { engineExitRow, isEngineExitCode } from "../src/codes/engine.ts";
 
 const RAW = (data as { schema: string; stopReasons: Record<string, unknown>[] }).stopReasons;
 
-test("CT-100-248: the enumeration holds exactly the 16 members of §E.3", () => {
+test("CT-100-248: the enumeration holds exactly the 15 members of §E.3", () => {
   assert.equal(SCHEMA_ID, "specstride.stop-reason/1");
   assert.equal((data as { schema: string }).schema, SCHEMA_ID);
   assert.equal(ANNEX_SECTION, "annex E, §E.3");
-  assert.equal(RAW.length, 16);
-  assert.equal(STOP_REASON_COUNT, 16);
-  assert.equal(STOP_REASONS.length, 16);
+  assert.equal(RAW.length, 15);
+  assert.equal(STOP_REASON_COUNT, 15);
+  assert.equal(STOP_REASONS.length, 15);
   assert.deepEqual(
     [...STOP_REASONS],
     RAW.map((row) => String(row.literal)),
   );
 
-  // The numbers are 1 to 16, each once.
+  // The numbers are 1 to 15, each once.
   assert.deepEqual(
     stopReasonRows.map((r) => r.number),
-    Array.from({ length: 16 }, (_unused, index) => index + 1),
+    Array.from({ length: 15 }, (_unused, index) => index + 1),
   );
 
-  // Row 3 of §X.6 holds the same 16, registered through T070.
+  // Row 3 of §X.6 holds the same 15, registered through T070.
   assert.equal(stopReasonSet.number, 3);
   assert.equal(stopReasonSet.byReference, true);
   assert.deepEqual([...stopReasonSet.members], [...STOP_REASONS]);

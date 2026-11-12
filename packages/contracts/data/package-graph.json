@@ -6,7 +6,6 @@
   "published": [
     "specstride",
     "@specstride/contracts",
-    "@specstride/host-kit",
     "@specstride/testkit"
   ],
   "builtByFeature100": [

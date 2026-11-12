@@ -261,8 +261,8 @@
     },
     {
       "Blocked reason": "`commit-gate`",
-      "When": "Two consecutive blocked approval commits of one phase with the same signature",
-      "Stop reason": "`commit_gate`",
+      "When": "Two consecutive blocked approval commits of one phase with the same signature (F152-FR-006), or a voided approval whose task list a human changed beyond its ticks, so the pre-tick bytes cannot be restored (F152-FR-014)",
+      "Stop reason": "`max_rejects`",
       "Engine exit": "2",
       "`retryable`": "No"
     }

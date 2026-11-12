@@ -2,12 +2,12 @@
  * T257 — assemble the closed sets (annex X, §X.6; F100-FR-208, F100-FR-209;
  * F100-SC-007).
  *
- * The seven batch files of T250 to T256 register their sets in the map of
- * T070 at load. This module imports all seven, then asserts at load that the
+ * The eight batch files of T250 to T256 (and of feature 152) register their sets in the map of
+ * T070 at load. This module imports all eight, then asserts at load that the
  * map holds exactly the 285 numbers of `data/closed-sets.json`, each once,
  * with the name of its row, and exports the map as `closedSets`.
  *
- * The count is pinned: `CLOSED_SET_COUNT` is the literal 285 of T257, and the
+ * The count is pinned: `CLOSED_SET_COUNT` is the literal 286 of T257 (285 rows at T257; the annex grew by row 286 of feature 152), and the
  * assertion refuses a data file that holds any other number of rows, so
  * neither the map nor the table can drift from it.
  */
@@ -19,6 +19,7 @@ import * as sets_120_125 from "./sets-120-125.ts";
 import * as sets_126_129 from "./sets-126-129.ts";
 import * as sets_130_144 from "./sets-130-144.ts";
 import * as sets_145_149 from "./sets-145-149.ts";
+import * as sets_150_152 from "./sets-150-152.ts";
 
 // The seven batch files are imported for their registration at load.
 const BATCHES = [
@@ -29,6 +30,7 @@ const BATCHES = [
   sets_126_129,
   sets_130_144,
   sets_145_149,
+  sets_150_152,
 ];
 void BATCHES;
 
@@ -40,8 +42,8 @@ export class ClosedSetAssemblyError extends Error {
   }
 }
 
-/** The 285 numbers of the table of §X.6 that T257 pins. */
-const CLOSED_SETS_OF_THE_TABLE = 285;
+/** The 286 numbers of the table of §X.6 that T257 pins (285 at T257; +1 of feature 152). */
+const CLOSED_SETS_OF_THE_TABLE = 286;
 
 function assemble(): ReadonlyMap<number, ClosedSet> {
   const map = registeredSets();
@@ -97,7 +99,7 @@ function assemble(): ReadonlyMap<number, ClosedSet> {
 export const closedSets: ReadonlyMap<number, ClosedSet> = assemble();
 
 /** The number of sets the package exports: the 285 rows of the table (T257). */
-export const CLOSED_SET_COUNT: 285 = CLOSED_SETS_OF_THE_TABLE;
+export const CLOSED_SET_COUNT: 286 = CLOSED_SETS_OF_THE_TABLE;
 
 /** The set of a number, or `undefined` where the table holds none. */
 export function closedSet(number: number): ClosedSet | undefined {
@@ -117,3 +119,4 @@ export * from "./sets-120-125.ts";
 export * from "./sets-126-129.ts";
 export * from "./sets-130-144.ts";
 export * from "./sets-145-149.ts";
+export * from "./sets-150-152.ts";

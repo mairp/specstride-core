@@ -34,24 +34,23 @@ export const ANNEX_SECTION = "annex E, §E.3" as const;
  * ------------------------------------------------------------------ */
 
 /**
- * The members whose as-is literal the projection keeps: 1 to 14. Members 15
- * and 16, `paused_quota_ceiling` and the `commit_gate` of feature 152, are
- * new and have no as-is literal.
+ * The members whose as-is literal the projection keeps: 1 to 14. Member 15,
+ * `paused_quota_ceiling`, is new and has no as-is literal.
  */
 export const MEMBERS_WITH_AN_AS_IS_LITERAL = STOP_REASONS.slice(0, 14) as readonly StopReason[];
 
-/** The members the baseline does not know (annex E, §E.3, rows 15 and 16). */
+/** The one member the baseline does not know (annex E, §E.3, row 15). */
 export const MEMBER_WITHOUT_AN_AS_IS_LITERAL = "paused_quota_ceiling" as const;
 
 /** One row of the as-is projection of a stop reason. */
 export type AsIsStopReason = {
-  /** The number of the row of §E.3, 1 to 16. */
+  /** The number of the row of §E.3, 1 to 15. */
   readonly number: number;
   /** The member of the closed set. */
   readonly literal: StopReason;
   /**
    * The literal the as-is stop line carries. For 1 to 14 it is the member
-   * itself: the product keeps the baseline's spelling. Null for 15 and 16.
+   * itself: the product keeps the baseline's spelling. Null for 15.
    */
   readonly asIsLiteral: string | null;
   /** The cell "Matched by string at the baseline" of §E.3. */

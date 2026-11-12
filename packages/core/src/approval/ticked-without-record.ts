@@ -112,7 +112,7 @@ export const STATE_COMMANDS = Object.freeze(["state export", "state import", "st
 /**
  * F101-FR-032 — the table "Halts of the phase gate" names no cause of this
  * refusal. Proved against the table itself rather than asserted: every cause
- * of `packages/contracts/data/gate-halts.json` is compared with the name of
+ * of `packages/contracts/data/gate-halts-101.json` is compared with the name of
  * the refusal.
  */
 export function theTableOfHaltsNamesIt(): boolean {
