@@ -11,7 +11,11 @@ const critic = argv.includes("--max-turns");
 console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));
 const attempt = Number(/This is attempt (\d+)/.exec(prompt)?.[1] ?? "1");
 if (critic) {
-  console.log(JSON.stringify({ type: "result", result: "VERDICT 0000000000000000: APPROVED" }));
+  // Echo the nonce of the demand line at the END of the prompt: earlier
+  // VERDICT lines in the quoted diff of the tree are data, never the nonce.
+  const allNonces = [...prompt.matchAll(/VERDICT ([0-9a-f]+)/g)];
+  const nonce = allNonces.length > 0 ? allNonces[allNonces.length - 1][1] : "0".repeat(16);
+  console.log(JSON.stringify({ type: "result", result: "T001 judged.\nVERDICT " + nonce + ": APPROVED" }));
 } else {
   write_(`seen-by-proposer-${String(attempt)}.txt`, prompt);
   write_(`session-${String(attempt)}.txt`, session ?? "");

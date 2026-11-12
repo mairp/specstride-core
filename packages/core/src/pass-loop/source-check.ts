@@ -139,9 +139,19 @@ export type SourceHashes = {
 export type SourceCheckQuestion = {
   /** The hashes of each of the three sources. */
   readonly sources: Readonly<Partial<Record<SourceName, SourceHashes>>>;
+  /**
+   * T143 (feature 152, F152-FR-017) — the rule data of the commit gate as a
+   * further watched source: its recorded hash is pinned at the launch and its
+   * hash now is read at every pass start. A change halts as a changed source,
+   * like any other watched source (CQ-152-06 A).
+   */
+  readonly commitGateRules?: SourceHashes | undefined;
   /** The value of `staleness.check_points`; under `parity` there is no check. */
   readonly checkPoints?: string;
 };
+
+/** A name the check reports a change of: the three sources, or the rule data. */
+export type WatchedSourceName = SourceName | "commitGateRules";
 
 /** What the check answers. */
 export type SourceCheckDecision = {
@@ -156,13 +166,13 @@ export type SourceCheckDecision = {
   /** The field `blocked` of the result, with the file that changed. */
   readonly blocked?: {
     readonly reason: typeof BLOCKED_REASON;
-    readonly file: SourceName;
+    readonly file: WatchedSourceName;
   };
   /** The event `blocked`, which names the file that changed. */
   readonly event?: {
     readonly event: "blocked";
     readonly reason: typeof BLOCKED_REASON;
-    readonly changedSource: SourceName;
+    readonly changedSource: WatchedSourceName;
     readonly changedRef: string;
   };
 };
@@ -183,7 +193,7 @@ export function checkSources(question: SourceCheckQuestion): SourceCheckDecision
   if (!checksAtAPassStart(question.checkPoints)) {
     return Object.freeze({ checked: false, stopped: false, classified: FRESH });
   }
-  const names: SourceName[] = [];
+  const names: WatchedSourceName[] = [];
   const readings = [];
   for (const name of SOURCES) {
     const hashes = question.sources[name];
@@ -198,13 +208,28 @@ export function checkSources(question: SourceCheckQuestion): SourceCheckDecision
       hashNowIgnoringCheckboxes: hashes.hashNowIgnoringCheckboxes,
     });
   }
+  // T143 (feature 152) — the commit-gate rule data, watched after the three
+  // sources of F103-FR-021 and in the same comparison.
+  if (question.commitGateRules !== undefined) {
+    const hashes = question.commitGateRules;
+    names.push("commitGateRules");
+    readings.push({
+      logicalName: "commitGateRules",
+      repositoryPath: hashes.path,
+      recordedHash: hashes.recordedHash,
+      hashNow: hashes.hashNow,
+    });
+  }
   const classified = classifySources(readings);
   const at = classified.findIndex((s) => s.state === "changed" || s.state === "unreadable");
   if (at < 0) {
     return Object.freeze({ checked: true, stopped: false, classified });
   }
-  const file = names[at] as SourceName;
-  const path = (question.sources[file] as SourceHashes).path;
+  const file = names[at] as WatchedSourceName;
+  const path =
+    file === "commitGateRules"
+      ? (question.commitGateRules as SourceHashes).path
+      : (question.sources[file] as SourceHashes).path;
   return Object.freeze({
     checked: true,
     stopped: true,

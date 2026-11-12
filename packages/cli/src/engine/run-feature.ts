@@ -235,9 +235,16 @@ import { feedbackOfTheCommitGate, quotedPath } from "../../../core/src/gate/feed
 import { newNonce } from "../../../core/src/gate/nonce.ts";
 import { COMMIT_GATE_BLOCKED_EVENT_TYPE } from "../../../core/src/gate/events.ts";
 import {
-  hashOfCommitGateRules,
-  loadEngineCommitGateRules,
+  blockingRuleOf,
+  ENGINE_COMMIT_GATE_RULES_FILE,
 } from "../../../kernel/src/redactor/commit-gate-rules.ts";
+import {
+  commitGateRulesForTheLaunch,
+  commitGateRulesHashNow,
+} from "../../../core/src/post-approval/commit-gate-launch.ts";
+import type { SourceCheckQuestion } from "../../../core/src/pass-loop/source-check.ts";
+import { SnapshotWriteError, writeRunSnapshot } from "../run-control/snapshot-writer.ts";
+import { currentSourceHashes } from "../run-control/source-compare.ts";
 import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
@@ -1752,9 +1759,6 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
   };
 
-  // A name beside a value is the mark of ordinary code too: `token: "abc"` in a test of
-  // the work. In the work of a pass only a pattern of a real credential holds a commit back.
-  const THE_SHAPE_OF_ORDINARY_CODE = "key-name-then-value";
   // The exit of a run whose commits the gate held back: 1, internal (annex E
   // §E.4's vocabulary for a run that did not finish its own duty — the table
   // has no row of its own for a blocked commit). See the decision at the exit.
@@ -1771,10 +1775,76 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const commitBackpressureOn = commitBackpressureIsOn({
     "commit.backpressure": loopConfig.backpressureValue,
   });
-  // T077 — the rule data of the gate, the engine's (the project file joins it
-  // at T140), loaded once for the run.
-  const commitGateRules = loadEngineCommitGateRules();
-  const commitGateRuleDataHash = hashOfCommitGateRules(commitGateRules, null);
+  // T077 — the rule data of the gate: the engine's and, where the project
+  // added one, the project's, loaded and merged ONCE at the start of the run
+  // (T140). A malformed file, a project rule that exempts or shadows an
+  // engine id, refuses the launch with exit 3 and names the file
+  // (F152-FR-016, F152-FR-018). The hash pins the data (F152-FR-017) and is
+  // watched at every pass start (T143) through the pass-loop source check.
+  // `SPECSTRIDE_COMMIT_GATE_RULES_ENGINE` is the tests' seam: a copy of the
+  // shipped engine data a test points the run at (T135).
+  const commitGateEngineFile =
+    process.env.SPECSTRIDE_COMMIT_GATE_RULES_ENGINE ?? ENGINE_COMMIT_GATE_RULES_FILE;
+  // The file read the launch loader uses: the edge package reads over
+  // `node:fs`; the core loader takes the read as an argument (F100-FR-012).
+  const commitGateReadFile = (path: string): string | undefined => {
+    try {
+      return readFileSync(path, "utf8");
+    } catch {
+      return undefined;
+    }
+  };
+  const commitGateLaunch = commitGateRulesForTheLaunch(
+    workdir,
+    commitGateReadFile,
+    commitGateEngineFile,
+  );
+  if (!commitGateLaunch.ok) {
+    say(`[${slug}] ${commitGateLaunch.message}: the launch is refused (F152-FR-016)`);
+    return commitGateLaunch.exitCode;
+  }
+  const commitGateRules = commitGateLaunch.rules;
+  const commitGateRuleDataHash = commitGateLaunch.hash;
+  // T134/T142 (F152-FR-017) — the run record (`run:<runId>:snapshot`,
+  // annex B §B.12) pins the canonical hash of the rule data in force at the
+  // launch, beside the source hashes. Written once, at the launch, before
+  // any pass starts; a failed write is a launch error (F102-FR-025). The
+  // source hashes are recorded as `source-compare` reads them, so a later
+  // `resume` compares like against like.
+  const sourceHashesAtLaunch = currentSourceHashes({
+    spec: join(featureDirectory, "spec.md"),
+    plan: join(featureDirectory, "plan.md"),
+    tasks: tasksPath,
+  });
+  try {
+    writeRunSnapshot(inControl(join("runs", runId, "snapshot.json")), {
+      runId,
+      createdAt: new Date().toISOString(),
+      profile: null,
+      keys: [],
+      sourceHashes: {
+        spec: { path: "spec.md", ...sourceHashesAtLaunch.spec },
+        plan: { path: "plan.md", ...sourceHashesAtLaunch.plan },
+        tasks: { path: relative(workdir, tasksPath), ...sourceHashesAtLaunch.tasks },
+      },
+      commitGateRulesHash: commitGateRuleDataHash,
+    });
+  } catch (error) {
+    const path = error instanceof SnapshotWriteError ? error.path : "the control plane";
+    say(`[${slug}] the run snapshot at ${path} could not be written; no pass starts (F102-FR-025)`);
+    return 3;
+  }
+  // T143 — the hash pinned at the launch, and the hash read again at every
+  // pass start; a difference halts as a changed source (`source-changed`,
+  // CQ-152-06 A).
+  const commitGateWatchedSource = (): SourceCheckQuestion => ({
+    sources: {},
+    commitGateRules: {
+      path: relative(workdir, commitGateEngineFile),
+      recordedHash: commitGateLaunch.hash,
+      hashNow: commitGateRulesHashNow(workdir, commitGateReadFile, commitGateEngineFile),
+    },
+  });
   const reasonOfTheRule = (rule: string): string =>
     commitGateRules.rules.find((candidate) => candidate.rule === rule)?.reason ?? "";
   // T078 — the corrective feedback of a blocked attempt goes through the same
@@ -1832,8 +1902,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       const found = ingress.scanCommit(present, workdir);
       // A line HEAD already holds is not the commit's to answer for (commit-lines.ts).
       const added = addedLinesAgainstHead(workdir, present);
+      // T141 (F152-FR-019) — the carve-out `THE_SHAPE_OF_ORDINARY_CODE` is no
+      // longer a constant here: the rule data in force (the engine's and the
+      // project's) decides, through `blockingRuleOf`, so the step-6 scan and
+      // the pre-scan decide alike.
       const hits = found.hits.filter(
-        (hit) => hit.pattern !== THE_SHAPE_OF_ORDINARY_CODE && isAddedLine(added, hit),
+        (hit) => blockingRuleOf(hit, commitGateRules) !== null && isAddedLine(added, hit),
       );
       const blocked = hits.length > 0;
       if (blocked) {
@@ -2645,6 +2719,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 }
               : DEFAULT_LIMITS,
             counters: countersOnEntry,
+            // T143 (F152-FR-017, CQ-152-06 A) — the rule data of the commit
+            // gate is a watched source: before every pass the loop compares
+            // the hash pinned at the launch with the hash read now, and a
+            // change halts as a changed source before the pass starts.
+            sourceHashes: () => commitGateWatchedSource(),
             hooks: {
               // F118-FR-011 — the cap breaker: after too many kills of the
               // ceiling in a row the loop ends with the cap result.
@@ -2824,6 +2903,22 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
     // A stop ends the run here: nothing is scored, no critic is called.
     if (theLoopResult.exit_code === 6) return stopTheRun("pass-loop");
+    // T143 (F152-FR-017, CQ-152-06 A) — a change of the commit-gate rule data
+    // halts the run as a changed source: `source-changed` (annex E §E.2) maps
+    // to its row's exit and stop reason, and the run rests blocked on a human.
+    if (theLoopResult.exit_code === 3 && theLoopResult.blocked?.reason === "source-changed") {
+      const row = blockedReasonRow("source-changed");
+      const needs = `the commit-gate rule data changed: ${theLoopResult.blocked.file}`;
+      emit("blocked", { reason: "source-changed", needs });
+      say(`[${slug}] blocked: source-changed: ${needs}`);
+      return {
+        endsTheRun: true as const,
+        because: "blocked" as const,
+        reason: "source-changed" as const,
+        exitCode: row?.engineExit ?? 3,
+        stopReason: row?.stopReason ?? "critic_config",
+      };
+    }
 
     // The closing check of the layer (F115-FR-028): on phase evidence, the
     // inner set runs once more on the final tree, unless the last check

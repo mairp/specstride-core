@@ -331,7 +331,8 @@ export type PassLoopResult = {
   readonly passReached?: number;
   readonly blocked?: {
     readonly reason: "declared-block" | "source-changed";
-    readonly file?: "spec" | "plan" | "tasks";
+    /** T143 (feature 152): the commit-gate rule data is a watched source too. */
+    readonly file?: "spec" | "plan" | "tasks" | "commitGateRules";
     readonly needs?: string;
   };
   readonly message?: string;

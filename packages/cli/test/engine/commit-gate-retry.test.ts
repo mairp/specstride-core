@@ -175,6 +175,34 @@ const eventsOf = (fx: Fixture): string => {
   return readFileSync(join(runsDir, readdirSync(runsDir)[0], "events.jsonl"), "utf8");
 };
 
+/**
+ * T136 (F152-FR-019) — ordinary code commits. The proposer writes only a
+ * value that matches the carve-out's pattern (`key-name-then-value`): no
+ * attempt is blocked, the run makes its commit in one attempt, and no block
+ * record exists. The carve-out is the engine rule `cg-ordinary-code` — the
+ * project file plays no part.
+ */
+test("CT-152-12 ordinary code commits: no attempt is blocked", async () => {
+  const fx = fixture("ordinary-code");
+  try {
+    assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
+    const out = fx.out();
+    // One attempt, committed, and the digest counts NO block.
+    assert.match(out, /DIGEST exit=0 stop=none cost_usd=\d+\.\d+ commits_blocked=0 run=run-/);
+    assert.equal(existsSync(fx.control("commit-gate", "phase1.1.block.json")), false);
+    // The work of the phase is in the history, with the ordinary code file.
+    assert.equal(porcelain(fx.dir), "");
+    assert.equal(existsSync(join(fx.dir, "example.json")), true);
+    // The approval record of the phase exists, once.
+    const approval = JSON.parse(readFileSync(fx.control("approvals", "phase-1.json"), "utf8")) as {
+      verdictId: string;
+    };
+    assert.ok(typeof approval.verdictId === "string" && approval.verdictId.length > 0);
+  } finally {
+    fx.restore();
+  }
+});
+
 test("CT-152-2 a blocked commit is retried and succeeds on the next attempt", async () => {
   const fx = fixture("secret-removed-on-retry");
   try {
