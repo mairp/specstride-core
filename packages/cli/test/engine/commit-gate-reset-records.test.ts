@@ -7,13 +7,23 @@
  * demonstrating the reset ran once, not once per attempt.
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  readdirSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 import { controlRootOfWorkspace } from "../../src/engine/workspace-control-root.ts";
 import { readBlockRecord } from "../../../core/src/post-approval/commit-gate.ts";
 
@@ -54,7 +64,10 @@ function fixture(): { readonly dir: string; readonly bin: string; readonly resto
   mkdirSync(join(work, "specs", "001-one"), { recursive: true });
   writeFileSync(join(bin, "claude"), STUB("APPROVED"));
   chmodSync(join(bin, "claude"), 0o755);
-  writeFileSync(join(work, "specs", "001-one", "tasks.md"), "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n");
+  writeFileSync(
+    join(work, "specs", "001-one", "tasks.md"),
+    "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n",
+  );
   // Initialize as a git repo; set identity so CI without git config can commit.
   for (const argv of [
     ["init", "--quiet", "."],
@@ -77,21 +90,19 @@ function fixture(): { readonly dir: string; readonly bin: string; readonly resto
   } as const;
   process.env.HOME = root;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
-  delete process.env.SPECSTRIDE_FEATURE;
-  process.env.SPECSTRIDE_PROPOSER = "claude";
-  process.env.SPECSTRIDE_CRITIC = "claude";
-  process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  // A leaked launch environment must not reach the run (see helpers/fixture.ts);
+  // the fixture's own pins (the switch, notably) stay in the `before` block.
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
+  process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = before.BACKPRESSURE ?? "on";
   return {
     dir: work,
     bin,
     restore: () => {
+      restoreEnv();
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
-      if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE; else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
-      if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER; else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
-      if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC; else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
-      if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC; else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
-      if (before.BACKPRESSURE === undefined) delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE; else process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = before.BACKPRESSURE;
+      if (before.BACKPRESSURE === undefined) delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+      else process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = before.BACKPRESSURE;
       rmSync(root, { recursive: true, force: true });
     },
   };
@@ -135,7 +146,6 @@ async function readBlock(controlRoot: string, phase: number, ordinal: number) {
   });
 }
 
-
 test("--reset-counts moves existing block records into reset-<at>/ and does it once at run start", async () => {
   const { dir, restore } = fixture();
   try {
@@ -164,7 +174,9 @@ test("--reset-counts moves existing block records into reset-<at>/ and does it o
     assert.equal(existsSync(join(control, "commit-gate", preexisting)), false);
 
     // The reset ran once at run start: exactly one reset-<at> folder exists.
-    const resets = (readdirSync(join(control, "commit-gate")) as string[]).filter((n) => n.startsWith("reset-"));
+    const resets = (readdirSync(join(control, "commit-gate")) as string[]).filter((n) =>
+      n.startsWith("reset-"),
+    );
     assert.equal(resets.length, 1, `expected exactly one reset-<at> folder, got ${resets.length}`);
   } finally {
     delete process.env.STUB_NEW_FILE;

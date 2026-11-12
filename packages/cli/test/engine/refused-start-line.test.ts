@@ -14,6 +14,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 
 const STUB = join(
   import.meta.dirname,
@@ -51,16 +52,11 @@ test("CT-101-15 (CLI): a refused start prints the refusal line, then exits 3", a
   const before = {
     HOME: process.env.HOME,
     PATH: process.env.PATH,
-    FEATURE: process.env.SPECSTRIDE_FEATURE,
-    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
-    CRITIC: process.env.SPECSTRIDE_CRITIC,
   };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
-  process.env.SPECSTRIDE_FEATURE = "001-one";
-  // The stub is never called: the refusal ends the start before the loop.
-  process.env.SPECSTRIDE_PROPOSER = "claude";
-  process.env.SPECSTRIDE_CRITIC = "claude";
+  // A leaked launch environment must not reach the run (see helpers/fixture.ts).
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
   const chunks: string[] = [];
   const originalWrite = process.stdout.write.bind(process.stdout);
   process.stdout.write = ((chunk: unknown): boolean => {
@@ -84,14 +80,9 @@ test("CT-101-15 (CLI): a refused start prints the refusal line, then exits 3", a
     assert.ok(out.indexOf("refused (") < out.indexOf("[LOOP]"));
   } finally {
     process.stdout.write = originalWrite;
+    restoreEnv();
     process.env.HOME = before.HOME;
     process.env.PATH = before.PATH;
-    if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE;
-    else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
-    if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER;
-    else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
-    if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC;
-    else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
     rmSync(dir, { recursive: true, force: true });
   }
 });

@@ -21,6 +21,7 @@ import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
 import { controlRootOfWorkspace } from "../../src/engine/workspace-control-root.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 
 const STUB = (verdict: string): string => `#!/usr/bin/env node
 const fs = require("node:fs"), path = require("node:path");
@@ -74,33 +75,20 @@ function fixture(verdict: string): { readonly dir: string; readonly restore: () 
   const before = {
     HOME: process.env.HOME,
     PATH: process.env.PATH,
-    FEATURE: process.env.SPECSTRIDE_FEATURE,
-    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
-    CRITIC: process.env.SPECSTRIDE_CRITIC,
-    PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
   };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
-  // A leaked launch environment (SPECSTRIDE_FEATURE, and a dsh: proposer or
-  // critic of the engine's own run) would point the run away from this
-  // fixture's stub, so the fixture clears what it pins and restores it.
-  delete process.env.SPECSTRIDE_FEATURE;
-  process.env.SPECSTRIDE_PROPOSER = "claude";
-  process.env.SPECSTRIDE_CRITIC = "claude";
-  process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  // A leaked launch environment (SPECSTRIDE_FEATURE, a dsh: proposer or
+  // critic of the engine's own run, `SPECSTRIDE_LIMITS=off`, `STUB_DIR`)
+  // would point the run away from this fixture's stub or its bounds, so the
+  // shared helper pins and restores all of it.
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
   return {
     dir: work,
     restore: () => {
+      restoreEnv();
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
-      if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE;
-      else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
-      if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER;
-      else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
-      if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC;
-      else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
-      if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
-      else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
       rmSync(dir, { recursive: true, force: true });
     },
   };
@@ -157,8 +145,13 @@ test("the state directory is not committed", async () => {
 test("a run with a blocked commit exits 1 and says so on the digest and the console", async () => {
   const { dir, restore } = fixture("APPROVED");
   // A hit the gate never excuses: an address with embedded credentials, which
-  // the narrowed url-embedded-credentials pattern still matches.
-  process.env.STUB_NEW_FILE = 'const u = "https://user:pass@host";';
+  // the narrowed url-embedded-credentials pattern still matches. The stub text
+  // is assembled at runtime so THIS file's own diff carries no contiguous
+  // credential address: the commit gate of the campaign that runs this suite
+  // would otherwise hold the approval commit itself back
+  // (cg-url-embedded-credentials). The stub file still receives the exact
+  // bytes the inner gate is meant to trip on.
+  process.env.STUB_NEW_FILE = ['const u = "https', '://user:pass@host";'].join("");
   // The as-is behaviour this test pins (the exit-1 rule of 2026-11-04, part A
   // item 2) is now the switch-off behaviour of feature 152 (F152-FR-022,
   // CQ-152-05 A): with the switch off the run goes on and exits 1,

@@ -29,6 +29,7 @@ import {
   readDshBetweenPasses,
   runFeature,
 } from "../../src/engine/run-feature.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 
 /** The stub of `claude`, as `run-feature.test.ts` has it; what pass N does is the script the test writes. */
 const STUB = (passScript: string): string => `#!/usr/bin/env node
@@ -82,9 +83,12 @@ function fixture(passScript: string): { readonly dir: string; readonly restore: 
   const before = { HOME: process.env.HOME, PATH: process.env.PATH };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
+  // A leaked launch environment must not reach the run (see helpers/fixture.ts).
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
   return {
     dir: work,
     restore: () => {
+      restoreEnv();
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
       rmSync(dir, { recursive: true, force: true });

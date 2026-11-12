@@ -327,6 +327,13 @@ test(
       SPECSTRIDE_PROPOSER_PAUSE_SEC: "0",
       TEST_WORKDIR: work,
     };
+    // A leaked launch environment must not reach the child run: the stub
+    // `claude` on PATH is the engine's model, the feature is this fixture's,
+    // and the bounds are the engine's defaults.
+    env.SPECSTRIDE_PROPOSER = "claude";
+    env.SPECSTRIDE_CRITIC = "claude";
+    env.SPECSTRIDE_FEATURE = "001-one";
+    delete env.SPECSTRIDE_LIMITS;
     // Where the host allows a mount namespace (root on Linux, as tests/isolate.ts
     // requires), the engine runs with an EMPTY process file system mounted over
     // /proc — the regime that stalled the suite, where no table read answers and

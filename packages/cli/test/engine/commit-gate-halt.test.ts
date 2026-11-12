@@ -78,6 +78,7 @@ function fixture(name: string): Fixture {
     PROPOSER: process.env.SPECSTRIDE_PROPOSER,
     CRITIC: process.env.SPECSTRIDE_CRITIC,
     PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
     STUB_DIR: process.env.STUB_DIR,
   };
   process.env.HOME = dir;
@@ -87,6 +88,11 @@ function fixture(name: string): Fixture {
   process.env.SPECSTRIDE_PROPOSER = "claude";
   process.env.SPECSTRIDE_CRITIC = "claude";
   process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  // The bounds of the run are the engine's defaults (the reject limit of 3 in
+  // particular): an outer Specstride run may run with `SPECSTRIDE_LIMITS=off`,
+  // which would leave the differing-signature fixture retrying past the limit,
+  // so T091 would never see `max_rejects`.
+  delete process.env.SPECSTRIDE_LIMITS;
   process.env.STUB_DIR = scratch;
   const chunks: string[] = [];
   const originalWrite = process.stdout.write.bind(process.stdout);
@@ -125,6 +131,8 @@ function fixture(name: string): Fixture {
       else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
       if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
       else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
+      if (before.LIMITS === undefined) delete process.env.SPECSTRIDE_LIMITS;
+      else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
       if (before.STUB_DIR === undefined) delete process.env.STUB_DIR;
       else process.env.STUB_DIR = before.STUB_DIR;
       rmSync(dir, { recursive: true, force: true });

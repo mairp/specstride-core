@@ -30,6 +30,7 @@ import {
   learningModeOf,
 } from "../../src/engine/learning-loop.ts";
 import { runFeature } from "../../src/engine/run-feature.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 
 /* ------------------------------------------------------------------ *
  * Fixtures
@@ -126,9 +127,12 @@ function engineFixture(options: EngineOptions): {
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
   if (options.learning === undefined) delete process.env.SPECSTRIDE_LEARNING;
   else process.env.SPECSTRIDE_LEARNING = options.learning;
+  // A leaked launch environment must not reach the run (see helpers/fixture.ts).
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
   return {
     dir: work,
     restore: () => {
+      restoreEnv();
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
       if (before.SPECSTRIDE_LEARNING === undefined) delete process.env.SPECSTRIDE_LEARNING;
