@@ -1,0 +1,58 @@
+{
+  "schema": "specstride.profile-rows-115/1",
+  "note": "Data of feature 115. spec.md stands where the two differ. Every row is a row of feature 100, annex X §X.7; the key names are those of that annex.",
+  "owned": [
+    {
+      "Row": "1",
+      "Switch": "Loop strategy",
+      "Key": "loop.strategy",
+      "Default": "micro",
+      "Under `parity`": "classic",
+      "Register row": "DV-012",
+      "Requirement": "F115-FR-001",
+      "Status": "confirmed"
+    },
+    {
+      "Row": "2",
+      "Switch": "Closing check",
+      "Key": "loop.micro.closing_check",
+      "Default": "on",
+      "Under `parity`": "off",
+      "Register row": "DV-046",
+      "Requirement": "F115-FR-028",
+      "Status": "confirmed"
+    },
+    {
+      "Row": "3",
+      "Switch": "Escalation of the model tier as the second repair",
+      "Key": "loop.escalation",
+      "Default": "on",
+      "Under `parity`": "off",
+      "Register row": "DV-050",
+      "Requirement": "F115-FR-034",
+      "Status": "confirmed"
+    },
+    {
+      "Row": "64",
+      "Switch": "Routing",
+      "Key": "loop.routing",
+      "Default": "on",
+      "Under `parity`": "not used",
+      "Class": "Narrowing",
+      "Register row": "—",
+      "Requirement": "F115-FR-033",
+      "Status": "confirmed"
+    },
+    {
+      "Row": "65",
+      "Switch": "Repairs per task id",
+      "Key": "loop.micro.caps.repairs",
+      "Default": "2",
+      "Under `parity`": "not used",
+      "Class": "Narrowing",
+      "Register row": "DV-012",
+      "Requirement": "F115-FR-022",
+      "Status": "confirmed"
+    }
+  ]
+}
