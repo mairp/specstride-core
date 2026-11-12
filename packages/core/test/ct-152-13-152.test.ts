@@ -10,6 +10,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  writeFileSync,
   rmSync,
   statSync,
 } from "node:fs";
@@ -82,6 +83,83 @@ test("the block record: atomic write, right path, valid against the schema, nonc
     assert.ok(dirEntries.isDirectory());
     const entries = readdirSync(join(root, "commit-gate"));
     assert.deepEqual(entries, ["phase3.2.block.json"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * T167 — what a kill between the writes left undone (F152-FR-013).
+ * `stepsToCompleteABlock` reads the newest block record of the phase (the
+ * top level of `commit-gate/` only) and reports whether the corrective
+ * feedback and the counts of its ordinal are still missing. The counts of
+ * ordinal k are present when the ledger shows `phaseAttemptOrdinal` ≥ k —
+ * a ledger record carries `phase` and `attemptId` but no ordinal field.
+ * ------------------------------------------------------------------ */
+
+import { stepsToCompleteABlock } from "../src/post-approval/commit-gate.ts";
+
+function controlOf(root: string) {
+  return {
+    readControl: (path: string) =>
+      existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : null,
+  };
+}
+
+test("stepsToCompleteABlock: no block record is complete (T167)", async () => {
+  const root = mkdtempSync(join(tmpdir(), "ct-152-13-t167-"));
+  try {
+    const steps = await stepsToCompleteABlock(1, { ...controlOf(root), readCounts: () => ({ phaseAttemptOrdinal: 0 }) });
+    assert.deepEqual(steps, { complete: true });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("stepsToCompleteABlock: a block record with neither feedback nor counts asks for both (T167)", async () => {
+  const root = mkdtempSync(join(tmpdir(), "ct-152-13-t167-"));
+  try {
+    // The records of ordinals 1 and 2: the reader walks the ordinals from 1.
+    for (const ordinal of [1, 2]) {
+      await writeBlockRecord({ ...record(), ordinal }, {
+        atomicWrite: (file, text) => {
+          mkdirSync(dirname(file), { recursive: true });
+          atomicWrite(file, text);
+        },
+        inControl: (path) => join(root, path),
+      });
+    }
+    const steps = await stepsToCompleteABlock(3, { ...controlOf(root), readCounts: () => ({ phaseAttemptOrdinal: 0 }) });
+    assert.deepEqual(steps, { complete: false, ordinal: 2, writeFeedback: true, writeCounts: true });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("stepsToCompleteABlock: feedback present, counts missing asks for the counts only (T167)", async () => {
+  const root = mkdtempSync(join(tmpdir(), "ct-152-13-t167-"));
+  try {
+    for (const ordinal of [1, 2]) {
+      await writeBlockRecord({ ...record(), ordinal }, {
+        atomicWrite: (file, text) => {
+          mkdirSync(dirname(file), { recursive: true });
+          atomicWrite(file, text);
+        },
+        inControl: (path) => join(root, path),
+      });
+    }
+    mkdirSync(dirname(join(root, "features", "152-commit-backpressure", "feedback", "phase3.2.md")), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(root, "features", "152-commit-backpressure", "feedback", "phase3.2.md"),
+      "the corrective block",
+    );
+    const steps = await stepsToCompleteABlock(3, { ...controlOf(root), readCounts: () => ({ phaseAttemptOrdinal: 1 }) });
+    assert.deepEqual(steps, { complete: false, ordinal: 2, writeFeedback: false, writeCounts: true });
+    // Ordinal 2 is counted once the ledger shows phaseAttemptOrdinal ≥ 2.
+    const done = await stepsToCompleteABlock(3, { ...controlOf(root), readCounts: () => ({ phaseAttemptOrdinal: 2 }) });
+    assert.deepEqual(done, { complete: true });
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

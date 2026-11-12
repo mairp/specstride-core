@@ -72,6 +72,14 @@ export type PostApprovalDependencies = {
   }) => void;
   /** Step 3 — the as-is line of the approval, with the ordinal (B-0224). */
   readonly writeLine: (line: string) => void;
+  /**
+   * T116 — with the commit backpressure on, the engine saves the bytes of the
+   * phase's task list here, BEFORE step 4 ticks them, so a void of the
+   * approval (F152-FR-014) can put them back. No step of
+   * `ORDER_AFTER_AN_APPROVAL` is added: the as-is list stays unchanged, and
+   * where the port is absent (the switch off) nothing happens.
+   */
+  readonly savePreTick?: (phase: number) => void;
   /** Step 4 — ticking (`./tick.ts`). */
   readonly tick: Omit<TickInputs, "phase">;
   /** Step 4 — the as-is event of a tick that worked (B-0103). */
@@ -139,7 +147,10 @@ export function stepsAfterAnApproval(
   deps.emitPhaseDone({ phase: inputs.phase, attempt: inputs.ordinal, title: inputs.title });
   deps.writeLine(phaseApproved(inputs.phase, inputs.ordinal));
 
-  // 4 — tick the tasks.
+  // 4 — tick the tasks. T117 — immediately before the tick, the engine saves
+  // the pre-tick bytes of the task list (F152-FR-004), where the port was
+  // wired in. The as-is list of steps gains no entry.
+  deps.savePreTick?.(inputs.phase);
   stepsRun.push(ORDER_AFTER_AN_APPROVAL[3] as string);
   const tick = tickTheTasks({ ...deps.tick, phase: inputs.phase });
   if (tick.ran && tick.ticked) {

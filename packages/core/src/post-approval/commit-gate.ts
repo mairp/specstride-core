@@ -268,6 +268,311 @@ export async function writeBlockRecord(
 }
 
 /* ------------------------------------------------------------------ *
+ * T168 — the steps of a block a kill left unfinished (F152-FR-013).
+ * ------------------------------------------------------------------ */
+
+/**
+ * What of one block's write order is still missing. `complete` where either
+ * no block record exists (the attempt re-runs from its start, as any
+ * interrupted attempt does) or the feedback and the counts are both present.
+ */
+export type StepsToCompleteABlock =
+  | { readonly complete: true }
+  | {
+      readonly complete: false;
+      /** The ordinal k of the newest block record of the phase. */
+      readonly ordinal: number;
+      /** The corrective feedback file of ordinal k is missing. */
+      readonly writeFeedback: boolean;
+      /** The counts of ordinal k are missing. */
+      readonly writeCounts: boolean;
+    };
+
+/** The counts of one phase, as `stepsToCompleteABlock` reads them. */
+export type CountsOfABlock = { readonly phaseAttemptOrdinal: number };
+
+/**
+ * T168 — the block record of the newest ordinal k of the phase says what a
+ * kill between the writes left undone (F152-FR-013; plan, "Crash and resume
+ * design"). The counts of ordinal k are present when the ledger counts of the
+ * phase show `phaseAttemptOrdinal` ≥ k — a ledger record carries `phase` and
+ * `attemptId` but no ordinal field, so this is how "ordinal k is counted" is
+ * read. The corrective feedback rides the feature's own feedback folder, read
+ * from the `feature` the block record carries.
+ */
+export async function stepsToCompleteABlock(
+  phase: number,
+  ports: {
+    readonly readControl: (path: string) => Promise<string | null> | string | null;
+    readonly readCounts: () => CountsOfABlock;
+  },
+): Promise<StepsToCompleteABlock> {
+  let ordinal = 0;
+  let record: Record<string, unknown> | null = null;
+  for (;;) {
+    const next = await readBlockRecord(phase, ordinal + 1, ports);
+    if (next === null) break;
+    ordinal += 1;
+    record = next;
+  }
+  if (record === null) return { complete: true };
+  const feature = typeof record.feature === "string" ? record.feature : "";
+  const feedbackPath = `features/${feature}/feedback/phase${String(phase)}.${String(ordinal)}.md`;
+  const feedback = await awaited(ports.readControl(feedbackPath));
+  const countsPresent = ports.readCounts().phaseAttemptOrdinal >= ordinal;
+  if (feedback === null && !countsPresent) {
+    return { complete: false, ordinal, writeFeedback: true, writeCounts: true };
+  }
+  if (feedback === null) {
+    return { complete: false, ordinal, writeFeedback: true, writeCounts: false };
+  }
+  if (!countsPresent) {
+    return { complete: false, ordinal, writeFeedback: false, writeCounts: true };
+  }
+  return { complete: true };
+}
+
+/* ------------------------------------------------------------------ *
+ * US3 — the pre-tick copy, the void marker and the restore (T118–T120;
+ * F152-FR-004, F152-FR-014).
+ * ------------------------------------------------------------------ */
+
+/**
+ * The checkbox syntax of EVERY format (F104-FR-011; B-2021), as
+ * `packages/spec-formats/src/model.ts` states it: optional indent, `-`,
+ * optional spaces, `[ ]`, `[x]`, `[X]` or `[]`, then the text. The one
+ * grammar of the spec-formats package is not imported here — a core package
+ * depends only on contracts and kernel — and a core file holds no reader of
+ * the grammar either (F104-SC-001, the one-grammar owner), so the line shape
+ * is read by hand, character by character, with the same acceptance as the
+ * owner's own pattern. Every function below reads a tick line through these
+ * two readers and no other shape.
+ */
+
+/** The two forms of a task id (F104-FR-010, F104-FR-013): `T001b`, `1.2`. */
+const TASK_ID_AT_TEXT_START = /^(?:T\d+[A-Za-z]?|\d+(?:\.\d+)+)\b/;
+
+const IS_SPACE = (character: string | undefined) =>
+  character === " " || character === "\t";
+
+/** One line read as a checkbox line, or `undefined` where it is not one. */
+function checkboxLineOf(
+  line: string,
+): { readonly markIndex: number; readonly mark: string; readonly rest: string } | undefined {
+  let at = 0;
+  while (IS_SPACE(line[at])) at += 1;
+  const indentEnds = at;
+  if (line[at] !== "-") return undefined;
+  at += 1;
+  while (IS_SPACE(line[at])) at += 1;
+  if (line[at] !== "[") return undefined;
+  const markIndex = at + 1;
+  const mark = line[markIndex] ?? "";
+  if (mark !== "" && mark !== " " && mark !== "x" && mark !== "X") return undefined;
+  if (line[markIndex + 1] !== "]") return undefined;
+  // indent + "-" + spaces + "[" is everything before the mark: the one
+  // byte a tick may change (F104-FR-017). The rest begins after the box.
+  if (mark === "" || line.slice(markIndex + 2).trim() === "") return undefined;
+  return { mark, markIndex, rest: line.slice(markIndex + 2) };
+}
+
+/**
+ * The number of the phase a heading opens, or `undefined` where the line is
+ * no heading of a phase. The heading forms the grammar owner accepts: one to
+ * six `#` marks, whitespace, then the phase named as `Phase 3` or `P3`, in
+ * any case, with the number after optional whitespace.
+ */
+function phaseNumberOf(line: string): number | undefined {
+  let at = 0;
+  while (line[at] === "#") at += 1;
+  if (at === 0 || at > 6) return undefined;
+  if (!IS_SPACE(line[at])) return undefined;
+  while (IS_SPACE(line[at])) at += 1;
+  const word = line.slice(at).toLowerCase();
+  let cursor = at;
+  if (word.startsWith("phase")) cursor = at + 5;
+  else if (word[0] === "p") cursor = at + 1;
+  else return undefined;
+  while (IS_SPACE(line[cursor])) cursor += 1;
+  const digitsBegin = cursor;
+  let number = 0;
+  while (line[cursor] !== undefined && line[cursor] >= "0" && line[cursor] <= "9") {
+    number = number * 10 + (line.charCodeAt(cursor) - 48);
+    cursor += 1;
+  }
+  return cursor === digitsBegin ? undefined : number;
+}
+
+/**
+ * T119 — true when the two texts differ ONLY in the checked state of the task
+ * checkboxes of the phase (F152-FR-004). Compared by line: a difference is
+ * allowed only where both lines are task checkbox lines of the phase's own
+ * section and nothing but the mark inside the box moved. A human's edit of
+ * any other byte is NOT ticks-only, so the pre-tick bytes are never written
+ * over it.
+ */
+export function onlyTicksChanged(preTick: string, now: string, phase: number): boolean {
+  const before = preTick.split("\n");
+  const after = now.split("\n");
+  if (before.length !== after.length) return false;
+  let within = false;
+  for (let at = 0; at < before.length; at += 1) {
+    const left = before[at] as string;
+    const right = after[at] as string;
+    const heading = phaseNumberOf(left);
+    if (heading !== undefined) within = heading === phase;
+    if (left === right) continue;
+    const leftBox = checkboxLineOf(left);
+    const rightBox = checkboxLineOf(right);
+    if (!within || leftBox === undefined || rightBox === undefined) return false;
+    if (leftBox.markIndex !== rightBox.markIndex) return false;
+    if (leftBox.rest !== rightBox.rest) return false;
+    if (!TASK_ID_AT_TEXT_START.test(rightBox.rest.trimStart())) return false;
+  }
+  return true;
+}
+
+/** The logical path of the pre-tick copy of one phase's task list. */
+export function preTickPath(phase: number): string {
+  return `${COMMIT_GATE_DIR}/phase${String(phase)}.pretick.md`;
+}
+
+/** The logical path of the void marker of one phase's approval. */
+export function voidMarkerPath(phase: number): string {
+  return `${COMMIT_GATE_DIR}/phase${String(phase)}.void.json`;
+}
+
+/** The ports the pre-tick copy and the void marker read and write through. */
+export type PreTickPorts = {
+  /** The absolute path of the phase's tasks.md. */
+  readonly tasksPath: () => string;
+  /** The current bytes of the phase's tasks.md. */
+  readonly readTasksText: () => string;
+  /** The absolute path of one file of the control plane, by logical name. */
+  readonly inControl: (path: string) => string;
+  /** Read one file of the control plane, or `null` where it does not exist. */
+  readonly readControlText: (file: string) => Promise<string | null> | string | null;
+  /** The kernel's atomic write; the mode is copied, as `tickFile` does. */
+  readonly writeAtomic: (file: string, text: string, mode: number) => Promise<void> | void;
+  /** The mode of one file, masked to what a file may hold. */
+  readonly modeOf: (file: string) => number;
+  /** Put a mode back that the process umask took something off. */
+  readonly chmod: (file: string, mode: number) => void;
+};
+
+/**
+ * T118 — save the bytes of the phase's task list BEFORE the tick (step 4 of
+ * the order after an approval), atomically, with the file mode copied the way
+ * `tickFile` copies it (packages/spec-formats/src/tick.ts:238).
+ */
+export async function savePreTick(phase: number, ports: PreTickPorts): Promise<void> {
+  const path = ports.tasksPath();
+  const text = ports.readTasksText();
+  const mode = ports.modeOf(path) & 0o7777;
+  const file = ports.inControl(preTickPath(phase));
+  await awaited(ports.writeAtomic(file, text, mode));
+  if ((ports.modeOf(file) & 0o7777) !== mode) ports.chmod(file, mode);
+}
+
+/**
+ * T118 — restore the pre-tick bytes of the phase's task list, atomically,
+ * with the mode the copy carries. False where no copy exists (the tick never
+ * ran, so there is nothing to restore).
+ */
+export async function restorePreTick(phase: number, ports: PreTickPorts): Promise<boolean> {
+  const copy = ports.inControl(preTickPath(phase));
+  const text = await awaited(ports.readControlText(copy));
+  if (text === null || text === undefined) return false;
+  const mode = ports.modeOf(copy) & 0o7777;
+  await awaited(ports.writeAtomic(ports.tasksPath(), text, mode));
+  if ((ports.modeOf(ports.tasksPath()) & 0o7777) !== mode) ports.chmod(ports.tasksPath(), mode);
+  return true;
+}
+
+/** What a void of one approval reports back (T120). */
+export type VoidApprovalResult =
+  | { readonly halt?: undefined }
+  | { readonly halt: "commit-gate"; readonly file: string };
+
+/** The inputs of one void of an approval (T120; data-model.md E4). */
+export type VoidApprovalInputs = {
+  readonly phase: number;
+  readonly verdictId: string;
+  readonly ordinal: number;
+  readonly path: "step-6" | "resume";
+};
+
+/**
+ * The ticks of one phase, taken back: every ticked task line of the phase's
+ * section loses its mark (F152-FR-014 — a voided approval never leaves the
+ * ticks of its attempt standing, so the phase runs again from its first
+ * attempt and no tick can pass for approved work). The text, not the file, is
+ * the unit: the caller writes it back.
+ */
+export function untickedTextOf(phase: number, text: string): string {
+  const lines = text.split("\n");
+  const out = lines.map((line) => {
+    const heading = phaseNumberOf(line);
+    const within = heading !== undefined && heading === phase;
+    if (!within) return line;
+    const box = checkboxLineOf(line);
+    if (box === undefined || (box.mark !== "x" && box.mark !== "X")) return line;
+    return line.slice(0, box.markIndex) + " " + line.slice(box.markIndex + 1);
+  });
+  if (out.every((line, at) => line === lines[at])) return text;
+  return out.join("\n");
+}
+
+/**
+ * T120 — void one approval (F152-FR-014). Where the task list changed since
+ * the tick ONLY in its ticks, the pre-tick bytes go back first; where a human
+ * edited anything else, the run halts `commit-gate` naming the file, and the
+ * bytes are never overwritten. Then the ticks of the phase go back, and only
+ * then is the void marker E4 — the verdictId of the record it voids —
+ * written, so the reader of F101-FR-031 never sees a voided record whose
+ * ticks still stand.
+ */
+export async function voidApproval(
+  inputs: VoidApprovalInputs,
+  ports: PreTickPorts,
+): Promise<VoidApprovalResult> {
+  const copy = ports.inControl(preTickPath(inputs.phase));
+  const preTick = await awaited(ports.readControlText(copy));
+  if (preTick !== null && preTick !== undefined) {
+    if (!onlyTicksChanged(preTick, ports.readTasksText(), inputs.phase)) {
+      return { halt: "commit-gate", file: ports.tasksPath() };
+    }
+    await restorePreTick(inputs.phase, ports);
+  }
+  // The ticks of the phase go back, whether the restore brought them or the
+  // tick never ran through the engine at all.
+  const unticked = untickedTextOf(inputs.phase, ports.readTasksText());
+  if (unticked !== ports.readTasksText()) {
+    const mode = ports.modeOf(ports.tasksPath()) & 0o7777;
+    await awaited(ports.writeAtomic(ports.tasksPath(), unticked, mode));
+    if ((ports.modeOf(ports.tasksPath()) & 0o7777) !== mode) ports.chmod(ports.tasksPath(), mode);
+  }
+  await awaited(
+    ports.writeAtomic(
+      ports.inControl(voidMarkerPath(inputs.phase)),
+      `${JSON.stringify(
+        {
+          phase: inputs.phase,
+          ordinal: inputs.ordinal,
+          verdictId: inputs.verdictId,
+          path: inputs.path,
+          at: new Date().toISOString(),
+        },
+        null,
+        2,
+      )}\n`,
+      0o644,
+    ),
+  );
+  return {};
+}
+
+/* ------------------------------------------------------------------ *
  * T043 — the switch of F152-FR-021.
  * ------------------------------------------------------------------ */
 

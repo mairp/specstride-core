@@ -430,13 +430,24 @@ export async function afterARejection(
 
   /* The counts: read from the ledger, raised, written back. */
   const before = deps.counts.read();
-  const counts = countsAfterARejection({
-    before,
-    ordinal: inputs.ordinal,
-    kind: inputs.kind,
-    malformedLimit,
-  });
-  deps.counts.write(counts);
+  // T127 — the counts write is IDEMPOTENT per ordinal for a block
+  // (F152-FR-013, F152-FR-015): a write for kind `commit-blocked` and ordinal
+  // k is a no-op when the ledger counts of the phase already show
+  // `phaseAttemptOrdinal` ≥ k — the resume of a kill between the feedback and
+  // the counts (T169) has counted that block once, and the write must not
+  // count it a second time. A ledger record carries `phase` and `attemptId`
+  // but no ordinal field, so the ordinal is read from the counts.
+  const alreadyCounted =
+    inputs.kind === "commit-blocked" && before.phaseAttemptOrdinal >= inputs.ordinal;
+  const counts = alreadyCounted
+    ? before
+    : countsAfterARejection({
+        before,
+        ordinal: inputs.ordinal,
+        kind: inputs.kind,
+        malformedLimit,
+      });
+  if (!alreadyCounted) deps.counts.write(counts);
 
   /* F101-FR-014 — every rejection emits the as-is event and writes the line. */
   const rejection = rejectionRecordOf({

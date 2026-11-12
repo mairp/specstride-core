@@ -110,7 +110,7 @@ test("a repeated block on the last allowed attempt halts from the table on `max_
   // recorded rule id prove the table step ran before the reject limit), and it
   // maps to the existing stop reason `max_rejects` (CQ-152-01).
   assert.equal(outcome.blocked?.reason, "commit-gate");
-  assert.match(outcome.stopFields?.ruleId ?? "", /CGH-1/);
+  assert.match(String(outcome.stopFields?.ruleId ?? ""), /CGH-1/);
   assert.equal(outcome.stopReason, "max_rejects");
   assert.equal(outcome.exitCode, 2);
 });
