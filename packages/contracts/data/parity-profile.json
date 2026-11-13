@@ -2001,6 +2001,60 @@
       "registerRows": [
         "DV-121"
       ]
+    },
+    {
+      "number": 135,
+      "switch": "The time limit of the check is enforced (F153-FR-029)",
+      "key": "verification.timeLimit.enforce",
+      "keys": [
+        "verification.timeLimit.enforce"
+      ],
+      "keyNote": "`verification.timeLimit.enforce`",
+      "default": "on",
+      "parity": "on: a ruled defect fix (CQ-153-13 A)",
+      "owner": "153",
+      "registerRows": [
+        "DV-123 (the defect-fix row requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 136,
+      "switch": "The closing check skips when the gate result equals the check's (F153-FR-012)",
+      "key": "loop.micro.closingCheck.skipWhenEqualToGate",
+      "keys": [
+        "loop.micro.closingCheck.skipWhenEqualToGate"
+      ],
+      "keyNote": "`loop.micro.closingCheck.skipWhenEqualToGate`",
+      "default": "on",
+      "parity": "off: the closing check runs whenever the layer is on",
+      "owner": "153",
+      "registerRows": []
+    },
+    {
+      "number": 137,
+      "switch": "The inner check set is scoped to the touched paths (F153-FR-045)",
+      "key": "verification.inner.scoped",
+      "keys": [
+        "verification.inner.scoped"
+      ],
+      "keyNote": "`verification.inner.scoped`",
+      "default": "on",
+      "parity": "off: every command of the inner set runs (F115-FR-013)",
+      "owner": "153",
+      "registerRows": []
+    },
+    {
+      "number": 138,
+      "switch": "The critic reads the evidence of each task, not the whole diff (F153-FR-051)",
+      "key": "critic.evidence.perTask",
+      "keys": [
+        "critic.evidence.perTask"
+      ],
+      "keyNote": "`critic.evidence.perTask`",
+      "default": "on",
+      "parity": "off: the whole diff capped at 200,000 bytes",
+      "owner": "153",
+      "registerRows": []
     }
   ]
 }

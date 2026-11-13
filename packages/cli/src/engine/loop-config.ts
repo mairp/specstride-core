@@ -87,6 +87,28 @@ export type LoopConfiguration = {
    * annotated off switches it off.
    */
   readonly backpressureValue: unknown;
+  /**
+   * `verification.timeLimit.enforce` (feature 153, row 135 of annex X §X.7),
+   * on by default and on under `parity` (CQ-153-13 A: a ruled defect fix). A
+   * project-file value that would turn it off is ignored: the project file may
+   * only narrow, and lifting the limit is not narrowing (F153-FR-005).
+   */
+  readonly timeLimitEnforced: boolean;
+  /**
+   * `loop.micro.closingCheck.skipWhenEqualToGate` (feature 153, row 136), on
+   * by default and off under `parity`.
+   */
+  readonly closingCheckSkipsWhenEqualToGate: boolean;
+  /**
+   * `verification.inner.scoped` (feature 153, row 137), on by default and off
+   * under `parity`.
+   */
+  readonly innerChecksAreScoped: boolean;
+  /**
+   * `critic.evidence.perTask` (feature 153, row 138), on by default and off
+   * under `parity`.
+   */
+  readonly criticEvidenceIsPerTask: boolean;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
 };
@@ -224,6 +246,35 @@ const NUMBER_KEYS: Readonly<Record<keyof Caps, string>> = Object.freeze({
 });
 
 /**
+ * The reading of an `on, off` switch that `closingCheck` and
+ * `commitBackpressureIsOn` already use: the literal `off`, a string that
+ * starts with `off` (the cell of a row of the parity profile) and the boolean
+ * `false` switch it off; everything else — including no value at all — keeps
+ * it on, so a switch that no source holds stands at its default.
+ */
+function switchIsOn(value: unknown): boolean {
+  if (typeof value === "string") return !value.startsWith("off");
+  return value !== false;
+}
+
+/** The key of the enforced time limit of the check (feature 153, row 135). */
+export const TIME_LIMIT_ENFORCE_KEY = "verification.timeLimit.enforce";
+
+/**
+ * The value of `verification.timeLimit.enforce`, read from the layers above
+ * the project file (F153-FR-005): a project file may only narrow, and the
+ * project file turning the enforcement off would lift the limit, so such an
+ * offer is skipped and the next offer above it — or the default, on — stands.
+ */
+function timeLimitEnforcedOf(resolved: ResolvedConfiguration): boolean {
+  for (const offer of offersOf(resolved, TIME_LIMIT_ENFORCE_KEY)) {
+    if (offer.layer === "project-configuration" && !switchIsOn(offer.value)) continue;
+    return switchIsOn(offer.value);
+  }
+  return true;
+}
+
+/**
  * Resolve the loop keys of a run through the real configuration: the files
  * the loader finds (the user file of `user:config`, the project file
  * `specstride.yaml` of the workspace), the environment and the defaults of
@@ -275,6 +326,12 @@ export function loopConfigurationOf(input: {
     source: configured ? ("configured" as const) : ("default" as const),
     configuredValue: configured ? strategy.value : undefined,
     backpressureValue: valueOf("commit.backpressure").value,
+    timeLimitEnforced: timeLimitEnforcedOf(resolved),
+    closingCheckSkipsWhenEqualToGate: switchIsOn(
+      valueOf("loop.micro.closingCheck.skipWhenEqualToGate").value,
+    ),
+    innerChecksAreScoped: switchIsOn(valueOf("verification.inner.scoped").value),
+    criticEvidenceIsPerTask: switchIsOn(valueOf("critic.evidence.perTask").value),
     parallel: parallelConfigurationOf(resolved),
   });
 }

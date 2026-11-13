@@ -716,6 +716,34 @@
       "note": "row 134 of annex X §X.7; the commit gate of F152-FR-021"
     },
     {
+      "key": "verification.timeLimit.enforce",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 135 of annex X §X.7; the enforced time limit of F153-FR-029 (CQ-153-13 A: on under parity, a ruled defect fix)"
+    },
+    {
+      "key": "loop.micro.closingCheck.skipWhenEqualToGate",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 136 of annex X §X.7; the closing-check skip of F153-FR-012"
+    },
+    {
+      "key": "verification.inner.scoped",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 137 of annex X §X.7; the scoped inner set of F153-FR-045"
+    },
+    {
+      "key": "critic.evidence.perTask",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 138 of annex X §X.7; the per-task critic evidence of F153-FR-051"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",
