@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.workspace-selection/1",
+  "title": "Workspace selection of an in-pass check (F153-FR-045 to F153-FR-047; data-model.md D15)",
+  "description": "The record of one decision of the workspace-selection table (rules WS-1 to WS-7 of plan.md): which declared commands of the inner check set an in-pass check ran, or why the full set ran. PROPOSAL. Only declared fixed-argv commands are ever selected and none is synthesised (F153-FR-045); uncertainty selects the full set (F153-FR-046); the verification gate of the phase is never scoped (F153-FR-047, rule WS-2). No decision reads this record back (F153-FR-006).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "phase",
+    "attempt",
+    "rule",
+    "choice",
+    "selectedCommandIds"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.workspace-selection/1"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rule": {
+      "enum": [
+        "WS-1",
+        "WS-2",
+        "WS-3",
+        "WS-4",
+        "WS-5",
+        "WS-6",
+        "WS-7"
+      ]
+    },
+    "choice": {
+      "enum": [
+        "full",
+        "scoped"
+      ]
+    },
+    "graphHashAtPhaseEntry": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "null when the graph could not be read."
+    },
+    "graphHashAtSelection": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "changedWorkspaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependentWorkspaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Found by the reverse-dependency walk of the static graph."
+    },
+    "selectedCommandIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ids of declared commands only, in manifest order."
+    }
+  }
+}

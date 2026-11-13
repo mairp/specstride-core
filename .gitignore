@@ -7,3 +7,6 @@ packages/cli/.build/
 *.log
 .env
 .env.*
+
+# Local evaluation notes (prompt and reports); never committed.
+.eval/

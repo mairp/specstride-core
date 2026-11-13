@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.report-rows/1",
+  "title": "specstride report rows (F153-FR-039 to -041; data-model.md D6)",
+  "description": "The rows of the read-only report in its opt-in --json form. A pure projection of events and control-plane records: unclosed attempts are shown as unclosed, unknowns are null, no duration is imputed, no manual critic split is printed (L-3), no secret can appear (F153-FR-003 ingress holds for every string here). The command writes no file (F129-FR-015 precedent). PROPOSAL of spec 153.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "runId", "rows"],
+  "properties": {
+    "schema": { "const": "specstride.report-rows/1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["attempt", "gate", "critic", "commit-gate", "check", "notice", "selection"]
+          },
+          "phase": { "type": ["string", "null"] },
+          "attempt": { "type": ["string", "null"] },
+          "endCause": { "type": ["string", "null"], "$comment": "a member of §X.6 row 272, or null while the attempt is unclosed — never guessed" },
+          "synthesized": { "type": ["boolean", "null"] },
+          "durationMs": { "type": ["integer", "null"], "minimum": 0, "$comment": "only where an event or record carries it; null otherwise" },
+          "commandId": { "type": ["string", "null"] },
+          "concurrent": { "type": ["boolean", "null"], "$comment": "the F148 flag; parallel durations are flagged, never averaged away" },
+          "notice": { "type": ["string", "null"], "maxLength": 300, "$comment": "ingressed engine-labelled excerpt only (F153-FR-040)" },
+          "rule": { "type": ["string", "null"], "$comment": "the rule id of the decision that produced this row (F153-FR-008)" }
+        }
+      }
+    }
+  }
+}

@@ -279,6 +279,16 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The fake commands of feature 153's loop-speed fixtures (the approved
+      // tasks T002 to T006 name them as `.mjs`) are test doubles run by the
+      // engine tests, not source of the product, and no published package
+      // ships them.
+      if (
+        path.startsWith("packages/cli/test/fixtures/loop-speed/bin/") &&
+        path.endsWith(".mjs")
+      ) {
+        continue;
+      }
       const name = path.slice(path.lastIndexOf("/") + 1);
       if (name === ".gitkeep" || name.endsWith(".md")) continue;
       const dot = name.lastIndexOf(".");
