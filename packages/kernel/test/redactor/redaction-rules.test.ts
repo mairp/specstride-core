@@ -35,13 +35,16 @@ import {
   BASELINE_SECRET_KEYS,
   BASELINE_SECRET_VALUE_PATTERNS,
   REDACTED,
+  SOURCE_UNSAFE_VALUE_PATTERN_NAMES,
   THINKING_KEYS,
   isBaselineSecretKey,
   isThinkingKey,
   redactText,
   redactValue,
+  shapedSecretValuePatterns,
 } from "../../src/redactor/rules.ts";
 import { REDACTION_PLACEHOLDER } from "../../src/redactor/index.ts";
+import { createRedactor } from "../../src/redactor/redactor.ts";
 
 /* ------------------------------------------------------------------ *
  * The reference half: skipped with its reason while the oracle is absent.
@@ -308,4 +311,80 @@ test("a stream record of the shape FX-26 captures loses its secrets and keeps it
   const value = out.value as { type: string; headers: Record<string, unknown> };
   assert.equal(value.type, "assistant");
   assert.equal(value.headers["x-request-id"], "req-1");
+});
+
+/* ------------------------------------------------------------------ *
+ * The source scope: the diff a critic prompt is grounded on.
+ *
+ * The letter of F111-FR-025 ("in any text") collides with source code: the
+ * key-name-then-value rule reads a type annotation (`token: string`) and a
+ * plain assignment (`const token = read(x).token;`) exactly as it reads a
+ * secret, and a working-tree diff is full of such lines. The source scope
+ * leaves that one rule out for that one kind of text; every other path keeps
+ * the full set. The backstop for a real secret written in `key=value` form
+ * stays where it is: the scan before a commit runs the full set on the bytes,
+ * so a tree holding one cannot reach a commit at all.
+ * ------------------------------------------------------------------ */
+
+test("the source scope drops exactly the source-unsafe rule", () => {
+  assert.deepEqual([...SOURCE_UNSAFE_VALUE_PATTERN_NAMES], ["key-name-then-value"]);
+  const shaped = shapedSecretValuePatterns(BASELINE_SECRET_VALUE_PATTERNS);
+  assert.equal(shaped.length, BASELINE_SECRET_VALUE_PATTERNS.length - 1);
+  assert.ok(!shaped.some((entry) => entry.name === "key-name-then-value"));
+  // The other baseline rules stay, in their order.
+  assert.deepEqual(
+    shaped.map((entry) => entry.name),
+    ["bearer", "sk-prefix", "github-prefix"],
+  );
+});
+
+test("the source scope keeps a type annotation and a plain assignment that the full set destroys", () => {
+  const source = [
+    "export function cursorToken(cursor: unknown, token: string): string {",
+    '  const token = read(view).cursorTokens[0] ?? "";',
+    "  return token;",
+    "}",
+  ].join("\n");
+  // The collision exists: the full set destroys the grounding.
+  const full = redactText(source);
+  assert.equal(full.redacted, true);
+  assert.ok(full.text.includes(REDACTED));
+  assert.ok(!full.text.includes("token: string"), full.text);
+  // The source scope keeps the identifiers and the signatures, byte for byte.
+  const shaped = redactText(source, shapedSecretValuePatterns(BASELINE_SECRET_VALUE_PATTERNS));
+  assert.equal(shaped.redacted, false);
+  assert.equal(shaped.text, source);
+});
+
+test("the source scope still takes the shaped secrets (negative control beside every keep)", () => {
+  const secret = "ghp_abcd1234efgh";
+  const source = [
+    "export function cursorToken(cursor: unknown, token: string): string {",
+    "  return token;",
+    "}",
+    `const head = "Bearer abcdefgh123456";`,
+    `const stub = "sk-abcdefgh1234";`,
+    `const real = "${secret}";`,
+  ].join("\n");
+  const shaped = redactText(source, shapedSecretValuePatterns(BASELINE_SECRET_VALUE_PATTERNS));
+  assert.equal(shaped.redacted, true);
+  assert.ok(!shaped.text.includes("Bearer abcdefgh123456"), shaped.text);
+  assert.ok(!shaped.text.includes("sk-abcdefgh1234"), shaped.text);
+  assert.ok(!shaped.text.includes(secret), shaped.text);
+  // The grounding survives beside the redactions.
+  assert.ok(shaped.text.includes("cursorToken(cursor: unknown, token: string)"), shaped.text);
+});
+
+test("redactSource through the one redactor: the grounding survives, the full path is unchanged", () => {
+  const redactor = createRedactor();
+  const source =
+    "export function cursorToken(cursor: unknown, token: string): string { return token; }";
+  const served = redactor.redactSource(source, 1_000_000);
+  assert.ok(!served.dropped, String(served.reason));
+  assert.ok(served.text.includes("token: string"), served.text);
+  // The full path keeps the baseline letter: a key-name shape still goes.
+  const full = redactor.redact("const token = sekritvalue;", 1_000_000);
+  assert.ok(!full.dropped, String(full.reason));
+  assert.ok(full.text.includes(REDACTED), full.text);
+  assert.ok(!full.text.includes("sekritvalue"), full.text);
 });

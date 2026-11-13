@@ -1467,6 +1467,20 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const result = ingress.document(text, CHANGE_CAP_BYTES * 2);
     return result.dropped ? "[content dropped: the redactor cannot run]" : result.text;
   };
+  // The diff of the working tree is source. The key-name-then-value rule of the
+  // baseline cannot tell a type annotation (`token: string`) from a secret
+  // assignment (`token: hunter2`), so a diff run through the full set reaches
+  // the critic with its identifiers and signatures destroyed — the critic then
+  // grounds on placeholder marks and broken signatures and rejects work the
+  // gate passed (the "placeholders and invalid function signatures" unmet line
+  // of a real campaign). The source scope keeps the shaped secrets (bearer,
+  // sk-, the vendor prefixes, the key blocks); the scan before a commit keeps
+  // its own full scan of the bytes. Still the one redaction point: the ingress
+  // runs it, the caller only declares the kind of the text.
+  const redactedSource = (text: string): string => {
+    const result = ingress.documentSource(text, CHANGE_CAP_BYTES * 2);
+    return result.dropped ? "[content dropped: the redactor cannot run]" : result.text;
+  };
 
   /* --- the recovery cycle (step 2): markers, hint, diagnosis, note ----- *
    *
@@ -2945,7 +2959,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                           taskOrder: taskIdsOfThePhase(phase),
                         })}`
                       : "",
-                    `\n# The change in the working tree\n${redacted(
+                    `\n# The change in the working tree\n${redactedSource(
                       changeOf(
                         workdir,
                         specDocsAtAttemptStart === undefined

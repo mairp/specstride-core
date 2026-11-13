@@ -245,6 +245,46 @@ test("a secret in the change blocks the commit and is not shown to the critic", 
   }
 });
 
+// REGRESSION — the diff a critic prompt is grounded on is source. The
+// key-name-then-value rule of the baseline cannot tell a type annotation
+// (`token: string`) from a secret assignment, so the served diff reached the
+// critic as placeholder marks and broken signatures, and the critic rejected
+// work the gate had passed ("placeholders and invalid function signatures",
+// a real campaign, 2026-11-13). The prompt's diff section now runs the source
+// scope: the shaped secrets still go, identifiers survive.
+test("a type annotation in the change reaches the critic unmangled, a shaped secret does not", async () => {
+  const { dir, restore } = fixture("APPROVED");
+  const secret = `ghp_${"a1B2c3D4e5".repeat(4)}`;
+  process.env.STUB_NEW_FILE = [
+    "export function cursorToken(cursor: unknown, token: string): string {",
+    '  const token = read(view).cursorTokens[0] ?? "";',
+    "  return token;",
+    "}",
+    `const leaked = "${secret}";`,
+  ].join("\n");
+  // The planted shaped secret keeps the scan before a commit on (the backstop
+  // of the sibling test), so the run approves the phase and its commit stays
+  // blocked: exit 1, one commit — the pin of this test is the PROMPT.
+  const beforeSwitch = process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+  process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
+  try {
+    assert.equal(await runFeature({ argv: [], workdir: dir }), 1);
+    assert.equal(commits(dir), 1);
+    const seen = readFileSync(join(dir, "seen-by-critic.txt"), "utf8");
+    // The grounding survives verbatim: the annotation, the assignment, the
+    // signature the critic has to judge.
+    assert.match(seen, /cursorToken\(cursor: unknown, token: string\): string/);
+    assert.match(seen, /const token = read\(view\)\.cursorTokens\[0\]/);
+    // The shaped secret does not: the source scope is not an open door.
+    assert.doesNotMatch(seen, new RegExp(secret));
+  } finally {
+    delete process.env.STUB_NEW_FILE;
+    if (beforeSwitch === undefined) delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+    else process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = beforeSwitch;
+    restore();
+  }
+});
+
 // REGRESSION — one claude session per PASS. The stub refuses a session id it
 // has seen, as `claude --session-id` does ("Session ID … is already in use"),
 // and writes the phase evidence only on its SECOND proposer pass. With one id
