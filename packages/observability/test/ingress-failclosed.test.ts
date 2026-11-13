@@ -185,6 +185,9 @@ const brokenRedactor: SpecstrideRedactor = Object.freeze({
   redact(): never {
     throw new Error("the redactor cannot run");
   },
+  redactSource(): never {
+    throw new Error("the redactor cannot run");
+  },
   redactValue(): never {
     throw new Error("the redactor cannot run");
   },
