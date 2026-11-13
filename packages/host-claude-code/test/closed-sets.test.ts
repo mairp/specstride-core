@@ -154,7 +154,10 @@ test("T003: the three rows agree with annex X §X.6, and each carries its member
       unknownValue: string;
     }[];
   }>("packages/contracts/data/closed-sets.json");
-  assert.equal(annex.closedSets.length, 285, "annex X §X.6 holds 285 rows");
+  // The count follows the annex as it grows: row 286 is the closed set of
+  // feature 152 (the effects of a commit-gate rule), owner "152", so the
+  // pinned literal here is the annex's row count, not T257's 285.
+  assert.equal(annex.closedSets.length, 286, "annex X §X.6 holds 286 rows");
 
   for (const number of ROWS_OF_113) {
     const row = byRow.get(number);

@@ -17,7 +17,6 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
-  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -191,14 +190,13 @@ test("the pre-tick copy round-trips: restorePreTick gives back the exact bytes a
     assert.equal(statSync(tasks).mode & 0o7777, 0o640, "the mode is the pre-tick mode");
 
     // Where no copy exists, nothing is restored.
-    await restorePreTick(3, ports) === false;
+    assert.equal(await restorePreTick(3, ports), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });
 
 test("onlyTicksChanged: ticks only, never a human edit (T119, the rule the void leans on)", () => {
-  const phase = 1;
   const before = "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n- [ ] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
   const ticked = "# Tasks\n\n## Phase 1: One\n\n- [x] T001 Do it\n- [x] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
   assert.equal(onlyTicksChanged(before, ticked, 1), true, "ticks of the phase are allowed");

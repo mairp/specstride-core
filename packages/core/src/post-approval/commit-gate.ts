@@ -361,7 +361,6 @@ function checkboxLineOf(
 ): { readonly markIndex: number; readonly mark: string; readonly rest: string } | undefined {
   let at = 0;
   while (IS_SPACE(line[at])) at += 1;
-  const indentEnds = at;
   if (line[at] !== "-") return undefined;
   at += 1;
   while (IS_SPACE(line[at])) at += 1;

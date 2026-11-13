@@ -1865,7 +1865,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // T118/T120 — the ports the pre-tick copy and the void marker go through:
   // the tasks.md of the phase as it stands, and the kernel's atomic write with
   // the mode copied, as `tickFile` copies it.
-  const preTickPortsOf = (phase: number) => ({
+  const preTickPortsOf = (_phase: number) => ({
     tasksPath: () => tasksPath,
     readTasksText: () => readFileSync(tasksPath, "utf8"),
     inControl,

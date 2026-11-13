@@ -310,8 +310,12 @@ test("the worker sender ends a proven worker through its own group, its tree wit
   try {
     assert.equal(processGroupOf(worker.pid), worker.pid, "the worker leads its own group");
     // The child of the worker's tree is IN that group, as the shell started it.
+    // A loaded runner (the whole workspace storming through the test runner's
+    // default concurrency) can take far more than two seconds to get the
+    // worker's child to its first write, so the window is generous: the test
+    // is about signal reach, not about host start-up speed under load.
     const began = Date.now();
-    while (!existsSync(join(dir, "inner.pid")) && Date.now() - began < 2_000) {
+    while (!existsSync(join(dir, "inner.pid")) && Date.now() - began < 15_000) {
       await new Promise((done) => setTimeout(done, 25));
     }
     assert.ok(existsSync(join(dir, "inner.pid")), "the worker's child is up");
@@ -336,7 +340,7 @@ test("the worker sender ends a proven worker through its own group, its tree wit
     // `kill(pid, 0)` — the sender's liveness probe — so its precise refusal
     // is asserted only once the runner has collected the pid.
     const beganCollect = Date.now();
-    while (alive(worker.pid) && Date.now() - beganCollect < 5_000) {
+    while (alive(worker.pid) && Date.now() - beganCollect < 15_000) {
       await new Promise((done) => setTimeout(done, 25));
     }
     // A gone worker keeps its precise refusal.
