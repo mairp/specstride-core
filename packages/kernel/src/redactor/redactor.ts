@@ -30,7 +30,12 @@ import {
   type LoadedPatternSet,
   type PatternEntry,
 } from "./patterns.ts";
-import { redactText, redactValue, type ValueRedaction } from "./rules.ts";
+import {
+  redactText,
+  redactValue,
+  shapedSecretValuePatterns,
+  type ValueRedaction,
+} from "./rules.ts";
 import { SecretRegistry } from "./register.ts";
 
 /** The mark a redactor that cannot run carries (row 90). */
@@ -64,6 +69,13 @@ export type SpecstrideRedactor = Redactor & {
   readonly registry: SecretRegistry;
   /** The value patterns in force, for the scan before a commit. */
   readonly values: readonly PatternEntry[];
+  /**
+   * The source scope: the same redaction over the shaped secrets of the set in
+   * force, minus the source-unsafe rules — the shapes ordinary code cannot be
+   * told apart from. A critic prompt's diff of the working tree goes through
+   * it, so identifiers survive and the grounding stays readable.
+   */
+  redactSource(text: string, sizeCap: number): RedactResult;
   /** Replace in a whole value: a thinking key goes, a secret key's value goes. */
   redactValue(value: unknown): ValueRedaction;
 };
@@ -129,6 +141,26 @@ export function createRedactor(options: CreateRedactorOptions = {}): SpecstrideR
       try {
         const secrets = registry.replaceIn(String(text));
         const patterns = redactText(secrets.text, set.values);
+        const replacements = secrets.replacements + patterns.replacements;
+        return Object.freeze({
+          text: cut(patterns.text, sizeCap),
+          replacements,
+          patternSetVersion: version,
+        });
+      } catch (error) {
+        return dropped(REDACTOR_UNAVAILABLE, version, String(error));
+      }
+    },
+
+    redactSource(text: string, sizeCap: number): RedactResult {
+      if (set === undefined) {
+        return dropped(unavailable ?? PATTERN_SET_INVALID, version, reason);
+      }
+      try {
+        const secrets = registry.replaceIn(String(text));
+        // The source scope: the shaped secrets still go, the source-unsafe
+        // rules (whose shapes ordinary code cannot be told apart from) do not.
+        const patterns = redactText(secrets.text, shapedSecretValuePatterns(set.values));
         const replacements = secrets.replacements + patterns.replacements;
         return Object.freeze({
           text: cut(patterns.text, sizeCap),

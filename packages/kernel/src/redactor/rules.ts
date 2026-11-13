@@ -158,6 +158,35 @@ export function redactText(
 }
 
 /**
+ * The value-pattern names that ordinary source code cannot be told apart from.
+ * The key-name-then-value rule of the baseline (F111-FR-025) reads every
+ * `token`, `secret` or `password` followed by `=` or `:` and a value as a
+ * secret assignment — and a type annotation (`token: string`) or a plain
+ * assignment (`const token = read(x).token;`) is exactly that shape. A diff of
+ * a working tree is full of such lines, so a diff run through the full set
+ * reaches a critic prompt full of placeholder marks and broken signatures: the
+ * grounding the section exists to give, destroyed. The rule stays in force on
+ * every other path — the event stream, the notes, the scan before a commit;
+ * only the source scope of a critic prompt's diff leaves it out.
+ */
+export const SOURCE_UNSAFE_VALUE_PATTERN_NAMES: readonly string[] = Object.freeze([
+  "key-name-then-value",
+]);
+
+/**
+ * The value patterns of the set in force, minus the source-unsafe ones. A
+ * caller that redacts source-shaped text (the diff a critic prompt is grounded
+ * on) asks for this scope, so the shaped secrets — bearer, sk-, the vendor
+ * prefixes, the key blocks, the embedded credentials — still go while
+ * identifiers survive.
+ */
+export function shapedSecretValuePatterns(
+  values: readonly PatternEntry[] = patternSetInForce()?.values ?? BASELINE_SECRET_VALUE_PATTERNS,
+): readonly PatternEntry[] {
+  return values.filter((entry) => !SOURCE_UNSAFE_VALUE_PATTERN_NAMES.includes(entry.name));
+}
+
+/**
  * Whether the redactor would change this text (F152-FR-010): a boolean view of
  * `redactText` for callers that must not hold the redaction itself, such as the
  * quoted paths of the commit gate's corrective block. It lives here so that the

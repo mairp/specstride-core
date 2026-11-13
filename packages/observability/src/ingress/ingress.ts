@@ -316,6 +316,27 @@ export class Ingress {
   }
 
   /**
+   * A whole SOURCE document for a critic prompt — the diff of the working tree
+   * the prompt is grounded on. Same cap, same fail-closed behaviour, but the
+   * source scope of the set in force: the source-unsafe rules (whose shapes
+   * ordinary code cannot be told apart from — a type annotation reads exactly
+   * like a key-name-then-value secret) do not run, so identifiers and
+   * signatures survive, while every shaped secret — bearer, sk-, the vendor
+   * prefixes, the key blocks, the embedded credentials — still goes. This is
+   * still the one redaction point: no caller redacts by itself, it only
+   * declares the kind of text it serves.
+   */
+  documentSource(
+    text: string,
+    capBytes: number,
+  ): { readonly text: string; readonly dropped: boolean } {
+    const result = this.#redactor.redactSource(text, capBytes);
+    return result.dropped === true
+      ? Object.freeze({ text: "", dropped: true })
+      : Object.freeze({ text: result.text, dropped: false });
+  }
+
+  /**
    * Register a resolved secret with the ONE redactor, so that the scan before
    * a commit and every redaction see it as a registered secret (F111-FR-030).
    * The same redactor the commit gate scans with holds the value, and no
