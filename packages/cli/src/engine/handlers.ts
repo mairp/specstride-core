@@ -29,6 +29,7 @@ import { launchCommand } from "../commands/launch.ts";
 import { runStop } from "../commands/stop.ts";
 import { controlRootOfWorkspace } from "./workspace-control-root.ts";
 import { entriesOfTheSupervisionRegistry } from "../run-control/supervision-registry-entries.ts";
+import { ownerRecordOfTheLock } from "../run-control/lock-owner-entry.ts";
 import { runWait, digestLineOfThePipeline, type WaitOptions } from "../status/wait.ts";
 // The read model of `wait` is a PARAMETER and not a package import (R-129-04):
 // the CLI holds no dependency on `@specstride/view`, so the sources are
@@ -113,7 +114,10 @@ export async function unlockHandler(call: RoutedCall): Promise<number> {
  * resolves (`workspace-control-root.ts`) — the request has to land in the
  * inbox THIS engine polls, or a live group never honours it (F143-FR-026);
  * the entries `--now` checks are read from the supervision registry the
- * engine itself writes (`<controlRoot>/procs.json`).
+ * engine itself writes (`<controlRoot>/procs.json`), with the owner record
+ * of the workspace lock (`<controlRoot>/lock/owner.json`) read alongside:
+ * a resumed run's registry can hold a pass pid of an earlier launch, and
+ * the lock is the record of the LIVE holder of the workspace (B-1550).
  */
 export function stopHandler(call: RoutedCall): number {
   const now = call.extras.includes("--now");
@@ -129,6 +133,7 @@ export function stopHandler(call: RoutedCall): number {
     ...(now
       ? {
           processes: entriesOfTheSupervisionRegistry(join(controlRoot, "procs.json")),
+          lockOwnerRecord: ownerRecordOfTheLock(join(controlRoot, "lock", "owner.json")),
         }
       : {}),
   });
