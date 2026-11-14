@@ -26,6 +26,19 @@
  * from, and the run's own records count as state for the exit — exit 0;
  * exit 1 only where NO state of any kind stood.
  *
+ * WITH THE REGISTRY STALE (B-1550, the no-op stop of a live pass). A resumed
+ * run's registry can hold the pass pid of an EARLIER launch, so `--now` read
+ * a dead pid, printed the not-running line, and left the live pass running.
+ * When `--now` was asked, the caller also reads the owner record of the
+ * workspace lock (`workspace:lock`, the record of the LIVE holder of the
+ * workspace, annex B §B.9); `runStop` maps it into a registry entry (through
+ * `../run-control/lock-owner-entry.ts`) and appends it where its pid is not
+ * already covered. The identity check judges it exactly as a registry entry
+ * — pid, start time, run token, and the group the runtime created — so the
+ * line printed is still the line of what truly happened: killed for the live
+ * holder, not-running for a dead one, and nothing at all where no record
+ * stands.
+ *
  * THE EXIT CODES (F102-FR-002). 0 in every branch once state exists; 1 when
  * the workspace has no state — no workspace record (`workspace:record`,
  * `specstride.layout/1`) that reads back.
@@ -66,6 +79,7 @@ import {
   signalOwnedEntries,
   type SignalOwnedResult,
 } from "../run-control/signal-owned.ts";
+import { entriesWithTheLockOwner } from "../run-control/lock-owner-entry.ts";
 
 /** The command name, as the consumer types it. */
 export const COMMAND = "stop" as const;
@@ -215,6 +229,17 @@ export type StopInput = {
   /** The recorded entries of the process registry, read by the caller. */
   readonly processes?:
     readonly import("@specstride/contracts/records/process-registry").ProcessRegistry[] | undefined;
+  /**
+   * The raw owner record of the workspace lock (`workspace:lock`,
+   * `<controlRoot>/lock/owner.json`), read by the caller, when `--now` was
+   * asked. Where the registry's entries are stale — a resumed run can hold
+   * the pass pid of an earlier launch — this is the record of the LIVE
+   * holder of the workspace, and `runStop` maps it into an entry for the
+   * identity check through `entriesWithTheLockOwner`; every guard of
+   * F102-FR-007 stands over it exactly as over a registry entry. Absent or
+   * unreadable, it changes nothing.
+   */
+  readonly lockOwnerRecord?: unknown;
   /** The path the pass record is expected at, for the `no in-flight pass` line. */
   readonly passRecordPath?: string | undefined;
   /** Hash of the run token, when a run was active and the caller knows it. */
@@ -281,13 +306,29 @@ export function runStop(input: StopInput): StopResult {
   }
 
   // `--now`: end the owned processes under the identity check (F102-FR-006
-  // to F102-FR-008), then the compatibility line the outcome chooses.
+  // to F102-FR-008), then the compatibility line the outcome chooses. The
+  // entries are the registry's, with the lock owner's entry appended where
+  // the registry went stale and the lock names the LIVE holder of the
+  // workspace (B-1550, the no-op stop of a live pass) — the identity check
+  // judges both sources alike.
   let nowOutcome: SignalOwnedResult | null = null;
   if (input.now === true) {
-    nowOutcome = signalOwnedEntries(input.processes ?? [], { jobs: input.jobs === true });
+    nowOutcome = signalOwnedEntries(
+      entriesWithTheLockOwner(input.processes ?? [], input.lockOwnerRecord),
+      { jobs: input.jobs === true },
+    );
     const kind = nowLineKindOf(nowOutcome);
     if (kind === "killed") {
-      lines.push(Object.freeze({ stream: "stdout", text: killedPassLine(nowOutcome.passPid!) }));
+      // The pid of the entry that WAS signalled — the lock owner's, where
+      // the registry held only a stale pid — falling back to the recorded
+      // pass pid the registry named first.
+      const signalled = nowOutcome.outcomes.find((one) => one.outcome === "signalled");
+      lines.push(
+        Object.freeze({
+          stream: "stdout",
+          text: killedPassLine(signalled?.pid ?? nowOutcome.passPid!),
+        }),
+      );
     } else if (kind === "not-running") {
       lines.push(Object.freeze({ stream: "stdout", text: passNotRunningLine(nowOutcome.passPid) }));
     } else {
