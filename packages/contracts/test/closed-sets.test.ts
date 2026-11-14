@@ -145,7 +145,7 @@ test("CT-100-309: a reader without a branch for an unknown value fails (F100-FR-
  * drifts from either count fails here and at the load of `all-sets.ts`.
  */
 test("CT-100-309: the table holds exactly the 285 closed sets of T257, each number once", () => {
-  const PINNED_CLOSED_SETS = 285 as const;
+  const PINNED_CLOSED_SETS = 286 as const;
   assert.equal(CLOSED_SET_COUNT, PINNED_CLOSED_SETS);
   assert.equal(RAW.length, PINNED_CLOSED_SETS);
   assert.equal(closedSets.size, PINNED_CLOSED_SETS);
@@ -166,6 +166,7 @@ test("CT-100-309: the seven batches of T250 to T256 hold the row counts those ta
     [126, 129, 33],
     [130, 144, 42],
     [145, 149, 23],
+    [150, 199, 1],
   ];
   let total = 0;
   for (const [from, to, pinned] of PINNED_BATCHES) {
@@ -177,7 +178,7 @@ test("CT-100-309: the seven batches of T250 to T256 hold the row counts those ta
     total += rows.length;
   }
   assert.equal(total, CLOSED_SET_COUNT);
-  assert.equal(total, 285);
+  assert.equal(total, 286);
 });
 
 /**
@@ -195,6 +196,7 @@ test("CT-100-309: each batch module of T250 to T256 exports the sets its task pi
     ["../src/enums/sets-126-129.ts", 126, 129, 33],
     ["../src/enums/sets-130-144.ts", 130, 144, 42],
     ["../src/enums/sets-145-149.ts", 145, 149, 23],
+    ["../src/enums/sets-150-152.ts", 150, 199, 1],
   ];
   let total = 0;
   for (const [specifier, from, to, pinned] of PINNED_MODULES) {
@@ -222,26 +224,26 @@ test("CT-100-309: each batch module of T250 to T256 exports the sets its task pi
     }
     total += exported.length;
   }
-  assert.equal(total, 285);
+  assert.equal(total, 286);
   assert.equal(total, CLOSED_SET_COUNT);
 });
 
 /**
  * T257 asserts at load. The assertion is not vacuous: a map that holds one set
- * fewer than the pinned 285 is refused, with the number of the missing row.
+ * fewer than the pinned 286 is refused, with the number of the missing row.
  */
-test("CT-100-309: the assembly of T257 refuses a map that is not the pinned 285", async () => {
+test("CT-100-309: the assembly of T257 refuses a map that is not the pinned 286", async () => {
   const { ClosedSetAssemblyError } = await import("../src/enums/all-sets.ts");
   const short = new Map(closedSets);
   short.delete(285);
-  assert.equal(short.size, 284);
+  assert.equal(short.size, 285);
   assert.notEqual(short.size, CLOSED_SET_COUNT);
-  // The shape the assembly refuses: a count other than the literal 285.
+  // The shape the assembly refuses: a count other than the literal 286.
   assert.ok(ClosedSetAssemblyError.prototype instanceof Error);
   const error = new ClosedSetAssemblyError(
     `the \`contracts\` package exports ${short.size} closed sets; the map holds exactly ` +
       `the ${CLOSED_SET_COUNT} numbers of annex X §X.6, each once`,
   );
-  assert.match(error.message, /exports 284 closed sets/);
-  assert.match(error.message, /the 285 numbers/);
+  assert.match(error.message, /exports 285 closed sets/);
+  assert.match(error.message, /the 286 numbers/);
 });

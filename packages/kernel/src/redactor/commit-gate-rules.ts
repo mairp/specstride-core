@@ -151,6 +151,24 @@ export function parseCommitGateRules(text: string, origin: CommitGateRulesOrigin
       );
     }
 
+    // T137 (F152-FR-018) — a project rule may only ADD a block. An exempt
+    // rule of the project would weaken or remove a decision of the engine,
+    // and an id of the `cg-` namespace would shadow one of the engine's.
+    if (origin === "project" && rule.effect === "exempt") {
+      throw new CommitGateRulesError(
+        origin,
+        `${at}.effect`,
+        "a project rule may only add a block; exempting is the engine's alone",
+      );
+    }
+    if (origin === "project" && rule.rule.startsWith("cg-")) {
+      throw new CommitGateRulesError(
+        origin,
+        `${at}.rule`,
+        `the id "${rule.rule}" is in the engine's \`cg-\` namespace, which a project rule may not shadow`,
+      );
+    }
+
     if ("pattern" in rule.match && !names.has(rule.match.pattern)) {
       throw new CommitGateRulesError(
         origin,
@@ -208,6 +226,69 @@ export function loadEngineCommitGateRules(
     }) as CommitGateRules;
   }
   return engineRules;
+}
+
+/**
+ * T139 (F152-FR-016, F152-FR-018) — the project's rules, from
+ * `<root>/specstride.commit-gate.json`, or `null` where the project added
+ * none. Every refusal names the project file.
+ */
+export const PROJECT_COMMIT_GATE_RULES_FILE_NAME = "specstride.commit-gate.json" as const;
+
+export function loadProjectCommitGateRules(
+  root: string,
+  readFile: (path: string) => string | undefined = (path) => {
+    try {
+      return readFileSync(path, "utf8");
+    } catch {
+      return undefined;
+    }
+  },
+): CommitGateRules | null {
+  const file = join(root, PROJECT_COMMIT_GATE_RULES_FILE_NAME);
+  const text = readFile(file);
+  if (text === undefined) return null;
+  try {
+    return parseCommitGateRules(text, "project");
+  } catch (error) {
+    if (error instanceof CommitGateRulesError) {
+      // The refusal names the project FILE, not a path inside the document.
+      throw new CommitGateRulesError(
+        "project",
+        file,
+        error.message.split(": ").slice(1).join(": "),
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * T138 (F152-FR-018) — the rules in force: the engine's, then the project's.
+ * A project file that repeats an id of the engine is refused (it would
+ * shadow it); the merged document is frozen.
+ */
+export function mergeCommitGateRules(
+  engine: CommitGateRules,
+  project: CommitGateRules | null,
+): CommitGateRules {
+  if (project !== null) {
+    const engineIds = new Set(engine.rules.map((rule) => rule.rule));
+    for (const rule of project.rules) {
+      if (engineIds.has(rule.rule)) {
+        throw new CommitGateRulesError(
+          "project",
+          PROJECT_COMMIT_GATE_RULES_FILE_NAME,
+          `the id "${rule.rule}" repeats an id of the engine's rules, which a project rule may not shadow`,
+        );
+      }
+    }
+  }
+  return Object.freeze({
+    schema: engine.schema,
+    version: engine.version,
+    rules: Object.freeze([...engine.rules, ...(project === null ? [] : project.rules)]),
+  }) as CommitGateRules;
 }
 
 /**

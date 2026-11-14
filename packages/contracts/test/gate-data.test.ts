@@ -2,7 +2,7 @@
  * T004 of feature 101 — the table "Halts of the phase gate" as data in the
  * package, and the validation AT LOAD that every stop reason and every exit
  * code in it is a member of a closed set of feature 100
- * (`packages/contracts/data/gate-halts.json`,
+ * (`packages/contracts/data/gate-halts-101.json`,
  * `packages/contracts/src/engine/gate-halts.ts`; F101-FR-010, F101-FR-037).
  *
  * The closed sets of feature 100 the table is read against:
@@ -22,7 +22,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import gateHaltsData from "../data/gate-halts.json" with { type: "json" };
+import gateHaltsData from "../data/gate-halts-101.json" with { type: "json" };
 import { closedSets } from "../src/enums/all-sets.ts";
 import { ENGINE_EXIT_CODES, isEngineExitCode, stopReasonsOf } from "../src/codes/engine.ts";
 import { STOP_REASONS, engineExitOf, isStopReason } from "../src/codes/stop-reasons.ts";
@@ -51,7 +51,7 @@ test("T004: data/gate-halts.json is a byte-for-byte copy of the contract file of
   const source = join(ROOT, CONTRACT_FILE);
   const copy = join(ROOT, DATA_FILE);
   assert.equal(CONTRACT_FILE, "specs/101-gate-and-verdict/contracts/gate-halts.json");
-  assert.equal(DATA_FILE, "packages/contracts/data/gate-halts.json");
+  assert.equal(DATA_FILE, "packages/contracts/data/gate-halts-101.json");
   assert.equal(existsSync(source), true, `${CONTRACT_FILE} exists`);
   assert.equal(existsSync(copy), true, `${DATA_FILE} exists`);
   const hash = sha256(copy);

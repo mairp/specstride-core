@@ -99,15 +99,19 @@ test("the reject limit still bounds a block with a new signature (T084)", async 
   assert.equal(outcome.blocked, undefined);
 });
 
-test("a repeated block on the last allowed attempt ends `commit-gate`, not `max_rejects` (T085)", async () => {
+test("a repeated block on the last allowed attempt halts from the table on `max_rejects` (T085)", async () => {
   const outcome = await run({
     ordinal: 3,
     previousBlockSignature: "same",
     blockSignature: "same",
   });
   assert.equal(outcome.go, "halt");
+  // The halt comes from the commit-gate halt table (the blocked reason and the
+  // recorded rule id prove the table step ran before the reject limit), and it
+  // maps to the existing stop reason `max_rejects` (CQ-152-01).
   assert.equal(outcome.blocked?.reason, "commit-gate");
-  assert.equal(outcome.stopReason, "commit_gate");
+  assert.match(String(outcome.stopFields?.ruleId ?? ""), /CGH-1/);
+  assert.equal(outcome.stopReason, "max_rejects");
   assert.equal(outcome.exitCode, 2);
 });
 

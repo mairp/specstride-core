@@ -4553,6 +4553,13 @@ export const schemaMap: Readonly<Record<string, unknown>> = {
         "x-type-in-words": "Map from file to record",
         "x-required": "Yes",
       },
+      commitGateRulesHash: {
+        type: "string",
+        description:
+          "The canonical hash of the commit-gate rule data in force (feature 152, F152-FR-017), pinned at the launch",
+        "x-type-in-words": "Text",
+        "x-required": "No",
+      },
       acceptedChanges: {
         type: "array",
         description: "Every intended change accepted on `resume`: time, file, old hash, new hash",

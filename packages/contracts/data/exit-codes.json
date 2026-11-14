@@ -18,8 +18,8 @@
         },
         {
           "Code": "2",
-          "Meaning": "Rejects exceeded (`max_rejects`); the commit-gate halt (`commit_gate`); oscillation (`gate_oscillation`); release verification failed (`release_verification`)",
-          "Stop reasons": "`max_rejects`, `commit_gate`, `gate_oscillation`, `release_verification`"
+          "Meaning": "Rejects exceeded (`max_rejects`); oscillation (`gate_oscillation`); release verification failed (`release_verification`)",
+          "Stop reasons": "`max_rejects`, `gate_oscillation`, `release_verification`"
         },
         {
           "Code": "3",

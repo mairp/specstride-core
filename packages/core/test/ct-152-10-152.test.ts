@@ -55,10 +55,22 @@ test("the template, exactly (F152-FR-010)", () => {
 
 const ALNUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+/* A seeded PRNG (xorshift32), so the property is deterministic and every
+ * failure replays. Math.random() made a rare collision in the probe
+ * assertion unreproducible. */
+let rngState = 0x15215215;
+function nextRandom(): number {
+  rngState ^= rngState << 13;
+  rngState ^= rngState >>> 17;
+  rngState ^= rngState << 5;
+  rngState >>>= 0;
+  return rngState / 0x100000000;
+}
+
 function body(length: number, charset: string = ALNUM): string {
   let out = "";
   for (let i = 0; i < length; i += 1) {
-    out += charset[Math.floor(Math.random() * charset.length)]!;
+    out += charset[Math.floor(nextRandom() * charset.length)]!;
   }
   return out;
 }

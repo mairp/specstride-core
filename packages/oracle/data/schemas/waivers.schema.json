@@ -25,7 +25,7 @@
     "properties": {
      "fixture": {
       "type": "string",
-      "pattern": "^FX-[0-9]{2}/[a-z0-9][a-z0-9-]*(@engine-stub|@full-stack)?$"
+      "pattern": "^(FX-[0-9]{2}/[a-z0-9][a-z0-9-]*(@engine-stub|@full-stack)?|[0-9]{3}/[a-z0-9][a-z0-9-]*)$"
      },
      "surface": {
       "enum": [

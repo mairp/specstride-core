@@ -92,6 +92,13 @@ export type ApprovalVerificationInputs = {
   readonly evidenceHashSetAside: string | undefined;
   /** The hash of the stored result of the verification gate. */
   readonly storedVerificationHash: string | undefined;
+  /**
+   * T121 — the void marker of the commit gate (F152-FR-014), where one stands
+   * for the phase: the verdictId it carries. A marker whose verdictId is the
+   * record's voids the approval: it reads as NOT approved with the failure
+   * `voided`, however valid the record's signature is.
+   */
+  readonly voidMarkerVerdictId?: string | undefined;
   readonly canonicalRecordHash: CanonicalRecordHash;
 };
 
@@ -186,6 +193,13 @@ export function verifyApprovalRecord(
     verdict.nonceHash !== record.nonceHash
   ) {
     return notApproved(phase, "verdict", record.keyId);
+  }
+
+  // 3b — the void marker of the commit gate (F152-FR-014, T121): where one
+  // stands for THIS record's verdictId, the approval was voided and counts as
+  // never given, with the failure `voided` of row 255.
+  if (inputs.voidMarkerVerdictId !== undefined && inputs.voidMarkerVerdictId === record.verdictId) {
+    return notApproved(phase, "voided", record.keyId);
   }
 
   // 4 — the hash of the phase evidence against the phase evidence set aside.

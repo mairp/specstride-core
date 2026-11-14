@@ -23,6 +23,7 @@ import { spawn, spawnSync } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -202,6 +203,7 @@ import { recoveryCyclePlanner } from "../../../core/src/ep18/planner-recovery.ts
 import { DSH_PIN } from "../../../adapter-dsh/src/descriptor/data.ts";
 import {
   afterARejection as handleARejection,
+  countsAfterARejection,
   MALFORMED_LIMIT_DEFAULT,
   NO_COUNTS,
   REJECT_LIMIT_DEFAULT,
@@ -217,18 +219,33 @@ import {
 import { registerSingleCriticStrategy } from "../../../core/src/ep18/critic-strategy.ts";
 import { stepsAfterAnApproval } from "../../../core/src/post-approval/order.ts";
 import {
+  blocksOfThePhase,
   commitBackpressureIsOn,
   commitGate,
+  preTickPath,
   readBlockRecord,
+  savePreTick as savePreTickOfTheGate,
+  stepsToCompleteABlock,
+  voidApproval,
+  voidMarkerPath,
   writeBlockRecord,
 } from "../../../core/src/post-approval/commit-gate.ts";
+import { mustReScanOnResume } from "../../../core/src/approval/commit-gate-resume.ts";
+import { blockedReasonRow } from "@specstride/contracts/state/blocked-reasons";
 import { feedbackOfTheCommitGate, quotedPath } from "../../../core/src/gate/feedback.ts";
 import { newNonce } from "../../../core/src/gate/nonce.ts";
 import { COMMIT_GATE_BLOCKED_EVENT_TYPE } from "../../../core/src/gate/events.ts";
 import {
-  hashOfCommitGateRules,
-  loadEngineCommitGateRules,
+  blockingRuleOf,
+  ENGINE_COMMIT_GATE_RULES_FILE,
 } from "../../../kernel/src/redactor/commit-gate-rules.ts";
+import {
+  commitGateRulesForTheLaunch,
+  commitGateRulesHashNow,
+} from "../../../core/src/post-approval/commit-gate-launch.ts";
+import type { SourceCheckQuestion } from "../../../core/src/pass-loop/source-check.ts";
+import { SnapshotWriteError, writeRunSnapshot } from "../run-control/snapshot-writer.ts";
+import { currentSourceHashes } from "../run-control/source-compare.ts";
 import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
@@ -1005,7 +1022,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         mkdirSync(inControl(dir), { recursive: true });
       },
     };
-    void setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
+    await setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
   }
 
   const events = inControl(join("runs", runId, "events.jsonl"));
@@ -1387,6 +1404,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           commit?: string | undefined;
         })
       : undefined;
+    const voidMarkerFile = inControl(voidMarkerPath(phase));
+    const voidMarkerVerdictId = existsSync(voidMarkerFile)
+      ? (((JSON.parse(readFileSync(voidMarkerFile, "utf8")) as { verdictId?: unknown }).verdictId ??
+          undefined) as string | undefined)
+      : undefined;
     const verified = verifyApprovalRecord({
       phase,
       record: existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as unknown) : undefined,
@@ -1395,6 +1417,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       verdictRecord: bound?.verdict,
       evidenceHashSetAside: bound?.evidenceHash,
       storedVerificationHash: bound?.verificationHash,
+      voidMarkerVerdictId,
       canonicalRecordHash,
     } as never);
     // The tree check the approval binds to: an approval counts only while the
@@ -1756,9 +1779,6 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
   };
 
-  // A name beside a value is the mark of ordinary code too: `token: "abc"` in a test of
-  // the work. In the work of a pass only a pattern of a real credential holds a commit back.
-  const THE_SHAPE_OF_ORDINARY_CODE = "key-name-then-value";
   // The exit of a run whose commits the gate held back: 1, internal (annex E
   // §E.4's vocabulary for a run that did not finish its own duty — the table
   // has no row of its own for a blocked commit). See the decision at the exit.
@@ -1775,10 +1795,76 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const commitBackpressureOn = commitBackpressureIsOn({
     "commit.backpressure": loopConfig.backpressureValue,
   });
-  // T077 — the rule data of the gate, the engine's (the project file joins it
-  // at T140), loaded once for the run.
-  const commitGateRules = loadEngineCommitGateRules();
-  const commitGateRuleDataHash = hashOfCommitGateRules(commitGateRules, null);
+  // T077 — the rule data of the gate: the engine's and, where the project
+  // added one, the project's, loaded and merged ONCE at the start of the run
+  // (T140). A malformed file, a project rule that exempts or shadows an
+  // engine id, refuses the launch with exit 3 and names the file
+  // (F152-FR-016, F152-FR-018). The hash pins the data (F152-FR-017) and is
+  // watched at every pass start (T143) through the pass-loop source check.
+  // `SPECSTRIDE_COMMIT_GATE_RULES_ENGINE` is the tests' seam: a copy of the
+  // shipped engine data a test points the run at (T135).
+  const commitGateEngineFile =
+    process.env.SPECSTRIDE_COMMIT_GATE_RULES_ENGINE ?? ENGINE_COMMIT_GATE_RULES_FILE;
+  // The file read the launch loader uses: the edge package reads over
+  // `node:fs`; the core loader takes the read as an argument (F100-FR-012).
+  const commitGateReadFile = (path: string): string | undefined => {
+    try {
+      return readFileSync(path, "utf8");
+    } catch {
+      return undefined;
+    }
+  };
+  const commitGateLaunch = commitGateRulesForTheLaunch(
+    workdir,
+    commitGateReadFile,
+    commitGateEngineFile,
+  );
+  if (!commitGateLaunch.ok) {
+    say(`[${slug}] ${commitGateLaunch.message}: the launch is refused (F152-FR-016)`);
+    return commitGateLaunch.exitCode;
+  }
+  const commitGateRules = commitGateLaunch.rules;
+  const commitGateRuleDataHash = commitGateLaunch.hash;
+  // T134/T142 (F152-FR-017) — the run record (`run:<runId>:snapshot`,
+  // annex B §B.12) pins the canonical hash of the rule data in force at the
+  // launch, beside the source hashes. Written once, at the launch, before
+  // any pass starts; a failed write is a launch error (F102-FR-025). The
+  // source hashes are recorded as `source-compare` reads them, so a later
+  // `resume` compares like against like.
+  const sourceHashesAtLaunch = currentSourceHashes({
+    spec: join(featureDirectory, "spec.md"),
+    plan: join(featureDirectory, "plan.md"),
+    tasks: tasksPath,
+  });
+  try {
+    writeRunSnapshot(inControl(join("runs", runId, "snapshot.json")), {
+      runId,
+      createdAt: new Date().toISOString(),
+      profile: null,
+      keys: [],
+      sourceHashes: {
+        spec: { path: "spec.md", ...sourceHashesAtLaunch.spec },
+        plan: { path: "plan.md", ...sourceHashesAtLaunch.plan },
+        tasks: { path: relative(workdir, tasksPath), ...sourceHashesAtLaunch.tasks },
+      },
+      commitGateRulesHash: commitGateRuleDataHash,
+    });
+  } catch (error) {
+    const path = error instanceof SnapshotWriteError ? error.path : "the control plane";
+    say(`[${slug}] the run snapshot at ${path} could not be written; no pass starts (F102-FR-025)`);
+    return 3;
+  }
+  // T143 — the hash pinned at the launch, and the hash read again at every
+  // pass start; a difference halts as a changed source (`source-changed`,
+  // CQ-152-06 A).
+  const commitGateWatchedSource = (): SourceCheckQuestion => ({
+    sources: {},
+    commitGateRules: {
+      path: relative(workdir, commitGateEngineFile),
+      recordedHash: commitGateLaunch.hash,
+      hashNow: commitGateRulesHashNow(workdir, commitGateReadFile, commitGateEngineFile),
+    },
+  });
   const reasonOfTheRule = (rule: string): string =>
     commitGateRules.rules.find((candidate) => candidate.rule === rule)?.reason ?? "";
   // T078 — the corrective feedback of a blocked attempt goes through the same
@@ -1796,14 +1882,51 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     feedback.set(phase, held);
     commitGateFeedbackOfThePhase.set(phase, ordinal);
   };
+  // T118/T120 — the ports the pre-tick copy and the void marker go through:
+  // the tasks.md of the phase as it stands, and the kernel's atomic write with
+  // the mode copied, as `tickFile` copies it.
+  const preTickPortsOf = (_phase: number) => ({
+    tasksPath: () => tasksPath,
+    readTasksText: () => readFileSync(tasksPath, "utf8"),
+    inControl,
+    readControlText: (file: string) => (existsSync(file) ? readFileSync(file, "utf8") : null),
+    writeAtomic: (file: string, text: string, mode: number) =>
+      atomicWrite(file, text, { createDirectory: true, mode }),
+    modeOf: (file: string) => statSync(file).mode & 0o7777,
+    chmod: (file: string, mode: number) => chmodSync(file, mode),
+  });
+  // T172 — the blocked end of a run a void halted (`commit-gate`, row O-33 of
+  // annex E §E.2: engineExit 2, stopReason `max_rejects`), with the `needs`
+  // the plan states. Both void paths — step 6 (T124) and the engine-start
+  // re-scan (T125) — end the run through this one shape.
+  const commitGateBlockedEndOf = (phase: number) => {
+    const row = blockedReasonRow("commit-gate");
+    if (row === undefined) {
+      throw new Error("`commit-gate` is no blocked reason of annex E §E.2 (F152-FR-014)");
+    }
+    const needs = `phase ${String(phase)}: tasks.md changed beyond the ticks; restore it or confirm by hand`;
+    emit("blocked", { reason: "commit-gate", needs });
+    say(`[${slug}] blocked: commit-gate: ${needs}`);
+    return {
+      endsTheRun: true as const,
+      because: "blocked" as const,
+      reason: "commit-gate" as const,
+      exitCode: row.engineExit,
+      stopReason: row.stopReason,
+    };
+  };
   const scanBeforeTheCommit = {
     scan: (files: readonly string[]) => {
       const present = files.filter((file) => existsSync(join(workdir, file)));
       const found = ingress.scanCommit(present, workdir);
       // A line HEAD already holds is not the commit's to answer for (commit-lines.ts).
       const added = addedLinesAgainstHead(workdir, present);
+      // T141 (F152-FR-019) — the carve-out `THE_SHAPE_OF_ORDINARY_CODE` is no
+      // longer a constant here: the rule data in force (the engine's and the
+      // project's) decides, through `blockingRuleOf`, so the step-6 scan and
+      // the pre-scan decide alike.
       const hits = found.hits.filter(
-        (hit) => hit.pattern !== THE_SHAPE_OF_ORDINARY_CODE && isAddedLine(added, hit),
+        (hit) => blockingRuleOf(hit, commitGateRules) !== null && isAddedLine(added, hit),
       );
       const blocked = hits.length > 0;
       if (blocked) {
@@ -2615,6 +2738,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 }
               : DEFAULT_LIMITS,
             counters: countersOnEntry,
+            // T143 (F152-FR-017, CQ-152-06 A) — the rule data of the commit
+            // gate is a watched source: before every pass the loop compares
+            // the hash pinned at the launch with the hash read now, and a
+            // change halts as a changed source before the pass starts.
+            sourceHashes: () => commitGateWatchedSource(),
             hooks: {
               // F118-FR-011 — the cap breaker: after too many kills of the
               // ceiling in a row the loop ends with the cap result.
@@ -2794,6 +2922,22 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
     // A stop ends the run here: nothing is scored, no critic is called.
     if (theLoopResult.exit_code === 6) return stopTheRun("pass-loop");
+    // T143 (F152-FR-017, CQ-152-06 A) — a change of the commit-gate rule data
+    // halts the run as a changed source: `source-changed` (annex E §E.2) maps
+    // to its row's exit and stop reason, and the run rests blocked on a human.
+    if (theLoopResult.exit_code === 3 && theLoopResult.blocked?.reason === "source-changed") {
+      const row = blockedReasonRow("source-changed");
+      const needs = `the commit-gate rule data changed: ${theLoopResult.blocked.file}`;
+      emit("blocked", { reason: "source-changed", needs });
+      say(`[${slug}] blocked: source-changed: ${needs}`);
+      return {
+        endsTheRun: true as const,
+        because: "blocked" as const,
+        reason: "source-changed" as const,
+        exitCode: row?.engineExit ?? 3,
+        stopReason: row?.stopReason ?? "critic_config",
+      };
+    }
 
     // The closing check of the layer (F115-FR-028): on phase evidence, the
     // inner set runs once more on the final tree, unless the last check
@@ -3103,6 +3247,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           // written, so no approval of this attempt counts anywhere
           // (F152-FR-001, F152-FR-013).
           const nonce = newNonce();
+          // The crash seam of T108 (kill BEFORE the block record): a SIGKILL
+          // HERE leaves no block record, so the resume runs attempt 1 again
+          // from its start, as any interrupted attempt does. No product path
+          // reads the variable; it is a test-only injection.
+          if (process.env.SPECSTRIDE_CRASH_BEFORE_BLOCK_RECORD === "1") {
+            process.kill(process.pid, "SIGKILL");
+          }
           await writeBlockRecord(
             {
               schema: "specstride.commit-gate-block/1",
@@ -3125,6 +3276,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               inControl,
             },
           );
+          // The crash seam of the kill-and-resume tests (CT-152-13, T106): a
+          // SIGKILL HERE — after the block record, before the corrective
+          // feedback and the counts — is the point those tests kill at. No
+          // product path reads the variable; it is a test-only injection,
+          // like the projection fault of the learning loop.
+          if (process.env.SPECSTRIDE_CRASH_AFTER_BLOCK_RECORD === "1") {
+            process.kill(process.pid, "SIGKILL");
+          }
           writeFeedbackFor(
             phase,
             ordinal,
@@ -3143,6 +3302,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               hitsOmitted: 0,
             }),
           );
+          // The crash seam of the kill-and-resume tests (CT-152-13, T107): a
+          // SIGKILL HERE — after the corrective feedback, before the counts
+          // go to the ledger — is the point T107 kills at. No product path
+          // reads the variable; it is a test-only injection, like the
+          // projection fault of the learning loop.
+          if (process.env.SPECSTRIDE_CRASH_AFTER_FEEDBACK === "1") {
+            process.kill(process.pid, "SIGKILL");
+          }
           emit(COMMIT_GATE_BLOCKED_EVENT_TYPE, {
             phase,
             attempt: ordinal,
@@ -3207,10 +3374,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       if (outcomeOfAnApprovedVerdict(phase, readApproval as never).outcome === "rejected")
         return "rejected" as const;
 
-      stepsAfterAnApproval({ phase, ordinal, title: titleOf(phase) }, {
+      // T123 — with the switch on, the pre-tick bytes of the task list are
+      // saved by the order itself, immediately before step 4 ticks them, so
+      // a void of the approval (F152-FR-014) can put them back. The write
+      // captures its bytes synchronously, before the tick can move the file.
+      const postApproval = stepsAfterAnApproval({ phase, ordinal, title: titleOf(phase) }, {
         // F101-FR-033 step 1 — the feedback, the hint and the acceleration
         // note of the phase are set aside, so none of them reaches a later
         // phase; what an earlier approval of the phase left is replaced.
+        // T126 — the pre-tick copy and the void marker of the phase move too,
+        // by rename, filenames preserved; a file that does not exist is
+        // skipped (ENOENT ignored).
         setAside: () => {
           const to = inControl(join("features", slug, "set-aside", `phase${String(phase)}`));
           const moved: string[] = [];
@@ -3219,6 +3393,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             : []) {
             mkdirSync(to, { recursive: true });
             renameSync(join(feedbackDirectory, name), join(to, name));
+            moved.push(name);
+          }
+          for (const logical of [preTickPath(phase), voidMarkerPath(phase)]) {
+            const file = inControl(logical);
+            if (!existsSync(file)) continue;
+            mkdirSync(to, { recursive: true });
+            const name = logical.split("/").pop() as string;
+            renameSync(file, join(to, name));
             moved.push(name);
           }
           if (existsSync(recoveryDirectoryOf(phase))) {
@@ -3237,6 +3419,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         emitPhaseDone: (event: Readonly<Record<string, unknown>>) => emit("phase.ended", event),
         writeLine: say,
+        savePreTick: commitBackpressureOn
+          ? (n: number) => {
+              void savePreTickOfTheGate(n, preTickPortsOf(n));
+            }
+          : undefined,
         tick: {
           spec: tasksPath,
           format: "speckit-tasks",
@@ -3247,6 +3434,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 { path: tasksPath, format: "speckit-tasks", request },
                 grammar,
               );
+              // The crash seam of T109–T111 (kill between the approval record
+              // and step 6, after the tick of step 4): the pre-tick copy of
+              // the phase exists, the approval record stands, and the commit
+              // of step 6 never comes. A test-only injection.
+              if (process.env.SPECSTRIDE_CRASH_AFTER_TICK === "1") {
+                process.kill(process.pid, "SIGKILL");
+              }
               // The port counts what it ticked; the file names no line for the engine here.
               return {
                 ticked: Array.from({ length: changed }, (_, at) => ({
@@ -3292,6 +3486,116 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         emitGitCheckpoint: (event: Readonly<Record<string, unknown>>) => emit("commit.made", event),
       } as never);
+      // T124 — the defensive step-6 path (F152-FR-014, plan.md "The residual
+      // and resume case", (a)): the pre-scan passed, but the scan inside the
+      // approval commit blocked anyway (a file moved under the gate). The
+      // approval already stands, so it is VOIDED: the gate runs again over
+      // the tree as the tick left it, the void marker and the block record go
+      // down (path `step-6`, a new nonce), and the attempt returns
+      // `commit-blocked` — the same order after a rejection as a pre-scan
+      // block, only from step 6.
+      if (
+        commitBackpressureOn &&
+        !postApproval.commit.committed &&
+        postApproval.commit.reason === "scan-blocked"
+      ) {
+        const changedNow = [
+          ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+          ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+        ].filter((name) => name !== "");
+        const gateAgain = commitGate(
+          {
+            commits: "auto",
+            insideAWorkTree: git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0,
+            changedPaths: changedNow,
+            tasksPath: relative(workdir, tasksPath),
+            tickedTasksText: readFileSync(tasksPath, "utf8"),
+            rules: commitGateRules,
+          },
+          {
+            scan: (files, overlay) => {
+              const result = ingress.scanCommit(files, workdir, overlay);
+              return {
+                hits: result.hits.map((hit) =>
+                  hit.matched === "registered-secret"
+                    ? { file: hit.file, line: hit.line, registeredSecret: true as const }
+                    : hit.matched === "unreadable"
+                      ? { file: hit.file, line: hit.line, unreadable: true as const }
+                      : { file: hit.file, line: hit.line, pattern: hit.pattern },
+                ),
+              };
+            },
+          },
+        );
+        if (gateAgain.entered && gateAgain.blocked) {
+          const voided = await voidApproval(
+            { phase, verdictId, ordinal, path: "step-6" },
+            preTickPortsOf(phase),
+          );
+          if (voided.halt === "commit-gate") {
+            // T172 — the human edited tasks.md beyond the ticks: the run ends
+            // blocked, and the pre-tick bytes are never written over the edit.
+            commitsLeftUncommitted += 1;
+            return commitGateBlockedEndOf(phase);
+          }
+          const nonce = newNonce();
+          await writeBlockRecord(
+            {
+              schema: "specstride.commit-gate-block/1",
+              feature: slug,
+              phase,
+              ordinal,
+              runId,
+              engineStartId,
+              verdictId,
+              hits: gateAgain.hits,
+              hitsOmitted: 0,
+              signature: gateAgain.signature,
+              ruleDataHash: commitGateRuleDataHash,
+              nonce,
+              at: new Date().toISOString(),
+              path: "step-6",
+            },
+            {
+              atomicWrite: (file, text) => atomicWrite(file, text, { createDirectory: true }),
+              inControl,
+            },
+          );
+          writeFeedbackFor(
+            phase,
+            ordinal,
+            feedbackOfTheCommitGate({
+              phase,
+              ordinal,
+              nonce,
+              rejectCount: (feedback.get(phase) ?? []).length + 1,
+              rejectLimit: REJECT_LIMIT_DEFAULT,
+              hits: gateAgain.hits.map((hit) => ({
+                rule: hit.rule,
+                reason: reasonOfTheRule(hit.rule),
+                file: quotedPath(hit.file),
+                line: hit.line,
+              })),
+              hitsOmitted: 0,
+            }),
+          );
+          emit(COMMIT_GATE_BLOCKED_EVENT_TYPE, {
+            phase,
+            attempt: ordinal,
+            rules: [...new Set(gateAgain.hits.map((hit) => hit.rule))],
+            fileCount: new Set(gateAgain.hits.map((hit) => hit.file)).size,
+            signature: gateAgain.signature,
+          });
+          emit(COMMIT_BLOCKED_EVENT_TYPE, {
+            files: [...new Set(gateAgain.hits.map((hit) => hit.file))],
+            counts: gateAgain.hits.map((hit) => hit.line),
+          });
+          say(
+            `[${slug}] phase ${String(phase)} attempt ${String(ordinal)}: the scan before the commit blocked it, and the approval was voided`,
+          );
+          return "commit-blocked" as const;
+        }
+      }
       // The commit the approval produced, bound to the approval: while it is
       // part of the history the workspace holds, the phase counts as approved;
       // a `git reset` past it takes the approval with it.
@@ -3525,78 +3829,345 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     criticStrategyIsRegistered = true;
   }
   const phaseNumbers = phases.map((phase) => phase.number);
-  const result = await runEngine(
-    {
-      workdir,
-      featureSlug: slug,
-      specFormat: "speckit-tasks",
-      phases: phaseNumbers,
-      runId,
-      engineStartId,
-      rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
-      malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
-      gitCommits: "auto",
-      launchReason: "first",
-    },
-    {
-      phaseCount: phases.length,
-      time: () => new Date().toISOString(),
-      phasesWithTasks: phases.map((phase) => ({
-        number: phase.number,
-        tasks: phase.tasks.map((task) => ({ ticked: task.ticked })),
-      })),
-      emitIntegrityEvent: (event) => emit(event.type, event as never),
-      position: { phases: phaseNumbers, readApproval: readApproval as never },
-      runLoop: {
-        releaseVerification: () =>
-          Promise.resolve({
-            passed: true,
-            notRequired: true,
-            summary: "release verification not required",
-          }),
-        runOnePhase: (phase) => {
-          const at = phaseNumbers.indexOf(phase);
-          enterPhase(
-            {
-              phase,
-              title: titleOf(phase),
-              total: phases.length,
-              shape: "",
-              time: new Date().toISOString(),
-              phaseEvidenceExists: existsSync(evidencePathOf(phase)),
-              feedbackExists: false,
-              asIsRunId: runId,
-              phaseBefore: at > 0 ? phaseNumbers[at - 1] : undefined,
-            },
-            {
-              emitPhaseStart: (event) => emit("phase.started", event as never),
-              writeLine: say,
-              readApproval: readApproval as never,
-              emitIntegrityEvent: (event) => emit(event.type, event as never),
-              setEvidenceAside: (n, label) => {
-                const to = inControl(
-                  join("features", slug, "set-aside", `phase${String(n)}.${label}.md`),
-                );
-                mkdirSync(dirname(to), { recursive: true });
-                renameSync(evidencePathOf(n), to);
-              },
-            },
-          );
-          return runPhaseAttempts(
-            { phase, firstOrdinal: (ledger[String(phase)]?.phaseAttemptOrdinal ?? 0) + 1 },
-            {
-              runOneAttempt: (ordinal: number) => runOneAttempt(phase, ordinal),
-              afterARejection: (ordinal: number, outcome: string) =>
-                afterARejection(phase, ordinal, outcome),
-            } as never,
-          );
+  // T169 — the engine start of a resumed run completes the writes of a block
+  // a kill left unfinished (F152-SC-006), before any phase attempt starts.
+  // T125 — where the re-scan of a pending approval cannot restore the task
+  // list (a human edit beyond the ticks), the phase's blocked end is kept
+  // here and handed back from the first call the loop makes for the phase,
+  // so the run ends through the same terminal record and digest as the
+  // phase loop, before any phase attempt starts.
+  const reScanHaltByPhase = new Map<
+    number,
+    { readonly exitCode: number; readonly stopReason: string; readonly needs: string }
+  >();
+  if (commitBackpressureOn) {
+    // F152-FR-015 — the digest count comes from the durable block records,
+    // never from a count held in memory: a resume counts the blocks the run
+    // before the kill wrote, the relaunch after it counts them again.
+    for (const phase of phaseNumbers) {
+      commitsBlocked += await blocksOfThePhase(phase, {
+        listControl: (dir: string) => {
+          const folder = inControl(dir);
+          return existsSync(folder) ? readdirSync(folder) : [];
         },
-        emitRunEnd: (event) => emit("run.ended", event as never),
-        writeLine: say,
-        logReleaseVerification: (summary) => emit("release.verification", { summary }),
-      },
-    },
-  );
+      });
+    }
+    for (const phase of phaseNumbers) {
+      const steps = await stepsToCompleteABlock(phase, {
+        readControl: (path: string) => {
+          const file = inControl(path);
+          return existsSync(file) ? readFileSync(file, "utf8") : null;
+        },
+        readCounts: () => countsOf(phase).read(),
+      });
+      if (steps.complete) continue;
+      const record =
+        steps.writeFeedback || steps.writeCounts
+          ? await readBlockRecord(phase, steps.ordinal, {
+              readControl: (path: string) => {
+                const file = inControl(path);
+                return existsSync(file) ? readFileSync(file, "utf8") : null;
+              },
+            })
+          : null;
+      if (steps.writeFeedback && record !== null) {
+        writeFeedbackFor(
+          phase,
+          steps.ordinal,
+          feedbackOfTheCommitGate({
+            phase,
+            ordinal: steps.ordinal,
+            nonce: String(record.nonce),
+            rejectCount: (feedback.get(phase) ?? []).length + 1,
+            rejectLimit: REJECT_LIMIT_DEFAULT,
+            hits: (record.hits as readonly { rule: string; file: string; line: number }[]).map(
+              (hit) => ({
+                rule: hit.rule,
+                reason: reasonOfTheRule(hit.rule),
+                file: quotedPath(hit.file),
+                line: hit.line,
+              }),
+            ),
+            hitsOmitted: typeof record.hitsOmitted === "number" ? record.hitsOmitted : 0,
+          }),
+        );
+      }
+      if (steps.writeCounts) {
+        countsOf(phase).write(
+          countsAfterARejection({
+            before: countsOf(phase).read(),
+            ordinal: steps.ordinal,
+            kind: "commit-blocked",
+            malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
+          }),
+        );
+      }
+    }
+    // T125 — the engine-start step `reScanPendingApprovals` (F152-FR-014,
+    // plan.md "The residual and resume case", (b)): the run before this one
+    // wrote an approval record and died before its steps ran. For each phase
+    // whose approval still verifies, the predicate T171 decides whether the
+    // pending tree has to go through the gate again; on a block the approval
+    // is VOIDED (path `resume`) and the block record and its corrective
+    // feedback (a new nonce) are written, so the voided phase runs again from
+    // its first attempt. No counts are written here: the T169 step above
+    // completes them from the record, and the attempt that follows counts
+    // through the order after a rejection, as always.
+    for (const phase of phaseNumbers) {
+      const verified = readApproval(phase);
+      if (!verified.approved) continue;
+      const bound = existsSync(boundPath(phase))
+        ? (JSON.parse(readFileSync(boundPath(phase), "utf8")) as { commit?: string }).commit
+        : undefined;
+      const insideAWorkTree = git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0;
+      const changedPaths = [
+        ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+        ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+      ].filter((name) => name !== "");
+      if (
+        !mustReScanOnResume({
+          approved: true,
+          boundCommit: !(typeof bound === "string" && bound !== ""),
+          switchOn: commitBackpressureOn,
+          commits: true,
+          insideAWorkTree,
+          changed: changedPaths.length > 0,
+        })
+      ) {
+        continue;
+      }
+      const gate = commitGate(
+        {
+          commits: "auto",
+          insideAWorkTree,
+          changedPaths,
+          tasksPath: relative(workdir, tasksPath),
+          tickedTasksText: readFileSync(tasksPath, "utf8"),
+          rules: commitGateRules,
+        },
+        {
+          scan: (files, overlay) => {
+            const result = ingress.scanCommit(files, workdir, overlay);
+            return {
+              hits: result.hits.map((hit) =>
+                hit.matched === "registered-secret"
+                  ? { file: hit.file, line: hit.line, registeredSecret: true as const }
+                  : hit.matched === "unreadable"
+                    ? { file: hit.file, line: hit.line, unreadable: true as const }
+                    : { file: hit.file, line: hit.line, pattern: hit.pattern },
+              ),
+            };
+          },
+        },
+      );
+      if (!(gate.entered && gate.blocked)) continue;
+      const voided = await voidApproval(
+        {
+          phase,
+          verdictId: verified.record.verdictId,
+          ordinal: 1,
+          path: "resume",
+        },
+        preTickPortsOf(phase),
+      );
+      if (voided.halt === "commit-gate") {
+        // T172 — from the engine-start step the run ends before ANY phase
+        // attempt starts, through the same terminal record and digest as the
+        // phase loop: the blocked end is handed back from the first
+        // `runOnePhase` call the loop makes.
+        commitsLeftUncommitted += 1;
+        const end = commitGateBlockedEndOf(phase);
+        reScanHaltByPhase.set(phase, {
+          exitCode: end.exitCode,
+          stopReason: end.stopReason,
+          needs: `phase ${String(phase)}: tasks.md changed beyond the ticks; restore it or confirm by hand`,
+        });
+        continue;
+      }
+      const nonce = newNonce();
+      await writeBlockRecord(
+        {
+          schema: "specstride.commit-gate-block/1",
+          feature: slug,
+          phase,
+          ordinal: 1,
+          runId,
+          engineStartId,
+          verdictId: verified.record.verdictId,
+          hits: gate.hits,
+          hitsOmitted: 0,
+          signature: gate.signature,
+          ruleDataHash: commitGateRuleDataHash,
+          nonce,
+          at: new Date().toISOString(),
+          path: "resume",
+        },
+        {
+          atomicWrite: (file, text) => atomicWrite(file, text, { createDirectory: true }),
+          inControl,
+        },
+      );
+      writeFeedbackFor(
+        phase,
+        1,
+        feedbackOfTheCommitGate({
+          phase,
+          ordinal: 1,
+          nonce,
+          rejectCount: (feedback.get(phase) ?? []).length + 1,
+          rejectLimit: REJECT_LIMIT_DEFAULT,
+          hits: gate.hits.map((hit) => ({
+            rule: hit.rule,
+            reason: reasonOfTheRule(hit.rule),
+            file: quotedPath(hit.file),
+            line: hit.line,
+          })),
+          hitsOmitted: 0,
+        }),
+      );
+      emit(COMMIT_GATE_BLOCKED_EVENT_TYPE, {
+        phase,
+        attempt: 1,
+        rules: [...new Set(gate.hits.map((hit) => hit.rule))],
+        fileCount: new Set(gate.hits.map((hit) => hit.file)).size,
+        signature: gate.signature,
+      });
+      emit(COMMIT_BLOCKED_EVENT_TYPE, {
+        files: [...new Set(gate.hits.map((hit) => hit.file))],
+        counts: gate.hits.map((hit) => hit.line),
+      });
+      // F152-FR-015 — the digest counts the blocks the durable records hold,
+      // including the one this step just wrote.
+      commitsBlocked += 1;
+      say(
+        `[${slug}] phase ${String(phase)}: the resume re-scan voided the approval of the pending tree (the commit gate blocked it)`,
+      );
+    }
+  }
+  // T172 — a void whose task list a human changed beyond its ticks ends the
+  // run BEFORE the engine starts: the start position would read the phase as
+  // approved (no void marker stands), say "nothing to do" and never reach the
+  // phase loop where the blocked end is handed back. The run ends here,
+  // through the same digest below, with the exit code and the stop reason of
+  // the `commit-gate` row of the blocked reasons.
+  const result: {
+    readonly exitCode: number;
+    readonly stopReason?: string;
+    readonly end: { readonly ended?: string; readonly refusal?: string; readonly message?: string };
+  } =
+    reScanHaltByPhase.size > 0
+      ? await (async () => {
+          const [phase, end] = [...reScanHaltByPhase.entries()][0] as [
+            number,
+            { exitCode: number; stopReason: string; needs: string },
+          ];
+          return {
+            exitCode: end.exitCode,
+            stopReason: end.stopReason,
+            end: {
+              ended: "halted",
+              exitCode: end.exitCode,
+              stopReason: end.stopReason,
+              phase,
+              phasesRun: [phase],
+            },
+          };
+        })()
+      : ((await runEngine(
+          {
+            workdir,
+            featureSlug: slug,
+            specFormat: "speckit-tasks",
+            phases: phaseNumbers,
+            runId,
+            engineStartId,
+            rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+            malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
+            gitCommits: "auto",
+            launchReason: "first",
+          },
+          {
+            phaseCount: phases.length,
+            time: () => new Date().toISOString(),
+            // F152-FR-014 — the ticks the resume re-scan took back must be seen
+            // HERE too: the refusal of F101-FR-032 and the position are derived
+            // from the task list as it stands at the start of the run, not as the
+            // launch read it before the re-scan unticked the voided phase.
+            phasesWithTasks: grammar
+              .phasesOf(readFileSync(tasksPath, "utf8"), relative(workdir, tasksPath))
+              .map((phase) => ({
+                number: phase.number,
+                tasks: phase.tasks.map((task) => ({ ticked: task.ticked })),
+              })),
+            emitIntegrityEvent: (event) => emit(event.type, event as never),
+            position: { phases: phaseNumbers, readApproval: readApproval as never },
+            runLoop: {
+              releaseVerification: () =>
+                Promise.resolve({
+                  passed: true,
+                  notRequired: true,
+                  summary: "release verification not required",
+                }),
+              runOnePhase: (phase) => {
+                // T172 — a void that could not restore the task list ends the run
+                // HERE, before enterPhase and before any attempt of the phase.
+                const haltedByTheReScan = reScanHaltByPhase.get(phase);
+                if (haltedByTheReScan !== undefined) {
+                  reScanHaltByPhase.delete(phase);
+                  return Promise.resolve({
+                    outcome: "halted" as const,
+                    ordinal: ledger[String(phase)]?.phaseAttemptOrdinal ?? 0,
+                    exitCode: haltedByTheReScan.exitCode,
+                    stopReason: haltedByTheReScan.stopReason,
+                    blocked: { reason: "commit-gate", needs: haltedByTheReScan.needs },
+                  });
+                }
+                const at = phaseNumbers.indexOf(phase);
+                enterPhase(
+                  {
+                    phase,
+                    title: titleOf(phase),
+                    total: phases.length,
+                    shape: "",
+                    time: new Date().toISOString(),
+                    phaseEvidenceExists: existsSync(evidencePathOf(phase)),
+                    feedbackExists: false,
+                    asIsRunId: runId,
+                    phaseBefore: at > 0 ? phaseNumbers[at - 1] : undefined,
+                  },
+                  {
+                    emitPhaseStart: (event) => emit("phase.started", event as never),
+                    writeLine: say,
+                    readApproval: readApproval as never,
+                    emitIntegrityEvent: (event) => emit(event.type, event as never),
+                    setEvidenceAside: (n, label) => {
+                      const to = inControl(
+                        join("features", slug, "set-aside", `phase${String(n)}.${label}.md`),
+                      );
+                      mkdirSync(dirname(to), { recursive: true });
+                      renameSync(evidencePathOf(n), to);
+                    },
+                  },
+                );
+                return runPhaseAttempts(
+                  { phase, firstOrdinal: (ledger[String(phase)]?.phaseAttemptOrdinal ?? 0) + 1 },
+                  {
+                    runOneAttempt: (ordinal: number) => runOneAttempt(phase, ordinal),
+                    afterARejection: (ordinal: number, outcome: string) =>
+                      afterARejection(phase, ordinal, outcome),
+                  } as never,
+                );
+              },
+              emitRunEnd: (event) => emit("run.ended", event as never),
+              writeLine: say,
+              logReleaseVerification: (summary) => emit("release.verification", { summary }),
+            },
+          },
+        )) as {
+          exitCode: number;
+          stopReason?: string;
+          end: { ended?: string; refusal?: string; message?: string };
+        });
   // F101-FR-032 — a refused START is named on the product output: before this
   // fix the run ended exit 3 with the `[LOOP]` and `[DIGEST]` lines alone, so
   // the operator learned neither which phases were refused nor the remedy the
@@ -3604,7 +4175,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // approval commits out of the history and every later `run` exited 3
   // silently). One line, before the `[LOOP]` line; the message names the
   // phases and the `state export` / `state import` / `state adopt` remedy.
-  if (startWasRefused(result.end)) {
+  if (startWasRefused(result.end as never)) {
     const line = `[${slug}] refused (${result.end.refusal}): ${result.end.message}`;
     say(line);
     engineLog(line);

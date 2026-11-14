@@ -509,7 +509,10 @@ test("SIGKILL of the engine running the group ends every worker and guard within
           return false;
         }
       },
-      5_000,
+      // THE BOOT IS NOT THE CONTRACT: a loaded host can take many seconds to
+      // boot the child node. The 5 s bound the test name names is about what
+      // follows the SIGKILL, and is asserted below.
+      30_000,
       "the engine booted",
     );
     const engineStartedAtMs = (await untilObservable(engine.pid as number)) ?? 0;

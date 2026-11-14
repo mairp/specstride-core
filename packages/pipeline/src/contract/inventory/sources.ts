@@ -215,6 +215,17 @@ export function inventorySources(input: {
   const constitution = join(root, CONSTITUTION_PATH);
   if (isARegularFile(constitution)) addText(constitution, CONSTITUTION_KIND);
 
+  // T144 (feature 152, F152-FR-017) — the rule data of the commit gate is a
+  // source of the launch contract: the engine's data as shipped, and the
+  // project's file where the project added one. Each enters the inventory on
+  // the content hash, so the launcher's integrity check covers a change of
+  // the rule data like a change of any other source.
+  addText(
+    join(root, "packages", "kernel", "data", "commit-gate", "engine-v1.json"),
+    "commit-gate-rules",
+  );
+  addText(join(root, "specstride.commit-gate.json"), "commit-gate-rules");
+
   collected.sort((a, b) => (a.absolute < b.absolute ? -1 : a.absolute > b.absolute ? 1 : 0));
   return collected.map((one) => one.record);
 }

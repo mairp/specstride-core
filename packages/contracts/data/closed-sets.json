@@ -37,7 +37,7 @@
     {
       "number": 4,
       "name": "Blocked reasons",
-      "members": "The six of annex E §E.2",
+      "members": "The seven of annex E §E.2",
       "literals": [],
       "owner": "100",
       "closedBy": "Design",
@@ -1959,7 +1959,7 @@
         "false-pass"
       ],
       "owner": "115",
-      "closedBy": "Owner decision",
+      "closedBy": "Owner decision (decision 21; ruling 42)",
       "unknownValue": "Treated as a breach"
     },
     {
@@ -3647,7 +3647,7 @@
     {
       "number": 255,
       "name": "What failed in an approval record",
-      "members": "`schema`, `signature`, `key-unknown`, `verdict`, `evidence-hash`, `verification-hash`, `missing`, `marker-only`",
+      "members": "`schema`, `signature`, `key-unknown`, `verdict`, `evidence-hash`, `verification-hash`, `missing`, `marker-only`, `voided`",
       "literals": [
         "schema",
         "signature",
@@ -3656,7 +3656,8 @@
         "evidence-hash",
         "verification-hash",
         "missing",
-        "marker-only"
+        "marker-only",
+        "voided"
       ],
       "owner": "101",
       "closedBy": "Design",
@@ -4113,6 +4114,18 @@
       "owner": "107",
       "closedBy": "Design",
       "unknownValue": "The answer is refused (F107-FR-010)"
+    },
+    {
+      "number": 286,
+      "name": "Effects of a commit-gate rule",
+      "members": "`block`, `exempt`",
+      "literals": [
+        "block",
+        "exempt"
+      ],
+      "owner": "152",
+      "closedBy": "Design",
+      "unknownValue": "The rule data is refused at load and the launch is refused with exit 3, naming the file (F152-FR-016)"
     }
   ]
 }

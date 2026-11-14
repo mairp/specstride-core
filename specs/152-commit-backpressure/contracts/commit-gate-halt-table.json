@@ -1,0 +1,21 @@
+{
+  "schema": "specstride.table/1",
+  "id": "commit-gate.halt",
+  "version": "1.0.0",
+  "points": {
+    "commit-gate-halt": {
+      "signals": { "sameSignature": "boolean" },
+      "choices": ["halt-commit-gate", "go"]
+    }
+  },
+  "rows": {
+    "commit-gate-halt": [
+      {
+        "ruleId": "CGH-1-same-signature",
+        "when": { "op": "equal", "signal": "sameSignature", "value": true },
+        "choice": "halt-commit-gate"
+      },
+      { "ruleId": "CGH-2-go", "choice": "go" }
+    ]
+  }
+}

@@ -126,9 +126,10 @@ export const approvalFailures: ClosedSet<
   | "verification-hash"
   | "missing"
   | "marker-only"
+  | "voided"
 > = whatFailedInAnApprovalRecord;
 
-/** The eight members of row 255, in the order of the table. */
+/** The nine members of row 255, in the order of the table. */
 export const APPROVAL_FAILURES = approvalFailures.members;
 
 /** What failed in an approval record (row 255). */

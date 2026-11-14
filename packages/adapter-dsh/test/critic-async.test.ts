@@ -92,8 +92,13 @@ test("a call that ignores SIGTERM is SIGKILLed, as a group, after the grace peri
   );
   try {
     const run = await call(fixture, {
-      timeoutMs: 200,
-      killGraceMs: 200,
+      // THE TIMING IS NOT THE CONTRACT: under the full suite's fork/exec load
+      // the 200 ms windows can elapse before the scheduler delivers the
+      // signals — the same flake the worker-supervisor tests fixed by
+      // widening their windows. What the test names is the escalation
+      // SIGTERM, then SIGKILL, not 200 ms.
+      timeoutMs: 600,
+      killGraceMs: 600,
       probeVersion: () => "0.1.0-rc.8",
     });
     assert.ok(!run.ok, JSON.stringify(run));

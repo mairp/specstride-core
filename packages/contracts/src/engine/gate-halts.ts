@@ -1,7 +1,7 @@
 /**
  * T004 of feature 101 — the table "Halts of the phase gate" as data, with its
  * validation AT LOAD (`specs/101-gate-and-verdict/contracts/gate-halts.json`,
- * copied to `data/gate-halts.json`; F101-FR-010, F101-FR-037).
+ * copied to `data/gate-halts-101.json`; F101-FR-010, F101-FR-037).
  *
  * The one rule this module enforces is the one the task names: every STOP
  * REASON and every EXIT CODE the table holds is a member of a closed set of
@@ -22,7 +22,7 @@
  * The module imports no `node:` module: the data comes through the JSON import
  * of the package, as every other data file of `contracts` does.
  */
-import gateHaltsData from "../../data/gate-halts.json" with { type: "json" };
+import gateHaltsData from "../../data/gate-halts-101.json" with { type: "json" };
 import { engineExitCodeSet, isEngineExitCode, stopReasonsOf } from "../codes/engine.ts";
 import { engineExitOf, isStopReason, stopReasonSet } from "../codes/stop-reasons.ts";
 import type { StopReason } from "../codes/stop-reasons.ts";
@@ -35,7 +35,7 @@ export const SCHEMA_ID = "specstride.gate-halts/1" as const;
 export const CONTRACT_FILE = "specs/101-gate-and-verdict/contracts/gate-halts.json" as const;
 
 /** The copy in the package, which this module reads. */
-export const DATA_FILE = "packages/contracts/data/gate-halts.json" as const;
+export const DATA_FILE = "packages/contracts/data/gate-halts-101.json" as const;
 
 /** Row 3 of annex X §X.6 — the closed set the stop reasons are read against. */
 export const STOP_REASON_SET_ROW = 3 as const;

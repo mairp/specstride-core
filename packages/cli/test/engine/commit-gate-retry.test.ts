@@ -81,6 +81,7 @@ function fixture(name: string): Fixture {
     PROPOSER: process.env.SPECSTRIDE_PROPOSER,
     CRITIC: process.env.SPECSTRIDE_CRITIC,
     PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
     STUB_DIR: process.env.STUB_DIR,
   };
   process.env.HOME = dir;
@@ -93,6 +94,10 @@ function fixture(name: string): Fixture {
   process.env.SPECSTRIDE_PROPOSER = "claude";
   process.env.SPECSTRIDE_CRITIC = "claude";
   process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  // The bounds of the run are the engine's defaults (the reject limit of 3 in
+  // particular): an outer Specstride run may run with `SPECSTRIDE_LIMITS=off`,
+  // which would leave a rejecting critic looping for ever (CT-152-4).
+  delete process.env.SPECSTRIDE_LIMITS;
   // The stub writes the prompts it saw to the scratch dir, outside the work
   // tree, so no later critic prompt quotes them as part of the diff.
   process.env.STUB_DIR = scratch;
@@ -139,6 +144,8 @@ function fixture(name: string): Fixture {
       else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
       if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
       else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
+      if (before.LIMITS === undefined) delete process.env.SPECSTRIDE_LIMITS;
+      else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
       if (before.STUB_DIR === undefined) delete process.env.STUB_DIR;
       else process.env.STUB_DIR = before.STUB_DIR;
       rmSync(dir, { recursive: true, force: true });
@@ -167,6 +174,34 @@ const eventsOf = (fx: Fixture): string => {
   const runsDir = join(workspaceRoot, "runs");
   return readFileSync(join(runsDir, readdirSync(runsDir)[0], "events.jsonl"), "utf8");
 };
+
+/**
+ * T136 (F152-FR-019) — ordinary code commits. The proposer writes only a
+ * value that matches the carve-out's pattern (`key-name-then-value`): no
+ * attempt is blocked, the run makes its commit in one attempt, and no block
+ * record exists. The carve-out is the engine rule `cg-ordinary-code` — the
+ * project file plays no part.
+ */
+test("CT-152-12 ordinary code commits: no attempt is blocked", async () => {
+  const fx = fixture("ordinary-code");
+  try {
+    assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
+    const out = fx.out();
+    // One attempt, committed, and the digest counts NO block.
+    assert.match(out, /DIGEST exit=0 stop=none cost_usd=\d+\.\d+ commits_blocked=0 run=run-/);
+    assert.equal(existsSync(fx.control("commit-gate", "phase1.1.block.json")), false);
+    // The work of the phase is in the history, with the ordinary code file.
+    assert.equal(porcelain(fx.dir), "");
+    assert.equal(existsSync(join(fx.dir, "example.json")), true);
+    // The approval record of the phase exists, once.
+    const approval = JSON.parse(readFileSync(fx.control("approvals", "phase-1.json"), "utf8")) as {
+      verdictId: string;
+    };
+    assert.ok(typeof approval.verdictId === "string" && approval.verdictId.length > 0);
+  } finally {
+    fx.restore();
+  }
+});
 
 test("CT-152-2 a blocked commit is retried and succeeds on the next attempt", async () => {
   const fx = fixture("secret-removed-on-retry");

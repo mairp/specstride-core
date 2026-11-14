@@ -28,6 +28,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
+import { pinEngineEnv } from "./helpers/fixture.ts";
 
 /**
  * The stub of `claude`. A proposer pass can write a checkpoint: the script
@@ -110,9 +111,12 @@ function fixture(options: FixtureOptions): { readonly dir: string; readonly rest
   const before = { HOME: process.env.HOME, PATH: process.env.PATH };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
+  // A leaked launch environment must not reach the run (see helpers/fixture.ts).
+  const restoreEnv = pinEngineEnv({ feature: "001-one" });
   return {
     dir: work,
     restore: () => {
+      restoreEnv();
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
       rmSync(dir, { recursive: true, force: true });

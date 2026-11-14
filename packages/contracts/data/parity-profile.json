@@ -1989,14 +1989,14 @@
     },
     {
       "number": 134,
-      "switch": "The commit gate holds an approval commit back on a hit of the scan (F152-FR-021)",
+      "switch": "A blocked approval commit becomes the next phase attempt with a corrective block, and a repeated block halts blocked on a human",
       "key": "commit.backpressure",
       "keys": [
         "commit.backpressure"
       ],
       "keyNote": "`commit.backpressure`",
       "default": "on",
-      "parity": "off: the approval commit is made with no gate of its own (DV-121)",
+      "parity": "off: the block is reported, the run goes on, and the run exits 1 at its end (DV-122)",
       "owner": "152",
       "registerRows": [
         "DV-121"

@@ -152,16 +152,6 @@
       "transientNote": "No",
       "retryable": "false",
       "matchedByStringAtBaseline": "— (new)"
-    },
-    {
-      "number": 16,
-      "literal": "commit_gate",
-      "writtenBy": "Engine",
-      "engineExit": 2,
-      "transient": false,
-      "transientNote": "No",
-      "retryable": "false",
-      "matchedByStringAtBaseline": "— (new)"
     }
   ]
 }

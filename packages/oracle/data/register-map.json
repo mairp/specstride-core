@@ -1346,6 +1346,16 @@
       "families": [],
       "note": "The switch `commit.backpressure` (row 134 of annex X §X.7) defaults on and the `parity` profile holds it off, so the oracle run makes the approval commit with no gate of its own; the block path is observed by the own test of feature 152 (CT-152-21). Added 2026-11-09.",
       "registerText": "**Not observable** as a difference: the switch `commit.backpressure` is off under `parity` (row 134), so the oracle never runs the block path; the switch is pinned by the own test of feature 152 (CT-152-21)"
+    },
+    {
+      "row": "DV-122",
+      "handling": [
+        "waiver"
+      ],
+      "rules": [],
+      "families": [],
+      "note": "The exit 1 after blocked commits (owner ruling of 2026-11-04) is in force under every profile, `parity` included; on the blocked-commit fixtures of feature 152 the exit and the warning line are read as this row, not as `different`. One waiver per fixture and surface, written by the parity test of feature 152 (T148). Added 2026-11-09.",
+      "registerText": "**Waiver** on the blocked-commit fixtures of feature 152 (FX-27 holds no blocked commit): the exit 1 and the warning line are in force under every profile, `parity` included, so the oracle reads them as this row and not as `different`; one waiver per fixture and surface where it shows"
     }
   ]
 }

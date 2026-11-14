@@ -125,6 +125,12 @@ test(
       SPECSTRIDE_PROPOSER_PAUSE_SEC: "0",
       TEST_WORKDIR: realWorkdir,
     };
+    // A leaked launch environment must not reach the child run (see
+    // helpers/fixture.ts): the stub on PATH is the engine's model.
+    env.SPECSTRIDE_PROPOSER = "claude";
+    env.SPECSTRIDE_CRITIC = "claude";
+    env.SPECSTRIDE_FEATURE = "001-one";
+    delete env.SPECSTRIDE_LIMITS;
     const engine = spawn(process.execPath, [join(dir, "runner.mjs")], {
       cwd: realWorkdir,
       env,

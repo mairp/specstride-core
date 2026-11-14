@@ -44,6 +44,12 @@ export interface RunSnapshot {
    */
   sourceHashes: Record<string, unknown>;
   /**
+   * The canonical hash of the commit-gate rule data in force (feature 152, F152-FR-017), pinned at the launch
+   *
+   * Type in words: Text.
+   */
+  commitGateRulesHash?: string;
+  /**
    * Every intended change accepted on `resume`: time, file, old hash, new hash
    *
    * Type in words: List of records.

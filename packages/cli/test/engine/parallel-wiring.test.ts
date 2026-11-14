@@ -47,6 +47,7 @@ import {
   type ParallelWiringInput,
 } from "../../src/engine/parallel-wiring.ts";
 import { writeWorkerGuardScript } from "../../src/engine/worker-supervisor.ts";
+import { startTimeOf } from "@specstride/kernel";
 import type { TheGroupAttemptRefused } from "../../src/engine/parallel-attempt.ts";
 import { WorkerStartRefused, type PreparedWorker } from "../../src/engine/parallel-group.ts";
 import { forbiddenWordsIn, workerBlockText } from "../../../layer-parallel/src/index.ts";
@@ -280,7 +281,12 @@ function wiringOf(
       runToken: "run-token-of-the-wiring",
       timeLimitMs: 120_000,
       enginePid: process.pid,
-      engineStartedAtMs: Date.now(),
+      // THE REAL START TIME OF THIS PROCESS, as the engine reads it
+      // (run-feature.ts). `Date.now()` fails the guard's identity check
+      // (`sameStart`): the guard then reads the engine as a stranger and ends
+      // the worker group ~250 ms after the spawn, which a loaded host turns
+      // into a flaky `killed` end of a stub that boots slower than that.
+      engineStartedAtMs: startTimeOf(process.pid) ?? 0,
       registry: fixture.registry,
       guardScriptPath: fixture.guardScriptPath,
       hash,

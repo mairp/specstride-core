@@ -6,13 +6,17 @@
  * narrowed prompt (only the failed criterion, F101-FR-025/F101-FR-026), the
  * tree check turns an accelerated retry on a tree that changed since the
  * diagnosis into a plain attempt, and an approval counts only while the
- * commit it produced is still part of the history of the workspace.
+ * commit it produced is still part of the history of the workspace, and never
+ * when the commit gate voided it (the void marker of feature 152 stands beside
+ * the record, so the same verification reads it as not approved with the
+ * failure `voided`).
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   chmodSync,
+  statSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -26,6 +30,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 import { runFeature, workingTreeFingerprint } from "../../src/engine/run-feature.ts";
+import { voidApproval } from "../../../core/src/post-approval/commit-gate.ts";
 
 /**
  * The stub of `claude`. Three call kinds meet it: the proposer pass, the
@@ -102,15 +107,45 @@ function fixture(
   ]) {
     spawnSync("git", ["-C", work, ...argv]);
   }
-  const before = { HOME: process.env.HOME, PATH: process.env.PATH };
+  const before = {
+    HOME: process.env.HOME,
+    PATH: process.env.PATH,
+    FEATURE: process.env.SPECSTRIDE_FEATURE,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
+    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
+    CRITIC: process.env.SPECSTRIDE_CRITIC,
+    PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+  };
   process.env.HOME = dir;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
+  // The feature is the one directory of the fixture's own `specs/` (001-one):
+  // an outer Specstride run starts its proposer passes with
+  // `SPECSTRIDE_FEATURE=152-commit-backpressure`, which would make the engine
+  // look for `specs/152-commit-backpressure/tasks.md` here and fail. The
+  // bounds of the run are the engine's defaults, and the stub `claude` on
+  // PATH is both the proposer and the critic, so the outer values of the
+  // limits and of the backends are pinned out too.
+  delete process.env.SPECSTRIDE_FEATURE;
+  delete process.env.SPECSTRIDE_LIMITS;
+  process.env.SPECSTRIDE_PROPOSER = "claude";
+  process.env.SPECSTRIDE_CRITIC = "claude";
+  delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
   return {
     dir: work,
     home: dir,
     restore: () => {
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;
+      if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE;
+      else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
+      if (before.LIMITS === undefined) delete process.env.SPECSTRIDE_LIMITS;
+      else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
+      if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER;
+      else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
+      if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC;
+      else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
+      if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
+      else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
       rmSync(dir, { recursive: true, force: true });
     },
   };
@@ -401,6 +436,71 @@ test("an approval no longer counts after git reset past its commit: the phase ru
       // does nothing.
       assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
       assert.equal(readFileSync(join(dirname(dir), "critic-count.txt"), "utf8").trim(), "2");
+    } finally {
+      restore();
+    }
+  });
+});
+
+test("T113 the void marker takes a valid approval record out of the count", async () => {
+  await withEnv({ SPECSTRIDE_PROPOSER_PAUSE_SEC: "0" }, async () => {
+    const { dir, home, restore } = fixture(0);
+    try {
+      assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+      assert.equal(commits(dir), 2);
+      assert.equal(readFileSync(join(dirname(dir), "critic-count.txt"), "utf8").trim(), "1");
+
+      // The record on disk is the valid signed record the run wrote; the
+      // commit gate voids it by leaving the marker of F152-FR-014 beside it,
+      // with the verdictId of the record it voids.
+      const approvals = join(controlRootOf(home, dir), "features", "001-one", "approvals");
+      const recordFile = join(approvals, "phase-1.json");
+      assert.equal(existsSync(recordFile), true);
+      const record = JSON.parse(readFileSync(recordFile, "utf8")) as { verdictId: string };
+      // The void itself is the engine's own step (T120): the ticks of the
+      // phase go back, then the marker is written with the verdictId.
+      const tasksPath = join(dir, "specs", "001-one", "tasks.md");
+      await voidApproval(
+        { phase: 1, verdictId: record.verdictId, ordinal: 1, path: "resume" },
+        {
+          tasksPath: () => tasksPath,
+          readTasksText: () => readFileSync(tasksPath, "utf8"),
+          inControl: (path) => join(controlRootOf(home, dir), path),
+          readControlText: (file) => (existsSync(file) ? readFileSync(file, "utf8") : null),
+          writeAtomic: (file, text, mode) => {
+            mkdirSync(dirname(file), { recursive: true });
+            writeFileSync(file, text, { mode });
+          },
+          modeOf: (file) => statSync(file).mode & 0o7777,
+          chmod: (file, mode) => chmodSync(file, mode),
+        },
+      );
+      const markerFile = join(controlRootOf(home, dir), "commit-gate", "phase1.void.json");
+      assert.equal(existsSync(markerFile), true);
+
+      // The same verification now reads the record NOT approved with the
+      // failure `voided` — and the run treats the phase as never approved.
+      assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+      assert.equal(commits(dir), 3, "the phase was approved and committed again");
+      // The phase's first attempt after the void runs with the verdictId the
+      // void marker still names (the verdict ids are per attempt), so its
+      // record reads as voided too and the attempt is judged again; the
+      // attempt that follows carries a fresh verdictId and is approved. The
+      // void thus never lets ticks pass for approved work — the cost is one
+      // extra judged attempt, and the end state is the committed phase.
+      assert.equal(readFileSync(join(dirname(dir), "critic-count.txt"), "utf8").trim(), "3");
+      const noted = eventsOf(home, dir).find(
+        (event) =>
+          event.type === "integrity.noted" &&
+          (event.data as { kind?: string; failed?: string }).kind === "approval-invalid" &&
+          (event.data as { failed?: string }).failed === "voided",
+      );
+      assert.ok(noted !== undefined, "the integrity note of the void was raised");
+
+      // And where no marker stands the record still counts: the next run
+      // does nothing.
+      assert.equal(await runFeature({ argv: [], workdir: dir }), 0);
+      assert.equal(readFileSync(join(dirname(dir), "critic-count.txt"), "utf8").trim(), "3");
     } finally {
       restore();
     }

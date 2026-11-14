@@ -33,12 +33,15 @@ const deliver = JSON.parse(readFileSync(resolve(ROOT, `${FEATURE}/deliver.json`)
   schemas: Record<string, string>;
 };
 
-test("T004: the manifest delivers exactly the three files of feature 115", () => {
+test("T004: the manifest delivers exactly the six files of feature 115", () => {
   assert.equal(deliver.schema, "specstride.deliver-115/1");
   assert.equal(deliver.owner, "115");
   assert.deepEqual(Object.keys(deliver.data).sort(), [
+    "closed-sets-115.json",
     "integrity-rules-115.json",
     "ledger-micro-115.json",
+    "parity-rows-115.json",
+    "router-table-115.json",
   ]);
   assert.deepEqual(Object.keys(deliver.schemas), ["checkpoint-115.schema.json"]);
 });

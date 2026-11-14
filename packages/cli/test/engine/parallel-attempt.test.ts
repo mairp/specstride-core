@@ -41,6 +41,7 @@ import { releaseTheWriter } from "../../../core/src/parallel/integrate.ts";
 import { readAppendedRecords } from "../../../core/src/parallel/queue.ts";
 import type { ParallelPlan } from "../../../layer-parallel/src/index.ts";
 import { writeWorkerGuardScript } from "../../src/engine/worker-supervisor.ts";
+import { startTimeOf } from "@specstride/kernel";
 import { groupIdOfTheAttempt, runTheGroupOfTheAttempt } from "../../src/engine/parallel-attempt.ts";
 import { WorkerStartRefused, type PreparedWorker } from "../../src/engine/parallel-group.ts";
 
@@ -326,7 +327,7 @@ function inputOf(
     outputRootOf: (worker) => join(fixture.root, "outputs", worker.workerId),
     startDoor: doors.start,
     enginePid: process.pid,
-    engineStartedAtMs: Date.now(),
+    engineStartedAtMs: startTimeOf(process.pid) ?? 0,
     workersAtATime: 2,
     guardScriptPath: fixture.guardScriptPath,
     registry: fixture.registry,

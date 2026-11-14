@@ -252,19 +252,26 @@ test(
     );
     // The ceiling is far away: the ENGINE's death is what ends this pass, and
     // the guard must do it — nothing else is watching.
+    const childEnv: NodeJS.ProcessEnv = {
+      ...process.env,
+      HOME: home,
+      PATH: `${bin}:${process.env.PATH ?? ""}`,
+      SPECSTRIDE_PROPOSER_TIMEOUT_SEC: "600",
+      SPECSTRIDE_WATCHDOG_TICK_MS: "500",
+      SPECSTRIDE_PROPOSER_PAUSE_SEC: "0",
+      SPECSTRIDE_PASS_GUARD_POLL_MS: "100",
+      SPECSTRIDE_KILL_GRACE_MS: "1000",
+      TEST_WORKDIR: work,
+    };
+    // A leaked launch environment must not reach the child run (see
+    // helpers/fixture.ts): the stub on PATH is the engine's model.
+    childEnv.SPECSTRIDE_PROPOSER = "claude";
+    childEnv.SPECSTRIDE_CRITIC = "claude";
+    childEnv.SPECSTRIDE_FEATURE = "001-one";
+    delete childEnv.SPECSTRIDE_LIMITS;
     const engine = spawn(process.execPath, [join(dir, "runner.mjs")], {
       cwd: work,
-      env: {
-        ...process.env,
-        HOME: home,
-        PATH: `${bin}:${process.env.PATH ?? ""}`,
-        SPECSTRIDE_PROPOSER_TIMEOUT_SEC: "600",
-        SPECSTRIDE_WATCHDOG_TICK_MS: "500",
-        SPECSTRIDE_PROPOSER_PAUSE_SEC: "0",
-        SPECSTRIDE_PASS_GUARD_POLL_MS: "100",
-        SPECSTRIDE_KILL_GRACE_MS: "1000",
-        TEST_WORKDIR: work,
-      },
+      env: childEnv,
       stdio: ["ignore", "pipe", "pipe"],
     });
     let out = "";

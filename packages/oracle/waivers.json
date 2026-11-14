@@ -230,6 +230,86 @@
     "reference": "5",
     "port": "none: the port never starts the stage"
    }
+  },
+  {
+   "fixture": "152/secret-removed-on-retry",
+   "surface": "exit",
+   "row": "DV-122",
+   "difference": {
+    "selector": "exitCode",
+    "reference": 0,
+    "port": 1
+   }
+  },
+  {
+   "fixture": "152/secret-removed-on-retry",
+   "surface": "stderr",
+   "row": "DV-122",
+   "difference": {
+    "selector": "the warning line that names the blocked commits",
+    "reference": "no such line: the baseline prints no warning over a blocked commit",
+    "port": "[001-one] 1 commit(s) were blocked by the secret gate; the work of those phases stays uncommitted — the run exits 1, not 0"
+   }
+  },
+  {
+   "fixture": "152/secret-every-attempt",
+   "surface": "exit",
+   "row": "DV-122",
+   "difference": {
+    "selector": "exitCode",
+    "reference": 0,
+    "port": 1
+   }
+  },
+  {
+   "fixture": "152/secret-every-attempt",
+   "surface": "stderr",
+   "row": "DV-122",
+   "difference": {
+    "selector": "the warning line that names the blocked commits",
+    "reference": "no such line: the baseline prints no warning over a blocked commit",
+    "port": "[001-one] 1 commit(s) were blocked by the secret gate; the work of those phases stays uncommitted — the run exits 1, not 0"
+   }
+  },
+  {
+   "fixture": "152/secret-moves-files",
+   "surface": "exit",
+   "row": "DV-122",
+   "difference": {
+    "selector": "exitCode",
+    "reference": 0,
+    "port": 1
+   }
+  },
+  {
+   "fixture": "152/secret-moves-files",
+   "surface": "stderr",
+   "row": "DV-122",
+   "difference": {
+    "selector": "the warning line that names the blocked commits",
+    "reference": "no such line: the baseline prints no warning over a blocked commit",
+    "port": "[001-one] 1 commit(s) were blocked by the secret gate; the work of those phases stays uncommitted — the run exits 1, not 0"
+   }
+  },
+  {
+   "fixture": "152/instruction-in-a-file-name",
+   "surface": "exit",
+   "row": "DV-122",
+   "difference": {
+    "selector": "exitCode",
+    "reference": 0,
+    "port": 1
+   }
+  },
+  {
+   "fixture": "152/instruction-in-a-file-name",
+   "surface": "stderr",
+   "row": "DV-122",
+   "difference": {
+    "selector": "the warning line that names the blocked commits",
+    "reference": "no such line: the baseline prints no warning over a blocked commit",
+    "port": "[001-one] 1 commit(s) were blocked by the secret gate; the work of those phases stays uncommitted — the run exits 1, not 0"
+   }
   }
  ]
 }

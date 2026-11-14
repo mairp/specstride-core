@@ -7,7 +7,8 @@
  * | `index.ts` | T001 | — (the entry of the group) |
  * | `record.ts` | T006, T043 | F101-FR-029 (the gate store of Lisa, rewritten) |
  * | `key.ts` | T043 | F101-FR-030 |
- * | `verify.ts` | T074 | F101-FR-031 |
+ * | `verify.ts` | T074, T121 | F101-FR-031, F152-FR-014 |
+ | `commit-gate-resume.ts` | T171 | F152-FR-014 |
  * | `ticked-without-record.ts` | T076 | F101-FR-032 |
  *
  * `record.ts` is a writer of records of the phase gate, beside
@@ -21,4 +22,5 @@ export * from "./gate-tree.ts";
 export * from "./record.ts";
 export * from "./key.ts";
 export * from "./verify.ts";
+export * from "./commit-gate-resume.ts";
 export * from "./ticked-without-record.ts";

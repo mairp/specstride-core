@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+// Fixture ordinary-code: plant only ordinary code that matches the carve-out
+const fs = require("node:fs");
+const path = require("node:path");
+const argv = process.argv.slice(2);
+const prompt = fs.readFileSync(0, "utf8");
+const out = process.env.STUB_DIR || ".";
+const write_ = (name, text) => fs.writeFileSync(path.join(out, name), text);
+const session = argv[argv.indexOf("--session-id") + 1];
+const critic = argv.includes("--max-turns");
+console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));
+const attempt = Number(/This is attempt (\d+)/.exec(prompt)?.[1] ?? "1");
+if (critic) {
+  // Echo the nonce of the demand line at the END of the prompt: earlier
+  // VERDICT lines in the quoted diff of the tree are data, never the nonce.
+  const allNonces = [...prompt.matchAll(/VERDICT ([0-9a-f]+)/g)];
+  const nonce = allNonces.length > 0 ? allNonces[allNonces.length - 1][1] : "0".repeat(16);
+  console.log(JSON.stringify({ type: "result", result: "T001 judged.\nVERDICT " + nonce + ": APPROVED" }));
+} else {
+  write_(`seen-by-proposer-${String(attempt)}.txt`, prompt);
+  write_(`session-${String(attempt)}.txt`, session ?? "");
+  const evidence = /write (\.\S*?specstride\S+?):/i.exec(prompt)[1];
+  fs.mkdirSync(path.dirname(evidence), { recursive: true });
+  fs.writeFileSync(evidence, "T001 done\n");
+  // Write a file that matches the carve-out pattern: key-name-then-value, ordinary code
+  fs.writeFileSync("example.json", '{"token": "abc"}\n');
+  const tasks = "specs/001-one/tasks.md";
+  fs.writeFileSync(tasks, fs.readFileSync(tasks, "utf8").replace("- [ ]", "- [x]"));
+  console.log(JSON.stringify({ type: "result", result: "ok" }));
+}

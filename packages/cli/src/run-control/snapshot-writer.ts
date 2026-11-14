@@ -120,6 +120,12 @@ export type SnapshotWriteInput = {
   readonly keys: readonly SnapshotKeyInput[];
   /** The hashes of `spec`, `plan` and `tasks` (see `source-compare.ts`). */
   readonly sourceHashes: Readonly<Record<string, unknown>>;
+  /**
+   * T142 (feature 152, F152-FR-017) — the canonical hash of the commit-gate
+   * rule data in force, pinned in the record at the launch beside the source
+   * hashes.
+   */
+  readonly commitGateRulesHash?: string | undefined;
   /** `acceptedChanges`, written only by `resume --accept-source-change`. */
   readonly acceptedChanges?: readonly unknown[] | undefined;
 };
@@ -157,6 +163,9 @@ export function buildSnapshotRecord(input: SnapshotWriteInput): RunSnapshot {
   const record = {
     ...built,
     keys,
+    ...(input.commitGateRulesHash === undefined
+      ? {}
+      : { commitGateRulesHash: input.commitGateRulesHash }),
     ...(input.acceptedChanges === undefined ? {} : { acceptedChanges: [...input.acceptedChanges] }),
   } as unknown as RunSnapshot;
   const read = readRunSnapshot(record as unknown as unknown);
