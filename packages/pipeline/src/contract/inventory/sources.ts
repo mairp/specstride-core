@@ -220,8 +220,10 @@ export function inventorySources(input: {
   // project's file where the project added one. Each enters the inventory on
   // the content hash, so the launcher's integrity check covers a change of
   // the rule data like a change of any other source.
-  addText(join(root, "packages", "kernel", "data", "commit-gate", "engine-v1.json"),
-    "commit-gate-rules");
+  addText(
+    join(root, "packages", "kernel", "data", "commit-gate", "engine-v1.json"),
+    "commit-gate-rules",
+  );
   addText(join(root, "specstride.commit-gate.json"), "commit-gate-rules");
 
   collected.sort((a, b) => (a.absolute < b.absolute ? -1 : a.absolute > b.absolute ? 1 : 0));

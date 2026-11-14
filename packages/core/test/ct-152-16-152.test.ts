@@ -22,7 +22,10 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { commitGateRulesForTheLaunch, projectFileOf } from "../src/post-approval/commit-gate-launch.ts";
+import {
+  commitGateRulesForTheLaunch,
+  projectFileOf,
+} from "../src/post-approval/commit-gate-launch.ts";
 import { runFeature } from "../../cli/src/engine/run-feature.ts";
 
 test("a malformed project file refuses the launch (the loader names the file)", () => {
@@ -75,7 +78,16 @@ test("a launch with a malformed project file exits 3 and says so", async () => {
   ]) {
     spawnSync("git", ["-C", work, ...argv]);
   }
-  const before = { HOME: process.env.HOME, PATH: process.env.PATH, FEATURE: process.env.SPECSTRIDE_FEATURE, PROPOSER: process.env.SPECSTRIDE_PROPOSER, CRITIC: process.env.SPECSTRIDE_CRITIC, STUB_DIR: process.env.STUB_DIR, PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC, LIMITS: process.env.SPECSTRIDE_LIMITS };
+  const before = {
+    HOME: process.env.HOME,
+    PATH: process.env.PATH,
+    FEATURE: process.env.SPECSTRIDE_FEATURE,
+    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
+    CRITIC: process.env.SPECSTRIDE_CRITIC,
+    STUB_DIR: process.env.STUB_DIR,
+    PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
+  };
   try {
     process.env.HOME = dir;
     process.env.PATH = `${bin}:${before.PATH ?? ""}`;

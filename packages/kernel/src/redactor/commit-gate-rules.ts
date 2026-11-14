@@ -253,7 +253,11 @@ export function loadProjectCommitGateRules(
   } catch (error) {
     if (error instanceof CommitGateRulesError) {
       // The refusal names the project FILE, not a path inside the document.
-      throw new CommitGateRulesError("project", file, error.message.split(": ").slice(1).join(": "));
+      throw new CommitGateRulesError(
+        "project",
+        file,
+        error.message.split(": ").slice(1).join(": "),
+      );
     }
     throw error;
   }

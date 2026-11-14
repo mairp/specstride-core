@@ -59,7 +59,10 @@ import {
  * T114 — an honest signed record, and the void marker beside it.
  * ------------------------------------------------------------------ */
 
-const KEY: ApprovalKeyRecord = newApprovalKey("152-commit-backpressure", "2026-11-09T00:00:00.000Z");
+const KEY: ApprovalKeyRecord = newApprovalKey(
+  "152-commit-backpressure",
+  "2026-11-09T00:00:00.000Z",
+);
 const EVIDENCE_HASH = createHash("sha256").update("the phase evidence", "utf8").digest("hex");
 const VERIFICATION_HASH = createHash("sha256").update("the stored result", "utf8").digest("hex");
 const NONCE_HASH = createHash("sha256").update("a".repeat(16)).digest("hex");
@@ -117,7 +120,8 @@ test("the void marker: voidApproval writes it with the verdictId, and the record
       readTasksText: () => readFileSync(tasks, "utf8"),
       inControl: (path) => join(root, path),
       readControlText: (file) => (existsSync(file) ? readFileSync(file, "utf8") : null),
-      writeAtomic: (file, text, mode) => void atomicWrite(file, text, { createDirectory: true, mode }),
+      writeAtomic: (file, text, mode) =>
+        void atomicWrite(file, text, { createDirectory: true, mode }),
       modeOf: (file) => statSync(file).mode & 0o7777,
       chmod: (file, mode) => chmodSync(file, mode),
     };
@@ -169,7 +173,8 @@ test("the pre-tick copy round-trips: restorePreTick gives back the exact bytes a
       readTasksText: () => readFileSync(tasks, "utf8"),
       inControl: (path) => join(root, path),
       readControlText: (file) => (existsSync(file) ? readFileSync(file, "utf8") : null),
-      writeAtomic: (file, text, mode) => void atomicWrite(file, text, { createDirectory: true, mode }),
+      writeAtomic: (file, text, mode) =>
+        void atomicWrite(file, text, { createDirectory: true, mode }),
       modeOf: (file) => statSync(file).mode & 0o7777,
       chmod: (file, mode) => chmodSync(file, mode),
     };
@@ -197,8 +202,10 @@ test("the pre-tick copy round-trips: restorePreTick gives back the exact bytes a
 });
 
 test("onlyTicksChanged: ticks only, never a human edit (T119, the rule the void leans on)", () => {
-  const before = "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n- [ ] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
-  const ticked = "# Tasks\n\n## Phase 1: One\n\n- [x] T001 Do it\n- [x] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
+  const before =
+    "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n- [ ] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
+  const ticked =
+    "# Tasks\n\n## Phase 1: One\n\n- [x] T001 Do it\n- [x] T002 Also\n\n## Phase 2: Two\n\n- [ ] T003 Later\n";
   assert.equal(onlyTicksChanged(before, ticked, 1), true, "ticks of the phase are allowed");
   assert.equal(
     onlyTicksChanged(before, ticked, 2),
@@ -206,11 +213,7 @@ test("onlyTicksChanged: ticks only, never a human edit (T119, the rule the void 
     "the ticks of ANOTHER phase are not this phase's ticks",
   );
   assert.equal(
-    onlyTicksChanged(
-      before,
-      before.replace("Do it", "Do it NOW"),
-      1,
-    ),
+    onlyTicksChanged(before, before.replace("Do it", "Do it NOW"), 1),
     false,
     "a human edit of the task text is not ticks-only",
   );
@@ -237,10 +240,6 @@ test("mustReScanOnResume: true only when all six flags hold (T170)", () => {
   assert.equal(mustReScanOnResume(all), true, "the control: all six hold");
   for (const flag of Object.keys(all) as readonly (keyof typeof all)[]) {
     const without = { ...all, [flag]: false } as typeof all;
-    assert.equal(
-      mustReScanOnResume(without),
-      false,
-      `false when ${flag} does not hold`,
-    );
+    assert.equal(mustReScanOnResume(without), false, `false when ${flag} does not hold`);
   }
 });

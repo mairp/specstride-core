@@ -11,7 +11,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,8 +27,13 @@ const AMENDMENTS = join(
   "amendments.md",
 );
 
-test("amendments.md carries every cross-spec amendment (T155, T156)", () => {
-  const text = readFileSync(AMENDMENTS, "utf8");
+test(
+  "amendments.md carries every cross-spec amendment (T155, T156)",
+  // The specs corpus is deliberately not part of the repository (gitignored,
+  // campaign-local documents), so a checkout without it (CI) skips the guard.
+  { skip: !existsSync(AMENDMENTS) ? "specs/152-commit-backpressure/amendments.md is not in the checkout" : false },
+  () => {
+    const text = readFileSync(AMENDMENTS, "utf8");
 
   // One section per target, as the "Cross-spec amendments" table of spec.md
   // lists them.
@@ -59,4 +64,5 @@ test("amendments.md carries every cross-spec amendment (T155, T156)", () => {
   // DV-121 is the switch under `parity` (off); DV-122 carries the waiver.
   assert.match(text, /DV-121[\s\S]{0,400}?off/, "DV-121 must record the value `off` under parity");
   assert.match(text, /DV-122[\s\S]{0,400}?waiver/i, "DV-122 must record the handling `waiver`");
-});
+  },
+);

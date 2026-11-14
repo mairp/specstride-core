@@ -48,8 +48,9 @@ test("a project rule may add", () => {
   );
   assert.equal(merged.rules[merged.rules.length - 1]?.rule, "proj-bearer");
   // And the merged document decides like the engine's plus the addition.
-  const rule = merged.rules.find((one) => one.effect === "block" && "pattern" in one.match &&
-    one.match.pattern === "bearer");
+  const rule = merged.rules.find(
+    (one) => one.effect === "block" && "pattern" in one.match && one.match.pattern === "bearer",
+  );
   assert.ok(rule !== undefined);
 });
 

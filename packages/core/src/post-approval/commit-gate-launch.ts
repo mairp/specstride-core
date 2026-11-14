@@ -113,8 +113,7 @@ export function commitGateRulesHashNow(
     if (engineText === undefined) return undefined;
     const engine = parseCommitGateRules(engineText, "engine");
     const projectText = readFile(projectFileOf(root));
-    const project =
-      projectText === undefined ? null : parseCommitGateRules(projectText, "project");
+    const project = projectText === undefined ? null : parseCommitGateRules(projectText, "project");
     return hashOfCommitGateRules(engine, project);
   } catch {
     // A file that stops parsing mid-run is a change like any other: the

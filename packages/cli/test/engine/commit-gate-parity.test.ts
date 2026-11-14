@@ -386,7 +386,11 @@ test("F152-SC-008: the oracle runs FX-27/commits-off (driveSide → comparePortW
     const comparison = comparePortWithGolden(result.capture, {
       fixture: FX27_SCENARIO,
       golden,
-      portContext: contextOfRun(result, { referenceRoot: ROOT, slug: "commits-off", fixture: FX27_SCENARIO }, declaration),
+      portContext: contextOfRun(
+        result,
+        { referenceRoot: ROOT, slug: "commits-off", fixture: FX27_SCENARIO },
+        declaration,
+      ),
     });
     assertNothingIsDifferent(FX27_SCENARIO, comparison.report);
   } finally {
@@ -497,12 +501,13 @@ test("the register map holds DV-121 and DV-122, and every waiver matches a real 
   }
   // And no emitted difference is left uncovered by a waiver of its own.
   for (const difference of emitted) {
-    const matched = OUR_WAIVERS.some((waiver) =>
-      waiver.fixture === difference.fixture &&
-      waiver.surface === difference.surface &&
-      waiver.difference.selector === difference.selector &&
-      JSON.stringify(waiver.difference.reference) === JSON.stringify(difference.reference) &&
-      JSON.stringify(waiver.difference.port) === JSON.stringify(difference.port),
+    const matched = OUR_WAIVERS.some(
+      (waiver) =>
+        waiver.fixture === difference.fixture &&
+        waiver.surface === difference.surface &&
+        waiver.difference.selector === difference.selector &&
+        JSON.stringify(waiver.difference.reference) === JSON.stringify(difference.reference) &&
+        JSON.stringify(waiver.difference.port) === JSON.stringify(difference.port),
     );
     const plain = difference.surface === "stderr" && difference.port === NO_WARNING_ON_THE_BASELINE;
     assert.ok(

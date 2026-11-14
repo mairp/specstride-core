@@ -352,8 +352,7 @@ export async function stepsToCompleteABlock(
 /** The two forms of a task id (F104-FR-010, F104-FR-013): `T001b`, `1.2`. */
 const TASK_ID_AT_TEXT_START = /^(?:T\d+[A-Za-z]?|\d+(?:\.\d+)+)\b/;
 
-const IS_SPACE = (character: string | undefined) =>
-  character === " " || character === "\t";
+const IS_SPACE = (character: string | undefined) => character === " " || character === "\t";
 
 /** One line read as a checkbox line, or `undefined` where it is not one. */
 function checkboxLineOf(
@@ -490,8 +489,7 @@ export async function restorePreTick(phase: number, ports: PreTickPorts): Promis
 
 /** What a void of one approval reports back (T120). */
 export type VoidApprovalResult =
-  | { readonly halt?: undefined }
-  | { readonly halt: "commit-gate"; readonly file: string };
+  { readonly halt?: undefined } | { readonly halt: "commit-gate"; readonly file: string };
 
 /** The inputs of one void of an approval (T120; data-model.md E4). */
 export type VoidApprovalInputs = {

@@ -9,7 +9,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,8 +40,15 @@ const SCENARIOS = [
   "Project `specstride.commit-gate.json` with `exempt`",
 ] as const;
 
-test("the quickstart scenarios of verified.md are all ticked (T154)", () => {
-  const text = readFileSync(VERIFIED, "utf8");
+test(
+  "the quickstart scenarios of verified.md are all ticked (T154)",
+  // The specs corpus is deliberately not part of the repository (it is
+  // gitignored — campaign-local working documents), so a checkout without it
+  // (CI) has nothing to check and the guard skips; a worktree that HAS the
+  // corpus is still held to every row.
+  { skip: !existsSync(VERIFIED) ? "specs/152-commit-backpressure/verified.md is not in the checkout" : false },
+  () => {
+    const text = readFileSync(VERIFIED, "utf8");
 
   // The "Quickstart scenarios" table holds one ticked row per scenario above.
   const tableStart = text.indexOf("## Quickstart scenarios");
@@ -66,4 +73,5 @@ test("the quickstart scenarios of verified.md are all ticked (T154)", () => {
       `the quickstart row of "${scenario}" is not ticked`,
     );
   }
-});
+  },
+);

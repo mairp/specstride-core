@@ -154,7 +154,10 @@ function fixture(name: string, backpressure?: "on" | "off"): Fixture {
 
 /** The digest line the run printed (`DIGEST exit=… commits_blocked=…`). */
 const digestLine = (fx: Fixture): string =>
-  fx.out().split("\n").find((line) => line.includes("DIGEST")) ?? "";
+  fx
+    .out()
+    .split("\n")
+    .find((line) => line.includes("DIGEST")) ?? "";
 
 /** The proposer attempts the stub saw (it writes one file per attempt). */
 const attemptsOf = (fx: Fixture): number[] =>

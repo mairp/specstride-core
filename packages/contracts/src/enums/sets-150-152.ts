@@ -16,7 +16,4 @@ import { defineClosedSet } from "./index.ts";
  * Unknown value: The rule data is refused at load and the launch is refused
  * with exit 3, naming the file (F152-FR-016)
  */
-export const effectsOfACommitGateRule = defineClosedSet(286, [
-  "block",
-  "exempt",
-] as const);
+export const effectsOfACommitGateRule = defineClosedSet(286, ["block", "exempt"] as const);

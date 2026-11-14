@@ -80,9 +80,7 @@ test("the counters of the commit gate never decide control flow (F152-FR-015, T1
         .getText()
         .includes("commit(s) were blocked by the secret gate");
       if (!saysTheSafetyNet) {
-        offences.push(
-          `IfStatement test references a counter: ${slice(file, node.expression)}`,
-        );
+        offences.push(`IfStatement test references a counter: ${slice(file, node.expression)}`);
       }
     } else if (ts.isConditionalExpression(node) && subtreeReferencesACounter(node.condition)) {
       // Allowed: the exit ternary, whose whole expression initialises
@@ -142,12 +140,10 @@ test("every reference of commitsBlocked is an increment or sits in the digest li
       // The initialiser `let commitsBlocked = 0` and the digest line's
       // `String(commitsBlocked)` (an argument, not a condition) are report
       // uses too.
-      const isInitialiser =
-        ts.isVariableDeclaration(parent) && parent.initializer !== undefined;
+      const isInitialiser = ts.isVariableDeclaration(parent) && parent.initializer !== undefined;
       const isDigestArgument =
         ts.isCallExpression(parent) &&
-        (ts.isTemplateSpan(parent.parent) ||
-          subtreeContainsTemplateSpan(parent));
+        (ts.isTemplateSpan(parent.parent) || subtreeContainsTemplateSpan(parent));
       if (!isIncrement && !inTemplate && !isInitialiser && !isDigestArgument) {
         uses.push(`${slice(file, parent)} [${ts.SyntaxKind[parent.kind]}]`);
       }
@@ -159,7 +155,6 @@ test("every reference of commitsBlocked is an increment or sits in the digest li
   assert.equal(
     uses.length,
     0,
-    `commitsBlocked is read outside the digest report (it must inform only):\n` +
-      uses.join("\n"),
+    `commitsBlocked is read outside the digest report (it must inform only):\n` + uses.join("\n"),
   );
 });

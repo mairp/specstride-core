@@ -1400,8 +1400,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       : undefined;
     const voidMarkerFile = inControl(voidMarkerPath(phase));
     const voidMarkerVerdictId = existsSync(voidMarkerFile)
-      ? ((JSON.parse(readFileSync(voidMarkerFile, "utf8")) as { verdictId?: unknown }).verdictId ??
-         undefined) as string | undefined
+      ? (((JSON.parse(readFileSync(voidMarkerFile, "utf8")) as { verdictId?: unknown }).verdictId ??
+          undefined) as string | undefined)
       : undefined;
     const verified = verifyApprovalRecord({
       phase,
@@ -1869,8 +1869,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     tasksPath: () => tasksPath,
     readTasksText: () => readFileSync(tasksPath, "utf8"),
     inControl,
-    readControlText: (file: string) =>
-      existsSync(file) ? readFileSync(file, "utf8") : null,
+    readControlText: (file: string) => (existsSync(file) ? readFileSync(file, "utf8") : null),
     writeAtomic: (file: string, text: string, mode: number) =>
       atomicWrite(file, text, { createDirectory: true, mode }),
     modeOf: (file: string) => statSync(file).mode & 0o7777,
@@ -3400,12 +3399,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         emitPhaseDone: (event: Readonly<Record<string, unknown>>) => emit("phase.ended", event),
         writeLine: say,
-        savePreTick:
-          commitBackpressureOn
-            ? (n: number) => {
-                void savePreTickOfTheGate(n, preTickPortsOf(n));
-              }
-            : undefined,
+        savePreTick: commitBackpressureOn
+          ? (n: number) => {
+              void savePreTickOfTheGate(n, preTickPortsOf(n));
+            }
+          : undefined,
         tick: {
           spec: tasksPath,
           format: "speckit-tasks",
@@ -3476,7 +3474,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       // down (path `step-6`, a new nonce), and the attempt returns
       // `commit-blocked` — the same order after a rejection as a pre-scan
       // block, only from step 6.
-      if (commitBackpressureOn && (!postApproval.commit.committed) && postApproval.commit.reason === "scan-blocked") {
+      if (
+        commitBackpressureOn &&
+        !postApproval.commit.committed &&
+        postApproval.commit.reason === "scan-blocked"
+      ) {
         const changedNow = [
           ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
           ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
@@ -3858,14 +3860,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             nonce: String(record.nonce),
             rejectCount: (feedback.get(phase) ?? []).length + 1,
             rejectLimit: REJECT_LIMIT_DEFAULT,
-            hits: (
-              record.hits as readonly { rule: string; file: string; line: number }[]
-            ).map((hit) => ({
-              rule: hit.rule,
-              reason: reasonOfTheRule(hit.rule),
-              file: quotedPath(hit.file),
-              line: hit.line,
-            })),
+            hits: (record.hits as readonly { rule: string; file: string; line: number }[]).map(
+              (hit) => ({
+                rule: hit.rule,
+                reason: reasonOfTheRule(hit.rule),
+                file: quotedPath(hit.file),
+                line: hit.line,
+              }),
+            ),
             hitsOmitted: typeof record.hitsOmitted === "number" ? record.hitsOmitted : 0,
           }),
         );
@@ -4032,119 +4034,120 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     readonly exitCode: number;
     readonly stopReason?: string;
     readonly end: { readonly ended?: string; readonly refusal?: string; readonly message?: string };
-  } = reScanHaltByPhase.size > 0
-    ? await (async () => {
-        const [phase, end] = [...reScanHaltByPhase.entries()][0] as [
-          number,
-          { exitCode: number; stopReason: string; needs: string },
-        ];
-        return {
-          exitCode: end.exitCode,
-          stopReason: end.stopReason,
-          end: {
-            ended: "halted",
+  } =
+    reScanHaltByPhase.size > 0
+      ? await (async () => {
+          const [phase, end] = [...reScanHaltByPhase.entries()][0] as [
+            number,
+            { exitCode: number; stopReason: string; needs: string },
+          ];
+          return {
             exitCode: end.exitCode,
             stopReason: end.stopReason,
-            phase,
-            phasesRun: [phase],
-          },
-        };
-      })()
-    : ((await runEngine(
-    {
-      workdir,
-      featureSlug: slug,
-      specFormat: "speckit-tasks",
-      phases: phaseNumbers,
-      runId,
-      engineStartId,
-      rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
-      malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
-      gitCommits: "auto",
-      launchReason: "first",
-    },
-    {
-      phaseCount: phases.length,
-      time: () => new Date().toISOString(),
-      // F152-FR-014 — the ticks the resume re-scan took back must be seen
-      // HERE too: the refusal of F101-FR-032 and the position are derived
-      // from the task list as it stands at the start of the run, not as the
-      // launch read it before the re-scan unticked the voided phase.
-      phasesWithTasks: grammar
-        .phasesOf(readFileSync(tasksPath, "utf8"), relative(workdir, tasksPath))
-        .map((phase) => ({
-          number: phase.number,
-          tasks: phase.tasks.map((task) => ({ ticked: task.ticked })),
-        })),
-      emitIntegrityEvent: (event) => emit(event.type, event as never),
-      position: { phases: phaseNumbers, readApproval: readApproval as never },
-      runLoop: {
-        releaseVerification: () =>
-          Promise.resolve({
-            passed: true,
-            notRequired: true,
-            summary: "release verification not required",
-          }),
-        runOnePhase: (phase) => {
-          // T172 — a void that could not restore the task list ends the run
-          // HERE, before enterPhase and before any attempt of the phase.
-          const haltedByTheReScan = reScanHaltByPhase.get(phase);
-          if (haltedByTheReScan !== undefined) {
-            reScanHaltByPhase.delete(phase);
-            return Promise.resolve({
-              outcome: "halted" as const,
-              ordinal: ledger[String(phase)]?.phaseAttemptOrdinal ?? 0,
-              exitCode: haltedByTheReScan.exitCode,
-              stopReason: haltedByTheReScan.stopReason,
-              blocked: { reason: "commit-gate", needs: haltedByTheReScan.needs },
-            });
-          }
-          const at = phaseNumbers.indexOf(phase);
-          enterPhase(
-            {
+            end: {
+              ended: "halted",
+              exitCode: end.exitCode,
+              stopReason: end.stopReason,
               phase,
-              title: titleOf(phase),
-              total: phases.length,
-              shape: "",
-              time: new Date().toISOString(),
-              phaseEvidenceExists: existsSync(evidencePathOf(phase)),
-              feedbackExists: false,
-              asIsRunId: runId,
-              phaseBefore: at > 0 ? phaseNumbers[at - 1] : undefined,
+              phasesRun: [phase],
             },
-            {
-              emitPhaseStart: (event) => emit("phase.started", event as never),
-              writeLine: say,
-              readApproval: readApproval as never,
-              emitIntegrityEvent: (event) => emit(event.type, event as never),
-              setEvidenceAside: (n, label) => {
-                const to = inControl(
-                  join("features", slug, "set-aside", `phase${String(n)}.${label}.md`),
+          };
+        })()
+      : ((await runEngine(
+          {
+            workdir,
+            featureSlug: slug,
+            specFormat: "speckit-tasks",
+            phases: phaseNumbers,
+            runId,
+            engineStartId,
+            rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+            malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
+            gitCommits: "auto",
+            launchReason: "first",
+          },
+          {
+            phaseCount: phases.length,
+            time: () => new Date().toISOString(),
+            // F152-FR-014 — the ticks the resume re-scan took back must be seen
+            // HERE too: the refusal of F101-FR-032 and the position are derived
+            // from the task list as it stands at the start of the run, not as the
+            // launch read it before the re-scan unticked the voided phase.
+            phasesWithTasks: grammar
+              .phasesOf(readFileSync(tasksPath, "utf8"), relative(workdir, tasksPath))
+              .map((phase) => ({
+                number: phase.number,
+                tasks: phase.tasks.map((task) => ({ ticked: task.ticked })),
+              })),
+            emitIntegrityEvent: (event) => emit(event.type, event as never),
+            position: { phases: phaseNumbers, readApproval: readApproval as never },
+            runLoop: {
+              releaseVerification: () =>
+                Promise.resolve({
+                  passed: true,
+                  notRequired: true,
+                  summary: "release verification not required",
+                }),
+              runOnePhase: (phase) => {
+                // T172 — a void that could not restore the task list ends the run
+                // HERE, before enterPhase and before any attempt of the phase.
+                const haltedByTheReScan = reScanHaltByPhase.get(phase);
+                if (haltedByTheReScan !== undefined) {
+                  reScanHaltByPhase.delete(phase);
+                  return Promise.resolve({
+                    outcome: "halted" as const,
+                    ordinal: ledger[String(phase)]?.phaseAttemptOrdinal ?? 0,
+                    exitCode: haltedByTheReScan.exitCode,
+                    stopReason: haltedByTheReScan.stopReason,
+                    blocked: { reason: "commit-gate", needs: haltedByTheReScan.needs },
+                  });
+                }
+                const at = phaseNumbers.indexOf(phase);
+                enterPhase(
+                  {
+                    phase,
+                    title: titleOf(phase),
+                    total: phases.length,
+                    shape: "",
+                    time: new Date().toISOString(),
+                    phaseEvidenceExists: existsSync(evidencePathOf(phase)),
+                    feedbackExists: false,
+                    asIsRunId: runId,
+                    phaseBefore: at > 0 ? phaseNumbers[at - 1] : undefined,
+                  },
+                  {
+                    emitPhaseStart: (event) => emit("phase.started", event as never),
+                    writeLine: say,
+                    readApproval: readApproval as never,
+                    emitIntegrityEvent: (event) => emit(event.type, event as never),
+                    setEvidenceAside: (n, label) => {
+                      const to = inControl(
+                        join("features", slug, "set-aside", `phase${String(n)}.${label}.md`),
+                      );
+                      mkdirSync(dirname(to), { recursive: true });
+                      renameSync(evidencePathOf(n), to);
+                    },
+                  },
                 );
-                mkdirSync(dirname(to), { recursive: true });
-                renameSync(evidencePathOf(n), to);
+                return runPhaseAttempts(
+                  { phase, firstOrdinal: (ledger[String(phase)]?.phaseAttemptOrdinal ?? 0) + 1 },
+                  {
+                    runOneAttempt: (ordinal: number) => runOneAttempt(phase, ordinal),
+                    afterARejection: (ordinal: number, outcome: string) =>
+                      afterARejection(phase, ordinal, outcome),
+                  } as never,
+                );
               },
+              emitRunEnd: (event) => emit("run.ended", event as never),
+              writeLine: say,
+              logReleaseVerification: (summary) => emit("release.verification", { summary }),
             },
-          );
-          return runPhaseAttempts(
-            { phase, firstOrdinal: (ledger[String(phase)]?.phaseAttemptOrdinal ?? 0) + 1 },
-            {
-              runOneAttempt: (ordinal: number) => runOneAttempt(phase, ordinal),
-              afterARejection: (ordinal: number, outcome: string) =>
-                afterARejection(phase, ordinal, outcome),
-            } as never,
-          );
-        },
-        emitRunEnd: (event) => emit("run.ended", event as never),
-        writeLine: say,
-        logReleaseVerification: (summary) => emit("release.verification", { summary }),
-      },
-    },
-  )) as {
-    exitCode: number;
-    stopReason?: string;
-    end: { ended?: string; refusal?: string; message?: string };
-  });
+          },
+        )) as {
+          exitCode: number;
+          stopReason?: string;
+          end: { ended?: string; refusal?: string; message?: string };
+        });
   // F101-FR-032 — a refused START is named on the product output: before this
   // fix the run ended exit 3 with the `[LOOP]` and `[DIGEST]` lines alone, so
   // the operator learned neither which phases were refused nor the remedy the

@@ -214,11 +214,7 @@ test("T107 kill after the feedback, before the counts: the resume writes the cou
         >)
       : {};
     const before1 = ledgerBefore["1"] ?? {};
-    assert.equal(
-      before1.rejectCount ?? 0,
-      0,
-      "the rejection was not counted before the kill",
-    );
+    assert.equal(before1.rejectCount ?? 0, 0, "the rejection was not counted before the kill");
     assert.equal(
       before1.phaseAttemptOrdinal ?? 0,
       0,
@@ -370,7 +366,12 @@ import { readBlockRecord } from "../../../core/src/post-approval/commit-gate.ts"
 import { approvalRecordPath } from "../../../core/src/approval/record.ts";
 
 const controlRootOf = (fx: Fixture): string =>
-  join(fx.home, ".specstride", "workspaces", createHash("sha256").update(fx.dir).digest("hex").slice(0, 16));
+  join(
+    fx.home,
+    ".specstride",
+    "workspaces",
+    createHash("sha256").update(fx.dir).digest("hex").slice(0, 16),
+  );
 
 const eventsOf = (fx: Fixture): { type: string; data: Record<string, unknown> }[] => {
   const runs = join(controlRootOf(fx), "runs");
@@ -391,7 +392,9 @@ const approvalRecordOf = (fx: Fixture): Record<string, unknown> | undefined => {
   const path = fx.control("approvals", `phase-1.json`);
   if (!existsSync(path)) {
     const alt = join(controlRootOf(fx), approvalRecordPath("001-one", 1));
-    return existsSync(alt) ? (JSON.parse(readFileSync(alt, "utf8")) as Record<string, unknown>) : undefined;
+    return existsSync(alt)
+      ? (JSON.parse(readFileSync(alt, "utf8")) as Record<string, unknown>)
+      : undefined;
   }
   return JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
 };
@@ -401,11 +404,7 @@ test("T108 kill before the block record: the resume runs attempt 1 again from it
   try {
     const first = await childRun(fx, { SPECSTRIDE_CRASH_BEFORE_BLOCK_RECORD: "1" });
     assert.equal(first.signal, "SIGKILL", `the child died by SIGKILL, got ${String(first.signal)}`);
-    assert.equal(
-      blockRecordNames(fx).length,
-      0,
-      "no block record existed when the child died",
-    );
+    assert.equal(blockRecordNames(fx).length, 0, "no block record existed when the child died");
     assert.equal(
       existsSync(fx.control("feedback", "phase1.1.md")),
       false,
@@ -456,7 +455,13 @@ async function killedAtTheTick(fx: Fixture): Promise<string> {
 const scratchFingerprint = (fx: Fixture): string =>
   readdirSync(fx.scratch)
     .sort()
-    .map((name) => `${name}:${createHash("sha256").update(readFileSync(join(fx.scratch, name), "utf8")).digest("hex").slice(0, 12)}`)
+    .map(
+      (name) =>
+        `${name}:${createHash("sha256")
+          .update(readFileSync(join(fx.scratch, name), "utf8"))
+          .digest("hex")
+          .slice(0, 12)}`,
+    )
     .join("|");
 
 test("T109 the resume re-scan voids: the approval never counts, the ticks go back, the run goes on", async () => {
@@ -490,7 +495,11 @@ test("T109 the resume re-scan voids: the approval never counts, the ticks go bac
 
     // The phase ran again after the void, the retry removed the secret, and
     // the run committed the phase — no uncommitted work is left.
-    assert.equal(existsSync(join(fx.scratch, "seen-by-proposer-3.txt")), true, "a third attempt ran");
+    assert.equal(
+      existsSync(join(fx.scratch, "seen-by-proposer-3.txt")),
+      true,
+      "a third attempt ran",
+    );
     const prompt3 = readFileSync(join(fx.scratch, "seen-by-proposer-3.txt"), "utf8");
     assert.ok(prompt3.includes(E3_HEADING), "the attempt after the void carries the block");
     assert.equal(porcelain(fx.dir), "", "no uncommitted work is left in the tree");
@@ -545,23 +554,17 @@ test("T111 the restore never overwrites a human edit: the run halts blocked on a
     assert.equal(exit, 2, "the run ends blocked on a human (engineExit of `commit-gate`)");
 
     assert.ok(
-      fx.out().includes("phase 1: tasks.md changed beyond the ticks; restore it or confirm by hand"),
+      fx
+        .out()
+        .includes("phase 1: tasks.md changed beyond the ticks; restore it or confirm by hand"),
       "the blocked reason names the file and what the run needs",
     );
     assert.ok(
       fx.out().includes("commit(s) were blocked by the secret gate"),
       "the end-of-run warning about uncommitted work is printed (T160)",
     );
-    assert.equal(
-      readFileSync(tasksPathOf, "utf8"),
-      humanTasks,
-      "tasks.md keeps the human edit",
-    );
-    assert.equal(
-      scratchFingerprint(fx),
-      tracesBefore,
-      "no phase attempt started after the halt",
-    );
+    assert.equal(readFileSync(tasksPathOf, "utf8"), humanTasks, "tasks.md keeps the human edit");
+    assert.equal(scratchFingerprint(fx), tracesBefore, "no phase attempt started after the halt");
     assert.equal(
       existsSync(fx.control("commit-gate", "phase1.void.json")),
       false,
@@ -578,12 +581,17 @@ test("T112 counters survive a relaunch", async () => {
   try {
     const first = await childRun(fx, { SPECSTRIDE_CRASH_AFTER_BLOCK_RECORD: "1" });
     assert.equal(first.signal, "SIGKILL");
-    assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0, "the resume finished the retry");
+    assert.equal(
+      await runFeature({ argv: [], workdir: fx.dir }),
+      0,
+      "the resume finished the retry",
+    );
 
     const countsAfterResume = ledgerOf(fx)["1"] as { rejectCount: number };
     const blocksAfterResume = blockRecordNames(fx);
     const recordAfterResume = await readBlockRecord(1, 1, {
-      readControl: (p) => (existsSync(fx.control(p)) ? readFileSync(fx.control(p), "utf8") : null) as never,
+      readControl: (p) =>
+        (existsSync(fx.control(p)) ? readFileSync(fx.control(p), "utf8") : null) as never,
     });
 
     // One more relaunch of the finished run changes nothing.
@@ -592,7 +600,8 @@ test("T112 counters survive a relaunch", async () => {
     assert.equal(countsAfterRelaunch.rejectCount, countsAfterResume.rejectCount);
     assert.deepEqual(blockRecordNames(fx), blocksAfterResume);
     const recordAfterRelaunch = await readBlockRecord(1, 1, {
-      readControl: (p) => (existsSync(fx.control(p)) ? readFileSync(fx.control(p), "utf8") : null) as never,
+      readControl: (p) =>
+        (existsSync(fx.control(p)) ? readFileSync(fx.control(p), "utf8") : null) as never,
     });
     assert.equal(recordAfterRelaunch?.signature, recordAfterResume?.signature);
   } finally {
