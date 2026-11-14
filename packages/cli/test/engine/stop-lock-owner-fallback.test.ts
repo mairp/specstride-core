@@ -99,11 +99,7 @@ function writeRegistry(
 }
 
 /** An owner record of §B.9 for a pid, written where the command reads it. */
-function writeLockOwner(
-  controlRoot: string,
-  pid: number,
-  startedAtMs: number | null,
-): void {
+function writeLockOwner(controlRoot: string, pid: number, startedAtMs: number | null): void {
   mkdirSync(join(controlRoot, "lock"), { recursive: true });
   writeFileSync(
     join(controlRoot, "lock", "owner.json"),
@@ -184,7 +180,11 @@ test("the owner record maps to a registry entry, and a start time that cannot be
   assert.equal(entry.pid, pid);
   assert.equal(entry.class, "owned");
   assert.equal(entry.processGroup, pid);
-  assert.equal(Number.isNaN(Date.parse(entry.startTime)), false, "the start time is an ISO instant");
+  assert.equal(
+    Number.isNaN(Date.parse(entry.startTime)),
+    false,
+    "the start time is an ISO instant",
+  );
   // A `startTime` the platform would not give — the `unknown` of §B.9 — is
   // not an identity the check may judge.
   assert.equal(lockOwnerEntryOf({ ...record, startTime: "unknown" }), null);
@@ -233,7 +233,11 @@ test("a pid the registry already covers is appended nowhere", () => {
   };
   assert.equal(entriesWithTheLockOwner(covered, samePidRecord).length, 1, "no duplicate entry");
   assert.equal(entriesWithTheLockOwner(covered, null).length, 1, "no record appends nothing");
-  assert.equal(entriesWithTheLockOwner(covered, "nonsense").length, 1, "a bad record appends nothing");
+  assert.equal(
+    entriesWithTheLockOwner(covered, "nonsense").length,
+    1,
+    "a bad record appends nothing",
+  );
 });
 
 test("stop --now ends the LIVE holder through the lock owner where the registry went stale", async () => {

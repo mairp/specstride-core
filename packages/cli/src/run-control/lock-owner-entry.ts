@@ -35,7 +35,10 @@
 import { readFileSync } from "node:fs";
 
 import { isOwnerRecord } from "@specstride/contracts/records/owner-record";
-import { isProcessRegistry, type ProcessRegistry } from "@specstride/contracts/records/process-registry";
+import {
+  isProcessRegistry,
+  type ProcessRegistry,
+} from "@specstride/contracts/records/process-registry";
 import { MINIMUM_PID } from "./signal-owned.ts";
 
 /** The requirements this module carries out (with F102-FR-006/-007). */
