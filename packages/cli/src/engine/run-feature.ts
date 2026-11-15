@@ -244,7 +244,10 @@ import {
 } from "../../../core/src/post-approval/commit-gate.ts";
 import { feedbackOfTheCommitGate, quotedPath } from "../../../core/src/gate/feedback.ts";
 import { newNonce } from "../../../core/src/gate/nonce.ts";
-import { COMMIT_GATE_BLOCKED_EVENT_TYPE } from "../../../core/src/gate/events.ts";
+import {
+  COMMIT_GATE_BLOCKED_EVENT_TYPE,
+  dataThroughTheIngress,
+} from "../../../core/src/gate/events.ts";
 import {
   hashOfCommitGateRules,
   loadEngineCommitGateRules,
@@ -1089,10 +1092,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const events = inControl(join("runs", runId, "events.jsonl"));
   const emit = (type: string, data: Readonly<Record<string, unknown>>): void => {
     const at = new Date().toISOString();
-    mkdirSync(dirname(events), { recursive: true });
-    writeFileSync(events, `${JSON.stringify({ type, at, data })}\n`, {
-      flag: "a",
-    });
+    // Best effort (F111-FR-019): an event that cannot be written changes no
+    // decision — the write is tried and a refusal is swallowed. The run
+    // records nothing about the drop here; the gap is the reader's to see.
+    try {
+      mkdirSync(dirname(events), { recursive: true });
+      writeFileSync(events, `${JSON.stringify({ type, at, data })}\n`, {
+        flag: "a",
+      });
+    } catch {
+      /* the events file is best effort; the run goes on (F153-FR-033) */
+    }
     // F144-FR-011 — the compatibility projection is a SINK: it is handed the
     // event after the primary line is on disk, best effort, and nothing it
     // does can reach the run. The primary line keeps its format
@@ -1856,7 +1866,25 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const records = feedback.get(phase) ?? [];
     const newest = records[records.length - 1];
     const sessionId = randomUUID();
-    const outcome = await runTheDiagnostician(
+    // F153-FR-035 (T123) — the timed pair of the diagnosis opens only where
+    // the diagnosis rule says one is due, so an opener always meets its
+    // closer (F111-FR-004). The provider is the provider of the role plan.
+    const diagnosisDue = theDiagnosisRule({
+      enabled: theDiagnosticianIsEnabled(process.env.SPECSTRIDE_DIAGNOSTICIAN),
+      feedbackExists: records.length > 0,
+      signature,
+      markers: markersOf(phase),
+    });
+    if (diagnosisDue) {
+      emit("recovery.diagnosis_started", {
+        phase,
+        attempt: ordinal,
+        provider: diagnosticianEntry.provider,
+      });
+    }
+    let outcome: Awaited<ReturnType<typeof runTheDiagnostician>>;
+    try {
+    outcome = await runTheDiagnostician(
       {
         phase,
         ordinal,
@@ -1906,6 +1934,46 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         framing: framingOfTheCall(),
       },
     );
+    // F153-FR-035 (T124) — the closer of the diagnosis pair: `done` names the
+    // bytes of the hint and the case of the reply; `failed` carries the
+    // failure text, through the one ingress, and never the reply in full.
+    if (diagnosisDue) {
+      if (outcome.called) {
+        emit("recovery.diagnosis_done", {
+          phase,
+          attempt: ordinal,
+          bytes: outcome.hint === undefined ? 0 : Buffer.byteLength(outcome.hint),
+          case: outcome.case ?? "unknown",
+          synthesized: false,
+        });
+      } else {
+        emit("recovery.diagnosis_failed", {
+          ...dataThroughTheIngress(
+            { phase, attempt: ordinal, error: outcome.failure ?? "no call was made" },
+            recoveryIngress,
+          ),
+          synthesized: false,
+        });
+      }
+    }
+    } catch (error) {
+      // A diagnosis that throws still closes its pair (T124), through the
+      // same ingress.
+      if (diagnosisDue) {
+        emit("recovery.diagnosis_failed", {
+          ...dataThroughTheIngress(
+            {
+              phase,
+              attempt: ordinal,
+              error: error instanceof Error ? error.message : String(error),
+            },
+            recoveryIngress,
+          ),
+          synthesized: false,
+        });
+      }
+      throw error;
+    }
     // The tree the diagnosis saw, for the staleness check of the accelerated
     // retry: the narrowed prompt is only honest on the tree it was made for.
     if (outcome.due) {
@@ -3013,6 +3081,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       },
       {
         runVerificationGate: async () => {
+          // F153-FR-034 — the timed pair of the gate opens first: the run of
+          // the verification gate is on the record from its first statement.
+          emit("verification.started", {
+            phase,
+            attempt: ordinal,
+            planRef: check ?? "none",
+          });
+          try {
           // The check runs NOW; a result of an earlier run is never accepted.
           // F153-FR-029 — with the enforced time limit on, the check runs
           // through the ONE check runner (`runEngineCheck`, T088): it is the
@@ -3076,13 +3152,41 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           say(
             `[${slug}] verification: ${check ?? "none declared"} -> ${record.roster[0]?.status ?? ""}`,
           );
+          // F153-FR-034 — the closer of the gate's pair names the evidence
+          // record of this attempt and the result code of the gate: 0 passed,
+          // 10 failed (T120).
+          emit("verification.ended", {
+            phase,
+            attempt: ordinal,
+            result: verification.exit_code === 0 ? "passed" : "failed",
+            rc: verification.exit_code,
+            evidenceRef: `attempt:${String(phase)}:${String(ordinal)}:verification`,
+            synthesized: false,
+          });
           return Promise.resolve(verification);
+          } catch (error) {
+            // A gate that throws still closes its pair, as a failure (T120).
+            emit("verification.ended", {
+              phase,
+              attempt: ordinal,
+              result: "failed",
+              rc: 10,
+              evidenceRef: `attempt:${String(phase)}:${String(ordinal)}:verification`,
+              synthesized: false,
+            });
+            throw error;
+          }
         },
-        callTheCritic: () => {
+        callTheCritic: async () => {
+          // F153-FR-035 — the timed pair of the critic's call opens BEFORE the
+          // call: provider is the critic harness the role plan names (T121).
+          const criticCallStartedAtMs = Date.now();
+          emit("critic.started", { phase, attempt: ordinal, provider: criticHarness });
+          try {
           const evidence = readFileSync(evidencePath, "utf8");
           const size = Buffer.byteLength(evidence);
           const hash = createHash("sha256").update(evidence).digest("hex");
-          return callTheCritic(
+          const outcomeOfTheCriticCall = await callTheCritic(
             criticCallInputs({
               workdir,
               phase,
@@ -3233,7 +3337,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 gate: {
                   phaseEvidence: { logicalName: `gate:${String(phase)}:evidence`, hash, size },
                   groundingSnapshot: {
-                    logicalName: `attempt:${String(phase)}:1:${String(ordinal)}:grounding`,
+                    logicalName: `attempt:${String(phase)}:${String(ordinal)}:grounding`,
                     hash,
                     size,
                   },
@@ -3244,6 +3348,35 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               },
             } as never,
           );
+          // F153-FR-035 — the closer of the critic's pair: the outcome is the
+          // verdict of the closed set, and `latencyMs` is the wall time of the
+          // whole call (T122). No prompt, no reply, no nonce ever enters the
+          // event: only the logical name of the prompt (F153-FR-033).
+          emit("critic.call", {
+            promptRef: `gate:${String(phase)}:${String(ordinal)}:prompt`,
+            form: "tool-less",
+            outcome:
+              "verdict" in outcomeOfTheCriticCall
+                ? outcomeOfTheCriticCall.verdict
+                : "blocked" in outcomeOfTheCriticCall
+                  ? "blocked"
+                  : "halted",
+            latencyMs: Date.now() - criticCallStartedAtMs,
+            synthesized: false,
+          });
+          return outcomeOfTheCriticCall;
+          } catch (error) {
+            // A critic call that throws still closes its pair (T122); the
+            // failure text never enters the event, only the outcome.
+            emit("critic.call", {
+              promptRef: `gate:${String(phase)}:${String(ordinal)}:prompt`,
+              form: "tool-less",
+              outcome: "error",
+              latencyMs: Date.now() - criticCallStartedAtMs,
+              synthesized: false,
+            });
+            throw error;
+          }
         },
         replyOfTheCriticCall: () => lastReply,
         // The red-gate notice of a failed gate (feature 153, T065/T066):
