@@ -10,3 +10,6 @@ packages/cli/.build/
 
 # Local evaluation notes (prompt and reports); never committed.
 .eval/
+
+# Local prompt sets (research and stage prompts); never committed.
+/prompts/
