@@ -289,6 +289,15 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The hand-written events fixture of feature 153's report rows (the
+      // approved task T126 names it as `.jsonl`): data read by the report
+      // tests, not source of the product, and no published package ships it.
+      if (
+        path.startsWith("packages/core/test/fixtures/153/") &&
+        path.endsWith(".jsonl")
+      ) {
+        continue;
+      }
       const name = path.slice(path.lastIndexOf("/") + 1);
       if (name === ".gitkeep" || name.endsWith(".md")) continue;
       const dot = name.lastIndexOf(".");
