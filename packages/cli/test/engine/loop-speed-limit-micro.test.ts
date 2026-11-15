@@ -308,6 +308,34 @@ test("CT-153-5 switch off is today: the baseline execute runs, not a process gro
   }
 });
 
+test("CT-153-31 limits off, micro path: the declared limit still applies", { skip: !GROUPS_AVAILABLE && "process groups are unavailable (F153-FR-032)" }, async () => {
+  const fx = fixtureOf();
+  const previous = process.env.SPECSTRIDE_LIMITS;
+  process.env.SPECSTRIDE_LIMITS = "off";
+  try {
+    // CQ-153-04 (answered A) — `SPECSTRIDE_LIMITS=off` never lifts a check's
+    // declared limit: the inner check is still ended at its 1 s, exactly as
+    // in the limits-on case.
+    const machine = machineOf(fx, { timeLimitEnforced: true });
+    await runOnePass(fx, machine);
+    const ended = fx.events.find((event) => event.type === "check.ended");
+    assert.ok(ended, "a check.ended event was emitted");
+    assert.ok(
+      typeof ended.fields.durationMs === "number" && ended.fields.durationMs < 4_000,
+      `the check ended in ${String(ended.fields.durationMs)} ms with limits off`,
+    );
+    const pids = pidsOf(fx);
+    assert.equal(pids.length, 2, "the fake recorded two pids");
+    for (const pid of pids) {
+      assert.ok(await pidIsGone(pid), `pid ${String(pid)} is still alive`);
+    }
+  } finally {
+    if (previous === undefined) delete process.env.SPECSTRIDE_LIMITS;
+    else process.env.SPECSTRIDE_LIMITS = previous;
+    fx.restore();
+  }
+});
+
 test("the taint is still taken", { skip: !GROUPS_AVAILABLE && "process groups are unavailable (F153-FR-032)" }, async () => {
   const fx = fixtureOf();
   try {

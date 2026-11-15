@@ -1,1 +1,5 @@
 dist/
+# Transient artifacts of the loop-speed fixtures (never check these in).
+test/fixtures/loop-speed/service-pids.txt
+test/fixtures/loop-speed/gate-pids.txt
+test/fixtures/loop-speed/gate-runs.txt

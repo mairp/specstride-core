@@ -244,6 +244,7 @@ import {
   writeCheckManifest,
   type MicroAttempt,
 } from "./micro-layer.ts";
+import { runEngineCheck, spawnSyncShapeOf, timeLimitMsOf } from "./check-run.ts";
 import { LoopLayerRegistry } from "../../../core/src/layers/registry.ts";
 import {
   isLoopStrategy,
@@ -280,6 +281,23 @@ export function proposerLimitMsOf(ceilingSec: number, killGraceMs: number): numb
 
 /** The time limit of one critic call, in milliseconds. */
 const CRITIC_LIMIT_MS = 5 * 60 * 1000;
+
+/**
+ * The time limit of the verification gate, in seconds (T085, F153-FR-029).
+ * F105-FR-017 gives a discovered test script 1,800 s; the gate has no
+ * declaration of its own yet, so it takes that limit here. The constant
+ * stands only until the plan's limits arrive (P1a); nothing reads the
+ * environment to change it — governance principle XV: no setting bypasses a
+ * budget.
+ */
+export const GATE_TIME_LIMIT_SEC = 1_800;
+
+/**
+ * Test-only override of the gate's time limit (`loop-speed-limit-gate.test.ts`).
+ * Production code never writes it, so the shipped limit stays
+ * `GATE_TIME_LIMIT_SEC`; the tests shrink it to keep the wall clock sane.
+ */
+export const GATE_TIME_LIMIT_SEC_FOR_TESTS: { value: number | undefined } = { value: undefined };
 
 /** The tools of a proposer pass. */
 const PROPOSER_TOOLS: readonly string[] = Object.freeze([
@@ -878,6 +896,43 @@ export function supervisionEventWriterOf(
   };
 }
 
+/**
+ * The object the engine registers as the service `check-runner` (T086,
+ * F153-FR-029): with the enforced time limit on, one command runs through
+ * the ONE check runner (`runEngineCheck`) as the leader of its own process
+ * group, ended — the whole group — at the declared limit; with the switch
+ * off, today's baseline `spawnSync` runs exactly as before the feature.
+ */
+type RunOfAServiceCommand = {
+  readonly status: number | null;
+  readonly signal: string | null;
+  readonly stdout: unknown;
+  readonly stderr: unknown;
+};
+export function checkRunnerServiceOf(input: {
+  readonly workdir: string;
+  readonly profile: string;
+  readonly timeLimitEnforced: boolean;
+  readonly timeLimitSec: number;
+}): { run: (command: { readonly argv: readonly string[] }) => Promise<RunOfAServiceCommand> } {
+  const run = (
+    command: { readonly argv: readonly string[] },
+  ): RunOfAServiceCommand | Promise<RunOfAServiceCommand> =>
+    input.timeLimitEnforced
+      ? runEngineCheck(
+          {
+            id: "check",
+            argv: command.argv,
+            cwd: input.workdir,
+            timeLimitMs: timeLimitMsOf(input.timeLimitSec, input.timeLimitSec),
+            phase: 0,
+          },
+          input.profile,
+        ).then(spawnSyncShapeOf)
+      : spawnSync(command.argv[0] ?? "false", command.argv.slice(1), { cwd: input.workdir });
+  return { run };
+}
+
 /** The process registry `specstride.procs/1`, a JSON file of the control plane (F118-FR-031). */
 export function supervisionRegistryAccessOf(path: string): RegistryAccess {
   const readAll = (): Record<string, RegistryEntry> => {
@@ -1204,7 +1259,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           replayedOnResume: false,
         };
   }
-  write(loopRecordPath, JSON.stringify(loopRecord, null, 2));
+  // CQ-153-04 (answered A) — `SPECSTRIDE_LIMITS=off` never lifts a check's
+  // declared limit (T090): the three paths of this feature read their
+  // declared limits unchanged, so the run says the fact once and records it
+  // in the loop record. Nothing here lifts a limit: governance XV.
+  const limitsOffRecorded = limitsAreOff() && loopConfig.timeLimitEnforced;
+  write(
+    loopRecordPath,
+    JSON.stringify(
+      limitsOffRecorded
+        ? { ...loopRecord, limitsOff: { checksStillBounded: true } }
+        : loopRecord,
+      null,
+      2,
+    ),
+  );
+  if (limitsOffRecorded) {
+    say(
+      "limits are off (SPECSTRIDE_LIMITS); the declared time limit of every check still applies",
+    );
+  }
   // The task-list record of the launch (F115-FR-012): the ids of every phase
   // as the task list read them at launch.
   write(
@@ -1971,10 +2045,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       const registration = new LoopLayerRegistry().register(attemptMachine.loopLayer(), {
         layerClass: "first-party",
         services: {
-          "check-runner": {
-            run: (command: { argv: readonly string[] }) =>
-              spawnSync(command.argv[0] ?? "false", command.argv.slice(1), { cwd: workdir }),
-          },
+          // F153-FR-029 — the check-runner service through the ONE check
+          // runner (T087): the declared limit of the layer's checks is the
+          // 300 s fallback of the engine, and it stands whatever the run's
+          // other settings are (governance XV). With the switch off, the
+          // baseline `spawnSync` runs exactly as before the feature.
+          "check-runner": checkRunnerServiceOf({
+            workdir,
+            profile: "default",
+            timeLimitEnforced: loopConfig.timeLimitEnforced,
+            timeLimitSec: 300,
+          }),
           router: {
             route: (point: "loop", signals: unknown) => routeIfEngaged(point, signals as never),
           },
@@ -2828,12 +2909,39 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         }),
       },
       {
-        runVerificationGate: () => {
+        runVerificationGate: async () => {
           // The check runs NOW; a result of an earlier run is never accepted.
+          // F153-FR-029 — with the enforced time limit on, the check runs
+          // through the ONE check runner (`runEngineCheck`, T088): it is the
+          // leader of its own process group and is ended — the whole group —
+          // at the gate's limit. The limit is the constant of T085, read
+          // through nothing but the test-only override; a result whose
+          // signal is `TIMEOUT` counts as FAILED (T089): `exit_code` 10, and
+          // the captured command of the notice carries no exit code and the
+          // signal. With the switch off, the baseline `spawnSync` runs.
+          const gateLimitSec = GATE_TIME_LIMIT_SEC_FOR_TESTS.value ?? GATE_TIME_LIMIT_SEC;
+          // The runner spawns without a shell (F148-FR-001), so the check of
+          // `sh -c` form goes through an ABSOLUTE `sh` (pinACommand refuses a
+          // bare name it cannot pin); where the search finds none, the
+          // baseline `spawnSync` path runs.
+          const shPath = resolveExecutable("sh", process.env.PATH ?? "") ?? "/bin/sh";
           const run =
             check === undefined
-              ? { status: 0, stdout: "", stderr: "" }
-              : spawnSync("sh", ["-c", check], { cwd: workdir, encoding: "utf8" });
+              ? { status: 0 as number | null, signal: null as string | null, stdout: "", stderr: "" }
+              : loopConfig.timeLimitEnforced
+                ? spawnSyncShapeOf(
+                    await runEngineCheck(
+                      {
+                        id: "check",
+                        argv: [shPath, "-c", check],
+                        cwd: workdir,
+                        timeLimitMs: timeLimitMsOf(gateLimitSec, gateLimitSec),
+                        phase,
+                      },
+                      "default",
+                    ),
+                  )
+                : spawnSync("sh", ["-c", check], { cwd: workdir, encoding: "utf8" });
           const exit_code = run.status === 0 ? 0 : 10;
           checkOutput = `${run.stdout ?? ""}${run.stderr ?? ""}`.slice(-4000);
           const record = {
