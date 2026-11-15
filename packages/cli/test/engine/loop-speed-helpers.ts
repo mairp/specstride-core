@@ -46,21 +46,21 @@ fs.appendFileSync("prompts.jsonl", JSON.stringify({ role, prompt }) + "\\n");
 console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));
 if (role === "diagnostician") {
   fs.writeFileSync("seen-by-diagnostician.txt", prompt);
-  console.log(JSON.stringify({ type: "result", result: "CASE: GROUNDING\\\\nName the missing test of T001." }));
+  console.log(JSON.stringify({ type: "result", result: "CASE: GROUNDING\\nName the missing test of T001." }));
 } else if (critic) {
   fs.writeFileSync("seen-by-critic.txt", prompt);
   const nonce = /VERDICT ([0-9a-f]+): APPROVED/.exec(prompt)[1];
   const n = fs.existsSync("critic-calls.txt") ? Number(fs.readFileSync("critic-calls.txt", "utf8")) : 0;
   fs.writeFileSync("critic-calls.txt", String(n + 1));
   const verdict = VERDICTS[Math.min(n, VERDICTS.length - 1)];
-  console.log(JSON.stringify({ type: "result", result: "T001 judged.\\\\nVERDICT " + nonce + ": " + verdict }));
+  console.log(JSON.stringify({ type: "result", result: "T001 judged.\\nVERDICT " + nonce + ": " + verdict }));
 } else {
-  const evidence = /write (\\.specstride\\\\S+?):/i.exec(prompt)[1];
+  const evidence = /write (\\.specstride\\S+?):/i.exec(prompt)[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
-  fs.writeFileSync(evidence, "T001 done\\\\n");
-  fs.writeFileSync("made.txt", process.env.STUB_NEW_FILE ?? "work\\\\n");
+  fs.writeFileSync(evidence, "T001 done\\n");
+  fs.writeFileSync("made.txt", process.env.STUB_NEW_FILE ?? "work\\n");
   fs.mkdirSync("newdir", { recursive: true });
-  fs.writeFileSync("newdir/inside.txt", "nested\\\\n");
+  fs.writeFileSync("newdir/inside.txt", "nested\\n");
   const tasks = "specs/001-one/tasks.md";
   fs.writeFileSync(tasks, fs.readFileSync(tasks, "utf8").replace("[ ]", "[x]"));
   console.log(JSON.stringify({ type: "result", result: "ok" }));

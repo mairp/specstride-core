@@ -124,6 +124,15 @@ export type PhaseGateDependencies = {
    */
   readonly replyOfTheCriticCall?: (() => string) | undefined;
   /**
+   * The red-gate notice of a failed verification gate, built by the engine
+   * (feature 153, T063): feature 105's F105-FR-006 frame with feature 105's
+   * F105-FR-037 failure summary of the command that failed, after the ONE
+   * ingress. Optional — where the engine does not hand it in, the gate keeps
+   * today's text from `feedbackOfTheVerificationGate`, byte for byte, so the
+   * port is a choice of the composition root and nothing else breaks.
+   */
+  readonly feedbackOfAFailedGate?: ((verification: VerificationGateResult) => string) | undefined;
+  /**
    * The AS-IS TEXT of the detail of the parse, for a MALFORMED verdict.
    *
    * F101-FR-012 and B-0880 ask that the quoted notice of a MALFORMED feedback
@@ -230,13 +239,19 @@ export async function runPhaseGate(
     verification = await deps.runVerificationGate();
     if (!verificationGatePassed(verification)) {
       // The critic is NOT called; the result is forced to a rejection; the
-      // engine writes the feedback itself, from the result record.
-      const feedback = feedbackOfTheVerificationGate({
-        phase: inputs.phase,
-        mode: verification.mode,
-        roster: verification.roster,
-        ...(verification.criteria === undefined ? {} : { criteria: verification.criteria }),
-      });
+      // engine writes the feedback itself, from the result record. Where the
+      // engine hands in `feedbackOfAFailedGate` the notice is ITS text (the
+      // red-gate notice, feature 153); where it does not, the gate builds
+      // today's text, byte for byte, as before.
+      const feedback =
+        deps.feedbackOfAFailedGate !== undefined
+          ? deps.feedbackOfAFailedGate(verification)
+          : feedbackOfTheVerificationGate({
+              phase: inputs.phase,
+              mode: verification.mode,
+              roster: verification.roster,
+              ...(verification.criteria === undefined ? {} : { criteria: verification.criteria }),
+            });
       deps.writeFeedback(feedback);
       return Object.freeze({
         outcome: "gate-failed" as const,
