@@ -67,7 +67,7 @@ export function isIgnored(workdir: string, directory: string): boolean {
   return probe.status === 0;
 }
 
-/** The text of every small `.md` document directly in `directory`, by name. */
+/** The text of every small `.md` document directly in `directory`, and of every small file in its `contracts/` directory, by name. */
 export function snapshotSpecDocs(directory: string): Map<string, string> {
   const out = new Map<string, string>();
   let names: string[] = [];
@@ -76,16 +76,31 @@ export function snapshotSpecDocs(directory: string): Map<string, string> {
   } catch {
     return out;
   }
-  for (const name of names) {
-    if (!name.endsWith(".md")) continue;
-    const path = join(directory, name);
+  const read = (name: string, path: string): void => {
     try {
       const stat = statSync(path);
-      if (!stat.isFile() || stat.size > SPEC_DOC_CAP_BYTES) continue;
+      if (!stat.isFile() || stat.size > SPEC_DOC_CAP_BYTES) return;
       out.set(name, readFileSync(path, "utf8"));
     } catch {
       // a document that vanished is simply not in the snapshot
     }
+  };
+  for (const name of names) {
+    if (!name.endsWith(".md")) continue;
+    read(name, join(directory, name));
+  }
+  // The feature's contracts live in `contracts/` beside the documents; a task
+  // that writes one there (153 phase 8 T093) must be as visible to the critic
+  // as an edit of tasks.md is — the directory is ignored by git all the same.
+  const contracts = join(directory, "contracts");
+  let contractNames: string[] = [];
+  try {
+    contractNames = readdirSync(contracts).sort();
+  } catch {
+    contractNames = []; // no contracts directory, nothing to snapshot
+  }
+  for (const name of contractNames) {
+    read(join("contracts", name), join(contracts, name));
   }
   return out;
 }

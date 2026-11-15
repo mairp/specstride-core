@@ -82,3 +82,28 @@ test("an ignored feature directory is told apart from a tracked one", () => {
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test("a contract file a task writes into contracts/ is in the critic's block too", () => {
+  const dir = mkdtempSync(join(tmpdir(), "spec-docs-contracts-"));
+  try {
+    const before = snapshotSpecDocs(dir);
+    assert.equal(before.size, 0);
+    mkdirSync(join(dir, "contracts"), { recursive: true });
+    writeFileSync(join(dir, "contracts", "attempt-end-cause-table.json"), '{"id":"attempt-end-cause"}\n');
+    writeFileSync(join(dir, "contracts", "too-big.bin"), "x".repeat(600 * 1024));
+    mkdirSync(join(dir, "contracts", "nested"));
+    writeFileSync(join(dir, "contracts", "nested", "deep.md"), "not a direct file\n");
+    const now = snapshotSpecDocs(dir);
+    assert.deepEqual([...now.keys()], ["contracts/attempt-end-cause-table.json"]);
+    const change = specDocsChange(dir, before, "specs/153-f");
+    assert.match(change, /--- specs\/153-f\/contracts\/attempt-end-cause-table\.json \(new\)/);
+    assert.match(change, /\+\{"id":"attempt-end-cause"\}/);
+    // An edit of the same contract diffs, it is not shown as new.
+    writeFileSync(join(dir, "contracts", "attempt-end-cause-table.json"), '{"id":"attempt-end-cause","version":"1.0.1"}\n');
+    const edited = specDocsChange(dir, now, "specs/153-f");
+    assert.match(edited, /--- specs\/153-f\/contracts\/attempt-end-cause-table\.json\n\+\+\+/);
+    assert.doesNotMatch(edited, /\(new\)/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

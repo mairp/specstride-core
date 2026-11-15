@@ -110,6 +110,7 @@ export function fixture(options: FixtureOptions): Fixture {
     PROPOSER: process.env.SPECSTRIDE_PROPOSER,
     CRITIC: process.env.SPECSTRIDE_CRITIC,
     PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
   };
   process.env.HOME = root;
   process.env.PATH = `${bin}:${before.PATH ?? ""}`;
@@ -117,6 +118,10 @@ export function fixture(options: FixtureOptions): Fixture {
   process.env.SPECSTRIDE_PROPOSER = "claude";
   process.env.SPECSTRIDE_CRITIC = "claude";
   process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  // The engine loop's own count limits hold in the tests: a campaign shell
+  // may run with SPECSTRIDE_LIMITS=off (the owner's no-ceiling ruling), under
+  // which a rejection test has no reject limit to reach and loops forever.
+  process.env.SPECSTRIDE_LIMITS = "on";
   return {
     dir: work,
     restore: () => {
@@ -130,6 +135,8 @@ export function fixture(options: FixtureOptions): Fixture {
       else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
       if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
       else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
+      if (before.LIMITS === undefined) delete process.env.SPECSTRIDE_LIMITS;
+      else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
       rmSync(root, { recursive: true, force: true });
     },
   };

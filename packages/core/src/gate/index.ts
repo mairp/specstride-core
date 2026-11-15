@@ -44,3 +44,6 @@ export * from "./limits.ts";
 export * from "./oscillation.ts";
 export * from "./archive.ts";
 export * as halts from "./halts.ts";
+// T101 — the pure end cause of a phase attempt (feature 153, F153-FR-037):
+// the engine's CLI wiring imports it from here.
+export * from "./end-cause.ts";

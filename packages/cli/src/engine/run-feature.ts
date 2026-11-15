@@ -169,6 +169,21 @@ import {
   runPhaseAttempts,
 } from "../../../core/src/engine/phase.ts";
 import { runPhaseGate, type VerificationGateResult } from "../../../core/src/gate/phase-gate.ts";
+// T106 — the end cause of a phase attempt (feature 153, F153-FR-037): the
+// pure table decides, the engine only hands in how the attempt ended.
+import {
+  endCauseOf,
+  type AttemptEnd153,
+} from "../../../core/src/gate/end-cause.ts";
+// T111 — the closers the next writer writes for a run a process left open
+// (F111-FR-004); the engine appends the `attempt.ended` closers with the
+// cause the table gives for a process that died mid-attempt (EC-11).
+import {
+  openerOf,
+  isOpener,
+  synthesizedClosersFor,
+  type PairedEvent,
+} from "../../../observability/src/writer/pairs.ts";
 import { callTheCritic, criticCallInputs } from "../../../core/src/gate/critic-call.ts";
 import { parseVerdict } from "../../../core/src/gate/verdict-parser.ts";
 import {
@@ -915,9 +930,9 @@ export function checkRunnerServiceOf(input: {
   readonly timeLimitEnforced: boolean;
   readonly timeLimitSec: number;
 }): { run: (command: { readonly argv: readonly string[] }) => Promise<RunOfAServiceCommand> } {
-  const run = (
+  const run = async (
     command: { readonly argv: readonly string[] },
-  ): RunOfAServiceCommand | Promise<RunOfAServiceCommand> =>
+  ): Promise<RunOfAServiceCommand> =>
     input.timeLimitEnforced
       ? runEngineCheck(
           {
@@ -1103,6 +1118,94 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       /* a failed write is counted and ignored by the projection (F144-FR-008) */
     }
   };
+
+  /* --- the closers the next writer writes (T111; F111-FR-004) -------- *
+   *
+   * "Where a process died before it wrote a closer, the next writer MUST
+   * write the closers, marked `synthesized: true` with the cause of the
+   * death, innermost first, before any new event." THIS run is the next
+   * writer: before its first `emit`, it reads the events file of the newest
+   * earlier run of the feature, builds the closers with the observability
+   * pair table's own `synthesizedClosersFor`, and appends — as the first
+   * lines of its own events file — each closer for an open
+   * `attempt.started`, with the end cause the rule table gives for a
+   * process that died mid-attempt (EC-11: `crash`, `synthesized: true`).
+   * The closer carries the `phase` and `attempt` of the opener it closes,
+   * so a reader can fold the pair across the two runs.
+   */
+  const closeTheAttemptsTheEarlierRunLeftOpen = (): void => {
+    const runsDirectory = inControl("runs");
+    if (!existsSync(runsDirectory)) return;
+    let newest: string | undefined;
+    let newestAt = -1;
+    for (const name of readdirSync(runsDirectory)) {
+      if (name === runId) continue;
+      const file = join(runsDirectory, name, "events.jsonl");
+      const stats = statSync(file, { throwIfNoEntry: false });
+      if (stats !== undefined && stats.mtimeMs > newestAt) {
+        newestAt = stats.mtimeMs;
+        newest = file;
+      }
+    }
+    if (newest === undefined) return;
+    let stream: PairedEvent[];
+    try {
+      stream = readFileSync(newest, "utf8")
+        .split("\n")
+        .filter((line) => line.trim() !== "")
+        .flatMap((line) => {
+          try {
+            return [JSON.parse(line) as PairedEvent];
+          } catch {
+            return [];
+          }
+        });
+    } catch {
+      return; // an unreadable earlier file is left exactly as it stands
+    }
+    const attemptClosers = synthesizedClosersFor(stream, { cause: "crash" }).filter(
+      (closer) => closer.type === "attempt.ended",
+    );
+    if (attemptClosers.length === 0) return;
+    // The data of the openers the closers close: the stack of the stream,
+    // walked the way `openSpans` walks it, so the closers — innermost first
+    // — pop it from the top.
+    const stack: { readonly type: string; readonly data: Record<string, unknown> }[] = [];
+    for (const event of stream) {
+      if (isOpener(event.type)) {
+        stack.push({ type: event.type, data: event.data ?? {} });
+        continue;
+      }
+      const opener = openerOf(event.type);
+      if (opener === undefined) continue;
+      for (let index = stack.length - 1; index >= 0; index -= 1) {
+        if (stack[index]?.type === opener) {
+          stack.splice(index, 1);
+          break;
+        }
+      }
+    }
+    const cause = endCauseOf({ outcome: "died" });
+    for (const closer of attemptClosers) {
+      const opener = stack.pop();
+      if (opener === undefined) break;
+      const at = new Date().toISOString();
+      write(
+        events,
+        `${JSON.stringify({
+          type: closer.type,
+          at,
+          data: {
+            phase: opener.data.phase,
+            attempt: opener.data.attempt,
+            endCause: cause.endCause,
+            synthesized: true,
+          },
+        })}\n`,
+      );
+    }
+  };
+  closeTheAttemptsTheEarlierRunLeftOpen();
 
   /* --- the learning state of the run (feature 106, the wiring) ------- *
    *
@@ -3491,6 +3594,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         because: "config-error" as const,
         exitCode: outcome.halt.exitCode,
         stopReason: outcome.halt.stopReason,
+        // T108 — the end cause the wrapper hands to `closeTheAttempt`: a
+        // halt for no phase evidence is EC-7, a configuration error EC-10.
+        attemptEnd: outcome.outcome === "no-evidence" ? ("no-evidence" as const) : ("error" as const),
       };
     }
     if (outcome.outcome === "gate-failed") return "gate-failed" as const;
@@ -3498,6 +3604,27 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   };
 
   /* --- the order after a rejection, with the recovery cycle (step 2) -- */
+
+  /* T106 — every attempt closes exactly once (feature 153, F153-FR-037).
+   * The table of `end-cause.ts` decides the cause; this wiring only hands
+   * in how the attempt ended. One `(phase, ordinal)` pair closes once per
+   * process: wherever an end reaches this closer twice (the rejection path
+   * closes at its own place in the order, the attempt wrapper would close
+   * again), the second call is a void, so the event order of a rejection
+   * does not move (Principle XVIII, T104). */
+  const closedAttempts = new Set<string>();
+  const closeTheAttempt = (phase: number, ordinal: number, end: AttemptEnd153): void => {
+    const key = `${String(phase)}.${String(ordinal)}`;
+    if (closedAttempts.has(key)) return;
+    closedAttempts.add(key);
+    const cause = endCauseOf(end);
+    emit("attempt.ended", {
+      phase,
+      attempt: ordinal,
+      endCause: cause.endCause,
+      synthesized: false,
+    });
+  };
 
   const afterARejection = async (phase: number, ordinal: number, outcome: string) => {
     const kind =
@@ -3620,7 +3747,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               : { newestSignature: signatures[signatures.length - 1] as string }),
             acceleration: accelerationFactsOf(phase),
           }),
-        emitReject: (event: Readonly<Record<string, unknown>>) => emit("attempt.ended", event),
+        // T107 — the as-is rejection event closes the attempt (F153-FR-037):
+        // the emit becomes a call of `closeTheAttempt` with the end the kind
+        // of the rejection gives, at the same place in the order, so the
+        // event order of a rejection does not move (Principle XVIII).
+        emitReject: (event: Readonly<Record<string, unknown>>) => {
+          closeTheAttempt(
+            event.phase as number,
+            event.attempt as number,
+            { outcome: kind } as AttemptEnd153,
+          );
+        },
         emitMalformed: (event: Readonly<Record<string, unknown>>) =>
           emit("critic.malformed", event),
         writeLine: say,
@@ -3728,7 +3865,38 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           return runPhaseAttempts(
             { phase, firstOrdinal: (ledger[String(phase)]?.phaseAttemptOrdinal ?? 0) + 1 },
             {
-              runOneAttempt: (ordinal: number) => runOneAttempt(phase, ordinal),
+              // T108 — the wrapper that closes the attempt (F153-FR-037):
+              // after `runOneAttempt` returns, the end it returned hands
+              // `closeTheAttempt` its outcome — `approved` for the approved
+              // return, `stopped` for the stop paths, `blocked` for the
+              // blocked halt, `no-evidence`/`error` for the halts — and a
+              // throw closes with `error` before it rethrows. The ends that
+              // already closed at their own place in the order (the
+              // rejection path of T107) reach a void here: one
+              // `(phase, ordinal)` closes once.
+              runOneAttempt: async (ordinal: number) => {
+                let end: Awaited<ReturnType<typeof runOneAttempt>>;
+                try {
+                  end = await runOneAttempt(phase, ordinal);
+                } catch (thrown) {
+                  closeTheAttempt(phase, ordinal, { outcome: "error" });
+                  throw thrown;
+                }
+                if (typeof end === "string") {
+                  closeTheAttempt(phase, ordinal, { outcome: end } as AttemptEnd153);
+                } else if (end.stopReason === "stop_flag") {
+                  closeTheAttempt(phase, ordinal, { outcome: "stopped" });
+                } else if (end.because === "blocked") {
+                  closeTheAttempt(phase, ordinal, { outcome: "blocked" });
+                } else {
+                  closeTheAttempt(phase, ordinal, {
+                    outcome:
+                      (end as { readonly attemptEnd?: "no-evidence" | "error" }).attemptEnd ??
+                      "error",
+                  });
+                }
+                return end;
+              },
               afterARejection: (ordinal: number, outcome: string) =>
                 afterARejection(phase, ordinal, outcome),
             } as never,
