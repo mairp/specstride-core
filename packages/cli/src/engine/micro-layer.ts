@@ -25,6 +25,7 @@ import {
   execute,
   DEFAULT_MAX_OUTPUT_BYTES,
 } from "../../../check-runner/src/command/lisa-executor.ts";
+import { runEngineCheck, timeLimitMsOf } from "./check-run.ts";
 import type { LoopLayer } from "@specstride/contracts/ep/loop-layer";
 import { checkpointContractBlock } from "../../../layer-micro/src/callpoints/contribute-prompt.ts";
 import { afterPass as afterPassPoint } from "../../../layer-micro/src/callpoints/after-pass.ts";
@@ -70,6 +71,18 @@ export type InnerCheckCommand = {
 };
 
 /** The check manifest of a phase, as the launch wrote it to the control plane. */
+/**
+ * The fields of a check's execution the rest of `runCheckCommand` reads —
+ * the shape `execute` gives and the shape `runEngineCheck` is read into
+ * (F153-FR-029, the local evidence object).
+ */
+type Evidence = {
+  readonly exitCode: number | null;
+  readonly durationMs: number;
+  readonly stdout: string;
+  readonly stderr: string;
+};
+
 export type CheckManifest = {
   readonly schema: "specstride.check-manifest/1";
   readonly phase: number;
@@ -228,6 +241,14 @@ export function createMicroAttempt(input: {
   readonly phaseTaskIds: readonly string[];
   readonly caps: MachineCaps;
   readonly closingCheckOn: boolean;
+  /**
+   * `verification.timeLimit.enforce` (feature 153, F153-FR-029): when true,
+   * every inner and closing check runs through the check runner
+   * (`runEngineCheck`), whose process group, timer and SIGTERM → SIGKILL
+   * escalation end a hung command at its declared limit; when false, the
+   * baseline `execute` runs exactly as it did before the feature.
+   */
+  readonly timeLimitEnforced: boolean;
   readonly emit: (type: string, fields: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;
   readonly fingerprint: () => string;
@@ -317,18 +338,44 @@ export function createMicroAttempt(input: {
     const full = manifest?.commands.find((held) => held.id === command.id);
     emitEvent(checkStarted({ checkId: command.id, unitId, runner: "runtime" }));
     const before = input.fingerprint();
-    const evidence = execute(
-      {
-        id: command.id,
-        kind: "test",
-        label: command.id,
-        executable: full?.argv[0] ?? "false",
-        args: (full?.argv ?? command.argv).slice(1),
-        cwd: full?.cwd ?? process.cwd(),
-        timeoutSec: full?.timeoutSec ?? 5 * 60,
-      },
-      DEFAULT_MAX_OUTPUT_BYTES,
-    );
+    // F153-FR-029 — with the enforced time limit on, the command goes through
+    // the one check runner (`runEngineCheck`), which runs it as the leader of
+    // its own process group, ends the whole group at the declared limit and
+    // settles with a result that has no exit code and the signal `TIMEOUT`.
+    // With the switch off, the baseline `execute` runs exactly as before.
+    // Both are read through one local `evidence` object so the lines below
+    // do not branch on the switch.
+    const evidence = input.timeLimitEnforced
+      ? await (async (): Promise<Evidence> => {
+          const result = await runEngineCheck(
+            {
+              id: command.id,
+              argv: full?.argv ?? command.argv,
+              cwd: full?.cwd ?? process.cwd(),
+              timeLimitMs: timeLimitMsOf(full?.timeoutSec, 300),
+              phase: input.phase,
+            },
+            "default",
+          );
+          return {
+            exitCode: result.exitCode,
+            durationMs: result.durationMs,
+            stdout: result.stdout,
+            stderr: result.stderr,
+          };
+        })()
+      : execute(
+          {
+            id: command.id,
+            kind: "test",
+            label: command.id,
+            executable: full?.argv[0] ?? "false",
+            args: (full?.argv ?? command.argv).slice(1),
+            cwd: full?.cwd ?? process.cwd(),
+            timeoutSec: full?.timeoutSec ?? 5 * 60,
+          },
+          DEFAULT_MAX_OUTPUT_BYTES,
+        );
     const after = input.fingerprint();
     // The taint: a command during whose run the tree changed. Never a pass,
     // never a reason the layer goes off.

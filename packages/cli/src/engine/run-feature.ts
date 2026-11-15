@@ -1963,6 +1963,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         phaseTaskIds: taskIdsOfThePhase(phase),
         caps: loopConfig.caps,
         closingCheckOn: loopConfig.closingCheck,
+        timeLimitEnforced: loopConfig.timeLimitEnforced,
         emit,
         say,
         fingerprint: () => workingTreeFingerprint(workdir),
