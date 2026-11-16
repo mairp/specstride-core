@@ -35,6 +35,8 @@ import {
   SUPERVISION_CHANGE_OPTION,
   SUPERVISION_COMMAND,
   SUPERVISION_CURSOR_OPTION,
+  SUPERVISION_CYCLE_SECONDS,
+  SUPERVISION_TIMEOUT_OPTION,
   THE_SKILL_SETS_THE_AUDIENCE,
   UNCHANGED_CYCLE_PRINTS_NOTHING,
   UNCHANGED_CYCLE_TOKENS,
@@ -131,6 +133,8 @@ test("the supervision section is written from the host's figures alone", () => {
   assert.equal(SUPERVISION_COMMAND, "wait");
   assert.equal(SUPERVISION_CHANGE_OPTION, "--until-change");
   assert.equal(SUPERVISION_CURSOR_OPTION, "--cursor");
+  assert.equal(SUPERVISION_TIMEOUT_OPTION, "--timeout");
+  assert.equal(SUPERVISION_CYCLE_SECONDS, 60);
   assert.equal(UNCHANGED_CYCLE_PRINTS_NOTHING, true);
   assert.equal(UNCHANGED_CYCLE_TOKENS, 0);
 
@@ -140,18 +144,24 @@ test("the supervision section is written from the host's figures alone", () => {
     runSupervisionTokenBudget: 2_000,
   });
   assert.match(foreground[2], /Supervise with `wait --until-change` and `--cursor /);
-  assert.match(foreground[3], /declares no background primitive/);
-  assert.ok(foreground[3].includes("each cycle costs at most 100 tokens"));
-  assert.ok(foreground[4].includes("stays within 2000 tokens"));
-  assert.match(foreground[5], /Print the digest verbatim/);
+  assert.match(foreground[3], /`--timeout 60`/);
+  assert.ok(foreground[3].includes("printed nothing is NOT the end of the run"));
+  assert.match(foreground[4], /declares no background primitive/);
+  assert.ok(foreground[4].includes("each cycle costs at most 100 tokens"));
+  assert.ok(foreground[5].includes("stays within 2000 tokens"));
+  // The digest line is the Order step's, never the section's.
+  assert.equal(
+    foreground.some((line) => line.includes("Print the digest verbatim")),
+    false,
+  );
 
   const background = supervisionSectionOf({
     backgroundPresent: true,
     cycleTokenBudget: 250,
     runSupervisionTokenBudget: 4_000,
   });
-  assert.match(background[3], /offers a background primitive, so run the wait in the background/);
-  assert.ok(background[4].includes("stays within 4000 tokens"));
+  assert.match(background[4], /offers a background primitive, so run the wait in the background/);
+  assert.ok(background[5].includes("stays within 4000 tokens"));
   // Neither host's figures appear in the other's section.
   for (const foreign of ["100 tokens", "2000", "declares no background primitive"]) {
     assert.equal(background.join("\n").includes(foreign), false, `must not hold ${foreign}`);

@@ -171,6 +171,19 @@ test("the ten steps are in order, and the digest step is the kit's own text", ()
   // The digest text is the shared module's by identity, never spelled twice.
   const digest = RUN_STEPS.find((step) => step.id === "digest");
   assert.equal(digest?.text, DIGEST_STEP_TEXT);
+  // The derive line names the contract; the contract is a name, never a path.
+  const derive = RUN_STEPS.find((step) => step.id === "derive")?.text ?? "";
+  assert.match(derive, /`contract=<name>`/);
+  assert.match(derive, /never a path/);
+  // Promotion comes before validation, with the CLI's own refusal named.
+  const validate = RUN_STEPS.find((step) => step.id === "validate")?.text ?? "";
+  assert.match(validate, /`contract promote`, then `contract validate`/);
+  assert.match(validate, /`contract status must be validated`/);
+  // The launch step spells the exact form and the arguments launch refuses.
+  const launch = RUN_STEPS.find((step) => step.id === "launch")?.text ?? "";
+  assert.match(launch, /`launch --mode run`/);
+  assert.match(launch, /from the repository root/);
+  assert.match(launch, /`launch` takes no contract and no `--repo`/);
   // A refusal stops at the step that refused and no later one.
   assert.deepEqual(
     [...stepsUpTo("validate").map((step) => step.id)],
@@ -278,7 +291,7 @@ test("the body is built from a host's sections and its own Modes paragraph", () 
     "2. Run the shim's CLI check",
     "- Stop at the FIRST refusal and print the line of the CLI that names the fix",
     `- In \`dry-run\`: derive and validate, print ${DRY_RUN_PRINTS}, and STOP. Never launch.`,
-    `- A failed launch check shown in the plan is ${FAILED_LAUNCH_CHECK_IS}, NOT a failure of `,
+    `- A failed launch check in the plan is ${FAILED_LAUNCH_CHECK_IS}, NOT a failure of`,
     "`started`: print the line and supervise the run that started.",
     "`refused`: print the refusal line and do not retry unless the consumer asks.",
   ]) {

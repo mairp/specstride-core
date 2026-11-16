@@ -15,8 +15,8 @@
       {
         "check": "static size",
         "subject": "specstride-run: body bytes",
-        "measuredBytes": 6907,
-        "measuredTokens": 2467,
+        "measuredBytes": 6968,
+        "measuredTokens": 2489,
         "limit": 7000,
         "unit": "bytes",
         "verdict": "pass",
@@ -25,7 +25,7 @@
       {
         "check": "static size",
         "subject": "specstride-run: body lines",
-        "measuredTokens": 90,
+        "measuredTokens": 85,
         "limit": 500,
         "unit": "count",
         "verdict": "pass",
@@ -34,8 +34,8 @@
       {
         "check": "static size",
         "subject": "specstride-reverse: body bytes",
-        "measuredBytes": 5191,
-        "measuredTokens": 1854,
+        "measuredBytes": 5271,
+        "measuredTokens": 1883,
         "limit": 5600,
         "unit": "bytes",
         "verdict": "pass",
@@ -53,8 +53,8 @@
       {
         "check": "static size",
         "subject": "doctor: body bytes",
-        "measuredBytes": 1772,
-        "measuredTokens": 633,
+        "measuredBytes": 1759,
+        "measuredTokens": 628,
         "limit": 2240,
         "unit": "bytes",
         "verdict": "pass",
@@ -99,24 +99,24 @@
       {
         "check": "golden output",
         "subject": "skills/specstride-run/SKILL.md",
-        "measuredBytes": 7209,
-        "measuredTokens": 2575,
+        "measuredBytes": 7270,
+        "measuredTokens": 2596,
         "verdict": "pass",
         "bytesPerToken": 2.8
       },
       {
         "check": "golden output",
         "subject": "skills/specstride-reverse/SKILL.md",
-        "measuredBytes": 5497,
-        "measuredTokens": 1963,
+        "measuredBytes": 5577,
+        "measuredTokens": 1992,
         "verdict": "pass",
         "bytesPerToken": 2.8
       },
       {
         "check": "golden output",
         "subject": "skills/specstride-doctor/SKILL.md",
-        "measuredBytes": 2021,
-        "measuredTokens": 722,
+        "measuredBytes": 2008,
+        "measuredTokens": 717,
         "verdict": "pass",
         "bytesPerToken": 2.8
       },
@@ -129,8 +129,8 @@
       {
         "check": "supervision cycle",
         "subject": "specstride-run: one cycle",
-        "measuredBytes": 357,
-        "measuredTokens": 128,
+        "measuredBytes": 274,
+        "measuredTokens": 98,
         "limit": 420,
         "unit": "bytes",
         "verdict": "pass",
@@ -139,8 +139,8 @@
       {
         "check": "supervision cycle",
         "subject": "specstride-run: whole run",
-        "measuredBytes": 586,
-        "measuredTokens": 209,
+        "measuredBytes": 568,
+        "measuredTokens": 203,
         "limit": 8400,
         "unit": "bytes",
         "verdict": "pass",
@@ -149,8 +149,8 @@
       {
         "check": "supervision cycle",
         "subject": "specstride-reverse: one cycle",
-        "measuredBytes": 357,
-        "measuredTokens": 128,
+        "measuredBytes": 274,
+        "measuredTokens": 98,
         "limit": 420,
         "unit": "bytes",
         "verdict": "pass",
@@ -159,8 +159,8 @@
       {
         "check": "supervision cycle",
         "subject": "specstride-reverse: whole run",
-        "measuredBytes": 586,
-        "measuredTokens": 209,
+        "measuredBytes": 568,
+        "measuredTokens": 203,
         "limit": 8400,
         "unit": "bytes",
         "verdict": "pass",
@@ -194,7 +194,7 @@
       {
         "check": "startup",
         "subject": "status p90 of 30 runs",
-        "measuredTokens": 28,
+        "measuredTokens": 6,
         "limit": 150,
         "unit": "ms",
         "verdict": "pass",
@@ -206,7 +206,7 @@
     "runner": "the status shim of the built package (hooks/session-start.sh) printing the precomputed status line; no host CLI, no model",
     "runs": 30,
     "percentile": 90,
-    "measuredP90Ms": 27.535,
+    "measuredP90Ms": 5.815,
     "limitMs": 150,
     "verdict": "pass"
   },
