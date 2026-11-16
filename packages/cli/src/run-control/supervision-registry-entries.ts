@@ -87,3 +87,22 @@ export function entriesOfTheSupervisionRegistry(path: string): readonly ProcessR
   }
   return entries;
 }
+
+/**
+ * The run token of the run the registry names LAST (the binding of the stop
+ * request): among the entries that name a run, the one with the
+ * newest start time, and its `runTokenHash`. A registry that holds only
+ * entries of an ended run answers that run — which is the point: the request
+ * is bound to the run the records show, and the engine of ANOTHER run then
+ * discards the request as not its own instead of stopping for it. An empty
+ * answer (no entry names a run, or none carries a hash) binds nothing, and
+ * the request behaves exactly as an unbound one always has.
+ */
+export function newestRunTokenHashOf(entries: readonly ProcessRegistry[]): string | undefined {
+  let best: ProcessRegistry | undefined;
+  for (const entry of entries) {
+    if (entry.runId === "" || entry.runTokenHash === "") continue;
+    if (best === undefined || entry.startTime > best.startTime) best = entry;
+  }
+  return best?.runTokenHash;
+}

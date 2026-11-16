@@ -505,6 +505,59 @@ test("the reader: an absent request is no stop, a standing one is read whole", (
   }
 });
 
+test("the reader honours a request bound to THIS run and ignores one bound to another", () => {
+  const fixture = fixtureOf("reader-bound");
+  const write = (runTokenHash: string | undefined): void =>
+    writeFileSync(
+      fixture.stopRequestPath,
+      JSON.stringify({
+        schema: "specstride.inbox/1",
+        type: "stop",
+        at: "2026-11-16T00:00:00.000Z",
+        now: true,
+        jobs: false,
+        ...(runTokenHash !== undefined ? { runTokenHash } : {}),
+      }),
+    );
+  try {
+    // Another run's hash: the poll sees NO stop, and leaves the file for the
+    // sequential boundary to remove.
+    write("a".repeat(64));
+    assert.deepEqual(theStopRequestAsItStands(fixture.stopRequestPath, "b".repeat(64)), {
+      asked: false,
+      now: false,
+      jobs: false,
+    });
+
+    // THIS run's hash: the stop stands, whole.
+    assert.deepEqual(theStopRequestAsItStands(fixture.stopRequestPath, "a".repeat(64)), {
+      asked: true,
+      now: true,
+      jobs: false,
+    });
+
+    // An UNBOUND request is a stop for whoever asks (F100-FR-065): a bound
+    // poll honours it exactly as an unbound poll always has.
+    write(undefined);
+    assert.deepEqual(theStopRequestAsItStands(fixture.stopRequestPath, "b".repeat(64)), {
+      asked: true,
+      now: true,
+      jobs: false,
+    });
+
+    // A poll with no hash of its own (an engine that declares none) reads
+    // every request as before: nothing is silently dropped.
+    write("a".repeat(64));
+    assert.deepEqual(theStopRequestAsItStands(fixture.stopRequestPath), {
+      asked: true,
+      now: true,
+      jobs: false,
+    });
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("a clean stop standing mid-group lets the workers and the close run whole, and says so", async () => {
   const fixture = fixtureOf("clean");
   // The request is written while the workers are in their passes (they wait

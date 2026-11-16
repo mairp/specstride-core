@@ -276,6 +276,11 @@ export async function runTheGroupOfTheAttempt(input: {
    * runs — the behaviour with the join off is the single-pass behaviour.
    */
   readonly stopRequestPath?: string | undefined;
+  /**
+   * The run token hash of THIS run, bound into the stop the group
+   * polls: a request that names another run is ignored by the poll.
+   */
+  readonly runTokenHash?: string | undefined;
   readonly say?: ((line: string) => void) | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
@@ -407,7 +412,12 @@ export async function runTheGroupOfTheAttempt(input: {
       },
       ...(input.stopRequestPath === undefined
         ? {}
-        : { stop: { requestPath: input.stopRequestPath } }),
+        : {
+            stop: {
+              requestPath: input.stopRequestPath,
+              ...(input.runTokenHash !== undefined ? { runTokenHash: input.runTokenHash } : {}),
+            },
+          }),
       say: input.say,
     });
     if (!run.ok) {

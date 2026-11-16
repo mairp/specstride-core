@@ -69,9 +69,23 @@ export const NO_STOP: TheStopAsItStands = Object.freeze({
  * bytes hold the schema-validated reader decides — unreadable and empty
  * alike are a clean stop with every default.
  */
-export function theStopRequestAsItStands(path: string): TheStopAsItStands {
+export function theStopRequestAsItStands(
+  path: string,
+  runTokenHash?: string | undefined,
+): TheStopAsItStands {
   if (!existsSync(path)) return NO_STOP;
   const read = readStopRequestFromFile(path);
+  // A request bound to ANOTHER run is not this run's stop: the poll
+  // ignores it and leaves the file for the sequential boundary, which
+  // removes it and goes on.
+  if (
+    !read.clean &&
+    runTokenHash !== undefined &&
+    read.request.runTokenHash !== undefined &&
+    read.request.runTokenHash !== runTokenHash
+  ) {
+    return NO_STOP;
+  }
   return read.clean
     ? Object.freeze({ asked: true, now: false, jobs: false })
     : Object.freeze({
@@ -85,12 +99,20 @@ export function theStopRequestAsItStands(path: string): TheStopAsItStands {
 export const THE_STOP_POLL_MS = 500 as const;
 
 /** The reader of the request; the tests hand a double over `theStopRequestAsItStands`. */
-export type StopPollRead = (path: string) => TheStopAsItStands;
+export type StopPollRead = (path: string, runTokenHash?: string | undefined) => TheStopAsItStands;
 
 /** What `runTheGroupWorkers` is given so the group runs under a stop poll. */
 export type TheStopOfTheGroup = {
   /** The path of the request (`inbox:stop`), as the workspace resolves it. */
   readonly requestPath: string;
+  /**
+   * The run token hash of THIS run. Given, a request the poll reads
+   * that names ANOTHER run is ignored: the poll stays a read (it never
+   * removes the file — the sequential boundary does that), it only refuses
+   * to act on a stop that was not written for this run. Absent, every
+   * request is this run's, exactly as before.
+   */
+  readonly runTokenHash?: string | undefined;
   /** The poll interval, in ms; the default is `THE_STOP_POLL_MS`. */
   readonly intervalMs?: number | undefined;
   /** The reader; the real one is `theStopRequestAsItStands`. */

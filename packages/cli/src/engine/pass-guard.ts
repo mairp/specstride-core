@@ -101,15 +101,32 @@ function sameStart(pid, recordedMs) {
   const observed = startOf(pid);
   return observed !== null && Math.abs(observed - recordedMs) <= TOLERANCE_MS;
 }
+function endOne(pid, signal) {
+  // The pass leads a process group of its own (the engine records the group
+  // beside the pid): signal the GROUP, so the detached grandchildren a pass
+  // leaves behind — the check's own process trees, which inherit the
+  // descriptors and would otherwise outlive the engine — end with it. The
+  // single pid is the fallback for a pass that ended between the check and
+  // the signal, or one whose group is already gone. A group id that is not
+  // a real group (0 and the negatives are kernel-wide) is never signalled.
+  if (pid <= 1) return;
+  try {
+    process.kill(-pid, signal);
+    return;
+  } catch {
+    // No such group: fall through to the single pid.
+  }
+  try {
+    process.kill(pid, signal);
+  } catch {
+    // It ended between the check and the signal.
+  }
+}
 function endThePass() {
   // Only a pass whose identity still matches the record: a reused pid is a
   // stranger, and a stranger is never signalled.
   if (!sameStart(passPid, passStartMs)) process.exit(0);
-  try {
-    process.kill(passPid, "SIGTERM");
-  } catch {
-    process.exit(0);
-  }
+  endOne(passPid, "SIGTERM");
   const deadline = Date.now() + (graceMs > 0 ? graceMs : 5000);
   // This interval is what holds the guard alive through the grace; it exits
   // with the process the moment the pass is gone.
@@ -118,11 +135,7 @@ function endThePass() {
     if (Date.now() < deadline) return;
     clearInterval(escalate);
     if (sameStart(passPid, passStartMs)) {
-      try {
-        process.kill(passPid, "SIGKILL");
-      } catch {
-        // It ended between the check and the signal.
-      }
+      endOne(passPid, "SIGKILL");
     }
     setTimeout(() => process.exit(0), 250);
   }, Math.min(pollMs > 0 ? pollMs : 250, 200));

@@ -424,6 +424,12 @@ export type ParallelWiringInput = {
    */
   readonly stopRequestPath?: string | undefined;
   /**
+   * The run token hash of THIS run, carried into the stop the
+   * group and the carried restart poll: a request that names another run is
+   * ignored by the poll, and the sequential boundary removes it.
+   */
+  readonly runTokenHash?: string | undefined;
+  /**
    * `--reset-counts` (F100-FR-045): zeroes the counters THIS start writes,
    * fresh group and carried resume alike. The composition root reads it from
    * the launch argv (`run --reset-counts`, the flag the verb table
@@ -585,7 +591,7 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
           // fresh group's do.
           ...(input.stopRequestPath === undefined
             ? {}
-            : { stopRequestPath: input.stopRequestPath }),
+            : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
           // THE RESTART of the two states a worker process has to start for
           // (F143-FR-025 states 1 and 2): the interrupted run's ledger, THIS
           // start's supervision and start door — the restarted passes run
@@ -708,7 +714,7 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
           ...(input.resetCounts === true ? { resetCounts: true } : {}),
           ...(input.stopRequestPath === undefined
             ? {}
-            : { stopRequestPath: input.stopRequestPath }),
+            : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
           emit: (event) => input.emit(event.type, event.data),
           say: input.say,
         });
