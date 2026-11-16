@@ -140,24 +140,34 @@ test("the supervision section is written from the host's figures alone", () => {
     runSupervisionTokenBudget: 2_000,
   });
   assert.match(foreground[2], /Supervise with `wait --until-change` and `--cursor /);
-  assert.match(foreground[3], /declares no background primitive/);
-  assert.ok(foreground[3].includes("each cycle costs at most 100 tokens"));
-  assert.ok(foreground[4].includes("stays within 2000 tokens"));
-  assert.match(foreground[5], /Print the digest verbatim/);
+  // Every call carries a time limit (sessions of 2026-11-15): without it
+  // `wait` holds 600 s and reports an ended run only when its limit passes.
+  assert.match(foreground[3], /Give every call `--timeout 60`/);
+  assert.match(foreground[3], /NOT the end of the run/);
+  assert.match(foreground[4], /declares no background primitive/);
+  assert.ok(foreground[4].includes("each cycle costs at most 100 tokens"));
+  assert.ok(foreground[5].includes("stays within 2000 tokens"));
 
   const background = supervisionSectionOf({
     backgroundPresent: true,
     cycleTokenBudget: 250,
     runSupervisionTokenBudget: 4_000,
   });
-  assert.match(background[3], /offers a background primitive, so run the wait in the background/);
-  assert.ok(background[4].includes("stays within 4000 tokens"));
+  assert.match(background[4], /offers a background primitive, so run the wait in the background/);
+  assert.ok(background[5].includes("stays within 4000 tokens"));
+  // The section no longer repeats the digest step (step 10 of the run carries
+  // it); the time limit is in both variants.
+  for (const foreign of [
+    "Print the digest verbatim",
+    "250",
+    "4000",
+    "offers a background primitive",
+  ]) {
+    assert.equal(foreground.join("\n").includes(foreign), false, `must not hold ${foreign}`);
+  }
   // Neither host's figures appear in the other's section.
   for (const foreign of ["100 tokens", "2000", "declares no background primitive"]) {
     assert.equal(background.join("\n").includes(foreign), false, `must not hold ${foreign}`);
-  }
-  for (const foreign of ["250", "4000", "offers a background primitive"]) {
-    assert.equal(foreground.join("\n").includes(foreign), false, `must not hold ${foreign}`);
   }
 
   // The whole-run budget is promised for the annex's default owner only, and
