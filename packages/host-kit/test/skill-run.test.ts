@@ -278,7 +278,7 @@ test("the body is built from a host's sections and its own Modes paragraph", () 
     "2. Run the shim's CLI check",
     "- Stop at the FIRST refusal and print the line of the CLI that names the fix",
     `- In \`dry-run\`: derive and validate, print ${DRY_RUN_PRINTS}, and STOP. Never launch.`,
-    `- A failed launch check shown in the plan is ${FAILED_LAUNCH_CHECK_IS}, NOT a failure of `,
+    `- A failed launch check in the plan is ${FAILED_LAUNCH_CHECK_IS}, NOT a failure of `,
     "`started`: print the line and supervise the run that started.",
     "`refused`: print the refusal line and do not retry unless the consumer asks.",
   ]) {
