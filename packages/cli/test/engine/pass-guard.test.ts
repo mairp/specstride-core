@@ -44,6 +44,39 @@ function stubEngine(): Promise<number> {
   });
 }
 
+/**
+ * A hung pass that LEADS its own process group, with a grandchild inside it —
+ * the shape a real pass has (the engine spawns the check detached; the check's
+ * own children land in the same group and inherit its descriptors).
+ */
+function hungPassLeadingAGroup(): Promise<{ passPid: number; grandchildPid: number }> {
+  const script = [
+    "const { spawn } = require('node:child_process');",
+    "const g = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });",
+    "process.stdout.write(String(g.pid));",
+    "setInterval(() => {}, 1000);",
+  ].join("\n");
+  return new Promise((done) => {
+    const pass = spawn(process.execPath, ["-e", script], {
+      stdio: ["ignore", "pipe", "ignore"],
+      detached: true,
+    });
+    let out = "";
+    pass.stdout?.on("data", (chunk: string) => {
+      out += chunk;
+    });
+    pass.on("spawn", () => {
+      const wait = setInterval(() => {
+        const match = /(\d+)/.exec(out);
+        if (match !== null) {
+          clearInterval(wait);
+          done({ passPid: pass.pid!, grandchildPid: Number(match[1]) });
+        }
+      }, 25);
+    });
+  });
+}
+
 /** Whether a pid answers at all — a corpse the reaper has not collected does not count. */
 function alive(pid: number): boolean {
   try {
@@ -111,6 +144,52 @@ test("the guard ends a hung pass soon after its engine dies, and only that pass"
       process.kill(passPid, "SIGKILL");
     } catch {
       // It ended by the guard.
+    }
+    try {
+      process.kill(enginePid, "SIGKILL");
+    } catch {
+      // It ended by the test.
+    }
+  }
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test("the guard ends the pass's whole group: the grandchild the pass left behind ends with it", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "guard-group-"));
+  const script = guardScriptOf(dir);
+  const { passPid, grandchildPid } = await hungPassLeadingAGroup();
+  const enginePid = await stubEngine();
+  const guard = startPassGuard({
+    scriptPath: script,
+    enginePid,
+    engineStartedAtMs: recordedStart(enginePid),
+    passPid,
+    passStartedAtMs: recordedStart(passPid),
+    pollMs: 100,
+    graceMs: 500,
+  });
+  assert.notEqual(guard?.pid, undefined, "the guard is running");
+  try {
+    await new Promise((done) => setTimeout(done, 300));
+    assert.ok(alive(passPid), "the pass lives while the engine lives");
+    assert.ok(alive(grandchildPid), "the grandchild lives inside the pass's group");
+    // SIGKILL of the engine only; the guard then ends the pass's GROUP, so
+    // the grandchild — which inherits the group and the descriptors — has
+    // nothing to outlive its pass into.
+    process.kill(enginePid, "SIGKILL");
+    assert.ok(await gone(passPid, 5_000), "the pass ended by itself");
+    assert.ok(await gone(grandchildPid, 5_000), "the grandchild ended with the pass's group");
+    assert.ok(await gone(guard!.pid!, 3_000), "the guard retired with the pass");
+  } finally {
+    try {
+      process.kill(-passPid, "SIGKILL");
+    } catch {
+      // The group ended by the guard.
+    }
+    try {
+      process.kill(grandchildPid, "SIGKILL");
+    } catch {
+      // It ended with its group.
     }
     try {
       process.kill(enginePid, "SIGKILL");

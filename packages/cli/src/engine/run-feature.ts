@@ -246,6 +246,7 @@ import {
 import type { SourceCheckQuestion } from "../../../core/src/pass-loop/source-check.ts";
 import { SnapshotWriteError, writeRunSnapshot } from "../run-control/snapshot-writer.ts";
 import { currentSourceHashes } from "../run-control/source-compare.ts";
+import { readStopRequestFromFile } from "../run-control/records.ts";
 import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
@@ -2215,7 +2216,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             say,
             // THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request the
             // `stop` command writes into the inbox, resolved through the
-            // layout table from the same control root the run writes.
+            // layout table from the same control root the run writes; bound
+            // to THIS run's token so a stale request for a run
+            // that ended cannot stop the group of the run that follows.
             stopRequestPath: resolveLogicalName(
               "inbox:stop",
               {},
@@ -2227,6 +2230,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 workerRoot: "",
               }),
             ),
+            runTokenHash,
             onClosed: (closed, counts) => totalsAfterTheGroup(parallelTotals, closed, counts),
             onHandoff: () => {},
           })
@@ -2249,6 +2253,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     );
     const takeTheStopRequest = (): boolean => {
       if (!existsSync(sequentialStopPath)) return false;
+      // THE REQUEST IS BOUND TO THE RUN IT NAMES: a request the
+      // `stop` command wrote for ANOTHER run — one that ended before it
+      // could read its inbox — is removed and ignored here, so a stale
+      // request in the inbox cannot stop the run that follows. An unbound
+      // request (no `runTokenHash`, the empty request included, F100-FR-065)
+      // keeps its meaning: a stop for whoever asks.
+      const read = readStopRequestFromFile(sequentialStopPath);
+      if (
+        !read.clean &&
+        read.request.runTokenHash !== undefined &&
+        read.request.runTokenHash !== runTokenHash
+      ) {
+        rmSync(sequentialStopPath, { force: true });
+        say(
+          `[${slug}] stop request for another run discarded (run token mismatch): the run goes on`,
+        );
+        return false;
+      }
       rmSync(sequentialStopPath, { force: true });
       return true;
     };

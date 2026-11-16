@@ -166,24 +166,45 @@ export async function runStageChild(input: {
 
   const result = await new Promise<ChildRun>((resolve) => {
     let errorCause: string | undefined;
-    child.once("error", (error: NodeJS.ErrnoException) => {
-      errorCause = error.code === "ENOENT" ? `${input.argv[0]}: command not found` : error.message;
-    });
-    child.once("close", (code: number | null, signal: string | null) => {
+    let settled = false;
+    const settle = (one: ChildRun): void => {
+      if (settled) return;
+      settled = true;
+      resolve(one);
+    };
+    const resultOf = (code: number | null, signal: string | null): ChildRun => {
       if (errorCause !== undefined && code === null) {
-        resolve({ code: EXEC_ERROR_EXIT_CODE, signal: null, timedOut: false, error: errorCause });
-        return;
+        return { code: EXEC_ERROR_EXIT_CODE, signal: null, timedOut: false, error: errorCause };
       }
       if (timedOut) {
-        resolve({
+        return {
           code: TIMEOUT_EXIT_CODE,
           signal,
           timedOut: true,
           error: `timeout after ${limitMs / 1_000}s`,
-        });
-        return;
+        };
       }
-      resolve({ code: code ?? 1, signal, timedOut: false });
+      return { code: code ?? 1, signal, timedOut: false };
+    };
+    child.once("error", (error: NodeJS.ErrnoException) => {
+      errorCause = error.code === "ENOENT" ? `${input.argv[0]}: command not found` : error.message;
+    });
+    child.once("close", (code: number | null, signal: string | null) => {
+      settle(resultOf(code, signal));
+    });
+    // The stage child is detached and sits in a session of its own
+    // (F123-FR-011), and the processes it spawns are detached with it: a
+    // grandchild that outlives the stage child inherits the pipes and holds
+    // them open, so `close` — which waits for the stdio streams — may never
+    // fire even though the stage child is gone. The stage loop then never
+    // returns, and the runtime root stays alive holding the workspace lock.
+    // Resolve from `exit` and end the streams so `close` is not what the
+    // loop waits on; `close` keeps covering the spawn-error path, where no
+    // `exit` fires.
+    child.once("exit", (code: number | null, signal: string | null) => {
+      child.stdout?.destroy();
+      child.stderr?.destroy();
+      settle(resultOf(code, signal));
     });
   });
 

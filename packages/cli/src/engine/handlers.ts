@@ -9,6 +9,7 @@
  * control plane the router resolved.
  */
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -28,8 +29,12 @@ import { contractId, resolveFeatures } from "../../../pipeline/src/contract/inve
 import { launchCommand } from "../commands/launch.ts";
 import { runStop } from "../commands/stop.ts";
 import { controlRootOfWorkspace } from "./workspace-control-root.ts";
-import { entriesOfTheSupervisionRegistry } from "../run-control/supervision-registry-entries.ts";
+import {
+  entriesOfTheSupervisionRegistry,
+  newestRunTokenHashOf,
+} from "../run-control/supervision-registry-entries.ts";
 import { ownerRecordOfTheLock } from "../run-control/lock-owner-entry.ts";
+import { theLiveRunOfTheEngineRecords } from "../run-control/live-run-evidence.ts";
 import { runWait, digestLineOfThePipeline, type WaitOptions } from "../status/wait.ts";
 // The read model of `wait` is a PARAMETER and not a package import (R-129-04):
 // the CLI holds no dependency on `@specstride/view`, so the sources are
@@ -123,6 +128,22 @@ export function stopHandler(call: RoutedCall): number {
   const now = call.extras.includes("--now");
   const jobs = call.extras.includes("--jobs");
   const controlRoot = controlRootOfWorkspace(call.workdir);
+  const processes = entriesOfTheSupervisionRegistry(join(controlRoot, "procs.json"));
+  const lockOwnerRecord = ownerRecordOfTheLock(join(controlRoot, "lock", "owner.json"));
+  const liveRun = theLiveRunOfTheEngineRecords(controlRoot);
+  // THE REQUEST IS BOUND TO THE RUN IT NAMES: the hash comes from
+  // the engine's own records — the newest registry entry's run token, or the
+  // live run's id hashed exactly the way the engine hashes its own — so a
+  // request written for a run that has ended (the engine died before it
+  // could read its inbox) is discarded by the run that follows instead of
+  // stopping it. No record names a run: the request carries no hash, and
+  // every consumer treats it exactly as an unbound request has always been
+  // treated (F102-FR-001).
+  const runTokenHash =
+    newestRunTokenHashOf(processes) ??
+    (liveRun.live && liveRun.runId !== ""
+      ? createHash("sha256").update(liveRun.runId).digest("hex")
+      : undefined);
   const result = runStop({
     controlRoot,
     workspaceRealPath: call.workdir,
@@ -130,12 +151,9 @@ export function stopHandler(call: RoutedCall): number {
     now,
     jobs,
     profile: process.env.SPECSTRIDE_PROFILE,
-    ...(now
-      ? {
-          processes: entriesOfTheSupervisionRegistry(join(controlRoot, "procs.json")),
-          lockOwnerRecord: ownerRecordOfTheLock(join(controlRoot, "lock", "owner.json")),
-        }
-      : {}),
+    processes,
+    lockOwnerRecord,
+    ...(runTokenHash !== undefined ? { runTokenHash } : {}),
   });
   for (const line of result.lines) {
     (line.stream === "stdout" ? call.io.out : call.io.err)(`${line.text}\n`);

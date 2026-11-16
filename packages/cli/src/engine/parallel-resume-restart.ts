@@ -281,6 +281,11 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
    * item 4 of par-4). Left out, no poll runs.
    */
   readonly stopRequestPath?: string | undefined;
+  /**
+   * The run token hash of THIS run, bound into the stop the
+   * restart's wait polls: a request that names another run is ignored.
+   */
+  readonly runTokenHash?: string | undefined;
   readonly drive: TheRestartOfTheResumeDrive;
 }): Promise<TheRestartOfAnOpenGroup> {
   const { open, drive } = input;
@@ -598,7 +603,12 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
       // does not run and the restart is exactly as it was.
       ...(input.stopRequestPath === undefined
         ? {}
-        : { stop: { requestPath: input.stopRequestPath } }),
+        : {
+            stop: {
+              requestPath: input.stopRequestPath,
+              ...(input.runTokenHash !== undefined ? { runTokenHash: input.runTokenHash } : {}),
+            },
+          }),
     });
 
     if (!run.ok) {

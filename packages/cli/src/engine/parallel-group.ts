@@ -563,7 +563,7 @@ export async function runTheGroupWorkers(input: {
         const at = Date.now();
         if (at - lastStopPollAt >= stopPollMs) {
           lastStopPollAt = at;
-          const found = readTheStop(input.stop.requestPath);
+          const found = readTheStop(input.stop.requestPath, input.stop.runTokenHash);
           if (found.asked) {
             stopSeen = { now: found.now };
             if (found.now) {
