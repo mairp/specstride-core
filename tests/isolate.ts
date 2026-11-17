@@ -33,8 +33,34 @@ const wanted =
 const reaper = ["/usr/bin/tini", "/usr/sbin/tini", "/sbin/tini"].find((path) => existsSync(path));
 const init = reaper === undefined ? [] : [reaper, "-s", "--"];
 
+// Each isolated run also gets a PRIVATE /tmp: a fresh tmpfs mounted over the host's
+// inside the same mount namespace `--mount-proc` already built. The suites build
+// mkdtemp fixtures by the hundreds and cannot reap them on every failure path; on an
+// unattended campaign the leftovers accumulated into the millions and the host's tmpfs
+// ran out of inodes — ENOSPC on every small write (2026-11-17: 4.19M/4.19M inodes, the
+// engine's agent and critic calls died of it mid-campaign). A namespace-private tmpfs
+// ends the leak at the source: whatever a run leaves behind is unmounted and freed
+// with the namespace at its end, and nothing outside the run can be touched. If the
+// mount is refused, the run falls back to the shared /tmp exactly as before.
+const mountPrivateTmp =
+  'mount -t tmpfs -o size=4g,mode=1777 tmpfs /tmp 2>/dev/null || true; exec "$0" "$@"';
+
 const [command, args] = wanted
-  ? ["unshare", ["--fork", "--pid", "--mount-proc", "--kill-child", "--", ...init, ...argv]]
+  ? [
+      "unshare",
+      [
+        "--fork",
+        "--pid",
+        "--mount-proc",
+        "--kill-child",
+        "--",
+        ...init,
+        "/bin/sh",
+        "-c",
+        mountPrivateTmp,
+        ...argv,
+      ],
+    ]
   : [argv[0], argv.slice(1)];
 
 // The tests are hermetic: the run-selection variables of the host (the engine
