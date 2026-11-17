@@ -7,3 +7,6 @@ packages/cli/.build/
 *.log
 .env
 .env.*
+# Local prompt sets (campaign and stage prompts); never committed.
+/prompts/
+/docs/prompts/
