@@ -64,4 +64,3 @@ function assertFirst(result: ReturnType<typeof spawnSync>, marker: string): void
     `the run could not use its own /tmp for the marker ${marker}: ${result.stderr}`,
   );
 }
-
