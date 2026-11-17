@@ -248,23 +248,27 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
   // In-pass checks (T129): count, failed, median, total, minimum, maximum,
   // and each duration with its own `concurrent` flag (F148).
   const checkEnds = events.filter((event) => event.type === "check.ended");
-  const checkDurations = checkEnds
+  const checkDurationsMs = checkEnds
     .map((event) => num(event.data.durationMs))
     .filter((value): value is number => value !== null);
-  const checkSeconds = checkDurations.map(seconds);
+  const checkSeconds = checkDurationsMs.map(seconds);
   const failedChecks = checkEnds.filter((event) => event.data.result === "failed").length;
   const concurrent: Record<string, number> = {};
   for (const event of checkEnds) {
     const durationMs = num(event.data.durationMs);
     if (durationMs === null) continue;
-    concurrent[String(seconds(durationMs))] = event.data.concurrent === true ? 1 : 0;
+    // Keep unknown 'concurrent' as unknown: only record keys where the flag is present.
+    if (Object.hasOwn(event.data, "concurrent")) {
+      concurrent[String(seconds(durationMs))] = event.data.concurrent === true ? 1 : 0;
+    }
   }
   rows.push({ row: "in-pass checks", value: checkEnds.length });
   rows.push({ row: "checks failed", value: failedChecks });
-  rows.push({ row: "check duration median", value: median(checkSeconds), unit: "s" });
+  const medMs = median(checkDurationsMs);
+  rows.push({ row: "check duration median", value: medMs === null ? null : seconds(medMs), unit: "s" });
   rows.push({
     row: "check duration total",
-    value: checkSeconds.reduce((sum, value) => sum + value, 0),
+    value: seconds(checkDurationsMs.reduce((sum, value) => sum + value, 0)),
     unit: "s",
   });
   rows.push({ row: "check duration minimum", value: checkSeconds.length === 0 ? null : Math.min(...checkSeconds), unit: "s" });
@@ -274,8 +278,47 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
   // End causes and commit-gate blocks (T130): the causes of row 272 as the
   // closers carry them; the blocks by rule; a block told apart from a critic
   // rejection by the `commit_gate.blocked` of the same phase and attempt.
-  rows.push({ row: "attempts by endCause", value: countsBy(events, "attempt.ended", "endCause") });
-  rows.push({ row: "commit-gate blocks by rule", value: countsBy(events, "commit_gate.blocked", "rules") });
+  // Only closed-set values may appear in the output (F153-FR-003): filter unknowns.
+  const END_CAUSES = new Set([
+    "approved",
+    "rejected",
+    "malformed",
+    "verification-failed",
+    "no-evidence",
+    "budget",
+    "blocked",
+    "stopped",
+    "error",
+    "crash",
+  ]);
+  const countsByFiltered = (
+    ev: readonly ReportEvent[],
+    type: string,
+    field: string,
+    accept: (key: string) => boolean,
+  ): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const e of ev) {
+      if (e.type !== type) continue;
+      const key = str(e.data[field]);
+      if (key === "null") continue;
+      if (!accept(key)) {
+        out.other = (out.other ?? 0) + 1;
+        continue;
+      }
+      out[key] = (out[key] ?? 0) + 1;
+    }
+    return out;
+  };
+  rows.push({
+    row: "attempts by endCause",
+    value: countsByFiltered(events, "attempt.ended", "endCause", (k) => END_CAUSES.has(k)),
+  });
+  rows.push({
+    row: "commit-gate blocks by rule",
+    // Commit-gate rules are ids owned by the product and start with `cg-` (e.g. `cg-sk-prefix`).
+    value: countsByFiltered(events, "commit_gate.blocked", "rules", (k) => /^cg-[a-z0-9._-]{1,64}$/.test(k)),
+  });
   const blockedKeys = new Set(
     events
       .filter((event) => event.type === "commit_gate.blocked")
@@ -300,17 +343,31 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
     value: hardCapSeconds.reduce((sum, value) => sum + value, 0),
     unit: "s",
   });
-  const diagnosisDurations = pairTimes(
+  // Diagnostician: support both legacy recovery.diagnosis_* and diagnostician_* spellings.
+  const diagDurationsA = pairTimes(
     events,
-    "recovery.diagnosis_started",
-    ["recovery.diagnosis_done", "recovery.diagnosis_failed"],
+    "diagnostician_start",
+    ["diagnostician_done", "diagnostician_error"],
     null,
   );
-  const diagnosisCount = countOf(events, "recovery.diagnosis_started");
+  const diagDurationsB = pairTimes(
+    events,
+    "recovery.diagnosis_started",
+    ["recovery.diagnosis_done", "recovery.diagnosis_error"],
+    null,
+  );
+  const diagnosisCount = countOf(events, "diagnostician_start") + countOf(events, "recovery.diagnosis_started");
+  const mergedDiagMedianMs = (() => {
+    const parts: number[] = [];
+    if (diagDurationsA.medianValue !== null) parts.push(diagDurationsA.medianValue);
+    if (diagDurationsB.medianValue !== null) parts.push(diagDurationsB.medianValue);
+    if (parts.length === 0) return null;
+    return median(parts);
+  })();
   rows.push({ row: "diagnostician calls", value: diagnosisCount });
   rows.push({
     row: "diagnostician duration median",
-    value: diagnosisCount === 0 ? NOT_IN_EVENTS : seconds(diagnosisDurations.medianValue ?? 0),
+    value: diagnosisCount === 0 ? NOT_IN_EVENTS : (mergedDiagMedianMs === null ? null : seconds(mergedDiagMedianMs)),
     unit: "s",
   });
 
@@ -325,18 +382,18 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
   rows.push({ row: "verdict MET and UNMET counts", value: NOT_IN_EVENTS });
   rows.push({ row: "pass-limit banners of a log", value: NOT_IN_EVENTS });
 
-  // Tasks per phase, where `phase.started` carries the count (T143).
-  const tasksPerPhase: Record<string, number> = {};
+  const phaseTotals: Record<string, number> = {};
   for (const event of events) {
     if (event.type !== "phase.started") continue;
+    const shape = String((event.data as Record<string, unknown>)["shape"] ?? "");
+    if (shape !== "flat") continue;
+    const phase = str(event.data.phase);
     const total = num(event.data.total);
-    if (total === null) continue;
-    tasksPerPhase[str(event.data.phase)] = total;
+    if (phase === "null" || total === null) continue;
+    phaseTotals[phase] = total;
   }
-  rows.push({
-    row: "tasks per phase",
-    value: Object.keys(tasksPerPhase).length === 0 ? NOT_IN_EVENTS : tasksPerPhase,
-  });
+  if (Object.keys(phaseTotals).length === 0) rows.push({ row: "tasks per phase", value: NOT_IN_EVENTS });
+  else rows.push({ row: "tasks per phase", value: phaseTotals });
 
   // Dropped events (T134): the gap the stream itself reports (F111-FR-019).
   rows.push({ row: "events dropped", value: sumOf(events, "event.dropped", "count") });

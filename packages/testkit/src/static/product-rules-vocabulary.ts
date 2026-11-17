@@ -298,6 +298,17 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The frozen replay fixture of feature 153's report verb (the approved
+      // tasks T158 and T159 name them as `.jsonl` and `.mjs`): a frozen copy
+      // of a recorded run's events and the ledger-method script kept beside
+      // it — data and a check script, not source of the product, and no
+      // published package ships them.
+      if (
+        path.startsWith("packages/cli/test/fixtures/loop-speed/recorded-152/") &&
+        (path.endsWith(".jsonl") || path.endsWith(".mjs"))
+      ) {
+        continue;
+      }
       const name = path.slice(path.lastIndexOf("/") + 1);
       if (name === ".gitkeep" || name.endsWith(".md")) continue;
       const dot = name.lastIndexOf(".");

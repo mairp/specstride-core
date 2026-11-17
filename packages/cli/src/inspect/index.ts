@@ -17,6 +17,8 @@ export const INSPECT_VERBS = [
   "phases",
   "watch",
   "status",
+  // Feature 153, phase 11 (T155) — the read-only report of US2.
+  "report",
 ] as const;
 
 /**
@@ -28,12 +30,13 @@ export const INSPECT_VERBS = [
  * already touches, and the merge happens once per call.
  */
 export async function inspectHandlers(): Promise<import("../router/route.ts").RouteHandlers> {
-  const [tailEvents, verdicts, phases, watch, status] = await Promise.all([
+  const [tailEvents, verdicts, phases, watch, status, report] = await Promise.all([
     import("./tail-events.ts"),
     import("./verdicts.ts"),
     import("./phases.ts"),
     import("./watch.ts"),
     import("./status-state.ts"),
+    import("./report.ts"),
   ]);
   return {
     tail: tailEvents.tailHandler,
@@ -45,5 +48,7 @@ export async function inspectHandlers(): Promise<import("../router/route.ts").Ro
     // Phase 5 (T039) — `status` prints the compatibility output; in default
     // output its owner is feature 129 and the handler refuses truthfully.
     status: (call) => status.statusHandler(call),
+    // Feature 153, phase 11 (T155) — the read-only rows of the report.
+    report: (call) => report.reportHandler(call),
   };
 }

@@ -1,0 +1,30 @@
+{"type":"strategy.selected","at":"2026-11-13T19:42:40.357Z","data":{"strategy":"micro","level":"L1","manifestHashes":["359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39","359350c7589f970bbdd8e9097463ac959a9acfec46bc05f47016d4fb49ffea39"]}}
+{"type":"integrity.noted","at":"2026-11-13T19:42:40.627Z","data":{"type":"integrity.noted","kind":"approval-invalid","phase":7,"failed":"missing","detail":"phase 7: missing"}}
+{"type":"phase.started","at":"2026-11-13T19:42:40.628Z","data":{"phase":7,"title":"Polish & Cross-Cutting Concerns","total":7,"shape":""}}
+{"type":"attempt.started","at":"2026-11-13T19:42:44.155Z","data":{"phase":7,"attempt":21,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-13T19:42:44.158Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-13T19:55:34.749Z","data":{"unitId":"u1","taskIds":["T153"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-13T19:55:34.750Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-13T20:08:15.996Z","data":{"checkId":"check","result":"pass","unitId":"u1","durationMs":753733,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-13T20:08:16.041Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.default","choice":"stay"}}
+{"type":"microloop.unit","at":"2026-11-13T20:08:16.048Z","data":{"unitId":"u1","check":"check","result":"kept"}}
+{"type":"evidence_written","at":"2026-11-13T20:08:16.062Z","data":{"file":"GATE7-EVIDENCE.md","iters":1}}
+{"type":"attempt.ended","at":"2026-11-13T20:22:31.629Z","data":{"phase":7,"attempt":21}}
+{"type":"diagnostician_trigger","at":"2026-11-13T20:22:31.921Z","data":{"phase":7,"attempt":21}}
+{"type":"diagnostician_start","at":"2026-11-13T20:22:31.925Z","data":{"phase":7,"attempt":21,"provider":"compass-gpt5-high"}}
+{"type":"diagnostician_done","at":"2026-11-13T20:24:05.465Z","data":{"phase":7,"attempt":21,"bytes":9772,"case":"grounding"}}
+{"type":"attempt.started","at":"2026-11-13T20:24:10.390Z","data":{"phase":7,"attempt":22,"strategy":"micro"}}
+{"type":"accelerator_start","at":"2026-11-13T20:24:13.258Z","data":{"phase":7,"attempt":22,"backend":"dsh","criteria":"T146,T147,T148,T149,T150,T151,T152,T154,T155,T156,T157,T158"}}
+{"type":"iter_start","at":"2026-11-13T20:24:13.260Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-13T21:02:29.427Z","data":{"unitId":"u1","taskIds":["T146","T147","T148","T149","T150","T151","T152","T154","T155","T156","T157","T158"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-13T21:02:29.432Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-13T21:15:00.650Z","data":{"checkId":"check","result":"pass","unitId":"u1","durationMs":746103,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-13T21:15:00.658Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.default","choice":"stay"}}
+{"type":"microloop.unit","at":"2026-11-13T21:15:00.660Z","data":{"unitId":"u1","check":"check","result":"kept"}}
+{"type":"evidence_written","at":"2026-11-13T21:15:00.668Z","data":{"file":"GATE7-EVIDENCE.md","iters":1}}
+{"type":"acceleration_note","at":"2026-11-13T21:15:01.015Z","data":{"phase":7,"attempt":22,"note":"/root/.specstride/workspaces/94f747a310013d36/features/152-commit-backpressure/recovery/phase7/acceleration.md"}}
+{"type":"phase.ended","at":"2026-11-13T21:28:01.081Z","data":{"phase":7,"attempt":22,"title":"Polish & Cross-Cutting Concerns"}}
+{"type":"tasks.ticked","at":"2026-11-13T21:28:01.112Z","data":{"phase":7,"count":13}}
+{"type":"commit.made","at":"2026-11-13T21:28:03.375Z","data":{"phase":7}}
+{"type":"release.verification","at":"2026-11-13T21:28:03.398Z","data":{"summary":"release verification not required"}}
+{"type":"run.ended","at":"2026-11-13T21:28:03.398Z","data":{"outcome":"all_approved","phases":7}}

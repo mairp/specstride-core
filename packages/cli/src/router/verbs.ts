@@ -108,6 +108,16 @@ export const VERBS: readonly VerbRow[] = Object.freeze([
     exitCodes: [0, 1],
   },
   {
+    // Feature 153, phase 11 (T156) — the read-only rows of the report
+    // (F153-FR-039 to -041; CQ-153-16 A: 0 on a readable state, 1 without).
+    verb: "report",
+    what: "Inspection command: the rows of the loop report (the ledger method M2, made a verb).",
+    owner: "153",
+    readOnly: true,
+    inspect: true,
+    exitCodes: [0, 1],
+  },
+  {
     verb: "wait",
     what: "With `--until-change`: prints nothing while nothing changes; prints and takes the cursor.",
     owner: "129",

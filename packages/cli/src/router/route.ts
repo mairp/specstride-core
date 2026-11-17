@@ -513,6 +513,8 @@ const INSPECT_DEFAULT_VERBS: readonly string[] = Object.freeze([
   // Phase 5 — `status` is mounted for COMPATIBILITY output only (F119-FR-028);
   // in default output the handler itself refuses truthfully: its owner is 129.
   "status",
+  // Feature 153, phase 11 (T155) — the read-only rows of the report.
+  "report",
 ]);
 
 let inspectHandlersCache: Promise<RouteHandlers> | undefined;
