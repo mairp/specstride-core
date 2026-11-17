@@ -6,11 +6,12 @@
  * configuration is silent.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import { ConfigValueError, loadConfigFiles } from "@specstride/config";
 import { loopConfigurationOf } from "../../src/engine/loop-config.ts";
 
 function fixture(projectFile?: string): { readonly home: string; readonly dir: string } {
@@ -20,6 +21,17 @@ function fixture(projectFile?: string): { readonly home: string; readonly dir: s
   mkdirSync(home);
   mkdirSync(dir);
   if (projectFile !== undefined) writeFileSync(join(dir, "specstride.yaml"), projectFile);
+  return { home, dir: root && dir };
+}
+
+/** The fixture whose configuration sits in the USER file, as a real install has it. */
+function fixtureWithUserFile(userFile: string): { readonly home: string; readonly dir: string } {
+  const root = mkdtempSync(join(tmpdir(), "specstride-loopcfg-"));
+  const home = join(root, "home");
+  const dir = join(root, "work");
+  mkdirSync(join(home, ".config", "specstride"), { recursive: true });
+  mkdirSync(dir);
+  writeFileSync(join(home, ".config", "specstride", "config.yaml"), userFile);
   return { home, dir: root && dir };
 }
 
@@ -80,6 +92,67 @@ test("the closing-check switch reads loop.micro.closing_check", () => {
     const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
     assert.equal(loop.closingCheck, false);
     assert.equal(loop.strategy, "micro");
+  } finally {
+    rmSync(join(dir, ".."), { recursive: true, force: true });
+  }
+});
+
+test("the units switch reads the boolean true of the user file as on", () => {
+  // The form the campaign of feature 153 runs on: the user file carries the
+  // boolean, and the merge delivers it engaged to the rank the layer reads.
+  const { home, dir } = fixtureWithUserFile("schema: 1\nloop:\n  parallel:\n    units: true\n");
+  try {
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(loop.parallel.units.userConfiguration, "on");
+  } finally {
+    rmSync(join(dir, ".."), { recursive: true, force: true });
+  }
+});
+
+test("the string switch word of the units switch is refused, and the refusal is recorded", () => {
+  // The campaign incident of feature 153: `units: "on"` where a boolean was
+  // declared engaged nothing, silently. The switch word is no value of a
+  // boolean key: the loader refuses it as a type error it RECORDS, and the
+  // rank is left out rather than filled with a foreign value.
+  const { home, dir } = fixtureWithUserFile('schema: 1\nloop:\n  parallel:\n    units: "on"\n');
+  try {
+    const loaded = loadConfigFiles({
+      home,
+      workspaceRealPath: realpathSync(dir),
+      startDir: dir,
+    });
+    const refusal = (loaded.user?.errors ?? []).find(
+      (error) => error instanceof ConfigValueError && error.key === "loop.parallel.units",
+    );
+    assert.ok(refusal !== undefined, "the type refusal of the string switch word is recorded");
+    assert.match(refusal.range, /on, off/);
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(loop.parallel.units.userConfiguration, undefined);
+  } finally {
+    rmSync(join(dir, ".."), { recursive: true, force: true });
+  }
+});
+
+test("the project file may turn the units switch off, which is the stricter value", () => {
+  // F110-FR-018: the switch is of the class narrowing, and off is the
+  // stricter value — the project file may narrow a run to sequential.
+  const { home, dir } = fixture("schema: 1\nloop:\n  parallel:\n    units: false\n");
+  try {
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(loop.parallel.units.projectConfiguration, "off");
+  } finally {
+    rmSync(join(dir, ".."), { recursive: true, force: true });
+  }
+});
+
+test("the project file may not turn the units switch on: it narrows, it never widens", () => {
+  // F110-FR-017/-FR-018: on is looser than the ranks below, so a project
+  // file asking for parallel units is ignored — engagement is the user's
+  // decision (or a flag), never the repository's.
+  const { home, dir } = fixture("schema: 1\nloop:\n  parallel:\n    units: true\n");
+  try {
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(loop.parallel.units.projectConfiguration, undefined);
   } finally {
     rmSync(join(dir, ".."), { recursive: true, force: true });
   }

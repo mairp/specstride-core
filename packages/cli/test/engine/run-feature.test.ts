@@ -211,6 +211,39 @@ test("a stop request ends a sequential run exit 6 before any pass, and is consum
   }
 });
 
+test("a stop request bound to another run is discarded: the run goes on", async () => {
+  // The campaign incident of feature 153: a stop.request written for a run
+  // that ended before it could read its inbox stayed behind and stopped the
+  // run that followed at once. A request without a run of its own is
+  // honoured (the pin above); a request that names ANOTHER run is removed
+  // and ignored here, so the stale inbox cannot poison the next launch.
+  const { dir, restore } = fixture("APPROVED");
+  try {
+    const inbox = join(controlRootOfWorkspace(dir), "inbox");
+    mkdirSync(inbox, { recursive: true });
+    const request = join(inbox, "stop.request");
+    writeFileSync(
+      request,
+      JSON.stringify({
+        schema: "specstride.inbox/1",
+        type: "stop",
+        at: new Date().toISOString(),
+        runTokenHash: "f10060710b2b6f7c1a4d4c3e2b1a09885f7e6d5c4b3a291807f6e5d4c3b2a190",
+      }),
+    );
+    assert.equal(
+      await runFeature({ argv: [], workdir: dir }),
+      0,
+      "a request bound to another run cannot stop this run",
+    );
+    assert.equal(existsSync(request), false, "the stale request is removed, not left behind");
+    assert.ok(existsSync(join(dir, "made.txt")), "the pass ran");
+    assert.equal(commits(dir), 2);
+  } finally {
+    restore();
+  }
+});
+
 test("a secret in the change blocks the commit and is not shown to the critic", async () => {
   const { dir, restore } = fixture("APPROVED");
   const secret = `ghp_${"a1B2c3D4e5".repeat(4)}`;
