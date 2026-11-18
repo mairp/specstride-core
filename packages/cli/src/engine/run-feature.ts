@@ -89,6 +89,15 @@ import {
   OBSERVED_EVENT_TYPE,
 } from "./learning-loop.ts";
 import { phaseShapesOfSpec } from "../learn.ts";
+import { pathsNamedByTheTextOfATask } from "../../../layer-parallel/src/scope.ts";
+import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
+import {
+  clearPins,
+  pinStepBeforeCall,
+  updatePinsAfterVerdict,
+} from "../../../core/src/critic-input/pins/block.ts";
+import { verdictPinsRecordPath } from "../../../core/src/critic-input/pins/store.ts";
+import { criterionIdsOf } from "../../../core/src/prompt/providers/feedback.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
 import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
 import { readBetweenPasses, runPassLoop } from "../../../core/src/pass-loop/loop.ts";
@@ -1677,6 +1686,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const taskIdsOfThePhase = (phase: number): readonly string[] =>
     phases.find((p) => p.number === phase)?.tasks.map((task) => task.id) ?? [];
 
+  // F153-FR-048 — the priority paths of the pins: the paths the task texts of
+  // the phase cite (the canonical model only), sorted and without repeats.
+  const priorityPathsOf = (phase: number): readonly string[] =>
+    [
+      ...new Set(
+        (phases.find((p) => p.number === phase)?.tasks ?? []).flatMap((task) =>
+          pathsNamedByTheTextOfATask(task.text),
+        ),
+      ),
+    ].sort();
+
   const recoveryDirectoryOf = (phase: number): string =>
     inControl(join("features", slug, "recovery", `phase${String(phase)}`));
   const markersPathOf = (phase: number): string => join(recoveryDirectoryOf(phase), "markers.json");
@@ -3186,6 +3206,21 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           const evidence = readFileSync(evidencePath, "utf8");
           const size = Buffer.byteLength(evidence);
           const hash = createHash("sha256").update(evidence).digest("hex");
+          // F153-FR-048 — the pin step before the call: best-effort, a failure
+          // gives the warning `W9 pin load skipped` and no block.
+          const pinsPath = verdictPinsRecordPath(inControl(join("features", slug, "phases")), phase);
+          const pinPaths = priorityPathsOf(phase);
+          const pinStep =
+            pinPaths.length === 0
+              ? { hash: "", confirmed: new Set<string>(), block: "", warning: undefined }
+              : pinStepBeforeCall({
+                  reader: nodeFileReader(),
+                  phase,
+                  recordPath: pinsPath,
+                  priorityPaths: pinPaths,
+                  workdir,
+                });
+          if (pinStep.warning !== undefined) process.stderr.write(`${pinStep.warning}\n`);
           const outcomeOfTheCriticCall = await callTheCritic(
             criticCallInputs({
               workdir,
@@ -3310,6 +3345,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                             ),
                       ),
                     )}`,
+                    ...(pinStep.block === "" ? [] : [`\n${pinStep.block}`]),
                     `\n# End of the data`,
                     `\n${demand}`,
                     `\n${unmetReportInstruction()} End with exactly one line:` +
@@ -3348,6 +3384,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               },
             } as never,
           );
+          // F153-FR-048 — the pins after the verdict: written only on a parsed
+          // REJECTED with a computed hash, removed on APPROVED (the record file
+          // itself is removed there, at the top of the approved branch).
+          if (
+            "verdict" in outcomeOfTheCriticCall &&
+            outcomeOfTheCriticCall.verdict === "REJECTED" &&
+            pinStep.hash !== ""
+          ) {
+            const knownIds = taskIdsOfThePhase(phase);
+            updatePinsAfterVerdict({
+              verdict: "REJECTED",
+              phase,
+              recordPath: pinsPath,
+              allIds: new Set(knownIds),
+              reply: lastReply,
+              hash: pinStep.hash,
+              reader: nodeFileReader(),
+              findCriterionIds: (text) => criterionIdsOf(text, { knownCriterionIds: knownIds }),
+            });
+          }
           // F153-FR-035 — the closer of the critic's pair: the outcome is the
           // verdict of the closed set, and `latencyMs` is the wall time of the
           // whole call (T122). No prompt, no reply, no nonce ever enters the
@@ -3424,6 +3480,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
 
     if (outcome.outcome === "approved") {
+      // F153-FR-048 — the pins of the phase are removed on APPROVED: the core
+      // call replaces the record by the empty set, then the file is removed.
+      const pinsOfThePhase = verdictPinsRecordPath(
+        inControl(join("features", slug, "phases")),
+        phase,
+      );
+      clearPins(pinsOfThePhase, phase);
+      rmSync(pinsOfThePhase, { force: true, recursive: true });
       // T075 — the change set the approval commit would hold, computed at the
       // top of the approved branch, BEFORE any record of the approval is
       // written, so the commit gate can run in front of it (F152-FR-001).
