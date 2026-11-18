@@ -3074,9 +3074,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const check = checkCommandOf(workdir);
     const mode = (check === undefined ? "off" : "required") as VerificationGateResult["mode"];
     let verification: VerificationGateResult | undefined;
-    let checkOutput = "";
-    // The failed commands of THIS attempt's gate, as captured (T065): the
-    // red-gate notice reads them only where the gate fails.
+    // F153-FR-050 — the engine captures no output of its own check for any
+    // critic-class input: the failed commands below go only to the red-gate
+    // feedback port (T065).
     let failedGateCommands: readonly FailedGateCommand[] = [];
     let nonceHashOfTheCall = "";
     let proofOfTheCall = "not-made";
@@ -3142,7 +3142,6 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   )
                 : spawnSync("sh", ["-c", check], { cwd: workdir, encoding: "utf8" });
           const exit_code = run.status === 0 ? 0 : 10;
-          checkOutput = `${run.stdout ?? ""}${run.stderr ?? ""}`.slice(-4000);
           const record = {
             exit_code,
             mode,
