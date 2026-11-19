@@ -861,6 +861,15 @@ function runOneGateCommandOf(input: {
   };
 }
 
+/**
+ * The rule id recorded in the gate binding record D1 for the command set
+ * the gate ran (T250, F153-FR-008): the plan's own selection for the phase
+ * gate (`selectCommands` of the gate of feature 105), applied as the plan
+ * record holds it. The resolution module of plan.md R4 was not built; the
+ * id names the selection that DID resolve the set.
+ */
+const GATE_COMMAND_RESOLUTION_RULE = "F105-gate-selectCommands" as const;
+
 /** The ids of the gate of a phase, in the order the gate selects them. */
 function gateCommandsOfThePhase(
   plan: ReturnType<typeof derivePlan>["plan"],
@@ -2731,6 +2740,22 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         phaseTaskIds: taskIdsOfThePhase(phase),
         caps: loopConfig.caps,
         closingCheckOn: loopConfig.closingCheck,
+        // F153-FR-012 (feature 153, T249) — the equality test of the
+        // closing check against the gate: the gate binding is the command
+        // set the plan's gate selects for this phase, with the runner name
+        // the gate itself carries ("runtime"); `undefined` where the gate
+        // selects nothing, so there is nothing to be equal to.
+        closingCheckSkipsWhenEqualToGate: loopConfig.closingCheckSkipsWhenEqualToGate,
+        gateBinding: () => {
+          const commands = gateCommandsOfThePhase(runPlan, phase).map((command) => ({
+            // The DECLARED id, exactly as the manifest of the phase names the
+            // same command (`commandsFromThePlan` above): the equality test
+            // compares the sets as the two records hold them.
+            id: command.declaredId ?? command.id,
+            argv: [command.executable, ...command.args],
+          }));
+          return commands.length > 0 ? { commands, runner: "runtime" } : undefined;
+        },
         timeLimitEnforced: loopConfig.timeLimitEnforced,
         emit,
         say,
@@ -3647,6 +3672,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             // THEM: the gate's own outcome records no stream, so the notice
             // and the events read this capture (T058, T065, T232).
             const captured = new Map<string, CheckRunnerResult>();
+            // F153-FR-012 (T250) — the tree the gate runs on, taken BEFORE
+            // the first command: the commands may touch the tree, and the
+            // binding must name the tree the gate RAN ON, not the one after.
+            const treeAtGate = workingTreeFingerprint(workdir);
             const reasons = new Map<string, string | undefined>();
             const roots = rootPathsOf({
               home: homedir(),
@@ -3698,6 +3727,61 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               if (raw !== undefined) {
                 emit("check.ended", checkEndedData({ checkId, result: raw }));
               }
+            }
+            // T250 — THE GATE BINDING RECORD D1 (F153-FR-012), written ONCE
+            // per gate run, beside the phase attempt, atomically: the
+            // declared command set the gate ran, its runner binding, the
+            // tree fingerprint taken at gate run, the per-command outcomes,
+            // the rule that resolved the set, and the rule id of the
+            // closing-check decision where the micro layer made one. This
+            // is the record the closing check's equality test is bound to
+            // (F153-FR-012); where the gate could not run — code 3, no
+            // commands — nothing ran, and no binding is written.
+            if (gateOutcome.commands.length > 0) {
+              // The closing-check decision of the micro layer, where one
+              // was made: the state the layer persists for this phase
+              // attempt carries the rule id under `closingCheckSkip`.
+              let closingSkipRuleId: string | undefined;
+              try {
+                const microState = JSON.parse(
+                  readFileSync(
+                    inControl(join("features", slug, "micro", `phase${String(phase)}.json`)),
+                    "utf8",
+                  ),
+                ) as { closingCheckSkip?: { ruleId?: string } };
+                const held = microState.closingCheckSkip?.ruleId;
+                if (typeof held === "string") closingSkipRuleId = held;
+              } catch {
+                // No readable micro state: no decision was made, and the
+                // binding simply carries none.
+              }
+              const binding = {
+                schema: "specstride.gate-command-binding/1",
+                phase: `phase-${String(phase)}`,
+                commands: gateCommands.map((command) => ({
+                  id: command.declaredId ?? command.id,
+                  argv: [command.executable, ...command.args],
+                })),
+                runner: "runtime",
+                treeFingerprint: treeAtGate,
+                resolvedByRule: GATE_COMMAND_RESOLUTION_RULE,
+                outcomes: gateOutcome.commands.map((command) => {
+                  const raw = captured.get(command.commandId);
+                  return {
+                    id: command.commandId,
+                    exitCode: raw?.exitCode ?? null,
+                    signal: raw?.signal === "TIMEOUT" ? "TIMEOUT" : null,
+                  };
+                }),
+                ...(closingSkipRuleId !== undefined
+                  ? { closingCheckSkip: { ruleId: closingSkipRuleId } }
+                  : {}),
+              };
+              atomicWrite(
+                join(controlRoot, "features", slug, "gate", `phase${String(phase)}.${String(ordinal)}.binding.json`),
+                Buffer.from(JSON.stringify(binding, null, 2)),
+                { createDirectory: true },
+              );
             }
             // T230 — the failed commands of the notice, with the streams AS
             // CAPTURED: only what failed is named (F105-FR-032, T065).

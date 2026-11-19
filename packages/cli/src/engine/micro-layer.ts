@@ -26,6 +26,7 @@ import {
   DEFAULT_MAX_OUTPUT_BYTES,
 } from "../../../check-runner/src/command/lisa-executor.ts";
 import { runEngineCheck, timeLimitMsOf } from "./check-run.ts";
+import { closingCheckSkipOf } from "../../../core/src/gate/closing-check-skip.ts";
 import type { LoopLayer } from "@specstride/contracts/ep/loop-layer";
 import { checkpointContractBlock } from "../../../layer-micro/src/callpoints/contribute-prompt.ts";
 import { afterPass as afterPassPoint } from "../../../layer-micro/src/callpoints/after-pass.ts";
@@ -127,6 +128,13 @@ type AttemptState = {
   readonly units: readonly UnitRecord[];
   lastCheckpointFingerprint: string | null;
   lastPassedTreeFingerprint: string | null;
+  /**
+   * F153-FR-012 — the closing check that stood down because the gate runs
+   * the same commands through the same runner on the same tree, with the
+   * rule id of the row of `closing-check.skip` that decided (CS-4). Held so
+   * the gate binding record names the decision where one was made (T250).
+   */
+  closingCheckSkip?: { readonly ruleId: string } | undefined;
   off: boolean;
   offCause: LayerOffCause | undefined;
 };
@@ -241,6 +249,29 @@ export function createMicroAttempt(input: {
   readonly phaseTaskIds: readonly string[];
   readonly caps: MachineCaps;
   readonly closingCheckOn: boolean;
+  /**
+   * F153-FR-012 — `loop.micro.closingCheck.skipWhenEqualToGate`: when true,
+   * a closing check whose command set and runner are the gate's own, on the
+   * tree the gate is about to run on, stands down (CS-4); the gate runs the
+   * commands moments later, so the check runs once, at the gate. The
+   * `parity` profile reads this switch off, so parity reproduces the
+   * pre-feature behaviour exactly.
+   */
+  readonly closingCheckSkipsWhenEqualToGate: boolean;
+  /**
+   * F153-FR-012 — the binding of the verification gate of this phase
+   * attempt, as the plan declares it, with the runner that runs it; the
+   * gate runs NEXT, on the tree as it stands, so the caller passes the
+   * binding without a tree and the closing check supplies its own. The
+   * composition root gives `undefined` where the phase's gate selects no
+   * command — nothing to be equal to, so the choice is `run`.
+   */
+  readonly gateBinding: () =>
+    | {
+        readonly commands: readonly { readonly id: string; readonly argv: readonly string[] }[];
+        readonly runner: string;
+      }
+    | undefined;
   /**
    * `verification.timeLimit.enforce` (feature 153, F153-FR-029): when true,
    * every inner and closing check runs through the check runner
@@ -598,6 +629,26 @@ export function createMicroAttempt(input: {
     async closingCheck(): Promise<{ readonly ran: boolean; readonly passed: boolean }> {
       if (!input.closingCheckOn || state.off || state.units.length === 0) {
         return { ran: false, passed: true };
+      }
+      // F153-FR-012 — the equality test against the gate (T248): the gate
+      // runs NEXT, on the tree as it stands, so the closing check supplies
+      // its own tree to both sides. Where the binding is `undefined` — the
+      // phase's gate selects no command — nothing is equal to, and the
+      // choice is `run` before the table is even asked. A skip records the
+      // rule that decided and returns exactly what the fingerprint skip
+      // below returns: the check never ran, nothing failed.
+      const binding = input.gateBinding();
+      if (input.closingCheckSkipsWhenEqualToGate && binding !== undefined) {
+        const decision = closingCheckSkipOf({
+          switchOn: input.closingCheckSkipsWhenEqualToGate,
+          closing: { commands: innerSet(), runner: "runtime", tree: input.fingerprint() },
+          gate: { commands: binding.commands, runner: binding.runner, tree: input.fingerprint() },
+        });
+        if (decision.choice === "skip") {
+          state = { ...state, closingCheckSkip: { ruleId: decision.ruleId } };
+          persist();
+          return { ran: false, passed: true };
+        }
       }
       const tree = input.fingerprint();
       if (state.lastPassedTreeFingerprint === tree) return { ran: false, passed: true };

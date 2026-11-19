@@ -47,3 +47,6 @@ export * as halts from "./halts.ts";
 // T101 — the pure end cause of a phase attempt (feature 153, F153-FR-037):
 // the engine's CLI wiring imports it from here.
 export * from "./end-cause.ts";
+// T242 — the pure equality test of the closing check against the gate
+// (feature 153, F153-FR-012): the engine's CLI wiring imports it from here.
+export * from "./closing-check-skip.ts";

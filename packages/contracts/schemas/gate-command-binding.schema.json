@@ -41,6 +41,18 @@
       "minLength": 1,
       "$comment": "the rule id of core/src/gate/command-resolution.ts that resolved this set (F153-FR-008, XIII)"
     },
+    "closingCheckSkip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId"],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "the rule id of the row of contracts/closing-check-skip-table.json that made the gate run the closing check's commands (F153-FR-012, T250); present only where the micro layer made the decision for this phase attempt"
+        }
+      }
+    },
     "outcomes": {
       "type": "array",
       "items": {
