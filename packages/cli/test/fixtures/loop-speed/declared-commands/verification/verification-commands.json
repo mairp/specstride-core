@@ -1,0 +1,21 @@
+{
+  "schema_version": "specstride.verification-commands/1",
+  "commands": [
+    {
+      "id": "verify-one",
+      "phase": 1,
+      "executable": "node",
+      "args": ["../bin/count-and-pass.ts", "counter-a.txt"],
+      "cwd": "WORKDIR",
+      "timeoutSec": 30
+    },
+    {
+      "id": "verify-two",
+      "phase": 2,
+      "executable": "node",
+      "args": ["../bin/count-and-pass.ts", "counter-b.txt"],
+      "cwd": "WORKDIR",
+      "timeoutSec": 30
+    }
+  ]
+}

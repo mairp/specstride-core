@@ -55,6 +55,30 @@ import {
   rootPathsOf,
 } from "@specstride/contracts/ids/logical-names";
 import { engineExitOf } from "@specstride/contracts/codes/stop-reasons";
+import type { SpecPhase } from "@specstride/contracts/records/canonical-spec-model";
+import type { CanonicalSpecModel } from "@specstride/contracts/records/canonical-spec-model";
+import type { CheckManifest as PlanManifest } from "@specstride/contracts/records/check-manifest";
+import type { ManifestEntry } from "@specstride/contracts/ep/check-runner";
+import type { Blocker, LoadedDocument } from "@specstride/verification";
+import {
+  ambiguityOf,
+  argvOf,
+  blockersOf,
+  canonicalPlanFile,
+  commandsOfThePhaseItself,
+  deriveEveryManifest,
+  derivePlan,
+  discoverProject,
+  loadDeclaredCommands,
+  markerLine,
+  persistPlan,
+  pinAtLaunch,
+  PLAN_RECORD_NAME,
+  readLiteralSource,
+  renderPlanForPeople,
+} from "@specstride/verification";
+import type { PinPort } from "@specstride/verification";
+import { checkRunner, pinACommand } from "@specstride/check-runner";
 import { canonicalRecordHash } from "@specstride/kernel/hasher";
 import { startPassGuard, writePassGuardScript } from "./pass-guard.ts";
 import {
@@ -270,6 +294,7 @@ import {
   factBlockBuilder,
   loopLineOf,
   writeCheckManifest,
+  type InnerCheckCommand,
   type MicroAttempt,
 } from "./micro-layer.ts";
 import { runEngineCheck, spawnSyncShapeOf, timeLimitMsOf } from "./check-run.ts";
@@ -687,6 +712,237 @@ function manifestCommandIdsOf(path: string): readonly string[] {
   } catch {
     return [];
   }
+}
+
+/* --- the verification plan of the run, derived and persisted AT LAUNCH --- *
+ *
+ * F153-FR-010 — the launch derives and persists the verification plan with
+ * the code of feature 105 (`derivePlan`, `persistPlan`, `deriveEveryManifest`)
+ * instead of the literal `npm test` the declared check carried. The commands
+ * come from the plan sources of F105-FR-015: the verification-commands
+ * document where the control plane holds one, the commands declared literally
+ * in the task list, and the discovery of the entry points of the toolchain.
+ * A blocker — a command that cannot be written as a fixed argument list, two
+ * declarations that disagree — REFUSES the launch before any attempt runs
+ * (Principle XIV; F105-FR-015), and so does a derivation the mode `required`
+ * refuses (F105-FR-019).
+ */
+
+/** What the launch reads back from the derivation of the plan. */
+export type PlanOfTheRun =
+  | {
+      readonly blocked: true;
+      /** Every blocker the plan sources gave, each one said at the refusal. */
+      readonly blockers: readonly Blocker[];
+      /** The message of a derivation the mode `required` refused, when it did. */
+      readonly refusal?: string;
+    }
+  | {
+      readonly blocked: false;
+      /** The derived plan, kept for the gate of the run (feature 153, phase 17). */
+      readonly plan: VerificationPlanOfTheRun;
+      /** The check manifests feature 105 derives, one per phase of the plan. */
+      readonly manifests: readonly PlanManifest[];
+      /** Where the canonical plan record was persisted (the layout table). */
+      readonly planRecordPath: string;
+      /** Where the plan for people was persisted, beside the record. */
+      readonly planForPeoplePath: string;
+    };
+
+/** The plan record of feature 105, as this module holds it. */
+type VerificationPlanOfTheRun = ReturnType<typeof derivePlan>["plan"];
+
+/** The name the verification-commands document of a feature lives under. */
+const COMMANDS_DOCUMENT_NAME = "feature:<slug>:verification:commands" as const;
+
+/** The format of the task list the engine reads (the `speckit-tasks` grammar). */
+const TASKS_FORMAT = "speckit-tasks" as const;
+
+/**
+ * The identity record of one command of the plan, as the launch pins it: the
+ * absolute path of the executable with its size and hash, exactly what the
+ * check runner's `pin` of the kind `command` records. A command whose
+ * executable cannot be pinned keeps the bare identity here and is REFUSED at
+ * the `pin` of the launch below — never guessed (§C.8).
+ */
+const pinOfTheLaunch: PinPort = (command) => {
+  const argv = [...argvOf(command)];
+  try {
+    return pinACommand({
+      id: command.id,
+      kind: "command",
+      argv,
+    } as unknown as Parameters<typeof pinACommand>[0]);
+  } catch {
+    return { kind: "command", argv };
+  }
+};
+
+/** What one plan source of F105-FR-015 contributes, as the blocker rules read it. */
+const contributionOf = (
+  sourceId: string,
+  commands: readonly PlanCommandOfTheRun[],
+): SourceContributionOfTheRun =>
+  Object.freeze({
+    sourceId,
+    commands,
+    blockers: Object.freeze([]),
+    findings: Object.freeze([]),
+    assumptions: Object.freeze([]),
+    ambiguities: Object.freeze([]),
+  });
+
+/** A command of the verification plan, as the plan sources give it. */
+type PlanCommandOfTheRun = Parameters<typeof argvOf>[0];
+
+/** What one plan source contributes, as the blocker rules of F105-FR-015 read it. */
+type SourceContributionOfTheRun = Parameters<typeof blockersOf>[0][number];
+
+/**
+ * The verification plan of the run (F153-FR-010): derived from the phases of
+ * the task list the launch read, the verification-commands document of the
+ * feature where the control plane holds one, the literal declarations of the
+ * task list, and the discovery of the toolchain — then persisted at the
+ * logical name `run:<runId>:verification:plan` and turned into the check
+ * manifests of the phases. A blocker or a refused derivation is REPORTED, and
+ * the caller ends the launch; nothing here decides the exit.
+ */
+export async function verificationPlanOfTheRun(input: {
+  readonly workdir: string;
+  readonly workspaceId: string;
+  readonly controlRoot: string;
+  readonly slug: string;
+  readonly runId: string;
+  readonly specPath: string;
+  /** The task list, as a path relative to the working directory (provenance). */
+  readonly tasksFile: string;
+  readonly phases: readonly SpecPhase[];
+  readonly searchPath: string;
+}): Promise<PlanOfTheRun> {
+  const roots = rootPathsOf({
+    home: homedir(),
+    workspaceRealPath: input.workdir,
+    workspaceId: input.workspaceId,
+    controlRoot: input.controlRoot,
+    workerRoot: "",
+  });
+  // The place of the logical name `run:<runId>:verification:plan`
+  // (`PLAN_RECORD_NAME`), resolved through the layout table the way every
+  // record of the run is: `<control>/features/<slug>/runs/<runId>/verification/`
+  // — never spelled here as a path (F100-FR-026).
+  const planRecordPath = resolveLogicalName(
+    PLAN_RECORD_NAME,
+    { "<runId>": input.runId, "<slug>": input.slug },
+    roots,
+  );
+  // The verification-commands document the launch contract wrote, where it
+  // exists; a document that cannot be read is a FAILED SOURCE: it contributes
+  // nothing and is never an error of the launch (annex C §C.9, F105-FR-015).
+  const commandsDocumentPath = resolveLogicalName(
+    COMMANDS_DOCUMENT_NAME,
+    { slug: input.slug },
+    roots,
+  );
+  let declared: LoadedDocument | undefined;
+  if (existsSync(commandsDocumentPath)) {
+    try {
+      declared = loadDeclaredCommands({
+        path: commandsDocumentPath,
+        searchPath: input.searchPath,
+      });
+    } catch {
+      declared = undefined;
+    }
+  }
+  const discovery = discoverProject({ workdir: input.workdir, searchPath: input.searchPath });
+  // The commands declared literally in the task list, read on the canonical
+  // model the grammar gave (F105-FR-015).
+  const literal = readLiteralSource({
+    model: {
+      format: TASKS_FORMAT,
+      feature: input.slug,
+      phases: input.phases,
+      sources: [{ kind: "tasks", path: input.tasksFile, contentHash: "" }],
+    } as unknown as CanonicalSpecModel,
+    repositoryRoot: input.workdir,
+  });
+  // The blockers of the sources (F105-FR-015): a declaration no fixed
+  // argument list can carry comes out of the literal source AS a blocker, and
+  // two declarations of one id that disagree come out of the conflict rules
+  // over the commands themselves.
+  const blockers = [
+    ...literal.blockers,
+    ...blockersOf([
+      literal,
+      contributionOf("verification-commands-document", declared?.commands ?? []),
+      contributionOf("toolchain-discovery", discovery.commands),
+    ]),
+  ];
+  if (blockers.length > 0) {
+    return Object.freeze({ blocked: true as const, blockers });
+  }
+  // The mode `required` where the sources hold at least one command; without
+  // one the plan is written in the mode `plan` and the run keeps today's
+  // behaviour — no gate, no commands in the manifests (F105-FR-019).
+  const commandsExist = discovery.commands.length + (declared?.commands.length ?? 0) > 0;
+  let derived: ReturnType<typeof derivePlan> | undefined;
+  let refusal: string | undefined;
+  try {
+    derived = derivePlan({
+      specPath: input.specPath,
+      model: { format: TASKS_FORMAT, phases: input.phases },
+      discovery: {
+        workdir: discovery.workdir,
+        fingerprint: discovery.fingerprint,
+        frameworks: discovery.frameworks,
+        commands: discovery.commands,
+        assumptions: discovery.assumptions,
+        ambiguities: discovery.ambiguities,
+      },
+      ...(declared !== undefined
+        ? {
+            declared: {
+              path: declared.path,
+              contentHash: declared.contentHash,
+              schemaVersion: declared.schemaVersion,
+              commands: declared.commands,
+              ...(declared.discovery !== undefined ? { discovery: declared.discovery } : {}),
+            },
+          }
+        : {}),
+      required: commandsExist,
+    });
+  } catch (error) {
+    refusal = error instanceof Error ? error.message : String(error);
+  }
+  if (derived === undefined) {
+    return Object.freeze({ blocked: true as const, blockers: Object.freeze([]), refusal });
+  }
+  const manifests = deriveEveryManifest({
+    plan: derived.plan,
+    pin: pinOfTheLaunch,
+    searchPath: input.searchPath,
+    provenance: derived.provenance,
+  });
+  // THE PLAN AT ITS LOGICAL NAME (F153-FR-010): the canonical record and the
+  // plan for people, written through the safe write of feature 105 inside the
+  // control root the record's row of the layout table names. The record and
+  // its path are kept for the gate of the run (phase 17 of this feature).
+  const persisted = persistPlan({
+    plan: { project: { workdir: input.controlRoot } },
+    markdownPath: planRecordPath.replace(/\.json$/, ".md"),
+    jsonPath: planRecordPath,
+    markdown: renderPlanForPeople(derived.plan),
+    marker: markerLine(derived.plan.contentHash),
+    json: canonicalPlanFile(derived.plan),
+  });
+  return Object.freeze({
+    blocked: false as const,
+    plan: derived.plan,
+    manifests,
+    planRecordPath: persisted.jsonPath,
+    planForPeoplePath: persisted.markdownPath,
+  });
 }
 
 /** The first executable of the given name on the search path, as the launch pins it. */
@@ -1345,27 +1601,84 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const manifestHashes: Record<string, string> = {};
   const npmPath = resolveExecutable("npm", process.env.PATH ?? "");
   const searchPathAtLaunch = process.env.PATH ?? "";
+  // THE PLAN OF THE RUN AT LAUNCH (F153-FR-010): derived and persisted BEFORE
+  // any attempt runs. A blocker of the plan sources, a derivation the mode
+  // `required` refuses, and a command the check runner refuses at `pin` all
+  // end the launch here, with the exit of a refused run (F124-FR-035) — no
+  // attempt starts (Principle XIV).
+  const planOfTheRun = await verificationPlanOfTheRun({
+    workdir,
+    workspaceId,
+    controlRoot,
+    slug,
+    runId,
+    specPath: learningSpecPath,
+    tasksFile: relative(workdir, tasksPath),
+    phases,
+    searchPath: searchPathAtLaunch,
+  });
+  if (planOfTheRun.blocked) {
+    for (const blocker of planOfTheRun.blockers) {
+      say(`[${slug}] verification plan blocker: ${ambiguityOf(blocker)}`);
+    }
+    if (planOfTheRun.refusal !== undefined) say(`[${slug}] ${planOfTheRun.refusal}`);
+    return RUN_REFUSED_EXIT;
+  }
+  // The plan and the place of its record, kept for the gate of the run
+  // (feature 153, phase 17): the gate keeps running today's declared check
+  // until that phase lands.
+  const runPlan = planOfTheRun.plan;
+  const runPlanRecordPath = planOfTheRun.planRecordPath;
+  say(
+    `[${slug}] verification plan derived and persisted at ${relative(workdir, runPlanRecordPath)}`,
+  );
+  // The commands of the phase, FROM THE PLAN (F105-FR-020): the entries of the
+  // check manifest feature 105 derives, read back as the inner check commands
+  // the manifest of the control plane carries.
+  const commandsFromThePlan = (phase: number): readonly InnerCheckCommand[] => {
+    const derived = planOfTheRun.manifests.find((manifest) => manifest.phase === phase);
+    if (derived === undefined) return [];
+    const byId = new Map(
+      commandsOfThePhaseItself({ plan: runPlan, phase }).map((command) => [command.id, command]),
+    );
+    return derived.entries.map((entry) => {
+      const read = entry as unknown as { id: string; argv?: string[]; timeLimit: number };
+      const planCommand = byId.get(read.id);
+      return {
+        // The declared id where the command has one, so the manifest names the
+        // command the sources declared, not the plan's derived id.
+        id: planCommand?.declaredId ?? read.id,
+        argv: [...(read.argv ?? [])],
+        cwd: planCommand?.cwd ?? workdir,
+        timeoutSec: read.timeLimit,
+      };
+    });
+  };
+  const engineManifestsOfThePlan = (): readonly ManifestEntry[] =>
+    planOfTheRun.manifests.flatMap((manifest) => manifest.entries) as unknown as readonly ManifestEntry[];
   if (recordedLoop === undefined || recordedLoop.strategy === "micro") {
     for (const phase of phases.map((held) => held.number)) {
-      const declared = checkCommandOf(workdir) !== undefined;
       const { hash } = writeCheckManifest({
         manifestPath: inControl(join("features", slug, "manifests", `phase${String(phase)}.json`)),
         phase,
-        commands:
-          declared && npmPath !== undefined
-            ? [
-                {
-                  id: "check",
-                  argv: [npmPath, "test"],
-                  cwd: workdir,
-                  timeoutSec: loopConfig.checkMin * 60,
-                },
-              ]
-            : [],
+        commands: commandsFromThePlan(phase),
         searchPath: searchPathAtLaunch,
         write,
       });
       manifestHashes[String(phase)] = hash;
+    }
+  }
+  // THE PIN AT LAUNCH (F105-FR-020, §C.8): every entry of every manifest,
+  // through the ONE check runner. A refused entry ends the launch like a
+  // blocker above — nothing runs unpinned.
+  const pinOutcomes = await pinAtLaunch(
+    checkRunner() as unknown as Parameters<typeof pinAtLaunch>[0],
+    engineManifestsOfThePlan(),
+  );
+  for (const outcome of pinOutcomes) {
+    if (outcome.refused !== undefined) {
+      say(`[${slug}] ${outcome.refused}`);
+      return RUN_REFUSED_EXIT;
     }
   }
   let loopRecord: StrategyRecord;

@@ -40,6 +40,7 @@
     ]
   },
   "dependencies": {
+    "@specstride/check-runner": "0.0.0",
     "@specstride/config": "0.0.0",
     "@specstride/contracts": "0.0.0",
     "@specstride/core": "0.0.0",
@@ -48,6 +49,7 @@
     "@specstride/learning": "0.0.0",
     "@specstride/observability": "0.0.0",
     "@specstride/spec-formats": "0.0.0",
+    "@specstride/verification": "0.0.0",
     "ajv": "8.20.0"
   },
   "bin": {
