@@ -169,8 +169,12 @@ function filesOf(directory: string): string[] {
 
 const SKIP = !GROUPS_AVAILABLE && "process groups are unavailable (F153-FR-032)";
 // The gate's limit as the tests shrink it, the runner's grace is 2 s: one
-// gate attempt ends within limit + grace + 2 s (F153-FR-030).
-const LIMIT_SEC = 1;
+// gate attempt ends within limit + grace + 2 s (F153-FR-030). The limit is
+// 5 s, not 1 s: attempt 2's check must still pass UNDER LOAD (the whole
+// workspace suite runs its files concurrently, and a bare `node` startup
+// has been observed past 1 s there), or the run rejects twice and the
+// `exit 0` assertion flakes for a reason the phase never owned.
+const LIMIT_SEC = 5;
 const ONE_ATTEMPT_MS = (LIMIT_SEC + 2 + 2) * 1_000;
 
 test("CT-153-29 the gate is ended at its limit", { skip: SKIP }, async () => {

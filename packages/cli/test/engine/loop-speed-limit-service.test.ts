@@ -63,7 +63,11 @@ test("CT-153-29 the service is ended at its limit", { skip: !GROUPS_AVAILABLE &&
       argv: [process.execPath, FAKE, pidFile],
     });
     const elapsed = Date.now() - started;
-    assert.ok(elapsed < (1 + 2 + 1) * 1_000, `the service resolved in ${String(elapsed)} ms`);
+    // The bound is limit + grace plus slack for the scheduler under load
+    // (the whole workspace suite runs its files concurrently): the property
+    // is that the call resolves near limit + grace and never hangs, not a
+    // stopwatch race.
+    assert.ok(elapsed < (1 + 2 + 5) * 1_000, `the service resolved in ${String(elapsed)} ms`);
     assert.notEqual(run.status, 0, "the timed-out command is not a pass");
     assert.ok(run.stderr.includes("command timed out"));
     // Neither the fake nor its SIGTERM-ignoring grandchild stays behind.
