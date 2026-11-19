@@ -58,7 +58,11 @@ import { engineExitOf } from "@specstride/contracts/codes/stop-reasons";
 import type { SpecPhase } from "@specstride/contracts/records/canonical-spec-model";
 import type { CanonicalSpecModel } from "@specstride/contracts/records/canonical-spec-model";
 import type { CheckManifest as PlanManifest } from "@specstride/contracts/records/check-manifest";
-import type { ManifestEntry } from "@specstride/contracts/ep/check-runner";
+import type {
+  CheckRunner,
+  ContainmentLevel as RunnerContainmentLevel,
+  ManifestEntry,
+} from "@specstride/contracts/ep/check-runner";
 import type { Blocker, LoadedDocument } from "@specstride/verification";
 import {
   ambiguityOf,
@@ -76,9 +80,38 @@ import {
   PLAN_RECORD_NAME,
   readLiteralSource,
   renderPlanForPeople,
+  // The gate of the run (feature 153, phase 17): the run calls the gate of
+  // feature 105 over the check runner of feature 148 — the library owns the
+  // order, the selection and the verdict; the engine owns the runner and the
+  // capture (F153-FR-010, -011).
+  GATE_RECORD_NAME,
+  gateCommandOf,
+  gateOf,
+  gateResultRecord,
+  loadPlan,
+  runCommand as runGateCommand,
+  runGateOrCode3,
+  selectCommands,
+  writeOnce,
+} from "@specstride/verification";
+import type {
+  CommandResult as GateCommandResult,
+  GateOutcome,
+  PlannedCommand,
 } from "@specstride/verification";
 import type { PinPort } from "@specstride/verification";
 import { checkRunner, pinACommand } from "@specstride/check-runner";
+// T232 — the timed pair of every gate command, through the builders of the
+// event catalogue (F148-FR-007): the engine emits, the builders own the
+// fields.
+import {
+  checkEndedData,
+  checkStartedData,
+} from "../../../check-runner/src/events/check-events.ts";
+import {
+  NO_CONDITIONS,
+  type RunnerResult as CheckRunnerResult,
+} from "../../../check-runner/src/result/result.ts";
 import { canonicalRecordHash } from "@specstride/kernel/hasher";
 import { startPassGuard, writePassGuardScript } from "./pass-guard.ts";
 import {
@@ -336,21 +369,12 @@ export function proposerLimitMsOf(ceilingSec: number, killGraceMs: number): numb
 const CRITIC_LIMIT_MS = 5 * 60 * 1000;
 
 /**
- * The time limit of the verification gate, in seconds (T085, F153-FR-029).
- * F105-FR-017 gives a discovered test script 1,800 s; the gate has no
- * declaration of its own yet, so it takes that limit here. The constant
- * stands only until the plan's limits arrive (P1a); nothing reads the
- * environment to change it — governance principle XV: no setting bypasses a
- * budget.
+ * The gate's time limits are the DECLARED ones now (feature 153, phase 17,
+ * F153-FR-029): every command of the plan carries its own `timeoutSec`, and
+ * `runOneGateCommand` hands it to the check runner. The run-level constant of
+ * T085 (`GATE_TIME_LIMIT_SEC`) and its test override are gone — no limit of
+ * the gate is invented here any more (governance principle XV).
  */
-export const GATE_TIME_LIMIT_SEC = 1_800;
-
-/**
- * Test-only override of the gate's time limit (`loop-speed-limit-gate.test.ts`).
- * Production code never writes it, so the shipped limit stays
- * `GATE_TIME_LIMIT_SEC`; the tests shrink it to keep the wall clock sane.
- */
-export const GATE_TIME_LIMIT_SEC_FOR_TESTS: { value: number | undefined } = { value: undefined };
 
 /** The tools of a proposer pass. */
 const PROPOSER_TOOLS: readonly string[] = Object.freeze([
@@ -712,6 +736,145 @@ function manifestCommandIdsOf(path: string): readonly string[] {
   } catch {
     return [];
   }
+}
+
+/* --- the gate over the declared commands (feature 153, phase 17) --- *
+ *
+ * F153-FR-010/-011 — the gate of a phase attempt calls `runGateOrCode3` of
+ * feature 105 over the check runner of feature 148. The engine owns three
+ * things here and nothing else: the runner port (`runOneGateCommand`), the
+ * capture of the failed commands' streams for the red-gate notice (T065),
+ * and the emission of the timed pair of every command (T232). The selection,
+ * the verdict, the result code and the result record are the library's.
+ */
+
+/**
+ * The environment allow-list the gate's commands run under: the names the
+ * `verify` command of feature 105 passes its own runner — the search path,
+ * the home, the temporary directory and the locale — and no more. The check
+ * runner filters the environment of a command to this list.
+ */
+const GATE_ENVIRONMENT_ALLOW_LIST: readonly string[] = Object.freeze([
+  "PATH",
+  "HOME",
+  "TMPDIR",
+  "LANG",
+  "LC_ALL",
+]);
+
+/**
+ * The manifest entry of the check runner for one planned command, as the
+ * launch derived it: the id, the kind `command`, the pinned argv, the phase
+ * and the DECLARED time limit in milliseconds (F153-FR-029).
+ */
+function gateManifestEntryOf(command: PlannedCommand, phase: number): ManifestEntry {
+  return Object.freeze({
+    id: command.id,
+    kind: "command" as const,
+    argv: Object.freeze([command.executable, ...command.args]),
+    phase,
+    timeLimitMs: (command.timeoutSec ?? 0) * 1_000,
+  });
+}
+
+/**
+ * The runner the gate commands go through: the ONE check runner of the run,
+ * adapted to the runner port of the contract. Two seams are closed here, and
+ * only these:
+ *
+ *  - the IDENTITY — the launch pinned every derived manifest entry, whose
+ *    identity is `pinACommand` of the entry's argv; the plan hands the gate
+ *    the executable and its arguments instead, so `start` re-derives the
+ *    pinned identity of the same argv and the registry finds the entry it
+ *    recorded (F148-FR-001). An argv that cannot be pinned goes to the
+ *    registry as it is, which answers `cannot-start` — a FAILED command,
+ *    never an error (F105-FR-032).
+ *  - the CAPTURE — the registry's result carries the two streams as the text
+ *    it captured, where the contract's result carries a reference; the raw
+ *    result is kept here, by command id, so the failed commands of the
+ *    red-gate notice carry their real streams (T058, T065, F153-FR-018).
+ *    What the gate's outcome records stays digest-free.
+ */
+function gateRunnerOf(input: {
+  readonly phase: number;
+  readonly captured: Map<string, CheckRunnerResult>;
+}): CheckRunner {
+  const runner = checkRunner() as unknown as CheckRunner;
+  return {
+    pin: (entry) => runner.pin(entry),
+    start: async (probe) => {
+      const argv = probe.identity.argv ?? [];
+      try {
+        const identity = pinACommand({
+          id: "",
+          kind: "command",
+          argv,
+          phase: input.phase,
+          timeLimitMs: 0,
+        });
+        return await runner.start({ ...probe, identity });
+      } catch {
+        // Not pinnable — the registry answers `cannot-start` for the
+        // identity as the plan gave it.
+        return runner.start(probe);
+      }
+    },
+    poll: (handle) => runner.poll(handle),
+    result: async (handle) => {
+      const result = (await runner.result(handle)) as unknown as CheckRunnerResult;
+      input.captured.set(result.commandId, result);
+      return result as never;
+    },
+    cancel: (handle) => runner.cancel(handle),
+    environment: (entry, profile) => runner.environment(entry, profile),
+  };
+}
+
+/**
+ * Run ONE command of the gate through the adapted runner: `runCommand` of
+ * feature 105 (T010), at the DECLARED time limit of the command
+ * (F153-FR-029), at the containment the proposer runs at, with the
+ * environment allow-list above.
+ */
+function runOneGateCommandOf(input: {
+  readonly phase: number;
+  readonly containment: string;
+  readonly captured: Map<string, CheckRunnerResult>;
+  readonly reasons: Map<string, string | undefined>;
+}): (command: PlannedCommand, index: number) => Promise<GateCommandResult> {
+  const runner = gateRunnerOf(input);
+  return async (command: PlannedCommand): Promise<GateCommandResult> => {
+    const result = await runGateCommand(
+      runner,
+      gateCommandOf(command, gateManifestEntryOf(command, input.phase)),
+      {
+        timeLimitMs: (command.timeoutSec ?? 0) * 1_000,
+        containment: input.containment as RunnerContainmentLevel,
+        environmentAllowList: GATE_ENVIRONMENT_ALLOW_LIST,
+      },
+    );
+    // The reason the runner recorded — a command ended at its DECLARED
+    // limit carries the sentence that names the limit (F153-FR-029) — is
+    // kept for the notice of a failed gate; the gate's own record drops it.
+    input.reasons.set(result.commandId, result.reason);
+    return result;
+  };
+}
+
+/** The ids of the gate of a phase, in the order the gate selects them. */
+function gateCommandsOfThePhase(
+  plan: ReturnType<typeof derivePlan>["plan"],
+  phase: number,
+): readonly PlannedCommand[] {
+  const gate = gateOf(plan, phase);
+  if (gate === undefined) return [];
+  const byId = new Map(plan.commands.map((command) => [command.id, command]));
+  const out: PlannedCommand[] = [];
+  for (const id of selectCommands(plan, gate).map((command) => command.id)) {
+    const command = byId.get(id);
+    if (command !== undefined) out.push(command);
+  }
+  return out;
 }
 
 /* --- the verification plan of the run, derived and persisted AT LAUNCH --- *
@@ -1629,6 +1792,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // until that phase lands.
   const runPlan = planOfTheRun.plan;
   const runPlanRecordPath = planOfTheRun.planRecordPath;
+  // The plan's logical name for the red-gate notice (T230): the same
+  // substitution `resolveLogicalName` applies for `PLAN_RECORD_NAME`, computed
+  // once here so the notice and the persisted path cannot drift apart — the
+  // notice names a record the engine really wrote.
+  const runPlanRecordName = PLAN_RECORD_NAME.replace("<runId>", runId);
   say(
     `[${slug}] verification plan derived and persisted at ${relative(workdir, runPlanRecordPath)}`,
   );
@@ -3406,13 +3574,31 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
     const verdictId = `v-${String(phase)}-${String(ordinal)}`;
     const attemptId = `${engineStartId}-a${String(ordinal)}`;
-    const check = checkCommandOf(workdir);
-    const mode = (check === undefined ? "off" : "required") as VerificationGateResult["mode"];
+    // THE GATE OVER THE DECLARED COMMANDS (feature 153, phase 17,
+    // F153-FR-010/-011): the gate of the phase is the one of feature 105,
+    // run over the check runner of feature 148, on the commands the
+    // verification plan declares. `mode` comes from the PLAN — `required`
+    // where the gate of the phase selects at least one command, `off` where
+    // it does not — and the literal `npm test` of `checkCommandOf` is off
+    // the gate path for good (F153-FR-015).
+    const gateCommands = gateCommandsOfThePhase(runPlan, phase);
+    const mode = (gateCommands.length > 0 ? "required" : "off") as VerificationGateResult["mode"];
     let verification: VerificationGateResult | undefined;
     // F153-FR-050 — the engine captures no output of its own check for any
     // critic-class input: the failed commands below go only to the red-gate
     // feedback port (T065).
     let failedGateCommands: readonly FailedGateCommand[] = [];
+    // The RESULT CODE the gate answered — 10 failed, 3 could not run — kept
+    // here because the hashed record folds both into `exit_code` 10, and the
+    // notice must not lose the distinction (T225, T228).
+    let gateResultCode: 3 | 10 | undefined;
+    // The name the gate result record of this attempt was written under —
+    // `attempt:<N>:<k>:<n>:verification` (GATE_RECORD_NAME, T231) — or
+    // `"none"` where NO record was written (a gate that could not run, code
+    // 3, or a throw before the write). `verification.ended` reads its
+    // `evidenceRef` from here and the red-gate notice its `record` (T233):
+    // the name stands only while the record it names EXISTS.
+    let gateRecordEvidenceRef = "none";
     let nonceHashOfTheCall = "";
     let proofOfTheCall = "not-made";
 
@@ -3431,7 +3617,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           critic: criticHarness,
           specFormat: "speckit-tasks",
           featureSlug: slug,
-          verificationPlan: check,
+          // A summary of the DECLARED commands, not their output: the gate
+          // names what would run (F153-FR-050).
+          verificationPlan:
+            gateCommands.length > 0
+              ? gateCommands.map((command) => [command.executable, ...command.args].join(" ")).join(" && ")
+              : undefined,
         }),
       },
       {
@@ -3441,91 +3632,188 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           emit("verification.started", {
             phase,
             attempt: ordinal,
-            planRef: check ?? "none",
+            planRef: gateCommands.length > 0 ? runPlan.id : "none",
           });
+          // The logical name the gate result record of this attempt is
+          // written under (GATE_RECORD_NAME, `<k>` = the attempt of the
+          // phase run): computed ONCE, before the `try`, so that both the
+          // record write (T231) and the `evidenceRef` of `verification.ended`
+          // name the SAME record on every path (T233).
+          const gateRecordName = GATE_RECORD_NAME.replace("<N>", String(phase))
+            .replace("<k>", "1")
+            .replace("<n>", String(ordinal));
           try {
-          // The check runs NOW; a result of an earlier run is never accepted.
-          // F153-FR-029 — with the enforced time limit on, the check runs
-          // through the ONE check runner (`runEngineCheck`, T088): it is the
-          // leader of its own process group and is ended — the whole group —
-          // at the gate's limit. The limit is the constant of T085, read
-          // through nothing but the test-only override; a result whose
-          // signal is `TIMEOUT` counts as FAILED (T089): `exit_code` 10, and
-          // the captured command of the notice carries no exit code and the
-          // signal. With the switch off, the baseline `spawnSync` runs.
-          const gateLimitSec = GATE_TIME_LIMIT_SEC_FOR_TESTS.value ?? GATE_TIME_LIMIT_SEC;
-          // The runner spawns without a shell (F148-FR-001), so the check of
-          // `sh -c` form goes through an ABSOLUTE `sh` (pinACommand refuses a
-          // bare name it cannot pin); where the search finds none, the
-          // baseline `spawnSync` path runs.
-          const shPath = resolveExecutable("sh", process.env.PATH ?? "") ?? "/bin/sh";
-          const run =
-            check === undefined
-              ? { status: 0 as number | null, signal: null as string | null, stdout: "", stderr: "" }
-              : loopConfig.timeLimitEnforced
-                ? spawnSyncShapeOf(
-                    await runEngineCheck(
-                      {
-                        id: "check",
-                        argv: [shPath, "-c", check],
-                        cwd: workdir,
-                        timeLimitMs: timeLimitMsOf(gateLimitSec, gateLimitSec),
-                        phase,
-                      },
-                      "default",
-                    ),
-                  )
-                : spawnSync("sh", ["-c", check], { cwd: workdir, encoding: "utf8" });
-          const exit_code = run.status === 0 ? 0 : 10;
-          const record = {
-            exit_code,
-            mode,
-            roster: [{ name: check ?? "none", status: exit_code === 0 ? "passed" : "failed" }],
-          };
-          verification = { ...record, hash: canonicalRecordHash(record) };
-          // The hashed record of THIS attempt is written beside the feedback,
-          // before any summary exists to move it (T066, F153-FR-018).
-          write(
-            inControl(join("features", slug, "verification", `phase${String(phase)}.${String(ordinal)}.json`)),
-            JSON.stringify(verification),
-          );
-          if (exit_code !== 0) {
-            failedGateCommands = [
+            // The captured results of the commands, AS THE RUNNER RETURNED
+            // THEM: the gate's own outcome records no stream, so the notice
+            // and the events read this capture (T058, T065, T232).
+            const captured = new Map<string, CheckRunnerResult>();
+            const reasons = new Map<string, string | undefined>();
+            const roots = rootPathsOf({
+              home: homedir(),
+              workspaceRealPath: workdir,
+              workspaceId,
+              controlRoot,
+              workerRoot: "",
+            });
+            const gateRecordPath = resolveLogicalName(
+              GATE_RECORD_NAME,
               {
-                commandId: "check",
-                executable: "sh",
-                args: ["-c", check ?? ""],
-                cwd: workdir,
-                exitCode: run.status ?? null,
-                signal: run.signal ?? null,
-                stdout: run.stdout ?? "",
-                stderr: run.stderr ?? "",
+                "<N>": String(phase),
+                "<k>": "1",
+                "<n>": String(ordinal),
+                "<slug>": slug,
+                "<runId>": runId,
               },
-            ];
-          }
-          say(
-            `[${slug}] verification: ${check ?? "none declared"} -> ${record.roster[0]?.status ?? ""}`,
-          );
-          // F153-FR-034 — the closer of the gate's pair names the evidence
-          // record of this attempt and the result code of the gate: 0 passed,
-          // 10 failed (T120).
-          emit("verification.ended", {
-            phase,
-            attempt: ordinal,
-            result: verification.exit_code === 0 ? "passed" : "failed",
-            rc: verification.exit_code,
-            evidenceRef: `attempt:${String(phase)}:${String(ordinal)}:verification`,
-            synthesized: false,
-          });
-          return Promise.resolve(verification);
+              roots,
+            );
+            // The gate of feature 105 (T227, T228): code 3 — a gate that
+            // could not run — is answered below as a red gate too.
+            const gateOutcome = await runGateOrCode3(async () => ({
+              // THE PLAN AT ITS RECORD (F153-FR-013): loaded from the place
+              // the launch persisted it, so a plan that cannot be read or
+              // validated is a gate that COULD NOT RUN.
+              plan: loadPlan({
+                path: runPlanRecordPath,
+                read: (path: string) => readFileSync(path, "utf8"),
+              }),
+              phase,
+              run: runOneGateCommandOf({
+                phase,
+                containment: entryOfTheRun.containmentCeiling ?? "C0",
+                captured,
+                reasons,
+              }),
+              ingress: checkOutputPortOf(ingress, CHANGE_CAP_BYTES),
+            }));
+            // T232 — the timed pair of EVERY command that ran, through the
+            // builders of the event catalogue; the capture carries the
+            // streams. The gate never stopped at a failed command, so a
+            // command after a failure closes its pair too (F105-FR-032).
+            for (const command of gateOutcome.commands) {
+              // The DECLARED id names the check where the plan declares one
+              // (F153-FR-010); the plan id backs it up.
+              const checkId = command.declaredId ?? command.commandId;
+              emit("check.started", checkStartedData({ checkId, commandRef: null }));
+              const raw = captured.get(command.commandId);
+              if (raw !== undefined) {
+                emit("check.ended", checkEndedData({ checkId, result: raw }));
+              }
+            }
+            // T230 — the failed commands of the notice, with the streams AS
+            // CAPTURED: only what failed is named (F105-FR-032, T065).
+            if (!gateOutcome.passed) {
+              failedGateCommands = gateOutcome.failedIds.flatMap((id): FailedGateCommand[] => {
+                const raw = captured.get(id);
+                const planned = runPlan.commands.find((command) => command.id === id);
+                // The notice names the command as the DOCUMENT declares it
+                // (F153-FR-010); the plan id stays the lookup key.
+                const declaredId = planned?.declaredId;
+                // The REASON the runner recorded — a command ended at its
+                // declared limit names the limit in the notice (T235,
+                // F153-FR-029) — joins the captured standard error.
+                const stderr = [raw?.stderr, reasons.get(id)]
+                  .filter((part): part is string => typeof part === "string" && part !== "")
+                  .join("\n");
+                return [
+                  {
+                    commandId: declaredId ?? id,
+                    executable: planned?.executable ?? "",
+                    args: planned?.args ?? [],
+                    cwd: planned?.cwd ?? workdir,
+                    exitCode: raw?.exitCode ?? null,
+                    signal: raw?.signal ?? null,
+                    stdout: raw?.stdout ?? "",
+                    stderr,
+                  },
+                ];
+              });
+            }
+            if (gateOutcome.rc !== 0) gateResultCode = gateOutcome.rc;
+            const exit_code = gateOutcome.rc === 0 ? 0 : 10;
+            // T231 — the result record of the gate, WRITTEN ONCE at its
+            // logical name of the layout table (F105-FR-009). A gate that
+            // could not run has no plan to record against.
+            const thePlan = (() => {
+              try {
+                return loadPlan({
+                  path: runPlanRecordPath,
+                  read: (path: string) => readFileSync(path, "utf8"),
+                });
+              } catch {
+                return undefined;
+              }
+            })();
+            if (thePlan !== undefined) {
+              writeOnce({
+                logicalName: gateRecordName,
+                path: gateRecordPath,
+                record: gateResultRecord({
+                  planId: thePlan.id,
+                  planHash: thePlan.contentHash,
+                  gateId: gateOutcome.gateId ?? "",
+                  phase,
+                  sourceRevision: "",
+                  outcome: gateOutcome,
+                }),
+                readExisting: (path: string) =>
+                  existsSync(path) ? readFileSync(path, "utf8") : undefined,
+                write: (path: string, text: string) => write(path, text),
+              });
+              // T233 — from here the record EXISTS at its logical name, so
+              // `verification.ended` and the red-gate notice may name it.
+              gateRecordEvidenceRef = gateRecordName;
+            }
+            const record = {
+              exit_code,
+              mode,
+              roster:
+                gateOutcome.commands.length > 0
+                  ? gateOutcome.commands.map((command) => ({
+                      name: command.declaredId ?? command.commandId,
+                      status: command.passed ? "passed" : "failed",
+                    }))
+                  : [{ name: "none", status: exit_code === 0 ? "passed" : "failed" }],
+            };
+            verification = { ...record, hash: canonicalRecordHash(record) };
+            // The hashed record of THIS attempt is written beside the feedback,
+            // before any summary exists to move it (T66, F153-FR-018).
+            write(
+              inControl(
+                join("features", slug, "verification", `phase${String(phase)}.${String(ordinal)}.json`),
+              ),
+              JSON.stringify(verification),
+            );
+            say(
+              `[${slug}] verification: ${
+                gateOutcome.commands.length > 0
+                  ? gateOutcome.commands
+                      .map((command) => `${command.declaredId ?? command.commandId} -> ${command.passed ? "passed" : "failed"}`)
+                      .join(", ")
+                  : "none declared"
+              }`,
+            );
+            // F153-FR-034 — the closer of the gate's pair names the evidence
+            // record of this attempt and the RESULT CODE OF THE GATE: 0
+            // passed, 10 failed, 3 could not run (T120, T228).
+            emit("verification.ended", {
+              phase,
+              attempt: ordinal,
+              result: exit_code === 0 ? "passed" : "failed",
+              rc: gateOutcome.rc,
+              evidenceRef: gateRecordEvidenceRef,
+              synthesized: false,
+            });
+            return verification;
           } catch (error) {
             // A gate that throws still closes its pair, as a failure (T120).
+            // `evidenceRef` names the record only where the write reached it
+            // (T233); a throw before `writeOnce` leaves `"none"`.
             emit("verification.ended", {
               phase,
               attempt: ordinal,
               result: "failed",
               rc: 10,
-              evidenceRef: `attempt:${String(phase)}:${String(ordinal)}:verification`,
+              evidenceRef: gateRecordEvidenceRef,
               synthesized: false,
             });
             throw error;
@@ -3803,10 +4091,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         feedbackOfAFailedGate: (failedGate) =>
           redGateFeedbackOf({
             phase,
-            gateResultCode: failedGate.exit_code === 10 ? 10 : 3,
+            gateResultCode: gateResultCode ?? (failedGate.exit_code === 10 ? 10 : 3),
             commands: () => failedGateCommands,
-            plan: `attempt:${String(phase)}:${String(ordinal)}:verification-plan`,
-            record: `attempt:${String(phase)}:${String(ordinal)}:verification`,
+            // The plan's logical name (T230): the persisted plan record
+            // `run:<runId>:verification:plan`, not an invented name.
+            plan: runPlanRecordName,
+            record: gateRecordEvidenceRef,
             ingress: checkOutputPortOf(ingress, CHANGE_CAP_BYTES),
           }),
         writeFeedback: (text) => {

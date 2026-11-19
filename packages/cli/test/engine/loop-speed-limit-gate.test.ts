@@ -1,32 +1,27 @@
 /**
- * Phase 7 of feature 153, slice P1e — the enforced time limit on the
- * verification gate (F153-FR-029 to -032) and on limits-off (CQ-153-04,
- * CQ-153-13). The fixture is the one of T043 with the check swapped for the
- * fake of T004: the gate's `npm test` hangs forever with a grandchild that
- * ignores SIGTERM. With the switch on, the gate runs through the one check
- * runner: the command runs as the leader of its own process group, the whole
- * group is ended at the gate's time limit (SIGTERM, then SIGKILL after the
- * runner's grace), the attempt ends `gate-failed`, the timed-out gate is a
- * FAILED gate (exit_code 10, `command timed out` on standard error) and is
- * never a transient stop — the run goes on to the next attempt. Under
- * `SPECSTRIDE_LIMITS=off` the gate's limit still applies (CQ-153-04 A): the
- * first attempt still times out, and the run — told once that limits are
- * off — finishes on the attempt whose check passes.
+ * Phase 7 of feature 153, slice P1e, REWORKED in phase 17 (T235) — the
+ * enforced time limit on the verification gate is the DECLARED one now
+ * (F153-FR-029): every command of the verification plan carries its own
+ * `timeoutSec`, and the gate of feature 105 ends the command — the whole
+ * process group — at that limit. The fixture declares one command whose
+ * fake (T004) hangs forever with a grandchild that ignores SIGTERM. The
+ * attempt ends on the failed gate, the timed-out gate is a FAILED gate
+ * (`exit_code` 10, the limit named in the notice) and is never a transient
+ * stop — the run goes on to the next attempt, whose command passes. Under
+ * `SPECSTRIDE_LIMITS=off` the declared limit still applies (CQ-153-04 A,
+ * CT-153-31): no setting lifts a budget (governance principle XV).
  *
- * The tests shrink the gate's limit through the test-only override the
- * engine exports (`GATE_TIME_LIMIT_SEC_FOR_TESTS`); production code never
- * writes it, so the shipped limit stays the constant 1,800 s of T085.
+ * The test-only override the engine used to export
+ * (`GATE_TIME_LIMIT_SEC_FOR_TESTS`) is GONE: the tests shrink the limit in
+ * the document, the way a consumer declares it.
  */
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import {
-  GATE_TIME_LIMIT_SEC_FOR_TESTS,
-  runFeature,
-} from "../../src/engine/run-feature.ts";
+import { runFeature } from "../../src/engine/run-feature.ts";
 import { workspaceIdOfWorkspace } from "../../src/engine/workspace-control-root.ts";
 import { fixture } from "./loop-speed-helpers.ts";
 
@@ -80,17 +75,18 @@ type GateRun = {
 };
 
 /**
- * The gate fixture: a workspace whose declared check runs the fake of T004 —
- * a hang with a SIGTERM-ignoring grandchild — on the first run of THIS
- * process only (the counter lives beside the workspace, never inside it), so
- * the run can end on the attempt whose check passes. The pid file lives
- * beside the workspace too: the engine's tree handling must never reach it.
- * `SPECSTRIDE_LIMITS` is pinned off the environment the test inherited, so
- * the reject limit of the loop stands.
+ * The gate fixture: a workspace whose DECLARED gate command (the document
+ * with `discovery: "none"`, so no `npm test` joins the gate) runs the fake of
+ * T004 — a hang with a SIGTERM-ignoring grandchild — on the first run of
+ * THIS process only (the counter lives beside the workspace, never inside
+ * it), so the run can end on the attempt whose command passes. The pid file
+ * lives beside the workspace too: the engine's tree handling must never
+ * reach it. `SPECSTRIDE_LIMITS` is pinned off the environment the test
+ * inherited, so the reject limit of the loop stands.
  *
- * The wrapper keeps the pipes of `npm test` OPEN through to the fake: the
- * fake's grandchild writes to them and dies of the broken pipe once the
- * ended command's pipes close.
+ * The command's declared limit is `LIMIT_SEC`; the grandchild writes to the
+ * inherited pipes and dies of the broken pipe once the ended command's pipes
+ * close.
  */
 function gateHangsOnce(): GateRun {
   const { dir, restore } = fixture({ verdicts: "APPROVED" });
@@ -117,17 +113,28 @@ if (n < 1) {
 process.exit(0);
 `,
   );
+  const control = controlRoot(dir);
+  mkdirSync(join(control, "features", "001-one", "verification"), { recursive: true });
   writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify(
-      { name: "x", private: true, scripts: { test: `node ${JSON.stringify(runner)}` } },
-      null,
-      2,
-    ),
+    join(control, "features", "001-one", "verification", "verification-commands.json"),
+    JSON.stringify({
+      schema_version: "specstride.verification-commands/1",
+      discovery: "none",
+      commands: [
+        {
+          id: "verify-hang",
+          phase: 1,
+          executable: "node",
+          args: [runner],
+          cwd: dir,
+          timeoutSec: LIMIT_SEC,
+        },
+      ],
+    }),
   );
   return {
     work: dir,
-    control: controlRoot(dir),
+    control,
     pids: () =>
       existsSync(pidFile)
         ? readFileSync(pidFile, "utf8")
@@ -168,18 +175,17 @@ function filesOf(directory: string): string[] {
 }
 
 const SKIP = !GROUPS_AVAILABLE && "process groups are unavailable (F153-FR-032)";
-// The gate's limit as the tests shrink it, the runner's grace is 2 s: one
+// The DECLARED limit of the gate command, and the runner's grace of 2 s: one
 // gate attempt ends within limit + grace + 2 s (F153-FR-030). The limit is
-// 5 s, not 1 s: attempt 2's check must still pass UNDER LOAD (the whole
+// 5 s, not 1 s: attempt 2's command must still pass UNDER LOAD (the whole
 // workspace suite runs its files concurrently, and a bare `node` startup
 // has been observed past 1 s there), or the run rejects twice and the
 // `exit 0` assertion flakes for a reason the phase never owned.
 const LIMIT_SEC = 5;
 const ONE_ATTEMPT_MS = (LIMIT_SEC + 2 + 2) * 1_000;
 
-test("CT-153-29 the gate is ended at its limit", { skip: SKIP }, async () => {
+test("CT-153-29 the gate is ended at its declared limit", { skip: SKIP }, async () => {
   const run = gateHangsOnce();
-  GATE_TIME_LIMIT_SEC_FOR_TESTS.value = LIMIT_SEC;
   try {
     const started = Date.now();
     const exit = await runFeature({ argv: [], workdir: run.work });
@@ -195,7 +201,6 @@ test("CT-153-29 the gate is ended at its limit", { skip: SKIP }, async () => {
       assert.ok(await pidIsGone(pid), `pid ${String(pid)} is still alive`);
     }
   } finally {
-    GATE_TIME_LIMIT_SEC_FOR_TESTS.value = undefined;
     // The fake is spawned detached from the ended command's process group,
     // so it would hang forever if a kill missed it: reap it here so no run
     // of these tests leaves stray processes behind.
@@ -208,7 +213,6 @@ test("CT-153-29 the gate is ended at its limit", { skip: SKIP }, async () => {
 
 test("CT-153-29 a timed-out gate is a failed gate", { skip: SKIP }, async () => {
   const run = gateHangsOnce();
-  GATE_TIME_LIMIT_SEC_FOR_TESTS.value = LIMIT_SEC;
   try {
     await runFeature({ argv: [], workdir: run.work });
     const record = JSON.parse(
@@ -222,13 +226,21 @@ test("CT-153-29 a timed-out gate is a failed gate", { skip: SKIP }, async () => 
       record.roster.every((entry) => entry.status !== "0"),
       `no roster status is the passing one: ${JSON.stringify(record.roster)}`,
     );
+    // Attempt 2 is approved, so the notice of attempt 1 was set aside with
+    // the rest of the phase's feedback.
     const notice = readFileSync(
       join(run.control, "features", "001-one", "set-aside", "phase1", "phase1.1.md"),
       "utf8",
     );
-    assert.ok(notice.includes("command timed out"), "the notice holds the runner's timeout text");
+    assert.ok(
+      notice.includes("ran past its time limit"),
+      "the notice holds the runner's timeout text",
+    );
+    assert.ok(
+      notice.includes(`${LIMIT_SEC * 1_000} ms`),
+      `the notice names the declared limit: ${notice.slice(0, 600)}`,
+    );
   } finally {
-    GATE_TIME_LIMIT_SEC_FOR_TESTS.value = undefined;
     for (const pid of run.pids()) {
       try { process.kill(-pid, "SIGKILL"); } catch { try { process.kill(pid, "SIGKILL"); } catch {} }
     }
@@ -238,7 +250,6 @@ test("CT-153-29 a timed-out gate is a failed gate", { skip: SKIP }, async () => 
 
 test("CT-153-32 a timed-out gate is not a transient stop", { skip: SKIP }, async () => {
   const run = gateHangsOnce();
-  GATE_TIME_LIMIT_SEC_FOR_TESTS.value = LIMIT_SEC;
   try {
     const exit = await runFeature({ argv: [], workdir: run.work });
     assert.equal(exit, 0, "the run went on and ended with the phase approved");
@@ -267,7 +278,6 @@ test("CT-153-32 a timed-out gate is not a transient stop", { skip: SKIP }, async
       );
     }
   } finally {
-    GATE_TIME_LIMIT_SEC_FOR_TESTS.value = undefined;
     for (const pid of run.pids()) {
       try { process.kill(-pid, "SIGKILL"); } catch { try { process.kill(pid, "SIGKILL"); } catch {} }
     }
@@ -275,9 +285,8 @@ test("CT-153-32 a timed-out gate is not a transient stop", { skip: SKIP }, async
   }
 });
 
-test("CT-153-31 limits off does not lift the gate's limit", { skip: SKIP }, async () => {
+test("CT-153-31 limits off does not lift the declared limit", { skip: SKIP }, async () => {
   const run = gateHangsOnce();
-  GATE_TIME_LIMIT_SEC_FOR_TESTS.value = LIMIT_SEC;
   process.env.SPECSTRIDE_LIMITS = "off";
   const linesBefore = engineLines.length;
   try {
@@ -301,7 +310,6 @@ test("CT-153-31 limits off does not lift the gate's limit", { skip: SKIP }, asyn
     ) as { limitsOff?: { checksStillBounded?: boolean } };
     assert.equal(loopRecord.limitsOff?.checksStillBounded, true);
   } finally {
-    GATE_TIME_LIMIT_SEC_FOR_TESTS.value = undefined;
     for (const pid of run.pids()) {
       try { process.kill(-pid, "SIGKILL"); } catch { try { process.kill(pid, "SIGKILL"); } catch {} }
     }

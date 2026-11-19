@@ -31,7 +31,7 @@ const roleOf = (argv: readonly string[], prompt: string): string => {
  * critic call) or a list consumed in order, the last one repeated; every
  * other part of the behaviour follows `STUB` of `run-feature.test.ts`.
  */
-export function stubClaude(verdicts: Verdicts): string {
+export function stubClaude(verdicts: Verdicts, proposerExtra = ""): string {
   const list = Array.isArray(verdicts) ? verdicts : [verdicts];
   const pick = (n: number): string => list[Math.min(n, list.length - 1)];
   return `#!/usr/bin/env node
@@ -61,6 +61,7 @@ if (role === "diagnostician") {
   fs.writeFileSync("made.txt", process.env.STUB_NEW_FILE ?? "work\\n");
   fs.mkdirSync("newdir", { recursive: true });
   fs.writeFileSync("newdir/inside.txt", "nested\\n");
+  ${proposerExtra}
   const tasks = "specs/001-one/tasks.md";
   fs.writeFileSync(tasks, fs.readFileSync(tasks, "utf8").replace("[ ]", "[x]"));
   console.log(JSON.stringify({ type: "result", result: "ok" }));
@@ -73,6 +74,8 @@ export type FixtureOptions = {
   readonly verdicts: Verdicts;
   /** Extra files written into the working directory before the run. */
   readonly files?: Readonly<Record<string, string>>;
+  /** Extra statements injected into the proposer branch of the stub. */
+  readonly proposerExtra?: string;
 };
 
 /**
@@ -86,7 +89,7 @@ export function fixture(options: FixtureOptions): Fixture {
   const work = join(root, "work");
   mkdirSync(bin);
   mkdirSync(join(work, "specs", "001-one"), { recursive: true });
-  writeFileSync(join(bin, "claude"), stubClaude(options.verdicts));
+  writeFileSync(join(bin, "claude"), stubClaude(options.verdicts, options.proposerExtra ?? ""));
   chmodSync(join(bin, "claude"), 0o755);
   writeFileSync(join(work, "specs", "001-one", "tasks.md"), "# Tasks\n\n## Phase 1: One\n\n- [ ] T001 Do it\n");
   for (const [name, content] of Object.entries(options.files ?? {})) {

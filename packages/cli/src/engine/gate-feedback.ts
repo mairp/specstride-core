@@ -144,7 +144,10 @@ export function redGateFeedbackOf(input: RedGateFeedbackInput): string {
   return renderFeedback({
     phase: input.phase,
     gateResultCode: input.gateResultCode,
-    failureSummary: failureSummaryOf(input),
+    // A gate that COULD NOT RUN ran no command, so no failure digest exists
+    // to render: the section holds the placeholder of B-1145, and the frame
+    // stays intact (feature 153, T225).
+    failureSummary: input.gateResultCode === 3 ? undefined : failureSummaryOf(input),
     plan: input.plan,
     record: input.record,
   });

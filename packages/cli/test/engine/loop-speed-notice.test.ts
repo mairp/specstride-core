@@ -13,7 +13,7 @@
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -50,6 +50,13 @@ function gateFailsOnce(firstOutput: readonly string[]): Run {
   const root = join(dir, "..");
   mkdirSync(join(root, "bin"), { recursive: true });
   const counter = join(root, "gate-runs.txt");
+  // The lines the fake prints live in a file BESIDE the workspace, so the
+  // SCRIPT itself is byte-identical across the runs of this file: phase 17
+  // names the gate command by the plan's `CMD-…` id, which is derived from
+  // the command, and the record of F153-FR-018 must not move with the
+  // OUTPUT of the run.
+  const output = join(root, "gate-output.txt");
+  writeFileSync(output, firstOutput.join("\n") + "\n");
   const fake = join(root, "bin", "fail-once.cjs");
   writeFileSync(
     fake,
@@ -59,7 +66,9 @@ const C = ${JSON.stringify(counter)};
 let n = 0; try { n = Number(fs.readFileSync(C, "utf8")); } catch {}
 fs.writeFileSync(C, String(n + 1));
 if (n < 1) {
-${firstOutput.map((line) => `  console.log(${JSON.stringify(line)});`).join("\n")}
+  for (const line of fs.readFileSync(${JSON.stringify(output)}, "utf8").trim().split(/\\r?\\n/)) {
+    console.log(line);
+  }
   process.exit(1);
 }
 process.exit(0);
@@ -87,6 +96,15 @@ test("CT-153-16 the next attempt gets the notice", async () => {
     assert.ok(notice.startsWith(`${HEADING}\n`));
     assert.ok(notice.includes(ALPHA));
     assert.ok(notice.includes(BETA));
+    // T230 — `## References` names the REAL logical names of the persisted
+    // plan and of the gate result record of the failed attempt.
+    const runName = readdirSync(join(run.control, "features", "001-one", "runs")).sort()[0] ?? "";
+    assert.ok(
+      notice.includes(`run:${runName}:verification:plan`),
+      `the notice names the persisted plan record: ${notice.slice(-600)}`,
+    );
+    assert.ok(notice.includes("attempt:1:1:1:verification"), "the notice names the gate result record");
+    assert.ok(!notice.includes("verification-plan"), "the invented plan name is gone");
     // The proposer prompt of attempt 2 carries the notice: both failing
     // lines reach the next attempt.
     const prompts = readFileSync(join(run.work, "prompts.jsonl"), "utf8")
@@ -124,23 +142,35 @@ test("CT-153-18 the record does not move", async () => {
       join(thin.control, "features", "001-one", "verification", "phase1.1.json"),
       "utf8",
     );
-    assert.equal(thinRecord, richRecord);
-    const record = JSON.parse(richRecord) as {
-      exit_code: number;
-      mode: string;
-      roster: readonly { name: string; status: string }[];
-      hash: string;
-      summary?: unknown;
+    // Phase 17 — the gate takes the DISCOVERED command from the plan, whose
+    // id is the plan's `CMD-…`, derived from the command line — which names
+    // THIS run's place, so the two runs' ids differ by the run's path alone.
+    // F153-FR-018 is about the OUTPUT: normalize the id away, and the two
+    // records must be equal.
+    const normalized = (text: string): unknown => {
+      const record = JSON.parse(text) as {
+        exit_code: number;
+        mode: string;
+        roster: readonly { name: string; status: string }[];
+        hash: string;
+      };
+      assert.equal(record.exit_code, 10);
+      assert.equal(record.mode, "required");
+      assert.equal(record.roster.length, 1);
+      assert.match(record.roster[0]?.name ?? "", /^CMD-/);
+      assert.equal(record.roster[0]?.status, "failed");
+      const stable = {
+        exit_code: 10,
+        mode: "required",
+        roster: [{ name: "CMD", status: "failed" }],
+      };
+      assert.equal(record.hash, canonicalRecordHash({ ...stable, roster: record.roster }));
+      return { ...record, ...stable, hash: canonicalRecordHash(stable) };
     };
-    assert.equal(record.exit_code, 10);
-    assert.equal(record.mode, "required");
-    assert.deepEqual(record.roster, [{ name: "npm test", status: "failed" }]);
-    assert.equal(
-      record.hash,
-      canonicalRecordHash({ exit_code: 10, mode: "required", roster: [{ name: "npm test", status: "failed" }] }),
-    );
+    assert.deepEqual(normalized(thinRecord), normalized(richRecord));
+    assert.equal(JSON.stringify(richRecord).includes(ALPHA), false);
+    const record = JSON.parse(richRecord) as { summary?: unknown };
     assert.equal("summary" in record, false, "the record holds no summary field");
-    assert.equal(JSON.stringify(record).includes(ALPHA), false);
   } finally {
     thin.restore();
   }

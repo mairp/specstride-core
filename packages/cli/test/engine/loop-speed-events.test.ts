@@ -23,7 +23,7 @@
  */
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import process from "node:process";
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -171,15 +171,49 @@ test("CT-153-45 an approved gate and its critic call open and close in order", a
     const gateCloses = events.filter((event) => event.type === "verification.ended");
     assert.equal(gateOpens.length, 1, "one verification.started");
     assert.equal(gateCloses.length, 1, "one verification.ended");
-    assert.deepEqual(gateOpens[0]?.data, { phase: 1, attempt: 1, planRef: "npm test" });
+    // Phase 17 — `planRef` names the PLAN now (its id), not the literal
+    // `npm test` (F153-FR-015).
+    assert.equal(gateOpens[0]?.data.phase, 1);
+    assert.equal(gateOpens[0]?.data.attempt, 1);
+    assert.equal(typeof gateOpens[0]?.data.planRef, "string");
+    assert.ok(
+      (gateOpens[0]?.data.planRef as string).length > 0,
+      "the opener names the plan",
+    );
     assert.deepEqual(gateCloses[0]?.data, {
       phase: 1,
       attempt: 1,
       result: "passed",
       rc: 0,
-      evidenceRef: "attempt:1:1:verification",
+      evidenceRef: "attempt:1:1:1:verification",
       synthesized: false,
     });
+    // Phase 17 (T233) — `evidenceRef` is the logical name the gate result
+    // record (T231) was written under, and the record EXISTS at the path
+    // that name resolves to (`<control>/features/<slug>/runs/<runId>/
+    // phases/<N>/attempts/e<k>-a<n>/gate/verification.json`, layout §B.5).
+    const eventsFile = eventsFilesOf(control).at(-1) as string;
+    const runId = basename(dirname(eventsFile));
+    const gateRecordPath = join(
+      control,
+      "features",
+      "001-one",
+      "runs",
+      runId,
+      "phases",
+      "1",
+      "attempts",
+      "e1-a1",
+      "gate",
+      "verification.json",
+    );
+    assert.ok(existsSync(gateRecordPath), `the gate record exists: ${gateRecordPath}`);
+    const gateRecord = JSON.parse(readFileSync(gateRecordPath, "utf8")) as {
+      readonly planId: string;
+      readonly passed: boolean;
+    };
+    assert.equal(gateRecord.passed, true, "the record holds the gate's outcome");
+    assert.ok(gateRecord.planId.length > 0, "the record names the plan it ran");
     assert.ok(
       events.indexOf(gateOpens[0] as EngineEvent) < events.indexOf(gateCloses[0] as EngineEvent),
       "the closer comes after the opener",
@@ -224,7 +258,7 @@ test("CT-153-45 a red gate closes as failed with rc 10", async () => {
       attempt: 1,
       result: "failed",
       rc: 10,
-      evidenceRef: "attempt:1:1:verification",
+      evidenceRef: "attempt:1:1:1:verification",
       synthesized: false,
     });
     assert.deepEqual(closes[1]?.data, {
@@ -232,7 +266,7 @@ test("CT-153-45 a red gate closes as failed with rc 10", async () => {
       attempt: 2,
       result: "passed",
       rc: 0,
-      evidenceRef: "attempt:1:2:verification",
+      evidenceRef: "attempt:1:1:2:verification",
       synthesized: false,
     });
     everyPairClosed(events, "verification.started", ["verification.ended"]);
