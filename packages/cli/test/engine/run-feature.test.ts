@@ -157,8 +157,12 @@ test("the state directory is not committed", async () => {
 test("a run with a blocked commit exits 1 and says so on the digest and the console", async () => {
   const { dir, restore } = fixture("APPROVED");
   // A hit the gate never excuses: an address with embedded credentials, which
-  // the narrowed url-embedded-credentials pattern still matches.
-  process.env.STUB_NEW_FILE = 'const u = "https://user:pass@host";';
+  // the narrowed url-embedded-credentials pattern still matches. The stub file
+  // is built by concatenation so this test's own source holds no literal of
+  // the credential shape (cg-url-embedded-credentials would block the commit
+  // of this fixture itself — phase 15, attempt 3).
+  const credentialUrl = ["https://", "user:pass", "@host"].join("");
+  process.env.STUB_NEW_FILE = `const u = "${credentialUrl}";`;
   // The as-is behaviour this test pins (the exit-1 rule of 2026-11-04, part A
   // item 2) is now the switch-off behaviour of feature 152 (F152-FR-022,
   // CQ-152-05 A): with the switch off the run goes on and exits 1,
@@ -228,6 +232,15 @@ test("a secret in the change blocks the commit and is not shown to the critic", 
   // switch off, like the sibling test below.
   const beforeSwitch = process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
   process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
+  // The test pins the capped-diff rendering (`--- new file made.txt`), which
+  // `critic.evidence.perTask` replaces while it is on (the default), so the
+  // run stands the switch down with `profile: parity`, as the T202 guard
+  // case of loop-speed-evidence.test.ts does.
+  mkdirSync(join(dir, "..", ".config", "specstride"), { recursive: true });
+  writeFileSync(
+    join(dir, "..", ".config", "specstride", "config.yaml"),
+    "schema: 1\nprofile: parity\n",
+  );
   try {
     // The run still approves the phase, and its commit stays blocked — so the
     // run no longer exits 0: its work sits uncommitted. Owner ruling

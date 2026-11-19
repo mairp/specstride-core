@@ -97,6 +97,7 @@ import {
   updatePinsAfterVerdict,
 } from "../../../core/src/critic-input/pins/block.ts";
 import { verdictPinsRecordPath } from "../../../core/src/critic-input/pins/store.ts";
+import { perTaskEvidenceOf } from "../../../core/src/critic-input/evidence/per-task.ts";
 import { criterionIdsOf } from "../../../core/src/prompt/providers/feedback.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
 import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
@@ -607,6 +608,24 @@ function changeOf(workdir: string, specDocs = ""): string {
   return change.length <= CHANGE_CAP_BYTES
     ? change
     : `${change.slice(0, CHANGE_CAP_BYTES)}\n[the change was cut here at ${String(CHANGE_CAP_BYTES)} bytes]`;
+}
+
+/**
+ * F153-FR-051 — the changed paths of the candidate, from the same two sources
+ * `changeOf` reads: the tracked diff and the untracked files (the run's own
+ * transcript excluded, F153-FR-019).
+ */
+function changedPathsOf(workdir: string): readonly string[] {
+  const fromDiff = git(workdir, ["diff", "HEAD", "--name-only"]).out;
+  const untracked = git(workdir, ["ls-files", "--others", "--exclude-standard"]).out;
+  return [
+    ...new Set(
+      [fromDiff, untracked]
+        .join("\n")
+        .split("\n")
+        .filter((name) => name !== "" && name !== "prompts.jsonl"),
+    ),
+  ];
 }
 
 /**
@@ -1686,16 +1705,19 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const taskIdsOfThePhase = (phase: number): readonly string[] =>
     phases.find((p) => p.number === phase)?.tasks.map((task) => task.id) ?? [];
 
-  // F153-FR-048 — the priority paths of the pins: the paths the task texts of
-  // the phase cite (the canonical model only), sorted and without repeats.
+  // F153-FR-048/051 — the tasks of the phase with the paths their texts cite
+  // (the canonical model only), and the priority paths of the pins read from
+  // that map: sorted and without repeats.
+  const taskPathsOf = (
+    phase: number,
+  ): readonly { id: string; paths: readonly string[] }[] =>
+    (phases.find((p) => p.number === phase)?.tasks ?? []).map((task) => ({
+      id: task.id,
+      paths: pathsNamedByTheTextOfATask(task.text),
+    }));
+
   const priorityPathsOf = (phase: number): readonly string[] =>
-    [
-      ...new Set(
-        (phases.find((p) => p.number === phase)?.tasks ?? []).flatMap((task) =>
-          pathsNamedByTheTextOfATask(task.text),
-        ),
-      ),
-    ].sort();
+    [...new Set(taskPathsOf(phase).flatMap((task) => task.paths))].sort();
 
   const recoveryDirectoryOf = (phase: number): string =>
     inControl(join("features", slug, "recovery", `phase${String(phase)}`));
@@ -3330,19 +3352,45 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                         })}`
                       : "",
                     `\n# The change in the working tree\n${redacted(
-                      changeOf(
-                        workdir,
-                        specDocsAtAttemptStart === undefined
-                          ? ""
-                          : specDocsBlock(
-                              specDocsChange(
-                                featureDirectory,
-                                specDocsAtAttemptStart,
-                                relative(workdir, featureDirectory),
-                              ),
-                              relative(workdir, featureDirectory),
-                            ),
-                      ),
+                      loopConfig.criticEvidenceIsPerTask
+                        ? `${perTaskEvidenceOf({
+                            tasks: taskPathsOf(phase),
+                            changedPaths: changedPathsOf(workdir),
+                            contentOf: (path: string) => {
+                              try {
+                                return readFileSync(join(workdir, path), "utf8");
+                              } catch {
+                                return undefined;
+                              }
+                            },
+                            windowTokens:
+                              Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || undefined,
+                            totalBudgetBytes: CHANGE_CAP_BYTES,
+                          }).text}${
+                            specDocsAtAttemptStart === undefined
+                              ? ""
+                              : specDocsBlock(
+                                  specDocsChange(
+                                    featureDirectory,
+                                    specDocsAtAttemptStart,
+                                    relative(workdir, featureDirectory),
+                                  ),
+                                  relative(workdir, featureDirectory),
+                                )
+                          }`
+                        : changeOf(
+                            workdir,
+                            specDocsAtAttemptStart === undefined
+                              ? ""
+                              : specDocsBlock(
+                                  specDocsChange(
+                                    featureDirectory,
+                                    specDocsAtAttemptStart,
+                                    relative(workdir, featureDirectory),
+                                  ),
+                                  relative(workdir, featureDirectory),
+                                ),
+                          ),
                     )}`,
                     ...(pinStep.block === "" ? [] : [`\n${pinStep.block}`]),
                     `\n# End of the data`,

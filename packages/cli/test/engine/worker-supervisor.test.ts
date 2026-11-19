@@ -340,11 +340,24 @@ test("the worker sender ends a proven worker through its own group, its tree wit
     assert.ok(childGone, "the child of the worker's tree was ended by the group signal");
     // `gone` reads a zombie as gone, but an UNREAPED corpse still answers
     // `kill(pid, 0)` — the sender's liveness probe — so its precise refusal
-    // is asserted only once the runner has collected the pid.
+    // is asserted only once the runner has collected the pid. The wait is
+    // for the REAPED pid, not merely the dead one: waiting on `alive` ends
+    // at the zombie stage, where the sender would still answer the corpse
+    // instead of refusing it (153 phase 15: this flaked [1,1] on the
+    // runtime's check).
     const beganCollect = Date.now();
-    while (alive(worker.pid) && Date.now() - beganCollect < 10_000) {
+    const reaped = (): boolean => {
+      try {
+        process.kill(worker.pid, 0);
+        return false;
+      } catch {
+        return true;
+      }
+    };
+    while (!reaped() && Date.now() - beganCollect < 10_000) {
       await new Promise((done) => setTimeout(done, 25));
     }
+    assert.ok(reaped(), "the runner collected the worker's pid");
     // A gone worker keeps its precise refusal.
     assert.equal(sender.signal(proven, "kill"), "no-such-process");
   } finally {
