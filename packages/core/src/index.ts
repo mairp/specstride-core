@@ -2,4 +2,9 @@
 // T144 — the rows of the report (feature 153, F153-FR-040) are reachable
 // from the package barrel, in the way src/gate/index.ts is exported.
 export * as report from "./report/index.ts";
+// T279 — the scoped in-pass selection of the inner check set (feature 153,
+// F153-FR-045 to F153-FR-047) is reachable from the package barrel, in the
+// way src/gate/index.ts is exported.
+export * as checks from "./checks/index.ts";
+
 
