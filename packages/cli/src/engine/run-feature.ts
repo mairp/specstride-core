@@ -34,7 +34,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { controlRootOfWorkspace, workspaceIdOfWorkspace } from "./workspace-control-root.ts";
 
 import {
@@ -51,6 +51,13 @@ import {
 import type { ProcessTableIo } from "@specstride/kernel";
 import { platformProcessTableIo } from "@specstride/kernel";
 import {
+  dependentsOf,
+  selectionOf,
+  workspaceOfPath,
+  type SelectionGraph,
+  type SelectionWorkspace,
+} from "@specstride/core/checks";
+import {
   resolve as resolveLogicalName,
   rootPathsOf,
 } from "@specstride/contracts/ids/logical-names";
@@ -64,6 +71,7 @@ import type {
   ManifestEntry,
 } from "@specstride/contracts/ep/check-runner";
 import type { Blocker, LoadedDocument } from "@specstride/verification";
+import type { LaunchContractScopes } from "@specstride/verification";
 import {
   ambiguityOf,
   argvOf,
@@ -101,6 +109,10 @@ import type {
 } from "@specstride/verification";
 import type { PinPort } from "@specstride/verification";
 import { checkRunner, pinACommand } from "@specstride/check-runner";
+import {
+  runTheCheckManifest,
+  type BatchEntry,
+} from "@specstride/check-runner";
 // T232 — the timed pair of every gate command, through the builders of the
 // event catalogue (F148-FR-007): the engine emits, the builders own the
 // fields.
@@ -615,6 +627,44 @@ export function workingTreeFingerprint(workdir: string): string {
 }
 
 /**
+ * F153-FR-042 (T294) — the reading of one end of a BATCH bracket, in the
+ * `specstride.protected-set/1` shape the runner's normalizer
+ * (`readProtectedSetReading`) reads: one hash PER PATH under `classB.files`
+ * (the `git ls-files -s` blob ids, keyed by the path relative to the
+ * workdir). The runner's taint comparison (`compareReadings`) reads the
+ * per-path map — a whole-tree hash alone can never show WHICH path changed,
+ * so a tree-only reading taints nothing and lowers nothing.
+ */
+function perPathWorkingTreeReading(workdir: string): Record<string, unknown> {
+  const scratch = mkdtempSync(join(tmpdir(), "specstride-reading-"));
+  const env = { ...process.env, GIT_INDEX_FILE: join(scratch, "index") };
+  const run = (argv: readonly string[]): { exit: number; out: string } => {
+    const result = spawnSync("git", ["-C", workdir, ...argv], { encoding: "utf8", env });
+    return { exit: result.status ?? 1, out: result.stdout ?? "" };
+  };
+  try {
+    if (run(["read-tree", "HEAD"]).exit !== 0 || run(["add", "--all"]).exit !== 0) {
+      return { classB: { files: [] }, atPhaseEntry: { set: "", tree: "" } };
+    }
+    const files: { path: string; hash: string }[] = [];
+    for (const line of run(["ls-files", "-s"]).out.split("\n")) {
+      // `<mode> <blob> <stage>\t<path>`
+      const tab = line.indexOf("\t");
+      if (tab < 0) continue;
+      const blob = line.slice(0, tab).split(" ")[1] ?? "";
+      const path = line.slice(tab + 1);
+      if (blob !== "" && path !== "") files.push({ path, hash: blob });
+    }
+    return {
+      classB: { files },
+      atPhaseEntry: { set: "", tree: run(["write-tree"]).out.trim() },
+    };
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+/**
  * Keeps the engine's own directory out of the consumer's commits without
  * touching a tracked file: the exclude file of the repository is local to it.
  */
@@ -675,6 +725,66 @@ function changedPathsOf(workdir: string): readonly string[] {
         .filter((name) => name !== "" && name !== "prompts.jsonl"),
     ),
   ];
+}
+
+/**
+ * F153-FR-045 (phase 21, T289) — the static package graph of the working
+ * directory, read AS DATA at the entry of the phase: the file
+ * `packages/contracts/data/package-graph.json` under the working directory,
+ * when it exists and parses. The hash is the canonical record hash of the parsed value, so a
+ * re-read later in the pass can answer whether the graph CHANGED
+ * (workspace-selection row WS-4). A file that is absent, unreadable or
+ * invalid gives no graph and no hash — uncertainty that WIDENS (WS-3,
+ * F153-FR-046); this module does no schema healing and never invents
+ * packages.
+ */
+function graphOfTheRun(workdir: string): {
+  readonly graph: SelectionGraph | undefined;
+  readonly hash: string | null;
+} {
+  const path = join(workdir, "packages", "contracts", "data", "package-graph.json");
+  if (!existsSync(path)) return { graph: undefined, hash: null };
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
+    if (parsed === null || typeof parsed !== "object") return { graph: undefined, hash: null };
+    return { graph: parsed as SelectionGraph, hash: canonicalRecordHash(parsed) };
+  } catch {
+    return { graph: undefined, hash: null };
+  }
+}
+
+/**
+ * F153-FR-045 (T289) — the workspaces of the run, from the DECLARED commands
+ * alone: one entry per distinct command working directory that holds a
+ * `package.json` naming its package, as `{dir, name}` with `dir` relative to
+ * the working directory (the shape `workspaceOfPath` matches the changed
+ * paths against). A command directory with no readable package name maps to
+ * no workspace — rule WS-6 widens on it. Nothing here synthesises a command
+ * or a workspace (Principle XIV): the list is read from what the
+ * verification plan declares.
+ */
+function workspacesOfCommands(
+  workdir: string,
+  commands: readonly { readonly cwd: string }[],
+): readonly SelectionWorkspace[] {
+  const names = new Map<string, SelectionWorkspace>();
+  for (const command of commands) {
+    if (names.has(command.cwd)) continue;
+    try {
+      const pkg = JSON.parse(readFileSync(join(command.cwd, "package.json"), "utf8")) as {
+        name?: unknown;
+      };
+      if (typeof pkg.name === "string" && pkg.name !== "") {
+        names.set(command.cwd, {
+          dir: relative(workdir, command.cwd),
+          name: pkg.name,
+        });
+      }
+    } catch {
+      // No readable package name: the directory maps to no workspace.
+    }
+  }
+  return [...names.values()];
 }
 
 /**
@@ -886,6 +996,154 @@ function gateCommandsOfThePhase(
   return out;
 }
 
+/**
+ * F153-FR-010 (phase 21, T298) — run the commands of the gate in BATCHES
+ * through the batch runner of feature 148, when `verification.parallelism`
+ * is above 1: the batches are formed from the manifest entries with their
+ * DECLARED reads and writes (an undeclared command is refused admission and
+ * runs alone), one fingerprint pair brackets every batch, a taint lowers the
+ * parallelism of the rest of the run to 1, and a failed member of a batch of
+ * more than one runs once more alone. Every event the run produced — the
+ * admissions of F148-FR-12 and the lowering of F148-FR-14 — is re-emitted on
+ * the run's own stream, and every result lands in the SAME capture and
+ * reason maps the sequential path fills, so the record, the binding, the
+ * notice and the timed pairs read the batch run exactly as they read the
+ * serial one. The gate path with the parallelism 1 — and the whole
+ * `parity` profile, whose row 7 reads 1 — never enters here (F153-FR-047's
+ * neighbour rule: parity reproduces the serial gate).
+ *
+ * The answer maps the PLAN command id to the command result the gate's own
+ * `run` port would have returned, so `runGate` replays the batch results
+ * command by command in the order the plan selects them, and every rule of
+ * feature 105 (reuse, ingress, the record of F105-FR-009) sees a result it
+ * cannot tell from the serial one.
+ */
+async function runTheGateCommandsInBatches(input: {
+  readonly phase: number;
+  readonly workdir: string;
+  readonly parallelism: number;
+  readonly commands: readonly PlannedCommand[];
+  readonly entries: readonly unknown[];
+  readonly captured: Map<string, CheckRunnerResult>;
+  readonly reasons: Map<string, string | undefined>;
+  /** The attempt of the gate, for the lowering record of F148-FR-014. */
+  readonly attempt?: number | undefined;
+  readonly emit: (name: string, data: Readonly<Record<string, unknown>>) => void;
+}): Promise<Map<string, GateCommandResult>> {
+  const entries: readonly BatchEntry[] = input.commands.map((command) => {
+    // The DECLARED reads and writes come from the manifest the launch
+    // derived (F148-FR-011): an entry of that manifest carries them where
+    // the launch contract declared the scope, and carries none where it did
+    // not — and an entry without a declaration runs alone.
+    const derived = input.entries.find((entry) => {
+      const held = entry as { id?: unknown };
+      return held.id === command.id;
+    }) as BatchEntry | undefined;
+    const scope = derived as { reads?: BatchEntry["reads"]; writes?: readonly string[] };
+    return {
+      id: command.id,
+      kind: "command" as const,
+      argv: [command.executable, ...command.args],
+      phase: input.phase,
+      timeLimitMs: (command.timeoutSec ?? 0) * 1_000,
+      ...(scope?.reads !== undefined ? { reads: scope.reads } : {}),
+      ...(scope?.writes !== undefined ? { writes: [...scope.writes] } : {}),
+    };
+  });
+  const identities: Record<string, ReturnType<typeof pinACommand>> = {};
+  for (const command of input.commands) {
+    try {
+      identities[command.id] = pinACommand({
+        id: command.id,
+        kind: "command",
+        argv: [command.executable, ...command.args],
+        phase: input.phase,
+        timeLimitMs: (command.timeoutSec ?? 0) * 1_000,
+      });
+    } catch {
+      // Not pinnable: the batch runner answers `cannot-start` — a failed
+      // command, never an error (F153-FR-011).
+    }
+  }
+  const batch = await runTheCheckManifest({
+    entries,
+    workingDirectory: input.workdir,
+    temporaryRoot: mkdtempSync(join(tmpdir(), "specstride-gate-batch-")),
+    parallelism: input.parallelism,
+    identities,
+    // F148-FR-014, T294 — the reading of one end of the bracket, through the
+    // port of EP-16: the tree fingerprint of the working tree stands for the
+    // protected set here, so a command that writes a TRACKED path while it
+    // runs taints its batch and lowers the parallelism to 1 for the rest of
+    // the run (the runner compares; it never derives the set — feature 116).
+    reading: () => perPathWorkingTreeReading(input.workdir),
+    ...(input.attempt !== undefined ? { attempt: input.attempt } : {}),
+  });
+  // Every event the batch run produced, re-emitted on the run's own stream:
+  // the `check.admission` records and the `check.parallelism_lowered` event.
+  for (const event of batch.events) input.emit(event.type, event.data);
+  const byId = new Map<string, GateCommandResult>();
+  for (const placed of batch.placed) {
+    const raw = placed.result as unknown as CheckRunnerResult;
+    input.captured.set(raw.commandId, raw);
+    input.reasons.set(raw.commandId, raw.reason ?? undefined);
+    // F148-FR-016 — a failed member of a batch of MORE THAN ONE was run once
+    // more alone, and the batch runner states BOTH executions on the result:
+    // the second in the field `rerun` of the first, and where the two differ
+    // the pair of observations `observedResults` (`in the batch`, `alone`),
+    // with `flaky` beside them (`statedTogether`, run-batch.ts:229). The
+    // exit result of the first execution is left EXACTLY as the runtime
+    // observed it — that is the runner's own rule — so the gate's verdict
+    // for the command stays the verdict on the first execution, with the
+    // rerun stated beside it, never silently substituted.
+    const rawWithRerun = raw as unknown as {
+      rerun?: CheckRunnerResult | null;
+      observedResults?: readonly unknown[];
+      flaky?: boolean;
+    };
+    const second = rawWithRerun.rerun ?? null;
+    const observed = rawWithRerun.observedResults;
+    byId.set(
+      placed.checkId,
+      Object.freeze({
+        commandId: placed.checkId,
+        declaredId: placed.checkId,
+        source: "runtime",
+        executable: raw.executable,
+        args: Object.freeze([...raw.args]),
+        env: Object.freeze({}),
+        cwd: raw.cwd,
+        exitCode: raw.exitCode,
+        signal: null,
+        durationMs: raw.durationMs,
+        // The gate's own record stays digest-free (F153-FR-050): the streams
+        // the notice reads come from the capture above, never from here.
+        stdout: "",
+        stderr: "",
+        passed: raw.passed,
+        ...(raw.reason !== null && raw.reason !== undefined ? { reason: raw.reason } : {}),
+        ...(second !== null
+          ? {
+              rerun: Object.freeze({
+                at: "alone",
+                exitCode: second.exitCode,
+                signal: second.signal,
+                passed: second.passed,
+                concurrent: second.concurrent,
+                durationMs: second.durationMs,
+              }),
+              ...(observed !== undefined
+                ? { observedResults: Object.freeze([...observed]) }
+                : {}),
+            }
+          : {}),
+        ...(rawWithRerun.flaky === true ? { flaky: true as const } : {}),
+      }) as unknown as GateCommandResult,
+    );
+  }
+  return byId;
+}
+
 /* --- the verification plan of the run, derived and persisted AT LAUNCH --- *
  *
  * F153-FR-010 — the launch derives and persists the verification plan with
@@ -979,6 +1237,75 @@ type SourceContributionOfTheRun = Parameters<typeof blockersOf>[0][number];
  * manifests of the phases. A blocker or a refused derivation is REPORTED, and
  * the caller ends the launch; nothing here decides the exit.
  */
+
+/**
+ * The declared reads and writes of the verification commands, read from the
+ * LAUNCH RECORD of the run (`launch:<launchId>:record`, annex G
+ * `configuration.scopes.commands`), where the run is a child of a launch —
+ * the runtime root names the launch through `SPECSTRIDE_LAUNCH_ID` (the
+ * `LAUNCH_ID_VAR` of `packages/runtime/src/detach/spawn-detached.ts`). The
+ * provenance of a declaration is translated from the closed set of row 261
+ * (`user-config`, `environment`, `flag`) onto the provenance that counts
+ * (`user-configuration`, `environment`, `flag` of
+ * `PROVENANCES_THAT_COUNT_AS_DECLARED`); a declaration from any other
+ * provenance, and a record that cannot be read, gives NO scopes — every
+ * command is then undeclared, which means it runs alone (ruling P11, CQ-190;
+ * `sources/scopes.ts` owns the intake).
+ */
+export function launchScopesOf(controlRoot: string): LaunchContractScopes | undefined {
+  type ScopeDeclarationLike = {
+    readonly reads?: readonly string[];
+    readonly writes?: readonly string[];
+    readonly source: string;
+  };
+  const launchId = process.env["SPECSTRIDE_LAUNCH_ID"];
+  if (launchId === undefined || launchId === "") return undefined;
+  const roots = rootPathsOf({
+    home: homedir(),
+    workspaceRealPath: process.cwd(),
+    workspaceId: "",
+    controlRoot,
+    workerRoot: "",
+  });
+  let path: string;
+  try {
+    path = resolveLogicalName("launch:<launchId>:record", { "<launchId>": launchId }, roots);
+  } catch {
+    return undefined;
+  }
+  let record: unknown;
+  try {
+    record = JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return undefined;
+  }
+  const commands = (
+    (record as { configuration?: { scopes?: { commands?: unknown } } })?.configuration?.scopes
+      ?.commands ?? null
+  ) as Readonly<Record<string, { reads?: unknown; writes?: unknown; source?: unknown }>> | null;
+  if (commands === null || typeof commands !== "object") return undefined;
+  // Row 261 names the provenance of a declaration; the manifest intake
+  // (`declaredScopeOf`) reads the same source under the provenance names of
+  // EP-07. A member outside the row is not translated: it never counts.
+  const PROVENANCE_THAT_COUNTS: Readonly<Record<string, string>> = Object.freeze({
+    "user-config": "user-configuration",
+    environment: "environment",
+    flag: "flag",
+  });
+  const verificationCommands: Record<string, ScopeDeclarationLike> = {};
+  for (const [id, declaration] of Object.entries(commands)) {
+    if (declaration === null || typeof declaration !== "object") continue;
+    const source = PROVENANCE_THAT_COUNTS[String(declaration.source)];
+    if (source === undefined) continue;
+    const one: { reads?: string[]; writes?: string[]; source: string } = { source };
+    if (Array.isArray(declaration.reads)) one.reads = declaration.reads.map(String);
+    if (Array.isArray(declaration.writes)) one.writes = declaration.writes.map(String);
+    verificationCommands[id] = Object.freeze(one);
+  }
+  if (Object.keys(verificationCommands).length === 0) return undefined;
+  return Object.freeze({ verificationCommands: Object.freeze(verificationCommands) });
+}
+
 export async function verificationPlanOfTheRun(input: {
   readonly workdir: string;
   readonly workspaceId: string;
@@ -1090,11 +1417,19 @@ export async function verificationPlanOfTheRun(input: {
   if (derived === undefined) {
     return Object.freeze({ blocked: true as const, blockers: Object.freeze([]), refusal });
   }
+  const theScopes = launchScopesOf(input.controlRoot);
   const manifests = deriveEveryManifest({
     plan: derived.plan,
     pin: pinOfTheLaunch,
     searchPath: input.searchPath,
     provenance: derived.provenance,
+    // F153-FR-042 — the declared reads and writes enter the frozen manifest
+    // from the launch contract ONLY (annex G, `configuration.scopes`; the
+    // intake of `sources/scopes.ts`): the launch record of the run carries
+    // them where the run is a child of a launch, and a manual run — no
+    // launch id — runs every command UNDECLARED, which means serial
+    // (ruling P11, CQ-190).
+    ...(theScopes !== undefined ? { scopes: theScopes } : {}),
   });
   // THE PLAN AT ITS LOGICAL NAME (F153-FR-010): the canonical record and the
   // plan for people, written through the safe write of feature 105 inside the
@@ -2729,6 +3064,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
      */
     let machine: MicroAttempt | undefined;
     if (strategyInForce === "micro") {
+      // F153-FR-045 (phase 21, T289) — the graph AS THIS PHASE ATTEMPT
+      // ENTERS it, read once here: the selection later in the pass compares
+      // this hash against a re-read (row WS-4), and the workspace list is
+      // read off the same declared commands the plan gave the phase.
+      const graphAtPhaseEntry = graphOfTheRun(workdir);
+      const workspacesOfThePhase = workspacesOfCommands(
+        workdir,
+        commandsFromThePlan(phase),
+      );
+      // The sequence of the selection records D15 of this run (T291): one
+      // per in-pass check that consulted the table, in the order they ran.
+      let selectionSeq = 0;
       const attemptMachine = createMicroAttempt({
         runId,
         phase,
@@ -2757,6 +3104,81 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           return commands.length > 0 ? { commands, runner: "runtime" } : undefined;
         },
         timeLimitEnforced: loopConfig.timeLimitEnforced,
+        // F153-FR-045 (T290) — the workspace selection of the in-pass check,
+        // through the `workspace-selection` table (WS-1 to WS-7). The switch
+        // arrives profile-folded (`verification.inner.scoped` off under
+        // `parity`, so WS-1 keeps the whole inner set); the caller is
+        // `in-pass` — the gate is never scoped (F153-FR-047). The decision
+        // is recorded D15 (T291) before the ids are answered.
+        selectInnerCommands: (all) => {
+          const graphNow = graphOfTheRun(workdir);
+          // T290 names `changedPathsOf(workdir)` and the call below passes it
+          // literally. ONE path is left out: the task list of the feature
+          // under way, which the loop itself ticks during the pass
+          // (F153-FR-042) — the loop's own bookkeeping, never a source
+          // change. Every other path under `specs/` still arrives, so a real
+          // change there widens the selection through WS-5 (pinned by the
+          // test "a change under specs/ outside the task list widens").
+          const changedPaths = changedPathsOf(workdir).filter(
+            (path) => path !== relative(workdir, tasksPath),
+          );
+          const decision = selectionOf({
+            switchOn: loopConfig.innerChecksAreScoped,
+            caller: "in-pass",
+            graph: graphNow.graph,
+            graphHashAtPhaseEntry: graphAtPhaseEntry.hash,
+            graphHashNow: graphNow.hash,
+            workspaces: workspacesOfThePhase,
+            changedPaths,
+            // The workspaces are workdir-relative (F153-FR-045): the command
+            // working directories arrive so as well, so the membership of a
+            // command and of a changed path is decided in the same space.
+            commands: all.map((command) => ({
+              id: command.id,
+              cwd: isAbsolute(command.cwd)
+                ? relative(workdir, command.cwd)
+                : command.cwd,
+            })),
+          });
+          const changedNames = [
+            ...new Set(
+              changedPaths
+                .map((path) => workspaceOfPath(path, workspacesOfThePhase)?.name)
+                .filter((name): name is string => name !== undefined),
+            ),
+          ].sort();
+          const dependentNames = dependentsOf(changedNames, graphNow.graph).filter(
+            (name) => !changedNames.includes(name),
+          );
+          selectionSeq += 1;
+          atomicWrite(
+            join(
+              controlRoot,
+              "features",
+              slug,
+              "micro",
+              `phase${String(phase)}.selection.${String(selectionSeq)}.json`,
+            ),
+            JSON.stringify(
+              {
+                schema: "specstride.workspace-selection/1",
+                phase,
+                attempt: ordinal,
+                rule: decision.ruleId,
+                choice: decision.choice,
+                graphHashAtPhaseEntry: graphAtPhaseEntry.hash,
+                graphHashAtSelection: graphNow.hash,
+                changedWorkspaces: changedNames,
+                dependentWorkspaces: dependentNames,
+                selectedCommandIds: [...decision.selectedCommandIds],
+              },
+              null,
+              2,
+            ),
+            { createDirectory: true },
+          );
+          return decision.selectedCommandIds;
+        },
         emit,
         say,
         fingerprint: () => workingTreeFingerprint(workdir),
@@ -3695,6 +4117,35 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               },
               roots,
             );
+            // F153-FR-010 (T298) — above the parallelism 1, the commands of
+            // the gate run through the BATCH runner of feature 148 first,
+            // and `runGate` below replays the results command by command in
+            // the order the plan selects them; at the parallelism 1 (the
+            // default, and the whole `parity` profile) the serial path of
+            // phase 17 runs unchanged. The inner path of the micro layer is
+            // never batched (L-4).
+            const sequentialRunner = runOneGateCommandOf({
+              phase,
+              containment: entryOfTheRun.containmentCeiling ?? "C0",
+              captured,
+              reasons,
+            });
+            const replay =
+              loopConfig.verificationParallelism > 1 && gateCommands.length > 1
+                ? await runTheGateCommandsInBatches({
+                    phase,
+                    workdir,
+                    parallelism: loopConfig.verificationParallelism,
+                    commands: gateCommands,
+                    entries:
+                      planOfTheRun.manifests.find((manifest) => manifest.phase === phase)
+                        ?.entries ?? [],
+                    captured,
+                    reasons,
+                    attempt: ordinal,
+                    emit,
+                  })
+                : undefined;
             // The gate of feature 105 (T227, T228): code 3 — a gate that
             // could not run — is answered below as a red gate too.
             const gateOutcome = await runGateOrCode3(async () => ({
@@ -3706,12 +4157,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 read: (path: string) => readFileSync(path, "utf8"),
               }),
               phase,
-              run: runOneGateCommandOf({
-                phase,
-                containment: entryOfTheRun.containmentCeiling ?? "C0",
-                captured,
-                reasons,
-              }),
+              run: async (command, index) => {
+                const replayed = replay?.get(command.id);
+                return replayed ?? sequentialRunner(command, index);
+              },
               ingress: checkOutputPortOf(ingress, CHANGE_CAP_BYTES),
             }));
             // T232 — the timed pair of EVERY command that ran, through the
@@ -3828,6 +4277,36 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               }
             })();
             if (thePlan !== undefined) {
+              // T295 (F153-FR-042, F148-FR-016) — a command the batch runner
+              // ran a second time alone carries BOTH executions into the
+              // gate record: the first (in the batch) as the entry itself,
+              // the rerun in `rerun`, beside the pair of observations the
+              // runner stated (`observedResults`). The record of F105-FR-009
+              // keeps its as-is fields; these stand BESIDE them, the way a
+              // condition field does, so an entry without a rerun holds no
+              // such field. The runner's own rule stands: the first
+              // execution's exit result is left exactly as observed, so the
+              // record's verdict on the command is the first execution's.
+              const commandsForRecord = gateOutcome.commands.map((command) => {
+                const raw = captured.get(command.commandId) as unknown as
+                  | { rerun?: CheckRunnerResult | null; observedResults?: readonly unknown[] }
+                  | undefined;
+                if (raw?.rerun == null) return command;
+                return {
+                  ...command,
+                  rerun: {
+                    at: "alone",
+                    exitCode: raw.rerun.exitCode,
+                    signal: raw.rerun.signal,
+                    passed: raw.rerun.passed,
+                    concurrent: raw.rerun.concurrent,
+                    durationMs: raw.rerun.durationMs,
+                  },
+                  ...(raw.observedResults !== undefined
+                    ? { observedResults: [...raw.observedResults] }
+                    : {}),
+                } as unknown as typeof command;
+              });
               writeOnce({
                 logicalName: gateRecordName,
                 path: gateRecordPath,
@@ -3837,7 +4316,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   gateId: gateOutcome.gateId ?? "",
                   phase,
                   sourceRevision: "",
-                  outcome: gateOutcome,
+                  outcome: { ...gateOutcome, commands: commandsForRecord },
                 }),
                 readExisting: (path: string) =>
                   existsSync(path) ? readFileSync(path, "utf8") : undefined,

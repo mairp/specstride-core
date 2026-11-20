@@ -109,6 +109,14 @@ export type LoopConfiguration = {
    * under `parity`.
    */
   readonly criticEvidenceIsPerTask: boolean;
+  /**
+   * `verification.parallelism` (feature 148, row 7 of annex E §E.2): a whole
+   * number, default 1, ceiling 4. The trust class is `N lo` — a rank may
+   * only narrow (lower) the value a rank above it held — so the effective
+   * value is the LOWEST whole value any source held, clamped into 1 to 4,
+   * and the `parity` profile reads 1, as the profile's own row 7 does.
+   */
+  readonly verificationParallelism: number;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
 };
@@ -274,6 +282,36 @@ function timeLimitEnforcedOf(resolved: ResolvedConfiguration): boolean {
   return true;
 }
 
+/** The key of the verification parallelism of the gate (feature 148, row 7). */
+export const PARALLELISM_CONFIG_KEY = "verification.parallelism";
+
+/** The ceiling of `verification.parallelism` (F148-FR-011). */
+const PARALLELISM_CEILING = 4;
+
+/**
+ * The value of `verification.parallelism` (F148-FR-011): a whole number,
+ * default 1, ceiling 4. The trust class is `N lo` — a rank may only narrow
+ * (lower) the value a rank above it held, so a project file cannot raise a
+ * value the user file set — and the effective value is therefore the LOWEST
+ * whole value any source held, clamped into 1 to 4. Under the `parity`
+ * profile the value is 1, exactly as the profile's own row 7 holds.
+ */
+function verificationParallelismOf(
+  resolved: ResolvedConfiguration,
+  profile: string | undefined,
+): number {
+  if (profile === "parity") return 1;
+  // The lowest SOURCE value stands. The built-in default of the catalogue is
+  // not a competing source — it is what stands when no source holds a value
+  // — so the shadowed default never takes part in the lowest-wins rule.
+  const held = offersOf(resolved, PARALLELISM_CONFIG_KEY)
+    .filter((offer) => offer.layer !== "default")
+    .map((offer) => Number(offer.value))
+    .filter((value) => Number.isInteger(value));
+  const lowest = held.length === 0 ? 1 : Math.min(...held);
+  return Math.min(Math.max(lowest, 1), PARALLELISM_CEILING);
+}
+
 /**
  * Resolve the loop keys of a run through the real configuration: the files
  * the loader finds (the user file of `user:config`, the project file
@@ -332,6 +370,7 @@ export function loopConfigurationOf(input: {
     ),
     innerChecksAreScoped: switchIsOn(valueOf("verification.inner.scoped").value),
     criticEvidenceIsPerTask: switchIsOn(valueOf("critic.evidence.perTask").value),
+    verificationParallelism: verificationParallelismOf(resolved, resolved.profile),
     parallel: parallelConfigurationOf(resolved),
   });
 }

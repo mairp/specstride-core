@@ -106,3 +106,28 @@ test("CT-153-9 the same value in the user file turns the enforced time limit off
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("CT-153-9 the parallelism cannot be widened: above the ceiling, and above a lower user value", () => {
+  // A value outside 1 to 4 — 9 — is REFUSED by the catalogue (F148-FR-011:
+  // the type of the key is `integer 1 to 4`), so the default 1 stands; the
+  // value is never widened above the ceiling.
+  const above = fixture({ userConfig: "schema: 1\nverification:\n  parallelism: 9\n" });
+  try {
+    const loop = loopConfigurationOf({ home: above.home, workdir: above.dir, environment: ENV });
+    assert.equal(loop.verificationParallelism, 1, "9 is refused; the default 1 stands");
+  } finally {
+    rmSync(above.root, { recursive: true, force: true });
+  }
+  // The trust class is `N lo`: the project file cannot raise the value the
+  // user file set — the lowest whole value any source held stands.
+  const raised = fixture({
+    userConfig: "schema: 1\nverification:\n  parallelism: 2\n",
+    projectFile: "schema: 1\nverification:\n  parallelism: 4\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home: raised.home, workdir: raised.dir, environment: ENV });
+    assert.equal(loop.verificationParallelism, 2, "the project file cannot raise 2 to 4");
+  } finally {
+    rmSync(raised.root, { recursive: true, force: true });
+  }
+});

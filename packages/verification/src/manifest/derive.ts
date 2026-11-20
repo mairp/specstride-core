@@ -124,7 +124,14 @@ export function entryOf(input: {
   readonly provenance?: ReadonlyMap<string, Provenance> | undefined;
 }): ManifestEntry {
   const command = input.command;
-  const scope = declaredScopeOf({ scopes: input.scopes, commandId: command.id });
+  // The launch contract declares the scopes under the id the SOURCES named —
+  // the declared id of the command (F105-FR-020) — not under the plan's
+  // derived id, so the intake reads the declaration by the declared id where
+  // the command carries one.
+  const scope = declaredScopeOf({
+    scopes: input.scopes,
+    commandId: command.declaredId ?? command.id,
+  });
   return Object.freeze({
     id: command.id,
     kind: ENTRY_KIND,

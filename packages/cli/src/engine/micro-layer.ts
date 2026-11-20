@@ -283,6 +283,20 @@ export function createMicroAttempt(input: {
   readonly emit: (type: string, fields: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;
   readonly fingerprint: () => string;
+  /**
+   * F153-FR-045 (feature 153, phase 21) — the workspace selection of the
+   * IN-PASS check. Given every declared command of the inner set, by id and
+   * working directory, it answers the ids of the commands this in-pass check
+   * runs. Uncertainty always widens to the full set (F153-FR-046); the
+   * composition root computes the decision through the
+   * `workspace-selection` table and records it (D15). `undefined` — no
+   * selection wired: the pre-feature behaviour, the whole inner set. The
+   * CLOSING check consults nothing here and always runs the whole inner set
+   * (F153-FR-047, CQ-153-08 A; tracked limitation L-4).
+   */
+  readonly selectInnerCommands?:
+    | ((all: readonly { readonly id: string; readonly cwd: string }[]) => readonly string[])
+    | undefined;
 }): MicroAttempt {
   const emitEvent = (event: { readonly type: string; readonly fields: unknown }): void => {
     input.emit(event.type, event.fields as Record<string, unknown>);
@@ -432,6 +446,26 @@ export function createMicroAttempt(input: {
   const innerSet = (): readonly InnerCommand[] =>
     (manifest?.commands ?? []).map((command) => ({ id: command.id, argv: [...command.argv] }));
 
+  /**
+   * F153-FR-045 — the inner set AS THE IN-PASS CHECK RECEIVES IT: where a
+   * selection is wired, only the commands whose id it returned. This is the
+   * hand-on of the in-pass check alone; the closing check consults
+   * `innerSet` and never this (F153-FR-047). A selection that names no
+   * command of the inner set runs nothing new — every id it returns that no
+   * manifest command holds is dropped here, and none is ever synthesised.
+   */
+  const innerSetForThePass = (): readonly InnerCommand[] => {
+    const all = innerSet();
+    if (input.selectInnerCommands === undefined) return all;
+    const cwdOf = new Map((manifest?.commands ?? []).map((command) => [command.id, command.cwd]));
+    const selected = new Set(
+      input.selectInnerCommands(
+        all.map((command) => ({ id: command.id, cwd: cwdOf.get(command.id) ?? process.cwd() })),
+      ),
+    );
+    return all.filter((command) => selected.has(command.id));
+  };
+
   const machine: MicroAttempt = {
     contractBlockText: () => checkpointContractBlock().text,
     passInstruction: (unitId: string): string =>
@@ -501,7 +535,7 @@ export function createMicroAttempt(input: {
           verifyManifest,
           endPassProcesses: async () => ({ guaranteed: true }),
           runCheckCommand: (command: InnerCommand) => runCheckCommand(command, pass.unitId),
-          innerSet: innerSet(),
+          innerSet: innerSetForThePass(),
           stopRequested: () => false,
           budgetAvailable: () => true,
           enterQuotaPause: async () => {},
