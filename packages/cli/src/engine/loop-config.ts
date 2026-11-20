@@ -26,6 +26,10 @@ import {
   type UnitsConfiguration,
   type WorkerCountConfiguration,
 } from "../../../layer-parallel/src/index.ts";
+import { MAX_BYTES_DEFAULT } from "../../../core/src/carry/handoff.ts";
+
+/** The key of the pass handoff switch (feature 153, row 8 of annex E §E.2). */
+export const LEDGER_HANDOFF_KEY = "carry.ledger_handoff";
 
 /** The strategies of the closed set of row 55 (`classic`, `micro`). */
 export type LoopStrategy = "micro" | "classic";
@@ -109,6 +113,17 @@ export type LoopConfiguration = {
    * under `parity`.
    */
   readonly criticEvidenceIsPerTask: boolean;
+  /**
+   * `carry.ledger_handoff` (feature 153, row 8 of annex E §E.2), ON by
+   * default and OFF under `parity` (F153-FR-059 — every pass is fresh under
+   * parity, so the pass handoff of F103-FR-041 is written no more there).
+   */
+  readonly ledgerHandoff: boolean;
+  /**
+   * `carry.handoffMaxBytes` (feature 103), in bytes, default
+   * `MAX_BYTES_DEFAULT` of the handoff writer.
+   */
+  readonly handoffMaxBytes: number;
   /**
    * `verification.parallelism` (feature 148, row 7 of annex E §E.2): a whole
    * number, default 1, ceiling 4. The trust class is `N lo` — a rank may
@@ -370,6 +385,14 @@ export function loopConfigurationOf(input: {
     ),
     innerChecksAreScoped: switchIsOn(valueOf("verification.inner.scoped").value),
     criticEvidenceIsPerTask: switchIsOn(valueOf("critic.evidence.perTask").value),
+    // F153-FR-059 — the pass handoff is on by default and always off under
+    // the `parity` profile, whatever a source holds: every pass is fresh.
+    ledgerHandoff:
+      resolved.profile !== "parity" && switchIsOn(valueOf("carry.ledger_handoff").value),
+    handoffMaxBytes: (() => {
+      const number = Number(valueOf("carry.handoffMaxBytes").value);
+      return Number.isSafeInteger(number) && number > 0 ? number : MAX_BYTES_DEFAULT;
+    })(),
     verificationParallelism: verificationParallelismOf(resolved, resolved.profile),
     parallel: parallelConfigurationOf(resolved),
   });

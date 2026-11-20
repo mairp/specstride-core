@@ -306,6 +306,13 @@ import {
   REJECT_LIMIT_DEFAULT,
   type Counts,
 } from "../../../core/src/gate/limits.ts";
+import {
+  readCounts,
+} from "../../../core/src/carry/counters.ts";
+import {
+  writeHandoffForAPass,
+  type PlannedUnit,
+} from "../../../core/src/carry/handoff.ts";
 import { startWasRefused } from "../../../core/src/approval/ticked-without-record.ts";
 import { approvalRecordPath, writeApprovalRecord } from "../../../core/src/approval/record.ts";
 import {
@@ -2530,6 +2537,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const taskIdsOfThePhase = (phase: number): readonly string[] =>
     phases.find((p) => p.number === phase)?.tasks.map((task) => task.id) ?? [];
 
+  // F103-FR-041 — the remaining units of the phase slice, as the pass handoff
+  // carries them: one planned unit per task of the canonical model that is not
+  // ticked, in the order of the model. No layer declared these units; they are
+  // the phase's own tasks.
+  const remainingUnitsOf = (phase: number): readonly PlannedUnit[] =>
+    (phases.find((p) => p.number === phase)?.tasks ?? [])
+      .filter((task) => !task.ticked)
+      .map((task) => ({ id: task.id, title: task.text }));
+
+  // F153-FR-058 — the feedback the phase holds, BY LOGICAL NAME and never by
+  // text (CQ-153-14 A): one name per feedback record the map above holds for
+  // the phase, oldest attempt first. The engine keeps one feedback file per
+  // phase attempt, so the pass index of the name is 1; the name is the layout
+  // table's `attempt:<N>:<k>:<n>:feedback` with `<n>` at 1.
+  const feedbackPointersOf = (phase: number): readonly string[] =>
+    (feedback.get(phase) ?? [])
+      .filter((record) => record.live)
+      .sort((left, right) => left.ordinal - right.ordinal)
+      .map((record) => `attempt:${String(phase)}:${String(record.ordinal)}:1:feedback`);
+
   // F153-FR-048/051 — the tasks of the phase with the paths their texts cite
   // (the canonical model only), and the priority paths of the pins read from
   // that map: sorted and without repeats.
@@ -3047,6 +3074,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // blocks the next prompt carries, and the counters of feature 118.
     let killBlock = "";
     let killNotePath = "";
+    // F103-FR-041 — the newest kill, as the pass handoff names it. Filled
+    // where the watchdog fills `killNotePath` (the same facts the kill note
+    // renders), consumed at the START of the next pass by the handoff and
+    // then dropped: the note itself stays with `carryTheKillNoteIntoThePrompt`.
+    let lastKillForHandoff:
+      | { readonly reason: string; readonly class: string; readonly passId: string }
+      | undefined;
     let nudgeBlock = "";
     // The note the next pass carries when this one deleted the engine's state.
     let stateBlock = "";
@@ -3322,6 +3356,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               }),
             ),
             onClosed: (closed, counts) => totalsAfterTheGroup(parallelTotals, closed, counts),
+            // The callback of the PARALLEL units' own handoff (feature 143's
+            // wiring), NOT the pass handoff of F103-FR-041, which `runPass`
+            // writes above.
             onHandoff: () => {},
           })
         : undefined;
@@ -3414,6 +3451,43 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     };
 
     const runPass = async (pass: number, _passId: string, prompt: string) => {
+      // F103-FR-041 / F153-FR-058 — THE PASS HANDOFF, at the START of every
+      // pass and before its prompt is read, through the ONE writer of feature
+      // 103 (`writeHandoffForAPass`). The record carries the counters, the
+      // remaining units of the canonical model, the feedback POINTERS by
+      // logical name (never the text of a failing line, CQ-153-14 A), the
+      // fingerprint of the tree and the tree-wins line; the ledger tail is
+      // empty (`records: []`, CQ-153-19 B — no signed pass ledger is wired).
+      // The switch is `carry.ledger_handoff`, on by default and always off
+      // under `parity` (F153-FR-059 — every pass is fresh there). A write
+      // that fails is said and the pass goes on: the handoff is a pointer,
+      // not a gate.
+      if (loopConfig.ledgerHandoff) {
+        const killOfTheHandoff = lastKillForHandoff;
+        lastKillForHandoff = undefined;
+        try {
+          writeHandoffForAPass({
+            phase,
+            phaseAttempt: ordinal,
+            counters: readCounts(countsOf(phase).read()),
+            records: [],
+            plan: remainingUnitsOf(phase),
+            ...(killOfTheHandoff !== undefined ? { kill: killOfTheHandoff } : {}),
+            feedbackPointers: feedbackPointersOf(phase),
+            treeFingerprint: workingTreeFingerprint(workdir),
+            maxBytes: loopConfig.handoffMaxBytes,
+            path: inControl(join("features", slug, "handoff.md")),
+            atomicWrite,
+            writeOptions: { createDirectory: true },
+          });
+        } catch (error) {
+          say(
+            `[${slug}] pass handoff could not be written: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+      }
       // The layer `micro`, while it is in force: the unit of work of this pass
       // is named in the prompt with the exact checkpoint path (F115-FR-008),
       // a checkpoint left over from an earlier pass is removed first
@@ -3680,6 +3754,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         );
         killNotePath = notePath;
         killBlock = previousPassBlock({ reason: kill.reason, elapsedSec, notePath }, noteIngress);
+        lastKillForHandoff = {
+          reason: kill.reason,
+          class: classification.class,
+          passId: String(pass),
+        };
         say(
           watchdogStderrLine(
             `pass over the ceiling (${String(ceiling.seconds)}s)`,
