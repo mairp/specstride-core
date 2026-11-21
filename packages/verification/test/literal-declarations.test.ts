@@ -91,6 +91,71 @@ test("an identifier span beside a real command keeps only the command", () => {
   assert.equal(source.commands[0]?.executable, "node");
 });
 
+test("a task whose prose carries two command lines declares neither (never a guess)", () => {
+  const source = readLiteralSource({
+    model: modelOf([
+      {
+        id: "T004",
+        line: 16,
+        text: "either `npm test -- one` or `npm test -- two`",
+      },
+    ]),
+    repositoryRoot: "/repo",
+  });
+  assert.equal(source.blockers.length, 0);
+  assert.equal(source.commands.length, 0);
+  assert.equal(source.ambiguities.length, 1);
+});
+
+test("a task line that declares a constant of code is prose, not a command", () => {
+  const source = readLiteralSource({
+    model: modelOf([
+      {
+        id: "T393",
+        line: 1192,
+        text:
+          'add the constants `COMMIT_GATE_STARTED_EVENT_TYPE = "commit_gate.started"` ' +
+          'and `COMMIT_GATE_ENDED_EVENT_TYPE = "commit_gate.ended"` beside the blocked one',
+      },
+    ]),
+    repositoryRoot: "/repo",
+  });
+  assert.equal(source.blockers.length, 0);
+  assert.equal(source.commands.length, 0);
+});
+
+test("a known-tool span no fixed argument list can hold blocks, never guesses (F105-FR-015)", () => {
+  const source = readLiteralSource({
+    model: modelOf([
+      {
+        id: "T006",
+        line: 20,
+        text: "check it: `cat counter-a.txt | grep one`",
+      },
+    ]),
+    repositoryRoot: "/repo",
+  });
+  assert.equal(source.commands.length, 0);
+  assert.equal(source.blockers.length, 1);
+  assert.ok(source.blockers[0]?.message.includes("cannot be written as a fixed argument list"));
+});
+
+test("a template of commands is never a declaration (F105-FR-015)", () => {
+  const source = readLiteralSource({
+    model: modelOf([
+      {
+        id: "T280",
+        line: 22,
+        text: "run the helper for each workspace: `node ../../bin/count-and-pass.ts counter-<x>.txt`",
+      },
+    ]),
+    repositoryRoot: "/repo",
+  });
+  assert.equal(source.commands.length, 0);
+  assert.equal(source.blockers.length, 0);
+  assert.equal(source.ambiguities.length, 0);
+});
+
 test("a Command: line and a fenced block keep their rule", () => {
   const source = readLiteralSource({
     model: modelOf([
@@ -106,17 +171,18 @@ test("a Command: line and a fenced block keep their rule", () => {
   assert.equal(source.commands.length, 2);
 });
 
-test("two real commands of one task still disagree (F105-FR-015 holds)", () => {
+test("a fenced block that parses stays a command beside prose identifiers", () => {
   const source = readLiteralSource({
     model: modelOf([
       {
-        id: "T004",
-        line: 16,
-        text: "either `npm test -- one` or `npm test -- two`",
+        id: "T005",
+        line: 18,
+        text: "verify the counter (`counter-a.txt`):\n\n```bash\nnpm test -- --name one\n```",
       },
     ]),
     repositoryRoot: "/repo",
   });
-  const registry = source.commands;
-  assert.equal(registry.length, 2);
+  assert.equal(source.blockers.length, 0);
+  assert.equal(source.commands.length, 1);
+  assert.equal(source.commands[0]?.executable, "npm");
 });

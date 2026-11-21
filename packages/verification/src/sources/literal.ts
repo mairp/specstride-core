@@ -203,10 +203,50 @@ export function declarationsOfPhase(input: {
   );
 }
 
+/** The executables a plan's toolchains actually run (F105-FR-015). */
+const TOOL_EXECUTABLES: ReadonlySet<string> = Object.freeze(
+  new Set([
+    "npm", "node", "npx", "pnpm", "yarn", "git", "sh", "bash", "cat", "grep",
+    "sed", "awk", "make", "python", "python3", "pip", "rm", "cp", "mv", "ls",
+    "echo", "mkdir", "touch", "curl", "jq", "diff", "tar", "sleep", "true",
+    "false", "kill", "ps", "head", "tail", "wc", "sort", "uniq", "cut",
+    "xargs", "find", "env", "cd", "printf", "date", "sha256sum", "base64",
+    "chmod", "ln", "rsync", "docker", "gh", "trap", "wait", "exit", "source",
+    "set", "unset", "export", "read", "pwd", "which", "stat", "tee",
+    "realpath", "dirname", "basename", "mktemp", "rmdir", "truncate", "install",
+  ]),
+);
+
+/** A path-like executable: the script a task line runs directly. */
+function executableIsPathLike(first: string): boolean {
+  if (/[\s"'`(){}=<>|;&$#*?!]/.test(first)) return false;
+  return first.includes("/") || /\.(ts|mjs|js|sh)$/.test(first);
+}
+
 /**
  * The source itself (F105-FR-015): the commands declared literally in the plan
  * or the task list, with the repository root as the working directory and the
  * time limit of the entry point whose kind each runs.
+ *
+ * The back-ticked spans of a TASK LINE are prose markup first: a corpus that
+ * writes identifiers, types, event names and schemas in back-ticks (`T393`
+ * declares two constants of code in spans) hands the naive reading — every
+ * span is a command — a hundred false declarations per file, and the plan of
+ * the run then refuses at launch (F153-FR-010) on the feature's own task
+ * list, which no launch may do. So the back-ticked form declares only where
+ * the span READS as a command line: it carries blanks (one token is an
+ * identifier, never a command), its executable is a word of the toolchains
+ * or a script path (a bare word like `scanBeforeTheCommit` or a signature
+ * like `process.kill(pid, 0)` is prose, not a program), and it names ONE
+ * line per task — a task whose prose holds several declares none (the
+ * ambiguity is recorded, never guessed). A template of commands
+ * (`counter-<x>.txt`) is never a declaration: its instances would be a
+ * guess. The EXPLICIT forms keep the strict rule of F105-FR-015: a
+ * `Command:` line or a fenced block that parses declares, and one that
+ * cannot be written as a fixed argument list is a blocker and never a guess;
+ * a known-tool back-ticked span that cannot be written as one blocks the
+ * same way (`cat counter-a.txt | grep one`). Two sources that disagree stay
+ * blockers (the conflict rules run over the contributions unchanged).
  */
 export function readLiteralSource(input: {
   readonly model: CanonicalSpecModel;
@@ -215,8 +255,32 @@ export function readLiteralSource(input: {
   const file = fileOfTheDeclarations(input.model);
   const commands: PlanCommand[] = [];
   const blockers: Blocker[] = [];
+  const ambiguities: string[] = [];
+  /** The back-ticked candidates of one task, keyed `phase:taskId`. */
+  const taskCommands = new Map<string, { declaration: LiteralDeclaration; argv: readonly string[] }[]>();
   for (const phase of input.model.phases) {
     for (const declaration of declarationsOfPhase({ phase, file })) {
+      if (declaration.form === "back-ticked") {
+        // The prose markup of a task line: only a span that reads as a
+        // command line may declare, and only alone in its task.
+        const text = declaration.text;
+        if (!/\s/.test(text)) continue;
+        const first = text.split(/\s+/)[0] ?? "";
+        if (!TOOL_EXECUTABLES.has(first) && !executableIsPathLike(first)) continue;
+        // A template of commands (`counter-<x>.txt`) is never declared: the
+        // instances would be a guess (F105-FR-015).
+        if (/<[A-Za-z][A-Za-z0-9_-]*>/.test(text)) continue;
+        const argv = argumentListOf(text);
+        if (argv === undefined) {
+          blockers.push(blockerOf(declaration));
+          continue;
+        }
+        const key = `${declaration.phase}:${declaration.taskId}`;
+        const bucket = taskCommands.get(key);
+        if (bucket === undefined) taskCommands.set(key, [{ declaration, argv }]);
+        else bucket.push({ declaration, argv });
+        continue;
+      }
       const argv = argumentListOf(declaration.text);
       if (argv === undefined) {
         blockers.push(blockerOf(declaration));
@@ -246,12 +310,47 @@ export function readLiteralSource(input: {
       );
     }
   }
+  // A task whose prose names EXACTLY ONE command line declares it; a task
+  // whose prose names several (or whose only spans are identifiers) declares
+  // nothing — the ambiguity is recorded, never guessed (F105-FR-015).
+  for (const [key, candidates] of taskCommands) {
+    if (candidates.length !== 1) {
+      ambiguities.push(
+        `the task \`${key}\` carries ${String(candidates.length)} spans that read as ` +
+          "command lines; the task declares none of them (never a guess)",
+      );
+      continue;
+    }
+    const { declaration, argv } = candidates[0]!;
+    const kind = kindOfLiteral(declaration.text);
+    const [executable, ...args] = argv;
+    commands.push(
+      Object.freeze({
+        id: stableId(
+          "CMD",
+          `literal:${declaration.taskId}:${declaration.phase}:${pythonJson([...argv])}:${input.repositoryRoot}`,
+        ),
+        kind,
+        label: `${declaration.taskId} (declared literally)`,
+        executable: executable!,
+        args: Object.freeze(args),
+        // The repository ROOT is the working directory (F105-FR-015).
+        cwd: input.repositoryRoot,
+        // The time limit of the entry point whose kind it runs, else 1800 s.
+        timeoutSec: timeLimitOfKind(kind),
+        source: SOURCE_ID,
+        declaredId: declaration.taskId,
+        phase: declaration.phase,
+        provenance: declaration.provenance,
+      }),
+    );
+  }
   return Object.freeze({
     sourceId: SOURCE_ID,
     commands: Object.freeze(commands),
     blockers: Object.freeze(blockers),
     findings: Object.freeze([]),
     assumptions: Object.freeze([]),
-    ambiguities: Object.freeze([]),
+    ambiguities: Object.freeze(ambiguities),
   });
 }
