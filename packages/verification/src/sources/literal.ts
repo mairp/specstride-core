@@ -100,7 +100,19 @@ export function declarationsInText(input: {
     provenance: Object.freeze({ file: input.file, line: input.line }),
   };
   for (const match of input.text.matchAll(/`([^`\n]+)`/g)) {
-    out.push(Object.freeze({ text: match[1]!.trim(), form: "back-ticked" as const, ...base }));
+    const body = match[1]!.trim();
+    // A span of ONE token in back-ticks names a thing of the prose — an
+    // identifier, a type, an event name, a file (`scanBeforeTheCommit`,
+    // `commit_gate.started`): it is not a command line, and reading it as
+    // one made one task's own prose disagree with itself, so the plan of
+    // the run refused at launch (F153-FR-010) with the false blocker
+    // `declarations-disagree`. F105-FR-015 declares COMMANDS written in
+    // the plan or the task list: a command line carries an executable and
+    // its arguments, separated by blanks. A span that holds no blank is
+    // never a command; the other forms (a `Command:` line, a fenced block)
+    // keep their rule.
+    if (body !== "" && !/\s/.test(body)) continue;
+    out.push(Object.freeze({ text: body, form: "back-ticked" as const, ...base }));
   }
   for (const match of input.text.matchAll(/^[ \t]*Command:[ \t]*(.+)$/gm)) {
     out.push(Object.freeze({ text: match[1]!.trim(), form: "command-line" as const, ...base }));
