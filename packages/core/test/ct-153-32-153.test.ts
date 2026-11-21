@@ -46,7 +46,10 @@ test("F118-FR-007 — the condition and error `interrupted` come only from `inte
     const interrupted = interrupt(aPass(), cause);
     assert.equal(interrupted.interrupted, true);
     assert.equal(interrupted.error, "interrupted");
-    assert.equal(interrupted.interruptedBy, cause);
+    assert.equal(
+      (interrupted as unknown as { interruptedBy: string }).interruptedBy,
+      cause,
+    );
     assert.equal(
       statedAsPass(interrupted),
       false,

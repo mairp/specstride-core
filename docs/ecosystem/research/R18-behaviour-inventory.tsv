@@ -1,0 +1,200 @@
+kind	system	b_item	item
+file	SS	B-0156	`<install-dir>/.env`; `orchestrator.sh`
+file	SS	B-0157	`<workdir>/<state-dir>/features/<slug>/`
+file	SS	B-0158	`<workdir>/testautomation/<slug>/TEST_PLAN.md`
+file	SS	B-0159	`<workdir>/testautomation/<slug>/generated`
+file	SS	B-0160	`<feature-dir>/runs/<run-id>/verification/verification-plan.json`
+file	SS	B-0161	`<workdir>/<state-dir>/lock`
+file	SS	B-0162	
+file	SS	B-0163	`<state-dir>/lock.d`
+file	SS	B-0164	`<state-dir>/lock.d/owner`
+file	SS	B-0165	`<feature-dir>/runs/<run-id>/`; `verdicts/`; `attempts/`; `debug/`; `gates/proofs/`; `runs/<run-id>/verification/`
+file	SS	B-0166	`<run-dir>/run.log`; `<run-dir>/events.jsonl`
+file	SS	B-0167	`<state-dir>/run.log`; `features/<slug>/runs/<run-id>/run.log`
+file	SS	B-0168	`<state-dir>/events.jsonl`; `features/<slug>/runs/<run-id>/events.jsonl`
+file	SS	B-0169	`<feature-dir>/last-run.conf`
+file	SS	B-0170	`<state-dir>/last-run.conf`
+file	SS	B-0171	`<state-dir>/stop.flag`
+file	SS	B-0172	`<feature-dir>/runs/<run-id>/verification/release.json`
+file	SS	B-0173	`gates/.diagnosed-phase<N>`
+file	SS	B-0174	`gates/GATE<N>-ACCELERATION.md`
+file	SS	B-0175	`gates/GATE<N>-ACCELERATOR-NOTE.md`
+file	SS	B-0176	`<feature-dir>/attempts/phase<N>/attempt<M>/`
+file	SS	B-0177	`<feature-dir>/yield/phase<N>-attempt<M>-<run-id>.json`
+file	SS	B-0178	`<feature-dir>/proposer-prompt.phase<N>.txt`; `<feature-dir>/accelerator-prompt.phase<N>.txt`
+file	SS	B-0179	`gates/.accelerated-phase<N>`
+file	SS	B-0180	`<run-dir>/accelerator/phase<N>-attempt<M>.before`; `.after`; `<path>\tnew`
+file	SS	B-0181	`<feature-dir>/runs/<run-id>/verification/phase-<N>-attempt-<M>.json`
+file	SS	B-0182	`gates/GATE<N>-FEEDBACK.md`; `verification_failure_digest.py`
+file	SS	B-0183	`<feature-dir>/debug/invocations/<run-id>/critic/phase-<N>/attempt-<A>/iter-0/<invocation-id>/`
+file	SS	B-0184	`GATE<N>-FEEDBACK.md`; `GATE<N>-HINT.md`; `GATE<N>-ACCELERATION.md`; `<feature-dir>/attempts/phase<N>/approved/`
+file	SS	B-0185	`gates/.diagnosed-phase<N>`; `gates/.accelerated-phase<N>`; `GATE<N>-EVIDENCE.md`
+file	SS	B-0186	
+file	SS	B-0339	`<state-dir>/proposer.pid`; `<state-dir>/critic.pid`
+file	SS	B-0340	`<output>.tmp`
+file	SS	B-0352	
+file	SS	B-0353	`<feature-dir>/long-jobs/phase<N>-attempt<M>-<run-id>.{pid,log,done}`
+file	SS	B-0395	`<overlay>/specstride-overlay.json`; `specstride-overlay/v1`
+file	SS	B-0396	
+file	SS	B-0397	
+file	SS	B-0398	`<overlay>/specstride-overlay.gitconfig`
+file	SS	B-0435	`<DSH_HOME>/profiles/<profile>/.specstride-plugin-install.lock`
+file	SS	B-0436	`specstride-dsh-plugin-install/v1`
+file	SS	B-0445	`result.json`; `<root>/<run_id>/<role>/phase-<P>/attempt-<A>/iter-<i>/<invocation_id>/result.json`
+file	SS	B-0454	
+file	SS	B-0617	
+file	SS	B-0618	`<state>/features/<feature>/dsh-plugin-request.json`
+file	SS	B-0619	`<state>/features/<feature>/plugin-installs/`
+file	SS	B-0620	`<yield-dir>/phase<P>-attempt<A>-<run-id>.json`
+file	SS	B-0621	`settings.yaml`; `settings.yaml`
+file	SS	B-0622	`$TMPDIR/specstride-overlay.<key>.XXXXXX`
+file	SS	B-0623	`<overlay>/specstride-overlay.env`
+file	SS	B-0624	`$TMPDIR/specstride-dsh-home.XXXXXX`; `settings.yaml`
+file	SS	B-0625	`$TMPDIR/specstride-prompt.XXXXXX`
+file	SS	B-0626	`<invocation_dir>/producer.json`; `specstride-producer-status/v1`
+file	SS	B-0627	`<invocation_dir>/metadata.json`; `specstride-invocation/v1`
+file	SS	B-0628	`<FEATURE_DIR>/pass-checkpoints/<run-id>-phase<P>-attempt<A>-pass<i>-<YYYYmmdd-HHMMSS>.md`
+file	SS	B-0629	`<state>/.last-watchdog-kill.path`
+file	SS	B-0630	`<state>/.last-watchdog-kill`; `<reason>|<elapsed>|<detail>`
+file	SS	B-0631	`<FEATURE_DIR>/yield-jobs/phase<P>-attempt<A>-<run-id>-yield<k>.pid`; `.rc`; `.log`
+file	SS	B-0632	`<FEATURE_DIR>/failure-ledger.jsonl`
+file	SS	B-0633	`<state>/features/<feature>/debug/invocations/<run-id>/<role>/phase-<P>/attempt-<A>/iter-<i>/<invocation-id>`
+file	SS	B-0634	`<state>/.last-invocation-dir`
+file	SS	B-0635	`<invocation_dir>/prompt.txt`
+file	SS	B-0636	`<invocation_dir>/provider-terminal.json`
+file	SS	B-0637	`<state>/.breaker-state.<run-id>.json`
+file	SS	B-0638	`<state>/proposer.pid`
+file	SS	B-0869	`<feature>/gates/GATE<N>-HINT.md`
+file	SS	B-0870	`<workdir>/<state-dir>/features/<slug>/`; `.specstride`
+file	SS	B-0871	`<feature>/gates/`; `<feature>/verdicts/`
+file	SS	B-0872	`<feature>/gates/GATE<N>-EVIDENCE.md`
+file	SS	B-0873	`<feature>/debug/critic-prompt.phase<N>.att<M>.txt`
+file	SS	B-0874	`<feature>/verdicts/phase<N>.attempt<M>.<YYYYmmdd-HHMMSS>.txt`
+file	SS	B-0875	`<feature>/gates/GATE<N>-APPROVED`
+file	SS	B-0876	
+file	SS	B-0877	
+file	SS	B-0878	`<feature>/gates/GATE<N>-FEEDBACK.md`
+file	SS	B-0879	
+file	SS	B-0880	`<detail>`
+file	SS	B-0881	
+file	SS	B-0882	
+file	SS	B-1018	`<feature>/verdict-pins.phase<N>.json`
+file	SS	B-1019	`<path>.tmp`; `os.replace`
+file	SS	B-1060	
+file	SS	B-1061	
+file	SS	B-1062	
+file	SS	B-1063	
+file	SS	B-1064	
+file	SS	B-1065	`.verification-*`; `os.replace`
+file	SS	B-1066	`verification.generated.test.ts`; `it.todo`; `verification.generated.test.js`; `test.todo`
+file	SS	B-1067	`test_verification_generated.py`
+file	SS	B-1068	`verification.generated.json`
+file	SS	B-1069	`prestage-phase-<N>-attempt-<M>.json`
+file	SS	B-1070	`prestage-logs/<name>.log`; `prestage-logs/<name>.status.json`
+file	SS	B-1071	
+file	SS	B-1142	`<run-dir>/verification/release.json`
+file	SS	B-1143	`<run-dir>/verification/phase-<N>-attempt-<M>.json`
+file	SS	B-1144	
+file	SS	B-1254	`specstride.learn.summary/7`
+file	SS	B-1255	
+file	SS	B-1256	
+file	SS	B-1257	
+file	SS	B-1258	`specstride.learn.applied/2`; `/1`
+file	SS	B-1259	`<feature-dir>/learning/applied.json`
+file	SS	B-1260	`<feature-dir>/events.jsonl`; `runs/<id>/events.jsonl`
+file	SS	B-1261	
+file	SS	B-1262	
+file	SS	B-1263	
+file	SS	B-1264	
+file	SS	B-1265	
+file	SS	B-1266	`<feature-dir>/learning/phase-<N>.json`
+file	SS	B-1367	`stop.flag`
+file	SS	B-1505	
+file	SS	B-1506	`<workdir>/<STATE_BASENAME>`; `.specstride`
+file	SS	B-1507	`<state>/last-run.conf`
+file	SS	B-1508	`<state>/features/<slug>/`; `<state>/features/<slug>/gates/`
+file	SS	B-1509	`<state>/lock.d`
+file	SS	B-1510	`<state>/lock`
+file	SS	B-1511	`last-run.conf`; `last-run.conf`
+file	SS	B-1512	`<state>/features/<slug>/verdicts/*.txt`
+file	SS	B-1513	`/tmp/specstride-spec-err`
+file	SS	B-1514	`<state>/stop.flag`
+file	SS	B-1515	`<state>/proposer.pid`
+file	SS	B-1516	`<state>/last-run.conf`; `<state>/features/<X>/last-run.conf`
+file	SS	B-1698	`<SRC>/specs/NNN-as-is-<slug>`; `specs/`
+file	SS	B-1699	
+file	SS	B-1700	
+file	SS	B-1701	
+file	SS	B-1702	`<run_state>/ANALYSIS.md`; `/speckit.analyze`
+file	SS	B-1703	`<SRC>/<state>/reverse/<slug>/`
+file	SS	B-1704	`<run_state>/inventory.json`
+file	SS	B-1705	`<run_state>/INVENTORY.md`
+file	SS	B-1706	`<run_state>/DRIVER.md`
+file	SS	B-1707	`<run_state>/verification-commands.json`
+file	SS	B-1708	`1.0.0`
+file	SS	B-1875	
+file	SS	B-1876	
+file	SS	B-1877	
+file	SS	B-1878	
+file	SS	B-1879	
+file	SS	B-1880	
+file	SS	B-1881	
+file	SS	B-1882	
+file	SS	B-1883	
+file	SS	B-1884	
+file	SS	B-1885	
+file	SS	B-1886	
+file	SS	B-1887	
+file	SS	B-1888	
+file	SS	B-1889	
+file	SS	B-1890	
+file	SS	B-1891	
+file	SS	B-1892	
+file	SS	B-1893	
+file	SS	B-1894	
+file	SS	B-1895	
+file	SS	B-1896	` (<manifest>)`
+file	SS	B-1897	
+file	SS	B-1898	
+file	SS	B-1899	
+file	SS	B-1900	`._`
+file	SS	B-1901	`<path>.tmp`; `os.replace`
+file	SS	B-1967	`.specify/templates/`
+file	SS	B-1968	
+file	SS	B-1969	
+file	SS	B-1970	
+file	SS	B-1971	
+file	SS	B-1972	
+file	SS	B-1973	
+file	SS	B-1974	
+file	SS	B-1975	`template.expected`
+file	SS	B-1976	
+file	SS	B-1977	`template.family`
+file	SS	B-2010	`<spec>.tick.<pid>.tmp`; `os.replace`
+file	SS	B-2098	
+file	SS	B-2099	`<invocation_dir>/provider-terminal.json`; `specstride-provider-terminal/v1`
+file	SS	B-2154	`<invocation_dir>/metadata.json`
+file	SS	B-2155	`<invocation_dir>/producer.json`
+file	SS	B-2156	`<invocation_dir>/provider-terminal.json`
+file	SS	B-2157	`<invocation_dir>/result.json`
+file	SS	B-2158	
+file	SS	B-2179	`.<name>.<random>.tmp`; `os.replace`
+file	SS	B-2180	
+file	SS	B-2181	`result.json`
+file	SS	B-2182	`<feature_root>/debug/invocations/<run_id>/<role>/phase-<n>/attempt-<n>/iter-<n>/<invocation_id>`
+file	SS	B-2183	`metadata.json`; `result.json`; `prompt.txt`; `provider.jsonl`; `events.jsonl`; `response.txt`
+file	SS	B-2363	`<path>.<pid>.tmp`; `<path>.lock`
+file	MOL	B-2497	`.mixture-of-loops/`
+file	MOL	B-2547	`launch-contract.json`; `runtime.py`; `contract_lib.py`; `.publish-*`; `os.replace`
+file	MOL	B-2548	
+file	MOL	B-2586	`runs/<id>/state.json`
+file	MOL	B-2587	`runs/<id>/launcher.log`
+file	MOL	B-2588	`runs/<id>/lock`; `fcntl.flock(LOCK_EX|LOCK_NB)`
+file	MOL	B-2637	`os.replace`
+file	MOL	B-2654	`.agents/skills`; `.claude/skills`; `.dsh/skills`; `.pi/skills`; `.prime/agent/skills`
+file	MOL	B-2661	`.mixture-of-loops/`; `.gitignore`; `.git/info/exclude`
+file	MOL	B-2662	`.mixture-of-loops/<feature>/verification-commands.json`
+file	MOL	B-2732	`runs/<id>/harness-launch.log`
+file	MOL	B-2733	`runs/<id>/harness-run.json`; `mixture-of-loops/harness-run/1`
+file	MOL	B-2734	`runs/<id>/harness-report.log`
+file	MOL	B-2735	`mol.retrospective/1`

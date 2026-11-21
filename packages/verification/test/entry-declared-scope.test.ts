@@ -20,6 +20,7 @@ const pin: PinPort = (command) => ({ id: command.id });
 const command: PlanCommand = {
   id: "SUITE-phase-1-cmd-verify-checks",
   kind: "declared",
+  label: "verify-checks",
   executable: "node",
   args: ["-e", "process.exit(0)"],
   cwd: ".",

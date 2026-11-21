@@ -24,7 +24,7 @@ const INPUTS = {
 
 const FAILED = {
   exit_code: 10,
-  mode: "required",
+  mode: "required" as const,
   roster: [{ name: "npm test", status: "failed" }],
   hash: "deadbeef",
 };

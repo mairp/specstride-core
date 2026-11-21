@@ -431,7 +431,7 @@ test("T285 the selection is recorded: every record validates against the schema"
   }
 });
 
-test("T286 CT-153-5 the switch off runs the whole inner set: all four in-pass", async () => {
+test("CT-153-5 T286 the switch off runs the whole inner set: all four in-pass", async () => {
   const g = scopedFixture({
     proposerExtra: TOUCH("pkgs/a/src/x.ts", "export {};\n"),
     userConfig: "schema: 1\nverification:\n  inner:\n    scoped: false\n",
@@ -453,7 +453,7 @@ test("T286 CT-153-5 the switch off runs the whole inner set: all four in-pass", 
   }
 });
 
-test("T286 CT-153-5 under parity the whole inner set runs: the reproduction stands", async () => {
+test("CT-153-5 T286 under parity the whole inner set runs: the reproduction stands", async () => {
   const g = scopedFixture({
     proposerExtra: TOUCH("pkgs/a/src/x.ts", "export {};\n"),
     userConfig: "schema: 1\nprofile: parity\n",

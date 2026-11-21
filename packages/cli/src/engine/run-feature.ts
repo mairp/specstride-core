@@ -104,7 +104,6 @@ import {
 } from "@specstride/verification";
 import type {
   CommandResult as GateCommandResult,
-  GateOutcome,
   PlannedCommand,
 } from "@specstride/verification";
 import type { PinPort } from "@specstride/verification";
@@ -121,7 +120,6 @@ import {
   checkStartedData,
 } from "../../../check-runner/src/events/check-events.ts";
 import {
-  NO_CONDITIONS,
   type RunnerResult as CheckRunnerResult,
 } from "../../../check-runner/src/result/result.ts";
 import { canonicalRecordHash } from "@specstride/kernel/hasher";
@@ -303,7 +301,6 @@ import {
   afterARejection as handleARejection,
   MALFORMED_LIMIT_DEFAULT,
   NO_COUNTS,
-  REJECT_LIMIT_DEFAULT,
   type Counts,
 } from "../../../core/src/gate/limits.ts";
 import {
@@ -432,7 +429,7 @@ export function criticOf(value: string | undefined): { readonly dshModel: string
 
 /** One pass of the implementer through `dsh`, on the provider and model the consumer names. */
 export async function passOnDsh(
-  model: string,
+  model: string | undefined,
   prompt: string,
   cwd: string,
   onStart: (pid: number | undefined, kill: (signal: NodeJS.Signals) => void) => void,
@@ -1324,6 +1321,12 @@ export async function verificationPlanOfTheRun(input: {
   readonly tasksFile: string;
   readonly phases: readonly SpecPhase[];
   readonly searchPath: string;
+  /**
+   * The path the engine call declared with `--verification-commands FILE`,
+   * where it did (F105-FR-015 as a plan source; the caller's explicit
+   * declaration wins over the document of the control plane).
+   */
+  readonly commandsDocumentFromArgv?: string | undefined;
 }): Promise<PlanOfTheRun> {
   const roots = rootPathsOf({
     home: homedir(),
@@ -1350,7 +1353,22 @@ export async function verificationPlanOfTheRun(input: {
     roots,
   );
   let declared: LoadedDocument | undefined;
-  if (existsSync(commandsDocumentPath)) {
+  // The caller's own declaration wins: where the engine call carries
+  // `--verification-commands FILE` (the ingress the reference engine offers on
+  // its engine call), that document is the declared source — the control plane's
+  // document stands only where the caller declared none.
+  const explicitCommandsPath = input.commandsDocumentFromArgv;
+  if (explicitCommandsPath !== undefined && existsSync(explicitCommandsPath)) {
+    try {
+      declared = loadDeclaredCommands({
+        path: explicitCommandsPath,
+        searchPath: input.searchPath,
+      });
+    } catch {
+      declared = undefined;
+    }
+  }
+  if (declared === undefined && existsSync(commandsDocumentPath)) {
     try {
       declared = loadDeclaredCommands({
         path: commandsDocumentPath,
@@ -1821,12 +1839,58 @@ export function resetCountsOfTheLaunch(argv: readonly string[]): boolean {
   return argv.includes("--reset-counts");
 }
 
+/**
+ * The path the launch gave the declared verification-commands document with
+ * `--verification-commands FILE` (or `--verification-commands=FILE`), where it
+ * did. The reference engine takes the document on its engine call the same way;
+ * the path joins the plan sources of F105-FR-015 (F153-FR-010) beside the one
+ * the control plane holds — the caller's explicit declaration wins where both
+ * stand. Exported for its test.
+ */
+export function verificationCommandsPathOfTheLaunch(argv: readonly string[]): string | undefined {
+  for (let at = 0; at < argv.length; at += 1) {
+    const arg = argv[at] as string;
+    if (arg === "--verification-commands") {
+      const value = argv[at + 1];
+      return value === undefined || value === "" ? undefined : value;
+    }
+    if (arg.startsWith("--verification-commands=")) {
+      const value = arg.slice("--verification-commands=".length);
+      return value === "" ? undefined : value;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * The spec document the launch named with `-s SPEC` (or `--specs SPEC`,
+ * `--specs=SPEC`), where it did — the same flag the reference engine call takes
+ * and the front door's inspection verbs accept (F119-FR-007, F119-FR-008). The
+ * named document is where the phases of the run are read from when the feature
+ * keeps no task list of its own. Exported for its test.
+ */
+export function specsPathOfTheLaunch(argv: readonly string[]): string | undefined {
+  for (let at = 0; at < argv.length; at += 1) {
+    const arg = argv[at] as string;
+    if (arg === "-s" || arg === "--specs") {
+      const value = argv[at + 1];
+      return value === undefined || value === "" ? undefined : value;
+    }
+    if (arg.startsWith("--specs=")) {
+      const value = arg.slice("--specs=".length);
+      return value === "" ? undefined : value;
+    }
+  }
+  return undefined;
+}
+
 /** The engine launcher of the front door (F119-FR-002). */
 export async function runFeature(launch: EngineLaunch): Promise<number> {
   const workdir = launch.workdir;
   const featureDirectory = featureDirectoryOf(workdir);
   const slug = featureDirectory.split("/").pop() as string;
   const resetCounts = resetCountsOfTheLaunch(launch.argv);
+  const declaredCommandsPath = verificationCommandsPathOfTheLaunch(launch.argv);
   const model = process.env.SPECSTRIDE_MODEL ?? DEFAULT_MODEL;
   const critic = criticOf(process.env.SPECSTRIDE_CRITIC);
   const criticModel = critic.dshModel ?? process.env.SPECSTRIDE_CRITIC_MODEL ?? model;
@@ -1834,11 +1898,33 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // The implementer of the passes: `claude`, or the dsh model the consumer names —
   // through the as-is variable `SPECSTRIDE_PROPOSER` or the row-36 key
   // `roles.proposer.harness` of the user configuration (F124-FR-026), with the
-  // ranks of F110-FR-014 deciding between them (the variable wins).
-  const implementerOfTheRun = criticOf(
-    proposerNameOf({ home: homedir(), workdir, environment: process.env }),
-  ).dshModel;
-  const tasksPath = join(featureDirectory, "tasks.md");
+  // ranks of F110-FR-014 deciding between them (the variable wins). The bare
+  // role name `dsh` names the dsh harness on the run's default model — the
+  // alias the reference resolves the same way — and is not a value of the
+  // `claude`/`dsh:<provider>/<model>` critic-role grammar.
+  const proposerRole = proposerNameOf({ home: homedir(), workdir, environment: process.env });
+  // `undefined` is the dsh harness with NO model of its own: the alias `dsh`
+  // (the as-is variable and the row-36 key both carry it) selects the harness
+  // alone, so the pass runs `dsh` on whatever its own default model is — the
+  // reference resolves the alias the same way. A named model rides as before.
+  const implementerOfTheRun: string | null | undefined =
+    proposerRole === undefined || proposerRole === "claude"
+      ? null
+      : proposerRole === "dsh"
+        ? undefined
+        : criticOf(proposerRole).dshModel ?? undefined;
+  const declaredTasksPath = join(featureDirectory, "tasks.md");
+  // The document the launch named with `-s SPEC` (F119-FR-008; the reference
+  // engine call takes the same flag) is where the phases are read from when the
+  // feature keeps no task list of its own — the as-is workspaces carry one
+  // spec document and no `tasks.md`, and the phases the one grammar reads
+  // there stand under the register row that carries the phase derivation
+  // (DV-060).
+  const explicitSpecPath = specsPathOfTheLaunch(launch.argv);
+  const tasksPath =
+    explicitSpecPath !== undefined && !existsSync(declaredTasksPath)
+      ? explicitSpecPath
+      : declaredTasksPath;
   const grammar = GRAMMARS["speckit-tasks"];
   const tasksText = readFileSync(tasksPath, "utf8");
   const phases = grammar.phasesOf(tasksText, relative(workdir, tasksPath));
@@ -1851,7 +1937,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // commands share (`workspace-control-root.ts`) — `stop` above all, whose
   // request must land where THIS engine polls it (F143-FR-026).
   const workspaceId = workspaceIdOfWorkspace(workdir);
-  const controlRoot = controlRootOfWorkspace(workdir);
+  // The loop configuration is resolved BEFORE the control root: under the
+  // `parity` profile the run restores the AS-IS control plane (the as-is
+  // state directory `state.dir` of the layout table, `XDG_STATE_HOME`), so
+  // the oracle's parity drive of this engine lays the run's state out where
+  // the reference run laid it and the state surfaces compare (F153-FR-061).
+  const loopConfig = loopConfigurationOf({
+    home: homedir(),
+    workdir,
+    environment: process.env,
+  });
+  const parityProfile = loopConfig.profile === "parity";
+  const asIsControlRoot = join(
+    process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
+    "specstride",
+    "workspaces",
+    slug,
+  );
+  const controlRoot = parityProfile ? asIsControlRoot : controlRootOfWorkspace(workdir);
   const runId = `run-${randomUUID()}`;
   const engineStartId = "e1";
 
@@ -2055,7 +2158,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // The shapes of the phases, read once per run for the learning calls: the
   // observation and the evaluation run under the CURRENT shape of the phase
   // (F106-FR-036), and a spec that cannot be read leaves no shape.
-  const learningSpecPath = join(workdir, "specs", slug, "spec.md");
+  const learningSpecPath = explicitSpecPath ?? join(workdir, "specs", slug, "spec.md");
   let learningShapes: Record<number, string> = {};
   if (existsSync(learningSpecPath)) {
     try {
@@ -2095,11 +2198,6 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
    * written per phase to the control plane with its canonical record hash
    * and the executable pin (F115-FR-014).
    */
-  const loopConfig = loopConfigurationOf({
-    home: homedir(),
-    workdir,
-    environment: process.env,
-  });
   const configuredStrategy =
     loopConfig.source === "configured" ? loopConfig.configuredValue : undefined;
   const loopRecordPath = inControl(join("features", slug, "loop.json"));
@@ -2130,6 +2228,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     tasksFile: relative(workdir, tasksPath),
     phases,
     searchPath: searchPathAtLaunch,
+    ...(declaredCommandsPath !== undefined ? { commandsDocumentFromArgv: declaredCommandsPath } : {}),
   });
   if (planOfTheRun.blocked) {
     for (const blocker of planOfTheRun.blockers) {
@@ -2148,9 +2247,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // once here so the notice and the persisted path cannot drift apart — the
   // notice names a record the engine really wrote.
   const runPlanRecordName = PLAN_RECORD_NAME.replace("<runId>", runId);
-  say(
-    `[${slug}] verification plan derived and persisted at ${relative(workdir, runPlanRecordPath)}`,
-  );
+  // Row 19 of annex X §X.7: under the `parity` profile the line is never
+  // printed (the plan record itself still stands — the red-gate notice and
+  // the halt frame read it), so the port's stream holds no line the as-is
+  // stream could not hold (F153-FR-061).
+  if (!parityProfile) {
+    say(
+      `[${slug}] verification plan derived and persisted at ${relative(workdir, runPlanRecordPath)}`,
+    );
+  }
   // The commands of the phase, FROM THE PLAN (F105-FR-020): the entries of the
   // check manifest feature 105 derives, read back as the inner check commands
   // the manifest of the control plane carries.
@@ -2207,7 +2312,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       configured: configuredStrategy,
     });
     if (replay !== undefined) {
-      if (replay.warning !== undefined) say(`[LOOP] ${replay.warning}`);
+      if (replay.warning !== undefined && !parityProfile) say(`[LOOP] ${replay.warning}`);
       loopRecord = replay.record;
     } else {
       loopRecord = recordedLoop;
@@ -2285,7 +2390,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       : undefined;
   const strategyInForce: "micro" | "classic" =
     runFallbackReason !== undefined || loopRecord.strategy === "classic" ? "classic" : "micro";
-  if (launchFallback.fallback) say(`[LOOP] ${launchFallback.announcement}`);
+  if (launchFallback.fallback && !parityProfile) say(`[LOOP] ${launchFallback.announcement}`);
   // `strategy.selected` once per run (F115-FR-037).
   {
     const event = strategySelected({
@@ -2386,7 +2491,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     say(`[${slug}] ${parallelLaunch.message}: the launch is refused (F142-FR-019)`);
     return RUN_REFUSED_EXIT;
   }
-  for (const line of parallelLaunch.launchLines) say(`[LOOP] ${line}`);
+  // Row 19 of annex X §X.7 — a line that names its feature is printed only
+  // where that feature is on; under the `parity` profile the layer's
+  // announcements are NEVER printed, so the port's stream holds no line the
+  // as-is stream could not hold (F153-FR-061).
+  if (!parityProfile) for (const line of parallelLaunch.launchLines) say(`[LOOP] ${line}`);
 
   // The counts of the `[LOOP]` line, aggregated over the attempts of the run.
   const loopTotals = {
@@ -2416,8 +2525,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     parallelLaunch.plan?.workers ?? 2,
   );
 
+  // The directory of the gate files. As the engine holds it, the gate files
+  // stand in the feature's `evidence/` directory; under the `parity` profile
+  // the AS-IS layout is restored (row 116 of annex X §X.7, `state.dir`): the
+  // baseline kept them in the feature's `gates/` directory — the fixtures of
+  // the oracle name the as-is path in the `evidence` argument of their
+  // proposer steps, and the halt frame of the baseline names it too — so a
+  // parity drive of this engine watches the file where the as-is engine
+  // watched it and the stub of the oracle writes it where the baseline's
+  // agent wrote it (F153-FR-061).
+  const gateDirectory = parityProfile ? "gates" : "evidence";
   const evidencePathOf = (phase: number): string =>
-    join(workdir, ".specstride", "features", slug, "evidence", `GATE${String(phase)}-EVIDENCE.md`);
+    join(workdir, ".specstride", "features", slug, gateDirectory, `GATE${String(phase)}-EVIDENCE.md`);
 
   /* --- the approval key and the records the approval binds to ------- */
 
@@ -2962,7 +3081,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const hint = readIfThere(hintPathOf(phase));
     return [
       `You are implementing phase ${String(phase)} of the feature \`${slug}\`.`,
-      `\n# Specification\n${readIfThere(join(featureDirectory, "spec.md"))}`,
+      `\n# Specification\n${readIfThere(explicitSpecPath ?? join(featureDirectory, "spec.md"))}`,
       `\n# Plan\n${readIfThere(join(featureDirectory, "plan.md"))}`,
       `\n# The tasks of this phase\n${sectionOf(phase)}`,
       last === undefined
@@ -3050,8 +3169,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     });
     const tickMs = Number(process.env.SPECSTRIDE_WATCHDOG_TICK_MS) || 15_000;
     const killGraceMs = Number(process.env.SPECSTRIDE_KILL_GRACE_MS) || 5_000;
+    // The pass limit of F103-FR-003, the key `loop.maxIter`: the as-is
+    // variable `SPECSTRIDE_MAX_ITER` reaches it through the alias table
+    // (loop-config.ts); `SPECSTRIDE_PROPOSER_MAX_ITER` stays the host/test
+    // override in front of the configured value.
     const passLimit = countLimit(
-      Number(process.env.SPECSTRIDE_PROPOSER_MAX_ITER) || REQUEST_DEFAULTS.passLimit,
+      Number(process.env.SPECSTRIDE_PROPOSER_MAX_ITER) || loopConfig.maxIter,
     );
     const pauseEnv = Number(process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC);
     const pauseSec =
@@ -3253,7 +3376,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       if (registration.accepted) {
         machine = attemptMachine;
       } else {
-        say(`[LOOP] ${registration.message}; the attempt runs the classic loop`);
+        // Row 19 of annex X §X.7: under the `parity` profile the layer's
+        // announcements are never printed — the fallback still takes hold.
+        if (!parityProfile) say(`[LOOP] ${registration.message}; the attempt runs the classic loop`);
         loopFallback = "harness";
       }
     }
@@ -3314,7 +3439,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             taskTextOf: (taskId) =>
               phases.flatMap((held) => held.tasks).find((task) => task.id === taskId)?.text ??
               taskId,
-            model: implementerOfTheRun,
+            // The parallel worker carries a NAMED model only; the bare `dsh`
+            // alias selects the harness alone, so the worker takes the run's
+            // default model, as `modelsThatProducedPasses` does.
+            model: implementerOfTheRun ?? model,
             // The base tier of the proposer, as resolved at launch; the
             // engine resolves no tier today, so the worker runs the default
             // tier unless a host sets the escape.
@@ -3807,7 +3935,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         result: { exit_code: reply.exit, reply: reply.reply },
         outcome: {
-          path: "legacy" as const,
+          // The engine MEASURES the progress of a pass itself (the porcelain
+          // reading below), so the accounting takes the structured path
+          // (F103-FR-013): that is the path row 59 of annex X §X.7 governs,
+          // and under the `parity` profile the switch is off (defect D-44
+          // kept), so the no-progress breaker is not evaluated there.
+          path: "structured" as const,
           agentResult: { is_error: reply.exit !== 0 },
           ...(kill !== undefined ? { killReason: kill.reason } : {}),
           madeProgress:
@@ -3885,6 +4018,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               const fields = row.asIsFields ?? (announcement as { fields?: unknown }).fields ?? {};
               emit(row.asIsName, fields as Record<string, unknown>);
             },
+            // Row 59 of annex X §X.7 — the structured no-progress measurement
+            // is the one the switch governs; under `parity` it is off (D-44).
+            noProgressStructured: loopConfig.noProgressStructured,
             limits: limitsAreOff()
               ? {
                   // F119 — limits off removes the TIME ceilings and the
@@ -3996,7 +4132,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             attemptId: `${engineStartId}-a${String(ordinal)}`,
             phase,
             ordinal,
-            rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+            rejectLimit: countLimit(loopConfig.maxRejects),
             // F101-FR-025 — the accelerator runs on the proposer's harness.
             harness: harnessOfTheAccelerator(
               process.env.SPECSTRIDE_ACCELERATOR_HARNESS,
@@ -4008,7 +4144,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             prompt: {
               phase,
               ordinal,
-              rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+              rejectLimit: countLimit(loopConfig.maxRejects),
               hint: readIfThere(hintPathOf(phase)),
               feedback: newest?.text ?? "",
               phaseSection: sectionOf(phase),
@@ -4139,7 +4275,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           workdir,
           phase,
           ordinal,
-          rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+          rejectLimit: countLimit(loopConfig.maxRejects),
           critic: criticHarness,
           specFormat: "speckit-tasks",
           featureSlug: slug,
@@ -4490,7 +4626,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               workdir,
               phase,
               ordinal,
-              rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+              rejectLimit: countLimit(loopConfig.maxRejects),
               critic: criticHarness,
               specFormat: "speckit-tasks",
               featureSlug: slug,
@@ -4868,7 +5004,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               ordinal,
               nonce,
               rejectCount: (feedback.get(phase) ?? []).length + 1,
-              rejectLimit: REJECT_LIMIT_DEFAULT,
+              rejectLimit: loopConfig.maxRejects,
               hits: gate.hits.map((hit) => ({
                 rule: hit.rule,
                 reason: reasonOfTheRule(hit.rule),
@@ -5203,7 +5339,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               };
             })()
           : {}),
-        rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+        rejectLimit: countLimit(loopConfig.maxRejects),
         malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
         feedbackRecords: records,
         taskIds: { knownTaskIds },
@@ -5302,7 +5438,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       phases: phaseNumbers,
       runId,
       engineStartId,
-      rejectLimit: countLimit(REJECT_LIMIT_DEFAULT),
+      rejectLimit: countLimit(loopConfig.maxRejects),
       malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
       gitCommits: "auto",
       launchReason: "first",
@@ -5416,7 +5552,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     strategyInForce === "micro"
       ? loopLineOf(loopTotals, loopFallback)
       : renderClassicLoopLine((runFallbackReason ?? "config") as FallbackReason);
-  if (loopLine !== undefined) {
+  // Row 19 of annex X §X.7: under the `parity` profile the layer's line is
+  // never printed (F153-FR-061) — the as-is stream holds no `[LOOP]` line.
+  if (loopLine !== undefined && !parityProfile) {
     // The `parallel=` fields of the layer (F142-FR-022) ride the same line,
     // from the run's own totals; `""` where the launch put the layer off, so
     // the inert run says nothing of the layer here (F142-FR-005).

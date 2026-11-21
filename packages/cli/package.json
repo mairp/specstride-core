@@ -36,7 +36,8 @@
     "commands": [
       "contract derive",
       "contract",
-      "learn"
+      "learn",
+      "run"
     ]
   },
   "dependencies": {

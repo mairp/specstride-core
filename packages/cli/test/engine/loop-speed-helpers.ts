@@ -21,11 +21,6 @@ import { dirname, join } from "node:path";
 export type Fixture = { readonly dir: string; readonly restore: () => void };
 export type Verdicts = string | readonly string[];
 
-const roleOf = (argv: readonly string[], prompt: string): string => {
-  if (prompt.includes("Diagnostician")) return "diagnostician";
-  return argv.includes("--max-turns") ? "critic" : "proposer";
-};
-
 /**
  * The stub `claude` executable. `verdicts` is one verdict (used for every
  * critic call) or a list consumed in order, the last one repeated; every
@@ -33,7 +28,6 @@ const roleOf = (argv: readonly string[], prompt: string): string => {
  */
 export function stubClaude(verdicts: Verdicts, proposerExtra = ""): string {
   const list = Array.isArray(verdicts) ? verdicts : [verdicts];
-  const pick = (n: number): string => list[Math.min(n, list.length - 1)];
   return `#!/usr/bin/env node
 const fs = require("node:fs"), path = require("node:path");
 const argv = process.argv.slice(2);

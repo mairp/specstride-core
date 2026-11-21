@@ -22,7 +22,7 @@
       "--feature",
       "demo",
       "--json",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

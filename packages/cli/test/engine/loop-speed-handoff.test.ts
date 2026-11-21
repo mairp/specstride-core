@@ -44,7 +44,6 @@ import {
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
@@ -52,8 +51,6 @@ import { loopConfigurationOf } from "../../src/engine/loop-config.ts";
 import { fixture } from "./loop-speed-helpers.ts";
 import { HEADING, THE_TREE_WINS, TRUNCATION_MARKER } from "../../../core/src/carry/handoff.ts";
 import { EVERY_PASS_IS_FRESH_UNDER_PARITY } from "../../../core/src/pass-loop/loop.ts";
-
-const HERE = fileURLToPath(new URL(".", import.meta.url));
 
 /** The planted secret: `ghp_` + 36 characters, a `github-prefix` hit. */
 const SECRET = `ghp_${"a".repeat(36)}`;
@@ -400,7 +397,7 @@ test("T305 no critic prompt holds a handoff line; the critic request is identica
  * T306 — under parity no handoff is written, and freshness still holds.
  * ------------------------------------------------------------------ */
 
-test("T306 under profile parity with carry.ledger_handoff off, no handoff is written and every pass stays fresh", async () => {
+test("CT-153-59 T306 under profile parity with carry.ledger_handoff off, no handoff is written and every pass stays fresh", async () => {
   assert.equal(EVERY_PASS_IS_FRESH_UNDER_PARITY, true, "the parity constant still holds");
   // The configuration reading first, through the real merge.
   const root = mkdtempSync(join(tmpdir(), "specstride-handoff-parity-"));

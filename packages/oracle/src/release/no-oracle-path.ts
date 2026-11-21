@@ -118,6 +118,11 @@ const SANCTIONED_ORACLE_TEST_KITS: ReadonlySet<string> = new Set([
   "packages/observability/test/limits.test.ts",
   "packages/observability/test/retention.test.ts",
   "packages/observability/test/targets.test.ts",
+  // Feature 153's parity test (CT-153-61): it verifies the loop's delivered
+  // behaviour against the oracle's committed goldens and fixtures through the
+  // oracle's own machinery — it verifies the product against the oracle and
+  // offers nothing for the oracle alone.
+  "packages/cli/test/engine/loop-speed-parity.test.ts",
 ]);
 
 /** Whether a finding is one of the sanctioned test kits and not a finding. */

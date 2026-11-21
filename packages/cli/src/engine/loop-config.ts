@@ -27,6 +27,9 @@ import {
   type WorkerCountConfiguration,
 } from "../../../layer-parallel/src/index.ts";
 import { MAX_BYTES_DEFAULT } from "../../../core/src/carry/handoff.ts";
+import { REJECT_LIMIT_DEFAULT } from "../../../core/src/gate/limits.ts";
+import { NO_PROGRESS_STRUCTURED_KEY } from "../../../core/src/pass-loop/accounting.ts";
+import { REQUEST_DEFAULTS } from "../../../core/src/pass-loop/request.ts";
 
 /** The key of the pass handoff switch (feature 153, row 8 of annex E §E.2). */
 export const LEDGER_HANDOFF_KEY = "carry.ledger_handoff";
@@ -55,6 +58,13 @@ export function proposerNameOf(input: {
 }): string | undefined {
   const files = loadConfigFiles({
     home: input.home,
+    // The configuration home the ENVIRONMENT names (F110-FR-003): a run whose
+    // environment sets `XDG_CONFIG_HOME` — a parity drive of the oracle among
+    // them — reads its user configuration there, and that is where the
+    // selection of the named profile `parity` stands.
+    ...(input.environment.XDG_CONFIG_HOME === undefined
+      ? {}
+      : { xdgConfigHome: input.environment.XDG_CONFIG_HOME }),
     workspaceRealPath: realpathSync(input.workdir),
     startDir: input.workdir,
   });
@@ -71,6 +81,14 @@ export function proposerNameOf(input: {
 
 /** The loop configuration of a run, as the composition root reads it. */
 export type LoopConfiguration = {
+  /**
+   * The named profile the merge selected (`undefined` where none did). Under
+   * the `parity` profile the run restores the as-is state layout: the gate
+   * files stand in the feature's `gates/` directory and the control plane
+   * stands in the as-is state directory (row 116 of annex X §X.7), so the
+   * oracle's parity drive of THIS engine reproduces the reference run.
+   */
+  readonly profile: string | undefined;
   /** The strategy in force (`micro` by default, F115-FR-001). */
   readonly strategy: LoopStrategy;
   /** `loop.micro.closing_check` (on by default, F115-FR-028). */
@@ -134,6 +152,23 @@ export type LoopConfiguration = {
   readonly verificationParallelism: number;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
+  /**
+   * `loop.maxIter` (F103-FR-003), whole number, default 30. The as-is
+   * variable `SPECSTRIDE_MAX_ITER` is the key's rank-4 alias (§K.8), so it
+   * reaches this value through the alias table of F110-FR-020.
+   */
+  readonly maxIter: number;
+  /**
+   * `loop.maxRejects` (F101-FR-014), whole number, default 3. The as-is
+   * variable `SPECSTRIDE_MAX_REJECTS` is the key's rank-4 alias (§K.8).
+   */
+  readonly maxRejects: number;
+  /**
+   * `loop.noProgressStructured` (F103-FR-018, row 59 of annex X §X.7): on by
+   * default and off under the `parity` profile, where the baseline's defect
+   * D-44 — no structured no-progress measurement — is kept.
+   */
+  readonly noProgressStructured: boolean;
 };
 
 /**
@@ -340,6 +375,13 @@ export function loopConfigurationOf(input: {
 }): LoopConfiguration {
   const files = loadConfigFiles({
     home: input.home,
+    // The configuration home the ENVIRONMENT names (F110-FR-003): a run whose
+    // environment sets `XDG_CONFIG_HOME` — a parity drive of the oracle among
+    // them — reads its user configuration there, and that is where the
+    // selection of the named profile `parity` stands.
+    ...(input.environment.XDG_CONFIG_HOME === undefined
+      ? {}
+      : { xdgConfigHome: input.environment.XDG_CONFIG_HOME }),
     workspaceRealPath: realpathSync(input.workdir),
     startDir: input.workdir,
   });
@@ -357,6 +399,24 @@ export function loopConfigurationOf(input: {
 
   const strategy = valueOf(STRATEGY_KEY);
   const configured = strategy.source !== "default" && strategy.value !== undefined;
+  // The two loop limits through the ALIAS TABLE (§K.8, F110-FR-020): the
+  // as-is variables `SPECSTRIDE_MAX_ITER` and `SPECSTRIDE_MAX_REJECTS` are
+  // the rank-4 aliases of `loop.maxIter` (F103-FR-003) and `loop.maxRejects`
+  // (F101-FR-014), so a run driven by the baseline's variable names — a
+  // fixture of the oracle among them — holds the limits the baseline held.
+  // The alias table is a reading of the merge, not a second one: it is why
+  // this merge carries `aliasTable: true` and only these two keys are read
+  // out of it.
+  const withAliases = resolveConfiguration({
+    ...(files.user === undefined ? {} : { user: files.user }),
+    ...(files.project === undefined ? {} : { project: files.project }),
+    environment: input.environment,
+    aliasTable: true,
+  });
+  const limitOf = (key: string, fallback: number): number => {
+    const number = Number(withAliases.values.get(key)?.value);
+    return Number.isSafeInteger(number) && number > 0 ? number : fallback;
+  };
   const caps = capsFor(
     Object.fromEntries(
       (Object.keys(NUMBER_KEYS) as (keyof Caps)[]).map((name) => {
@@ -367,6 +427,7 @@ export function loopConfigurationOf(input: {
     ),
   );
   return Object.freeze({
+    profile: resolved.profile,
     strategy: strategy.value === "classic" ? ("classic" as const) : ("micro" as const),
     // The catalogue types the switch `on, off`, which the merge reads as a
     // boolean; both spellings of "off" switch it off.
@@ -394,6 +455,13 @@ export function loopConfigurationOf(input: {
       return Number.isSafeInteger(number) && number > 0 ? number : MAX_BYTES_DEFAULT;
     })(),
     verificationParallelism: verificationParallelismOf(resolved, resolved.profile),
+    // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
+    // OFF under the `parity` profile (defect D-44 kept — the baseline has no
+    // structured no-progress measurement, so under parity the breaker is not
+    // evaluated; F103-FR-018).
+    noProgressStructured: switchIsOn(valueOf(NO_PROGRESS_STRUCTURED_KEY).value),
+    maxIter: limitOf("loop.maxIter", REQUEST_DEFAULTS.passLimit),
+    maxRejects: limitOf("loop.maxRejects", REJECT_LIMIT_DEFAULT),
     parallel: parallelConfigurationOf(resolved),
   });
 }

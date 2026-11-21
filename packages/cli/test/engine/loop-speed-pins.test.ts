@@ -8,7 +8,7 @@
  * lives in the fixtures' `bin` directory, beside the other test doubles.
  */
 import assert from "node:assert/strict";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";

@@ -22,7 +22,6 @@
  * executables, and the check is a script this file writes.
  */
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import process from "node:process";
 import assert from "node:assert/strict";

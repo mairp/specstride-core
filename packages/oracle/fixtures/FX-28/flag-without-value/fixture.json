@@ -18,7 +18,7 @@
       "specstride",
       "status",
       "--feature",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

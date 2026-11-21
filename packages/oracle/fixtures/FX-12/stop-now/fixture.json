@@ -20,7 +20,7 @@
       "specstride",
       "stop",
       "--now",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

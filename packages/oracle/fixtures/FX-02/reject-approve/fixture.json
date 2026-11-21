@@ -8,7 +8,7 @@
   },
   "command": {
     "reference": ["<IMPL>/specstride", "run", "-w", "<WORK>", "-s", "<WORK>/SPECS.md"],
-    "port": ["specstride", "run", "--workspace", "<WORK>"]
+    "port": ["specstride", "run", "--workdir", "<WORK>", "-s", "<WORK>/SPECS.md"]
   },
   "environment": {
     "SPECSTRIDE_PROPOSER": "dsh",

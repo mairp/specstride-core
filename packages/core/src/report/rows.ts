@@ -149,22 +149,6 @@ function countOf(events: readonly ReportEvent[], type: string): number {
   return events.filter((event) => event.type === type).length;
 }
 
-/** Counts of one string field over one event type, as a record. */
-function countsBy(
-  events: readonly ReportEvent[],
-  type: string,
-  field: string,
-): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const event of events) {
-    if (event.type !== type) continue;
-    const key = str(event.data[field]);
-    if (key === "null") continue;
-    counts[key] = (counts[key] ?? 0) + 1;
-  }
-  return counts;
-}
-
 /** A timed open/close pair: total and median durations, `null` without pairs. */
 function pairTimes(
   events: readonly ReportEvent[],

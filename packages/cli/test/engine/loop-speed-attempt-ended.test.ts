@@ -23,7 +23,6 @@
  */
 import { spawn } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import process from "node:process";
@@ -263,7 +262,6 @@ test("CT-153-37 a stopped attempt closes", async () => {
     const exit = await runFeature({ argv: [], workdir: fx.dir });
     assert.equal(exit, 6, "the run ends on the stop request");
     const events = theNewestRun(control);
-    const starts = events.filter((event) => event.type === "attempt.started");
     const ends = events.filter((event) => event.type === "attempt.ended");
     assert.equal(ends.length, 2, "exactly one attempt.ended per attempt");
     assert.equal(ends[0]?.data.endCause, "verification-failed", "the red gate closed first");

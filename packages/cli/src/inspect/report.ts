@@ -23,9 +23,6 @@ import { readEvents as readEnveloped, type ReadResult } from "../status/event-re
 /** The terse marking of a row the events cannot hold (F153-FR-040). */
 const TERSE_NOT_IN_EVENTS = "not in the events";
 
-/** One raw line of the events file, parsed tolerantly: `{type, at, data}`. */
-type RawEvent = { type: string; at: number; data: Record<string, unknown> };
-
 /**
  * T152 — read the events through the shared reader and adapt them to {type, at, data}.
  * The reader tolerates torn lines, skipped lines and records gaps.

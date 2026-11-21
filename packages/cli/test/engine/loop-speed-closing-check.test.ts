@@ -25,14 +25,12 @@
  * and the scripts this file writes beside the workspace.
  */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
-  rmSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
@@ -281,7 +279,7 @@ test("T244 the gate still executes: its pair opens and closes, every attempt", a
   }
 });
 
-test("T245 CT-153-5 the switch off runs both: the closing check adds its line", async () => {
+test("CT-153-5 T245 the switch off runs both: the closing check adds its line", async () => {
   const g = closingFixture({
     commands: (work) => [declared("verify-one", "count-and-pass.cjs", ["counter-a.txt"], work)],
     userConfig: "schema: 1\nloop:\n  micro:\n    closingCheck:\n      skipWhenEqualToGate: false\n",
@@ -302,7 +300,7 @@ test("T245 CT-153-5 the switch off runs both: the closing check adds its line", 
   }
 });
 
-test("T245 CT-153-5 under parity both run: the reproduction profile stands down", async () => {
+test("CT-153-5 T245 under parity both run: the reproduction profile stands down", async () => {
   const g = closingFixture({
     commands: (work) => [declared("verify-one", "count-and-pass.cjs", ["counter-a.txt"], work)],
     userConfig: "schema: 1\nprofile: parity\n",

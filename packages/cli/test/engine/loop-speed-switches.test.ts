@@ -95,6 +95,32 @@ test("CT-153-9 a project file only narrows: it cannot turn the enforced time lim
   }
 });
 
+test("CT-153-5 under parity verification.parallelism is 1 (F148 row 7, F153-FR-060)", () => {
+  const { home, dir, root } = fixture({ userConfig: "schema: 1\nprofile: parity\n" });
+  try {
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(loop.verificationParallelism, 1, "row 7 of feature 148: 1 under parity");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("CT-153-5 under parity carry.ledger_handoff stands down: every pass is fresh (F153-FR-060)", () => {
+  const { home, dir, root } = fixture({
+    userConfig: "schema: 1\nprofile: parity\ncarry:\n  ledger_handoff: true\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });
+    assert.equal(
+      loop.ledgerHandoff,
+      false,
+      "F153-FR-059: parity keeps every pass fresh, whatever a source holds",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("CT-153-9 the same value in the user file turns the enforced time limit off", () => {
   const { home, dir, root } = fixture({
     userConfig: "schema: 1\nverification:\n  timeLimit:\n    enforce: false\n",

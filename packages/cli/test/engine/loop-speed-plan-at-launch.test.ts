@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import test from "node:test";
 
 import { loadPlan } from "@specstride/verification";
@@ -220,18 +220,6 @@ function fixture(options: FixtureOptions): {
     },
   };
 }
-
-const eventsOf = (control: string): { type: string; data: Record<string, unknown> }[] => {
-  const runs = join(control, "runs");
-  const all: { type: string; data: Record<string, unknown> }[] = [];
-  for (const name of existsSync(runs) ? readdirSync(runs).sort() : []) {
-    for (const line of readFileSync(join(runs, name, "events.jsonl"), "utf8").split("\n")) {
-      if (line.trim() === "") continue;
-      all.push(JSON.parse(line) as { type: string; data: Record<string, unknown> });
-    }
-  }
-  return all;
-};
 
 const capture = async (workdir: string): Promise<{ lines: string[]; exit: number }> => {
   const lines: string[] = [];

@@ -16,7 +16,7 @@
     "port": [
       "specstride",
       "--help",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

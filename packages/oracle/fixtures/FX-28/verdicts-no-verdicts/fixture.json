@@ -20,7 +20,7 @@
       "verdicts",
       "--feature",
       "demo",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

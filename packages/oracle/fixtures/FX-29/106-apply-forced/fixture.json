@@ -30,7 +30,7 @@
       "1",
       "--run-id",
       "learn-00000000000c",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

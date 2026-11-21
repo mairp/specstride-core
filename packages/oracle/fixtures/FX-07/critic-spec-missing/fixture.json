@@ -22,7 +22,7 @@
   "port": [
    "specstride",
    "critic",
-   "--workspace",
+   "--workdir",
    "<WORK>",
    "--phase",
    "1"

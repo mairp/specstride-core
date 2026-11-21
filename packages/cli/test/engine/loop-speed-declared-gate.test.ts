@@ -26,14 +26,12 @@
  * and the scripts this file writes beside the workspace.
  */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
-  rmSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";

@@ -17,8 +17,6 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { route } from "../../src/router/route.ts";
-import { VERBS } from "../../src/router/verbs.ts";
-import { INSPECT_VERBS } from "../../src/inspect/index.ts";
 // T147 — validate the JSON document with Ajv at the contracts' pinned version.
 // Import Ajv the same way other packages do, to avoid deep node_modules paths.
 import { Ajv2020 } from "ajv/dist/2020.js";

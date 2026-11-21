@@ -20,7 +20,7 @@
       "status",
       "--feature",
       "absent",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

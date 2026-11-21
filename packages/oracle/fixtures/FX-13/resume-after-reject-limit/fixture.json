@@ -18,8 +18,10 @@
     "port": [
       "specstride",
       "run",
-      "--workspace",
-      "<WORK>"
+      "--workdir",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
     ]
   },
   "environment": {
@@ -110,8 +112,10 @@
         "port": [
           "specstride",
           "run",
-          "--workspace",
-          "<WORK>"
+          "--workdir",
+          "<WORK>",
+          "-s",
+          "<WORK>/SPECS.md"
         ]
       }
     },
@@ -126,7 +130,7 @@
         "port": [
           "specstride",
           "resume",
-          "--workspace",
+          "--workdir",
           "<WORK>"
         ]
       },
