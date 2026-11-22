@@ -11,7 +11,64 @@
  * Usage: node <path>/tests/isolate.ts <command> [args...]
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// The private tmpfs of the namespace covers the runs that get one. The fallback
+// runs — non-root hosts, sandboxes without the mount, SPECSTRIDE_TEST_NO_ISOLATE=1
+// — still build their mkdtemp fixtures in the shared /tmp, and a suite that dies
+// there leaks its directories into the host's tmp forever: nothing else sweeps
+// tmp, and the leaks accumulate (2026-11-17 01:23–01:31Z: ~2234 stale
+// `specstride-*` directories pushed /tmp inodes toward ENOSPC and stalled the
+// running engine's own fixture creation). Before every command, the entries that
+// match the repository's mkdtemp shapes AND are older than the age floor are
+// removed. The floor keeps every live suite's directories — this run's included
+// — untouched: a suite's own fixtures are minutes old, and the concurrently
+// running fixtures of other runs stay under the floor too.
+//
+// Shapes: the repository's fixtures always end in mkdtemp's six random
+// characters appended to a lowercase kebab prefix from a known family
+// (`specstride-*`, `par`/`par<N>-*`). Nothing outside the family, no files,
+// no symlinks, nothing outside tmpdir, and never when tmpdir itself does not
+// look like a temporary directory.
+const REAP_PATTERNS = [/^specstride-[a-z0-9-]+-[A-Za-z0-9]{6}$/, /^par[0-9]*-[a-z0-9-]+-[A-Za-z0-9]{6}$/];
+const REAP_MIN_AGE_MS = Number(process.env.SPECSTRIDE_TEST_REAP_MIN_AGE_MS ?? 30 * 60 * 1000);
+// Test-only override of the swept directory; production always sweeps tmpdir.
+const REAP_DIR = process.env.SPECSTRIDE_TEST_REAP_DIR ?? tmpdir();
+
+const reapStaleFixtureDirectories = (): void => {
+  if (REAP_MIN_AGE_MS < 0) return;
+  if (!/^\//.test(REAP_DIR)) return;
+  if (REAP_DIR !== tmpdir() && !REAP_DIR.startsWith(`${tmpdir()}/`)) {
+    // The override is for tests: refuse to sweep anywhere but under tmpdir.
+    return;
+  }
+  let entries: string[];
+  try {
+    entries = readdirSync(REAP_DIR);
+  } catch {
+    return;
+  }
+  const cutoff = Date.now() - REAP_MIN_AGE_MS;
+  for (const name of entries) {
+    if (!REAP_PATTERNS.some((pattern) => pattern.test(name))) continue;
+    const path = join(REAP_DIR, name);
+    let stat;
+    try {
+      stat = statSync(path); // follows symlinks: a symlink is reaped as itself, never recursed
+    } catch {
+      continue;
+    }
+    if (!stat.isDirectory() || stat.mtimeMs > cutoff) continue;
+    try {
+      rmSync(path, { recursive: true, force: true });
+      process.stderr.write(`isolate.ts: reaped stale fixture ${path}\n`);
+    } catch (error) {
+      process.stderr.write(`isolate.ts: could not reap ${path}: ${String(error)}\n`);
+    }
+  }
+};
 
 const argv = process.argv.slice(2);
 if (argv.length === 0) {
@@ -84,6 +141,8 @@ for (const name of [
 ]) {
   delete env[name];
 }
+
+reapStaleFixtureDirectories();
 
 const result = spawnSync(command, args, {
   stdio: "inherit",
