@@ -38,7 +38,7 @@ if (prompt.includes("Diagnostician")) {
   const nonce = /VERDICT ([0-9a-f]+): APPROVED/.exec(prompt)[1];
   console.log(JSON.stringify({ type: "result", result: "T001 judged.\\nVERDICT " + nonce + ": ${verdict}" }));
 } else {
-  const evidence = /write (\\.specstride\\S+?):/i.exec(prompt)[1];
+  const evidence = (/Write your evidence to (\\.specstride\\S+?) \\(/i.exec(prompt) ?? /write (\\.specstride\\S+?):/i.exec(prompt))[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
   fs.writeFileSync(evidence, "T001 done\\n");
   fs.writeFileSync("made.txt", process.env.STUB_NEW_FILE ?? "work\\n");

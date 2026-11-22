@@ -194,10 +194,26 @@ test(
     .filter((line) => line !== "")
     .map((line) => Number(line));
   assert.equal(pids.length, 2, "the fake wrote its pid and the grandchild's pid");
+  // A killed pid can answer kill(pid, 0) for a moment after the group is
+  // signalled: under a loaded host the entry lingers until it is reaped, and
+  // reaping is not this case's subject — the group was signalled, and every
+  // member leaves. Poll briefly; a pid still answering after the poll is a
+  // real survivor and fails.
+  const gone = async (pid: number): Promise<boolean> => {
+    const deadline = Date.now() + 5_000;
+    for (;;) {
+      try {
+        process.kill(pid, 0);
+      } catch {
+        return true;
+      }
+      if (Date.now() >= deadline) return false;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  };
   for (const pid of pids) {
-    assert.throws(
-      () => process.kill(pid, 0),
-      /ESRCH/,
+    assert.ok(
+      await gone(pid),
       `pid ${String(pid)} of the group is still alive`,
     );
   }

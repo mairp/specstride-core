@@ -497,6 +497,7 @@ async function composedHandler(verb: string, call: RoutedCall): Promise<number> 
   if (verb === "unlock") return composed.unlockHandler(call);
   if (verb === "wait") return composed.waitHandler(call);
   if (verb === "stop") return composed.stopHandler(call);
+  if (verb === "resume") return composed.resumeHandler(call);
   const refusal = composed.NOT_IN_THIS_BUILD[verb];
   if (refusal === undefined) throw new VerbNotMountedError(verb);
   call.io.err(`specstride ${verb}: ${refusal}\n`);

@@ -637,6 +637,49 @@ export function comparePortWithGolden(
     options.portContext,
   );
 
+  // The provenance annotations of the two sides are not behaviour and are not
+  // compared here. `comparedStream` of the surface `events` is the member the
+  // rule N-12 stamps on the PORT's normalized capture alone
+  // (`../normalize/events.ts`), so a stored golden — normalized on the
+  // reference side, where N-12 acts on nothing — never carries it; it records
+  // where the compared records came from, not what any run did. `mappedBy` of
+  // the surface `exit` is the same class the other way round
+  // (`../capture/exit.ts`): set on the REFERENCE side only, where the
+  // exit-code map of `resume` was applied to a stored golden; the port's exit
+  // is its own and can never carry it. Neither member has a register row or a
+  // waiver that reads it, so each is taken out of ITS OWN side before the
+  // comparison — dropping one side's annotation for both sides is what rows
+  // DV-061 and DV-097 do, and this is the same act for members the register
+  // has never had to name.
+  const portSurfaces = Object.fromEntries(
+    Object.entries(normalizedPort.surfaces).map(([name, surface]) =>
+      name === "events" && surface !== null && typeof surface === "object"
+        ? [
+            name,
+            Object.fromEntries(
+              Object.entries(surface as Record<string, unknown>).filter(
+                ([key]) => key !== "comparedStream",
+              ),
+            ),
+          ]
+        : [name, surface],
+    ),
+  );
+  const comparedGoldenSurfaces = Object.fromEntries(
+    Object.entries(goldenSurfaces).map(([name, surface]) =>
+      name === "exit" && surface !== null && typeof surface === "object"
+        ? [
+            name,
+            Object.fromEntries(
+              Object.entries(surface as Record<string, unknown>).filter(
+                ([key]) => key !== "mappedBy",
+              ),
+            ),
+          ]
+        : [name, surface],
+    ),
+  );
+
   const names = [
     ...new Set([
       ...Object.keys(goldenSurfaces),
@@ -651,8 +694,20 @@ export function comparePortWithGolden(
   const waivers = options.waivers ?? [];
 
   for (const surface of names) {
-    const missing = options.golden.missing[surface] ?? normalizedPort.missing[surface] ?? undefined;
+    const goldenMissing = options.golden.missing[surface];
+    const portMissing = normalizedPort.missing[surface];
+    const missing = goldenMissing ?? portMissing ?? undefined;
     if (missing !== undefined) {
+      // Both sides missing for the SAME recorded reason is agreement, not a
+      // difference: the record that makes a surface missing (a session
+      // continuation, F141-FR-011, DV-010) is written on both sides of a
+      // parity drive, and the behaviour it names — the call the stub refused
+      // to serve — is the same behaviour. Only a side that is missing while
+      // the other is present, or two different reasons, reads `different`.
+      if (goldenMissing !== undefined && goldenMissing === portMissing) {
+        results[surface] = { result: "equal" };
+        continue;
+      }
       const difference: Difference = {
         fixture: options.fixture,
         surface,
@@ -667,12 +722,12 @@ export function comparePortWithGolden(
     const differences = differencesOf(
       options.fixture,
       surface,
-      goldenSurfaces[surface],
-      normalizedPort.surfaces[surface],
+      comparedGoldenSurfaces[surface],
+      portSurfaces[surface],
     );
     every.push(...differences);
     const onlyPort = COMPARED_STREAMS.includes(surface)
-      ? portOnlyLines(goldenSurfaces[surface], normalizedPort.surfaces[surface])
+      ? portOnlyLines(comparedGoldenSurfaces[surface], portSurfaces[surface])
       : [];
     if (onlyPort.length > 0) {
       results[surface] = {

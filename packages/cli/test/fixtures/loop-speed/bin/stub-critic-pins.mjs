@@ -42,7 +42,7 @@ if (role === "diagnostician") {
     : "The work is done.\nVERDICT " + nonce + ": APPROVED";
   console.log(JSON.stringify({ type: "result", result: text }));
 } else {
-  const evidence = /write (\.specstride\S+?):/i.exec(prompt)[1];
+  const evidence = (/Write your evidence to (\.specstride\S+?) \(/i.exec(prompt) ?? /write (\.specstride\S+?):/i.exec(prompt))[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
   fs.writeFileSync(evidence, "T001 T002 T004 done\n");
   fs.mkdirSync("src", { recursive: true });

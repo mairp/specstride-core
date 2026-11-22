@@ -183,12 +183,30 @@ export const N15: Rule = {
     // storage and comparison"), so its removals are counted as N-15's own and no
     // rule of its own is added to the twenty-nine (F141-FR-020).
     const notCarried = takeOutNotCarried(capture, context);
+    // The engine of the PORT of THIS repository (the parity port of feature 153)
+    // is `packages/cli/bin/specstride` under the implementation root. The as-is
+    // engine of the same component is the file the table above names for the
+    // logical component `engine` (`orchestrator.sh` of the baseline), which the
+    // file form below already folds; the front-door name `specstride` carries no
+    // extension and is deliberately never a file form, so the port's own path to
+    // its engine entry reached the comparison unfolded — the resume line of
+    // FX-13 read `<IMPL>/packages/cli/bin/specstride` against the reference's
+    // `<IMPL>/<component:engine>` for no divergence of behaviour. The PORT's
+    // path to the same component folds here, on the port's side alone, through
+    // the logical name the table already holds (F153-FR-061).
+    const portEngine =
+      context.side === "port" ? table.find((row) => row.logical === "engine") : undefined;
     return (
       notCarried +
       replaceInSurfaces(capture.surfaces, this.surfaces, (value) => {
         let text = value;
         for (const row of table) {
           text = text.split(`${row.asIs}:`).join(`${row.logical}:`);
+        }
+        if (portEngine !== undefined) {
+          text = text
+            .split(`packages/cli/bin/specstride`)
+            .join(COMPONENT_PLACEHOLDER(portEngine.logical));
         }
         for (const row of asAFile) {
           // The name of a FILE: at the start of a value or after a path separator or a

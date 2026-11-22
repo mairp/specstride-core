@@ -129,6 +129,8 @@ type FixtureWithOptions = {
 function closingFixture(options: FixtureWithOptions): {
   readonly work: string;
   readonly control: string;
+  /** The as-is control plane the parity profile reads (F153-FR-061). */
+  readonly asIsControl: string;
   readonly restore: () => void;
 } {
   const f = fixture({
@@ -150,14 +152,20 @@ function closingFixture(options: FixtureWithOptions): {
   chmodSync(join(binOf(work), "count-and-pass.cjs"), 0o755);
   const control = controlRootOf(work);
   mkdirSync(join(control, "features", "001-one", "verification"), { recursive: true });
-  writeFileSync(
-    join(control, "features", "001-one", "verification", "verification-commands.json"),
-    JSON.stringify({
-      schema_version: "specstride.verification-commands/1",
-      discovery: "none",
-      commands: options.commands(work),
-    }),
-  );
+  const declaredDocument = JSON.stringify({
+    schema_version: "specstride.verification-commands/1",
+    discovery: "none",
+    commands: options.commands(work),
+  });
+  writeFileSync(join(control, "features", "001-one", "verification", "verification-commands.json"), declaredDocument);
+  // Under the `parity` profile the run reads the AS-IS control plane (the
+  // as-is state root of the layout table, `XDG_STATE_HOME`), so the declared
+  // document of the launch stands there too: this fixture stands in for the
+  // oracle's parity drive, which lays the state out where the as-is engine
+  // reads it (F153-FR-061).
+  const asIsControl = join(process.env.HOME ?? "", ".local", "state", "specstride", "workspaces", "001-one");
+  mkdirSync(join(asIsControl, "features", "001-one", "verification"), { recursive: true });
+  writeFileSync(join(asIsControl, "features", "001-one", "verification", "verification-commands.json"), declaredDocument);
   if (options.userConfig !== undefined) {
     const userConfig = join(process.env.HOME ?? "", ".config", "specstride");
     mkdirSync(userConfig, { recursive: true });
@@ -171,6 +179,7 @@ function closingFixture(options: FixtureWithOptions): {
   return {
     work,
     control,
+    asIsControl,
     restore: () => {
       for (const [key, value] of Object.entries(heldEnv)) {
         if (value === undefined) delete process.env[key];
@@ -313,7 +322,8 @@ test("CT-153-5 T245 under parity both run: the reproduction profile stands down"
     // inner check's line and the gate's — two lines, as today.
     const lines = counterLines(g.work, "counter-a.txt");
     assert.equal(lines.length, 2, `parity reproduces today: ${JSON.stringify(lines)}`);
-    assert.equal(microState(g.control)?.["closingCheckSkip"], undefined);
+    // The skip state of a parity run lives in the as-is control plane.
+    assert.equal(microState(g.asIsControl)?.["closingCheckSkip"], undefined);
   } finally {
     g.restore();
   }

@@ -64,6 +64,15 @@ export const SETTINGS_FILE = "settings.yaml" as const;
 
 /** The prompt of one call of the dsh stub. */
 export function promptOfDshCall(call: HarnessCall): PromptOfCall {
+  // Standard input first, where one arrives. The port's parity arm writes the
+  // as-is record's text on the pipe the launcher owns (`headless…`, the profile
+  // word prefixed, exactly what the committed golden carries), while `argv`
+  // still carries the plain prompt as its positional argument; the positional
+  // reading below would take the plain prompt and lose the prefix. A call
+  // whose caller wrote nothing on the pipe reads exactly as before.
+  if (call.stdin !== "") {
+    return Object.freeze({ prompt: call.stdin, promptChannel: "stdin" as const });
+  }
   const separator = call.argv.indexOf(TASK_SEPARATOR);
   if (separator >= 0) {
     // The critic form: the chunked task, rejoined exactly as DSH rejoins it.

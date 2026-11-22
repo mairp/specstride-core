@@ -2,26 +2,97 @@
   "schema": "specstride.report-rows/1",
   "runId": null,
   "rows": [
-    { "row": "attempts started", "value": 2 },
-    { "row": "attempts closed", "value": 1 },
-    { "row": "attempts unclosed", "value": 1 },
-    { "row": "attempt duration total", "value": 2387.474, "unit": "s" },
-    { "row": "attempt duration median", "value": 2387.474, "unit": "s" },
-    { "row": "phases approved", "value": {} },
-    { "row": "in-pass checks", "value": 2 },
-    { "row": "checks failed", "value": 0 },
-    { "row": "check duration median", "value": 749.918, "unit": "s" },
-    { "row": "check duration total", "value": 1499.836, "unit": "s" },
-    { "row": "check duration minimum", "value": 746.103, "unit": "s" },
-    { "row": "check duration maximum", "value": 753.733, "unit": "s" },
-    { "row": "check durations concurrent", "value": {} },
-    { "row": "attempts by endCause", "value": {} },
-    { "row": "commit-gate blocks by rule", "value": {} },
-    { "row": "rejections from a commit-gate block", "value": 0 },
-    { "row": "passes ended by hard_cap", "value": 0 },
-    { "row": "hard_cap pass time total", "value": 0, "unit": "s" },
-    { "row": "diagnostician calls", "value": 1 },
-    { "row": "diagnostician duration median", "value": 93.54, "unit": "s" },
-    { "row": "events dropped", "value": 0 }
+    {
+      "row": "attempts started",
+      "value": 2
+    },
+    {
+      "row": "attempts closed",
+      "value": 1
+    },
+    {
+      "row": "attempts unclosed",
+      "value": 1
+    },
+    {
+      "row": "attempt duration total",
+      "value": 2387.474,
+      "unit": "s"
+    },
+    {
+      "row": "attempt duration median",
+      "value": 2387.474,
+      "unit": "s"
+    },
+    {
+      "row": "phases approved",
+      "value": {}
+    },
+    {
+      "row": "in-pass checks",
+      "value": 2
+    },
+    {
+      "row": "checks failed",
+      "value": 0
+    },
+    {
+      "row": "check duration median",
+      "value": 749.918,
+      "unit": "s"
+    },
+    {
+      "row": "check duration total",
+      "value": 1499.836,
+      "unit": "s"
+    },
+    {
+      "row": "check duration minimum",
+      "value": 746.103,
+      "unit": "s"
+    },
+    {
+      "row": "check duration maximum",
+      "value": 753.733,
+      "unit": "s"
+    },
+    {
+      "row": "check durations concurrent",
+      "value": {}
+    },
+    {
+      "row": "attempts by endCause",
+      "value": {}
+    },
+    {
+      "row": "commit-gate blocks by rule",
+      "value": {}
+    },
+    {
+      "row": "rejections from a commit-gate block",
+      "value": 0
+    },
+    {
+      "row": "passes ended by hard_cap",
+      "value": 0
+    },
+    {
+      "row": "hard_cap pass time total",
+      "value": 0,
+      "unit": "s"
+    },
+    {
+      "row": "diagnostician calls",
+      "value": 1
+    },
+    {
+      "row": "diagnostician duration median",
+      "value": 93.54,
+      "unit": "s"
+    },
+    {
+      "row": "events dropped",
+      "value": 0
+    }
   ]
 }

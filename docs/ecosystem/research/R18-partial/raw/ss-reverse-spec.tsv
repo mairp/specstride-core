@@ -1,0 +1,460 @@
+SS	cli-command	`python3 lib/reverse.py plan <SRC>` writes the inventory, the driver spec and the verification-commands document, then prints the plan as JSON on stdout; it never calls an LLM.	lib/reverse.py:1367	sub.add_parser("plan"	none (contract: cli.md)
+SS	cli-command	`python3 lib/reverse.py lint <FEATURE_DIR>` runs the deterministic Spec Kit linter over a feature directory and prints findings.	lib/reverse.py:1372	sub.add_parser("lint"	none (contract: cli.md)
+SS	cli-command	`python3 lib/reverse.py guard <SRC> --baseline <inventory.json> --out <DIR>` re-walks the source and fails when anything outside the output dir and state dir changed.	lib/reverse.py:1379	sub.add_parser("guard"	none (contract: cli.md)
+SS	cli-command	`reverse.py` requires a subcommand (`plan`, `lint` or `guard`); none or an unknown one is an argparse usage error (exit 2).	lib/reverse.py:1366	dest="cmd", required=True	none
+SS	cli-flag	`plan` positional `src`: the source directory; a path that is not a directory fails with `source is not a directory: <src>` (exit 3); it is resolved with realpath.	lib/reverse.py:473	source is not a directory	none
+SS	cli-flag	`plan --out DIR`: output feature directory, made absolute; default `<SRC>/specs/NNN-as-is-<slug>`.	lib/reverse.py:1369	p.add_argument("--out")	028 FR-025
+SS	cli-flag	`plan --name SLUG`: the run name, slugified; default is the basename of the source directory.	lib/reverse.py:477	slugify(name if name else	none (contract: cli.md)
+SS	cli-flag	`plan --tasks done|open` (argparse `choices`, so any other value exits 2); default None, which falls back to `SPECSTRIDE_REVERSE_TASKS`, then `done`.	lib/reverse.py:1371	choices=TASK_MODES	none (contract: cli.md)
+SS	cli-flag	`lint` positional `feature_dir`; a missing directory fails with `feature directory not found: <dir>` (stderr `reverse: ...`, exit 3).	lib/reverse.py:1212	feature directory not found	none
+SS	cli-flag	`lint --src SRC` enables evidence citation checks against the source; a non-directory fails with `--src is not a directory: <src>` (exit 3).	lib/reverse.py:1221	--src is not a directory	none
+SS	cli-flag	`lint --baseline INV` loads an inventory.json so citations resolve against the inventory's file list and line counts instead of the live filesystem.	lib/reverse.py:1216	load_inventory(baseline) if baseline	none
+SS	cli-flag	`lint --upto N` (int, default 5) selects the lint level; a value outside 0..5 fails with `--upto must be one of 0, 1, 2, 3, 4, 5` (exit 3); a non-integer is an argparse error (exit 2).	lib/reverse.py:1214	--upto must be one of	none (contract: cli.md)
+SS	cli-flag	`lint --upto` default is 5.	lib/reverse.py:1376	"--upto", type=int, default=5	none (contract: cli.md)
+SS	cli-flag	`lint --claims FILE` additionally lints a scratch claims file (used by level-0 unit phases of an oversize run).	lib/reverse.py:1377	l.add_argument("--claims")	none (contract: cli.md)
+SS	cli-flag	`lint --json` prints the findings as one JSON object `{errors:[...], warnings:[...]}` (indent 1, sorted keys) instead of text lines.	lib/reverse.py:1378	"--json", action="store_true"	none (contract: cli.md)
+SS	cli-flag	`guard` positional `src` is the source tree to re-walk (realpath).	lib/reverse.py:1380	g.add_argument("src")	none (contract: cli.md)
+SS	cli-flag	`guard --baseline` is required (argparse exit 2 when missing); an unreadable or non-JSON file fails with `cannot read inventory <path>: <error>` (exit 3).	lib/reverse.py:154	cannot read inventory	none
+SS	cli-flag	`guard --baseline` and `lint --baseline` reject a JSON document that is not an object with `fingerprint` and `files` keys: `not an inventory: <path>` (exit 3).	lib/reverse.py:156	not an inventory: %s	none
+SS	cli-flag	`guard --out` is required; it is the output directory excluded from the comparison and named in the failure line.	lib/reverse.py:1382	"--out", required=True	none (contract: cli.md)
+SS	exit-code	`reverse.py` exit 3 (`E_FINDINGS`) is the single code for findings and for invalid input.	lib/reverse.py:42	E_FINDINGS = 3	none (contract: cli.md)
+SS	exit-code	`reverse.py` documents exit codes as 0 ok, 3 findings or invalid input, 2 usage (argparse).	lib/reverse.py:23	3 findings or invalid input	none (contract: cli.md)
+SS	exit-code	`reverse.py plan` exits 0 after printing the plan JSON.	lib/reverse.py:1392	sort_keys=True))	none (contract: cli.md)
+SS	exit-code	`reverse.py lint` exits 3 when there is at least one error finding and 0 otherwise; warnings alone never fail the linter.	lib/reverse.py:1398	E_FINDINGS if result["errors"]	none (contract: cli.md)
+SS	exit-code	`reverse.py guard` exits 3 when at least one problem was found.	lib/reverse.py:1402	if problems:	none (contract: cli.md)
+SS	exit-code	`reverse.py guard` exits 0 when the source is untouched.	lib/reverse.py:1406	guard: ok	none (contract: cli.md)
+SS	exit-code	Any `ReverseError` or `InventoryError` in any subcommand is written to stderr as `reverse: <message>` and exits 3.	lib/reverse.py:1409	sys.stderr.write("reverse: %s\n"	none
+SS	env	`SPECSTRIDE_REVERSE_TASKS` (values `done` or `open`, default `done`; empty counts as `done`) sets the tasks mode of `plan` when `--tasks` is not given; the legacy-prefixed variable is read as a fallback.	lib/reverse.py:1386	"SPECSTRIDE_REVERSE_TASKS", "done"	none (contract: config-env.md)
+SS	env	An invalid `SPECSTRIDE_REVERSE_TASKS` fails `plan` with `SPECSTRIDE_REVERSE_TASKS must be done or open (got '<v>')` and exit 3.	lib/reverse.py:1389	must be done or open (got %r)"	none
+SS	env	`SPECSTRIDE_CONTEXT_BUDGET` (positive integer, default 24000) caps the character size of the INVENTORY.md that `plan` writes; a non-positive or non-integer value fails the plan (exit 3).	lib/reverse.py:496	"SPECSTRIDE_CONTEXT_BUDGET"	none
+SS	behaviour	The slug is lower-cased, every run of characters outside `a-z0-9` becomes `-`, leading/trailing `-` are stripped, and it is cut to 40 characters (`SLUG_MAX`).	lib/reverse.py:195	re.sub(r'[^a-z0-9]+', '-'	none
+SS	behaviour	An empty slug (nothing usable in the name) becomes `project`.	lib/reverse.py:196	return slug or "project"	none
+SS	behaviour	`SLUG_MAX` is 40.	lib/reverse.py:164	SLUG_MAX = 40	none
+SS	behaviour	The feature namespace of a reverse run is `reverse-<slug>`; its gate state lives in `<SRC>/<state>/features/reverse-<slug>/`.	lib/reverse.py:480	feature = "reverse-%s" % slug	none
+SS	behaviour	`plan` refuses when `<state>/features/reverse-<slug>/gates/` exists and is not empty: `a reverse run for '<slug>' already has gate state in <dir>; resume it with specstride resume -w <src> --feature reverse-<slug>, or pass --name` (exit 3).	lib/reverse.py:484	already has gate state in	none
+SS	file	Default output directory is `<SRC>/specs/NNN-as-is-<slug>` with NNN zero-padded to 3 digits and equal to the highest existing spec number plus 1, or 001 when `specs/` has no numbered directory.	lib/reverse.py:201	"%03d-as-is-%s"	028 FR-025
+SS	behaviour	Existing spec numbers are the leading 3-or-more-digit prefixes of DIRECTORIES under `<SRC>/specs/` named `<digits>-...`; files are ignored.	lib/reverse_inventory.py:803	re.match(r'^(\d{3,})-', name)	none
+SS	stop-reason	Refusal `--out cannot be the source root itself; choose a dedicated output folder: <out>`.	lib/reverse.py:209	--out cannot be the source root itself	028 FR-025
+SS	stop-reason	Refusal `--out must be inside the source tree <src> (got <out>)`.	lib/reverse.py:212	--out must be inside the source tree	028 FR-025
+SS	stop-reason	Refusal `--out cannot be inside the project's .git directory: <out>` (first path component is `.git`).	lib/reverse.py:216	inside the project's .git directory	028 FR-025
+SS	stop-reason	Refusal `--out cannot be inside the state directory <name>/: <out>` when the first path component is the active state dir name, `.specstride`, the legacy state dir name or `.lisa`.	lib/reverse.py:218	--out cannot be inside the state directo	028 FR-025
+SS	stop-reason	Refusal `--out cannot be inside .specify/ (the run never touches it): <out>`.	lib/reverse.py:221	--out cannot be inside .specify/	028 FR-025
+SS	stop-reason	Refusal `--out exists and is not a directory: <out>`.	lib/reverse.py:224	--out exists and is not a directory	none
+SS	stop-reason	Refusal `--out already exists and is not empty: <out> (resume an existing reverse run with specstride resume --feature reverse-<slug>)`; an existing EMPTY directory is accepted.	lib/reverse.py:226	--out already exists and is not empty	028 FR-025
+SS	behaviour	Output-dir containment is judged on realpaths, so a symlinked `--out` that resolves outside the source is refused.	lib/reverse.py:207	src_r, out_r = _real(src), _real(out)	none
+SS	stop-reason	`plan()` called with a tasks mode other than done/open raises `--tasks must be done or open (got '<v>')`.	lib/reverse.py:476	--tasks must be done or open	none
+SS	file	`plan` creates the run-state directory `<SRC>/<state>/reverse/<slug>/` (makedirs, exist_ok); it does not create the output directory itself.	lib/reverse.py:489	os.path.join(state_dir, "reverse", slug)	none (contract: files-on-disk.md)
+SS	file	`plan` writes `<run_state>/inventory.json` atomically, built with the output dir (SRC-relative) as the only exclude.	lib/reverse.py:492	"inventory.json")	none (contract: files-on-disk.md)
+SS	file	`plan` writes `<run_state>/INVENTORY.md` atomically, rendered from the inventory under the context budget.	lib/reverse.py:493	"INVENTORY.md")	none (contract: files-on-disk.md)
+SS	behaviour	The inventory that `plan` builds excludes exactly the output directory (`excludes=[out_rel]`).	lib/reverse.py:494	excludes=[out_rel]	none
+SS	file	`plan` writes the driver spec `<run_state>/DRIVER.md` atomically.	lib/reverse.py:504	"DRIVER.md")	none (contract: files-on-disk.md)
+SS	file	`plan` writes `<run_state>/verification-commands.json` atomically as JSON with indent 1, sorted keys and a trailing newline.	lib/reverse.py:505	"verification-commands.json")	none (contract: files-on-disk.md)
+SS	behaviour	The generated driver is validated with the `native` spec adapter before it is written; a failure raises `generated driver is not a valid native spec: <errors>` (exit 3) and is a generator bug, not an input problem.	lib/reverse.py:529	generated driver is not a valid native s	none
+SS	behaviour	A constitution has to be written by the run only when the source has no `.specify/memory/constitution.md` (`constitution_needed`).	lib/reverse.py:501	constitution_needed = not inventory	028 FR-027
+SS	behaviour	The state directory name used by reverse is resolved silently (the legacy-dir notice is sent to a discarded stream).	lib/reverse.py:132	stream=io.StringIO()	none
+SS	file	verification-commands.json top level: `schema_version` `1.0.0`, `discovery` `none`, `commands` list, `phaseTimeouts` map.	lib/reverse.py:542	"schema_version": "1.0.0"	none
+SS	behaviour	Each driver phase N contributes command `lint-N`: `executable` = the running Python interpreter, `cwd` = SRC, `args` = `[reverse.py, lint, <out>, --src, <src>, --baseline, <inventory.json>, --upto, <level>]`, `timeoutSec` 120.	lib/reverse.py:535	"id": "lint-%d" % phase["n"]	none
+SS	behaviour	Each driver phase N contributes command `guard-N`: `args` = `[reverse.py, guard, <src>, --baseline, <inventory.json>, --out, <out>]`, `timeoutSec` 300.	lib/reverse.py:538	"id": "guard-%d" % phase["n"]	none
+SS	behaviour	Lint command timeout is 120 seconds.	lib/reverse.py:537	"timeoutSec": 120	none
+SS	behaviour	Guard command timeout is 300 seconds.	lib/reverse.py:540	"timeoutSec": 300	none
+SS	behaviour	`phaseTimeouts` gives 3600 seconds to every phase whose lint level is 0 or 1 (unit investigation and specification phases); other phases get no entry.	lib/reverse.py:541	str(p["n"]): 3600	none
+SS	behaviour	The lint command of a unit phase adds `--claims <run_state>/claims-<unit-key>.md`.	lib/reverse.py:511	args += ["--claims"	none
+SS	behaviour	The lint and guard commands shown in the driver are the same argv, shell-quoted with `shlex.quote` and prefixed with `python3`.	lib/reverse.py:522	shlex.quote(a) for a in	none
+SS	output-line	`plan` prints one JSON object on stdout with indent 1 and sorted keys.	lib/reverse.py:1391	print(json.dumps(plan(args.src	none (contract: cli.md)
+SS	output-line	Plan JSON key `src`: the realpath of the source.	lib/reverse.py:547	"src": src,	none
+SS	output-line	Plan JSON key `slug`: the run slug.	lib/reverse.py:548	"slug": slug,	none
+SS	output-line	Plan JSON key `feature`: `reverse-<slug>`.	lib/reverse.py:549	"feature": feature,	none
+SS	output-line	Plan JSON key `out`: realpath of the output feature directory.	lib/reverse.py:550	"out": out,	none
+SS	output-line	Plan JSON key `state_dir`: `<SRC>/<state dir name>`.	lib/reverse.py:551	"state_dir": state_dir,	none
+SS	output-line	Plan JSON key `run_state`: `<state_dir>/reverse/<slug>`.	lib/reverse.py:552	"run_state": run_state,	none
+SS	output-line	Plan JSON key `inventory`: path of inventory.json.	lib/reverse.py:553	"inventory": inventory_path,	none
+SS	output-line	Plan JSON key `inventory_md`: path of INVENTORY.md.	lib/reverse.py:554	"inventory_md": inventory_md,	none
+SS	output-line	Plan JSON key `driver`: path of DRIVER.md.	lib/reverse.py:555	"driver": driver_path,	none
+SS	output-line	Plan JSON key `verification_commands`: path of verification-commands.json.	lib/reverse.py:556	"verification_commands": commands_path	none
+SS	output-line	Plan JSON key `test_plan`: `<run_state>/TEST_PLAN.md` (a path under the state dir, not written by plan).	lib/reverse.py:557	"TEST_PLAN.md")	none
+SS	output-line	Plan JSON key `generate_tests`: `<run_state>/generated` (a path under the state dir, not written by plan).	lib/reverse.py:558	os.path.join(run_state, "generated")	none
+SS	output-line	Plan JSON key `analysis`: `<run_state>/ANALYSIS.md` (written later by the final phase).	lib/reverse.py:559	"analysis": os.path.join(run_state	none
+SS	output-line	Plan JSON key `tasks_mode`: `done` or `open`.	lib/reverse.py:560	"tasks_mode": tasks_mode,	none
+SS	output-line	Plan JSON key `oversize`: boolean copied from the inventory.	lib/reverse.py:561	"oversize": inventory["oversize"],	none
+SS	output-line	Plan JSON key `phases`: list of `{n, title, lint_level}` per driver phase.	lib/reverse.py:562	"lint_level": p["level"]	none
+SS	output-line	Plan JSON key `summary`: `files`, `skipped`, `text_bytes`, `walk`, `git_head`, `languages`, `frameworks`, `units` (count) and `constitution` (`existing` or `to be written`).	lib/reverse.py:573	"to be written"	none
+SS	behaviour	A non-oversize run has 5 driver phases, numbered from 1: specification (level 1), `Plan and research` (2), `Design artifacts` (3), `Tasks (<mode>)` (4), `Cross-artifact analysis and sign-off` (5).	lib/reverse.py:248	"title": "Plan and research"	none
+SS	behaviour	Phase 1 title is `Constitution and specification` when a constitution must be written, else `Specification`.	lib/reverse.py:245	"Constitution and specification"	none
+SS	behaviour	An oversize run prepends one level-0 phase per inventory unit, titled `Investigate unit <path> (1<letter>)`, before the specification phase.	lib/reverse.py:238	"Investigate unit %s (1%s)"	none
+SS	behaviour	In an oversize run the specification phase is titled `Synthesis — constitution and specification` or `Synthesis — specification`.	lib/reverse.py:242	Synthesis — specification	none
+SS	behaviour	Unit phase letters run a..z; from the 27th unit on the suffix is `-<index+1>`.	lib/reverse.py:260	letters[index] if index < len(letters)	none
+SS	behaviour	The unit key used in claims file names is `root` for unit `.`, else the unit path with every run outside `A-Za-z0-9._-` replaced by `-`.	lib/reverse.py:264	return "root" if unit_path == "."	none
+SS	behaviour	Driver phases are numbered contiguously from 1 in list order (the phase number is also the gate number).	lib/reverse.py:253	for n, phase in enumerate(phases, 1)	none
+SS	behaviour	Tasks phase title carries the mode: `Tasks (done)` or `Tasks (open)`.	lib/reverse.py:250	"Tasks (%s)" % tasks_mode	none
+SS	file	DRIVER.md starts with `# Reverse-engineer `<src basename>` into Spec Kit (as-is)` and ends with exactly one trailing newline.	lib/reverse.py:276	into Spec Kit (as-is)	none
+SS	file	DRIVER.md has a `## Run boundaries` section listing target repository, output directory, run state, tasks mode and the full policy.	lib/reverse.py:283	"## Run boundaries"	none
+SS	file	Each driver phase is `## Phase <n>: <title>` with subsections `### Policy`, `### Work`, `### Gate` and `### Acceptance criteria`.	lib/reverse.py:298	"## Phase %d: %s" % (n, phase["title"])	none
+SS	behaviour	Every driver phase names `<run_state>/INVENTORY.md` (full record inventory.json) as ground truth for what exists and tells the agent not to re-derive it.	lib/reverse.py:300	Ground truth for **what exists**	none
+SS	behaviour	The policy is repeated verbatim inside every phase (`### Policy`), not only in the run boundaries.	lib/reverse.py:305	"### Policy"	none
+SS	behaviour	The `### Gate` block lists the phase's lint command and the guard command in a bash fence and tells the agent to run them first and fix every error before writing evidence.	lib/reverse.py:317	The gate runs exactly these	none
+SS	behaviour	The driver tells the agent to keep `GATE<n>-EVIDENCE.md` short (critic grounding budget 32 KB), to paste the linter's `--json` output and to cite artifacts by workdir-relative path.	lib/reverse.py:325	the critic's grounding budget is 32 KB	none
+SS	behaviour	Acceptance criteria are emitted as unticked `- [ ] ` checkbox lines; every phase's list ends with `<lint command> exits 0.` and `<guard command> exits 0.`.	lib/reverse.py:332	"- [ ] %s" % c for c in	none
+SS	behaviour	Common criteria are the two lines `` `<lint>` exits 0.`` and `` `<guard>` exits 0.``.	lib/reverse.py:436	common = ["`%s` exits 0." % lint	none
+SS	behaviour	Policy: source-aware mode; source, configuration, tests, schemas, documentation, manifests and Git history are read-only evidence.	lib/reverse.py:168	- Mode: source-aware.	none
+SS	behaviour	Policy: no network access, no dependency install, no services, containers or daemons.	lib/reverse.py:170	No network access, no dependency install	none
+SS	behaviour	Policy: the product, its tests, builds, generators, migrations, linters and formatters are not executed; only read-only discovery (`ls`, `cat`, `grep`, `find`, `wc`) and `git log`/`git show`/`git blame` are allowed.	lib/reverse.py:171	Do not execute the product, its tests	none
+SS	behaviour	Policy: the only permitted writes are the output directory and the state directory; never touch `.specify/`, never write `.specify/feature.json`, never create a git branch or commit.	lib/reverse.py:174	The only permitted writes are the output	none
+SS	behaviour	Policy: describe current behaviour only; no To-Be design, no remediation or enhancement backlog.	lib/reverse.py:177	Describe current behavior only	none
+SS	behaviour	Policy: evidence precedence is executable source, schemas and configuration > tests > templates and command definitions > user docs > comments and git history; a disagreement lowers confidence and is recorded in `contradicts=`.	lib/reverse.py:179	Evidence precedence when sources disagre	none
+SS	behaviour	Policy: every linter-checked claim (each FR, SC, research Decision, data-model entity heading) carries an evidence comment on the line directly after it.	lib/reverse.py:183	Every claim that the linter checks	none
+SS	behaviour	Policy: evidence paths are relative to the source, ranges must exist in the file, and at most 3 `[NEEDS CLARIFICATION` markers are allowed in spec.md; other unknowns go under Assumptions with `validation=unverified`.	lib/reverse.py:188	-relative; ranges must exist in the file	none
+SS	behaviour	Unit phase work: investigate only that unit and append claims, one per line as `- <claim>` each followed by its evidence comment, to `<run_state>/claims-<unit-key>.md`; nothing is written under the output dir.	lib/reverse.py:347	Do not write anything under `%s/` in thi	none
+SS	behaviour	Oversize specification phase work: synthesize from the scratch claims files `<run_state>/claims-*.md`.	lib/reverse.py:353	Synthesize from the scratch claims files	none
+SS	behaviour	When the source has no constitution the spec phase writes `<out>/memory/constitution.md` from the constitution template with principles recovered from evidence.	lib/reverse.py:356	The target has no `.specify/memory/const	none
+SS	behaviour	When the source has a constitution the spec phase reads it and must not copy it into the output.	lib/reverse.py:362	Read the existing `.specify/memory/const	none
+SS	behaviour	Spec phase work prescribes the spec.md grammar: `### User Story <n> - <title> (Priority: P<n>)` numbered from 1, **Why this priority**, **Independent Test**, a Given/When/Then scenario, `- **FR-###**:` and `- **SC-###**:` lines with evidence comments.	lib/reverse.py:365	Write `%s/spec.md` from `%s/spec-templat	none
+SS	behaviour	Spec phase work prescribes `checklists/requirements.md`: every item evaluated `[x]`, or `[ ]` followed by an indented `Fails:` line carrying an evidence comment.	lib/reverse.py:371	Write `%s/checklists/requirements.md`	none
+SS	behaviour	Spec phase work forbids leaving any template placeholder, sample text or template HTML comment behind.	lib/reverse.py:376	Leave no template placeholder	none
+SS	behaviour	Plan phase work: write plan.md from the plan template with real Technical Context, Constitution Check and structure; delete `[REMOVE IF UNUSED]` options; keep Complexity Tracking as a heading with None.	lib/reverse.py:381	Write `%s/plan.md` from `%s/plan-templat	none
+SS	behaviour	Plan phase work: research.md is a list of `- **Decision**: ...` entries each followed by an evidence comment, then Rationale and Alternatives; an unrecoverable rationale is written `unknown`.	lib/reverse.py:386	Write `%s/research.md` as a list of deci	none
+SS	behaviour	Design phase work: data-model.md has one `### <Entity>` heading per entity, each followed by its evidence comment.	lib/reverse.py:393	Write `%s/data-model.md`: one `### <Enti	none
+SS	behaviour	Design phase work: `contracts/*.md`, one file per external surface that exists (CLI, HTTP API, events, files on disk, config/env).	lib/reverse.py:396	Write `%s/contracts/*.md`, one file per	none
+SS	behaviour	Design phase work: quickstart.md commands come from manifests and docs and each is labelled not executed by the reverse run.	lib/reverse.py:398	Write `%s/quickstart.md`. Commands come	none
+SS	behaviour	Tasks phase work: every task box is `[x]` in `done` mode (work that already exists) and `[ ]` in `open` mode (a rebuild step).	lib/reverse.py:402	box = "[x]" if ctx["tasks_mode"] == "don	none
+SS	behaviour	Tasks phase work prescribes phases `## Phase 1: Setup`, `## Phase 2: Foundational`, one `## Phase <n>: User Story <k> - <title> (Priority: P<k>)` per story in priority order, then a final numbered Polish phase.	lib/reverse.py:410	`## Phase 1: Setup	none
+SS	behaviour	Tasks phase work requires each `FR-###` to be mentioned in at least one task description, e.g. `(FR-003)`.	lib/reverse.py:417	Mention each `FR-###` in at least one ta	none
+SS	behaviour	Tasks phase work requires the marker comment `<!-- specstride-reverse: tasks=<mode> -->` on its own line right after the front matter, and the template's YAML front matter to be kept.	lib/reverse.py:420	Keep the marker comment	none
+SS	file	The final phase writes the analysis report to `<run_state>/ANALYSIS.md` (not into the output dir) in the `/speckit.analyze` report shape.	lib/reverse.py:427	Write the analysis report to `%s/ANALYSI	none
+SS	behaviour	Tasks phase criterion: tasks.md passes `python3 <root>/lib/specstride_spec.py validate --specs <out>/tasks.md --format speckit-tasks`.	lib/reverse.py:461	lib/specstride_spec.py validate	none
+SS	behaviour	Final phase criterion: ANALYSIS.md exists and lists every finding with its resolution, and the linter reports zero errors at `--upto 5`.	lib/reverse.py:467	The linter reports zero errors at	none
+SS	behaviour	Design phase criterion: data-model.md, quickstart.md and at least one `contracts/*.md` exist and every quickstart command is labelled not executed.	lib/reverse.py:459	Every quickstart command is labelled	none
+SS	behaviour	Spec phase criterion: `No desired behavior is represented as current behavior.`	lib/reverse.py:445	No desired behavior is represented	none
+SS	behaviour	The template directory named in the driver is `<SRC>/.specify/templates` when that directory exists, else the vendored `lib/speckit_templates`.	lib/reverse.py:580	return local if os.path.isdir(local)	none
+SS	behaviour	Feature layout: `spec.md`, `plan.md`, `research.md`, `data-model.md`, `quickstart.md`, `tasks.md`, `checklists/requirements.md`, `memory/constitution.md`, plus `contracts/*.md` as the only pattern.	lib/reverse.py:48	LAYOUT = ("spec.md", "plan.md"	none
+SS	behaviour	Lint level 0 owns no artifact: it is the level of an oversize run's unit phases, which only write a claims file checked with `--claims`.	lib/reverse.py:51	Level 0 owns nothing	none
+SS	behaviour	Lint level 1 owns `spec.md`, `checklists/requirements.md` and `memory/constitution.md`.	lib/reverse.py:55	1: ("spec.md", "checklists/requirements.	028 FR-027
+SS	behaviour	Lint level 2 owns `plan.md` and `research.md`.	lib/reverse.py:56	2: ("plan.md", "research.md"),	none
+SS	behaviour	Lint level 3 owns `data-model.md`, the `contracts/` directory and `quickstart.md`.	lib/reverse.py:57	3: ("data-model.md", CONTRACTS_DIR	none
+SS	behaviour	Lint level 4 owns `tasks.md`.	lib/reverse.py:58	4: ("tasks.md",),	none
+SS	behaviour	Lint level 5 owns no new artifact; it adds the FR-coverage check across spec.md and tasks.md.	lib/reverse.py:59	5: (),	none
+SS	behaviour	Levels are cumulative: `--upto N` checks every artifact owned by levels 1..N; artifacts of higher levels are not required and their content is not linted.	lib/reverse.py:1235	for owner in range(1, upto + 1):	028 FR-027
+SS	behaviour	Template-driven checks apply to five artifacts: spec.md, plan.md, tasks.md, checklists/requirements.md and memory/constitution.md, each mapped to its `*-template.md`.	lib/reverse.py:62	TEMPLATE_FOR = {	none
+SS	behaviour	Without `--src` the constitution is neither required nor forbidden, templates come only from the vendored copy, and the warning `evidence.skipped` is raised.	lib/reverse.py:1218	constitution_needed = None	none
+SS	behaviour	Citations into the feature directory (when inside SRC) and into the state directory are rejected as generated artifacts.	lib/reverse.py:1228	excluded.append(state_basename(src))	none
+SS	behaviour	research.md, data-model.md, quickstart.md and each `contracts/*.md` get the fixed placeholder check only (no template), when owned at the level.	lib/reverse.py:1249	("research.md", "data-model.md", "quicks	none
+SS	output-line	Text finding line: `ERROR <file>[:<line>] [<rule>] <message>` for errors and `warn  <file>[:<line>] [<rule>] <message>` for warnings; a finding with no file prints `-`.	lib/reverse.py:1359	"ERROR" if severity == "errors" else "wa	none
+SS	output-line	The text output ends with the summary line `<E> error(s), <W> warning(s)`.	lib/reverse.py:1361	%d error(s), %d warning(s)	none
+SS	output-line	`--json` output is `{"errors": [...], "warnings": [...]}` where each finding has `rule`, `file`, `line`, `message`; no summary line is printed.	lib/reverse.py:1352	print(json.dumps(result, indent=1	none
+SS	behaviour	Findings are sorted by file, line, rule, message (errors before warnings in text mode), so the output is deterministic.	lib/reverse.py:599	key = lambda f: (f["file"] or ""	none
+SS	behaviour	Templates are loaded from `<SRC>/.specify/templates/` first and from the vendored `lib/speckit_templates/` otherwise; required headings are never listed in the code.	lib/reverse.py:604	def load_template(name, src):	none
+SS	behaviour	Only `## ` headings outside fenced code blocks count, in both template and artifact; YAML front matter is stripped first.	lib/reverse.py:636	if not fenced and line.startswith("## ")	none
+SS	behaviour	Headings are compared normalised: `*(...)*` annotations removed, emoji and ornaments replaced by spaces, whitespace collapsed, lower-cased.	lib/reverse.py:622	def _norm_heading(text):	none
+SS	behaviour	A template heading marked `*(mandatory)*` is required (exact normalised match).	lib/reverse.py:659	MANDATORY_MARK.search(heading)	028 FR-027
+SS	behaviour	A template heading marked `*(optional)*`, `*(include if ...)*`, `OPTIONAL` or `[REMOVE IF UNUSED]` produces no rule.	lib/reverse.py:663	if OPTIONAL_MARKS.search(heading):	none
+SS	behaviour	Template headings `Phase <n|N>:` collapse into one phase-family rule satisfied by any artifact heading `phase <digits>:`.	lib/reverse.py:681	r'^phase \d+\s*:'	none
+SS	behaviour	A template heading containing a `[placeholder]` is a family: each bracket matches any text; identical family patterns are de-duplicated.	lib/reverse.py:672	if pattern in seen_families:	none
+SS	behaviour	A family rule cannot be satisfied by a heading that an explicit (required or expected) template heading already accounts for.	lib/reverse.py:693	if kind != "family" or n not in explicit	none
+SS	behaviour	A template heading with a sample `User Story <n>` and no bracket (e.g. `Parallel Example: User Story 1`) matches any story number and only warns when missing.	lib/reverse.py:652	"User Story [N]", heading)	none
+SS	behaviour	Every other template heading is `expected`: missing it is a warning, not an error.	lib/reverse.py:679	rules.append(("expected", heading,	none
+SS	stop-reason	Lint error `template.mandatory`: `missing mandatory section '## <heading>' (from <template path>)`.	lib/reverse.py:699	"template.mandatory"	028 FR-027
+SS	stop-reason	Lint error `template.family`: `no section matches the template family '## <heading>' (from <template>)`.	lib/reverse.py:702	findings.error("template.family", rel, N	028 FR-027
+SS	stop-reason	Lint error `template.family` (phase form): `no '## Phase <n>:' section (the template's phase family, from <template>)`.	lib/reverse.py:707	no '## Phase <n>:' section	none
+SS	stop-reason	Lint warning `template.expected`: `expected section '## <heading>' is missing (from <template>)`.	lib/reverse.py:710	"template.expected"	none
+SS	behaviour	Template paths in messages are printed relative to the Specstride root when vendored, else as the full path.	lib/reverse.py:696	os.path.relpath(template_path, ROOT)	none
+SS	stop-reason	Lint error `placeholder` (per line): `template placeholder <label> left in the artifact` for `[FEATURE NAME]`, `[###-feature-name]`, `$ARGUMENTS`, `ACTION REQUIRED`, `[DATE]`, `__SPECKIT_COMMAND_*__` and `[e.g., ...]`.	lib/reverse.py:724	findings.error("placeholder", rel, numbe	028 FR-027
+SS	behaviour	The fixed placeholder list is seven patterns.	lib/reverse.py:101	PLACEHOLDERS = (	none
+SS	stop-reason	Lint error `placeholder` for an upper-case bracket token (`[AB_C]`, 3+ chars) that also occurs in the artifact's template; `[US<n>]` is exempt.	lib/reverse.py:730	if token in tokens and not re.match	none
+SS	stop-reason	Lint error `placeholder`: `template HTML comment copied verbatim: <!-- <first 60 chars>... -->` when a template comment longer than 20 characters appears inside an artifact comment (whitespace-normalised).	lib/reverse.py:737	template HTML comment copied verbatim	none
+SS	behaviour	Only template comments longer than 20 characters (stripped) are checked for verbatim copy.	lib/reverse.py:717	if len(c.strip()) > 20]	none
+SS	stop-reason	Lint error `structure.extra`: `not part of the Spec Kit feature layout` for any file in the feature dir outside the layout (checked at every level, including 0).	lib/reverse.py:753	"structure.extra"	none
+SS	behaviour	When the source already has a constitution, `memory/constitution.md` in the output is `structure.extra` with the suffix `(the source already has .specify/memory/constitution.md)`.	lib/reverse.py:751	allowed.discard("memory/constitution.md"	028 FR-027
+SS	stop-reason	Lint error `structure.contracts`: `contracts/ holds no .md contract` at level 3 and above.	lib/reverse.py:761	"structure.contracts"	none
+SS	stop-reason	Lint error `structure.required`: `required at --upto <N> but missing` for each owned artifact that is absent.	lib/reverse.py:767	"structure.required"	028 FR-027
+SS	behaviour	A contract is a file matching `contracts/<name>.md` directly inside `contracts/`; nested files are extras.	lib/reverse.py:748	r'^contracts/[^/]+\.md$'	none
+SS	behaviour	The evidence comment is `<!-- evidence: <citations> | kind=... | confidence=... | contradicts=... | validation=... -->` on one line.	lib/reverse.py:73	EVIDENCE_RE = re.compile	028 FR-027
+SS	behaviour	A citation is `path:START` or `path:START-END`; the path holds no whitespace, comma or `|`.	lib/reverse.py:74	CITATION_RE = re.compile	none
+SS	behaviour	Allowed `kind` values: `observed`, `inferred`, `declared`.	lib/reverse.py:75	KINDS = ("observed", "inferred", "declar	none
+SS	behaviour	Allowed `validation` values: `verified`, `unverified`, `disproved`.	lib/reverse.py:76	VALIDATIONS = ("verified", "unverified"	none
+SS	behaviour	`confidence` must match `0.dd` or `1.00` (exactly two decimals).	lib/reverse.py:77	CONFIDENCE_RE = re.compile	none
+SS	stop-reason	Lint error `evidence.missing`: `<what> has no evidence comment on the line after it`, where the line after the claim block must START with `<!--` and hold an evidence comment.	lib/reverse.py:947	"evidence.missing"	028 FR-027
+SS	behaviour	A claim block extends over wrapped continuation lines; it ends at a blank line, a line starting with `<!--`, `#`, `- `, `* `, `|`, a code fence or `<n>. `, or at the next claim.	lib/reverse.py:930	stripped.startswith(("<!--", "#", "- "	none
+SS	behaviour	EVERY evidence comment in a linted file is validated, whether or not it is attached to a claim.	lib/reverse.py:954	for m in EVIDENCE_RE.finditer(line):	none
+SS	behaviour	Without `--src` only the presence of evidence comments is checked; their content is not validated.	lib/reverse.py:951	if ectx is None:	none
+SS	stop-reason	Lint error `evidence.format`: `evidence comment needs 5 '|'-separated fields (citations | kind= | confidence= | contradicts= | validation=)`.	lib/reverse.py:842	evidence comment needs 5 '|'-separated	none
+SS	stop-reason	Lint error `evidence.format`: `field '<part>' must be '<key>=...'` when a field is out of order or misnamed.	lib/reverse.py:847	field '%s' must be '%s=	none
+SS	stop-reason	Lint error `evidence.kind`: `kind=desired is forbidden in as-is artifacts`.	lib/reverse.py:862	kind=desired is forbidden	none
+SS	stop-reason	Lint error `evidence.kind`: `kind must be observed, inferred or declared (got '<v>')`.	lib/reverse.py:865	kind must be observed, inferred or	none
+SS	stop-reason	Lint error `evidence.confidence`: `confidence must be in [0,1] with two decimals (got '<v>')`.	lib/reverse.py:870	"evidence.confidence"	none
+SS	stop-reason	Lint error `evidence.validation`: `validation must be verified, unverified or disproved (got '<v>')`.	lib/reverse.py:876	"evidence.validation"	none
+SS	stop-reason	Lint error `evidence.disproved`: `a disproved requirement must be removed, not kept` (only for a claim line mentioning `**FR-n**` in spec.md).	lib/reverse.py:880	"evidence.disproved"	none
+SS	stop-reason	Lint error `evidence.citation` covers every problem in the first field (the citations).	lib/reverse.py:882	"evidence.citation")	028 FR-027
+SS	stop-reason	Lint error `evidence.contradicts` applies the same citation checks to `contradicts=` unless its value is `none`.	lib/reverse.py:885	"evidence.contradicts")	none
+SS	behaviour	Several citations are separated by comma-plus-space (`, `); an empty field reports `no citation`.	lib/reverse.py:890	c.strip() for c in text.split(", ")	none
+SS	stop-reason	Citation message `citation '<c>' is not path:START[-END]`.	lib/reverse.py:898	is not path:START[-END]	none
+SS	stop-reason	Citation message `absolute path (cite it SRC-relative)` for a path starting with `/` or a drive letter.	lib/reverse.py:820	absolute path (cite it SRC-relative)	none
+SS	stop-reason	Citation message `path escapes the source tree` for a normalised path equal to or under `..`.	lib/reverse.py:823	path escapes the source tree	none
+SS	stop-reason	Citation message `cites a generated artifact under <root>/, not the source`.	lib/reverse.py:826	cites a generated artifact under	none
+SS	stop-reason	Citation message `ambiguous across workspace packages: <hits>` when a path resolves in more than one workspace package.	lib/reverse.py:833	ambiguous across workspace packages	none
+SS	stop-reason	Citation message `no such file in the source`.	lib/reverse.py:834	no such file in the source	none
+SS	stop-reason	Citation message `<path> is not a text file the inventory counted (<reason>)` for binary, oversize or symlink-escape entries.	lib/reverse.py:910	is not a text file the inventory counted	none
+SS	stop-reason	Citation message `line range outside <path> (1-<count>)` when START < 1, END < START or END > line count.	lib/reverse.py:914	line range outside %s (1-%d)	028 FR-027
+SS	behaviour	A cited path is tried SRC-relative first, then relative to each workspace package; exactly one workspace hit resolves it.	lib/reverse.py:830	if len(hits) == 1:	none
+SS	behaviour	With a baseline, a path exists when it is in the inventory's `files` or `skipped`; without one the live filesystem is used and workspaces are any non-root directory holding a `package.json`.	lib/reverse.py:801	return rel in self.lines or rel in self.	none
+SS	stop-reason	Lint warning `unknowns.placement`: `unverified claim below 0.50 confidence belongs under Assumptions, not among the <section>` (spec.md only).	lib/reverse.py:964	"unknowns.placement"	none
+SS	stop-reason	Lint warning `evidence.skipped`: `no --src: evidence citations were not checked`.	lib/reverse.py:1231	"evidence.skipped"	none
+SS	stop-reason	Lint errors `spec.fr-format` / `spec.sc-format`: `FR must be written '- **FR-###**: ...' with a 3-digit id` (same for SC).	lib/reverse.py:995	"spec.%s-format" % label.lower()	none
+SS	stop-reason	Lint errors `spec.fr-unique` / `spec.sc-unique`: `FR-<id> duplicates line <n>`.	lib/reverse.py:1000	"spec.%s-unique" % label.lower()	none
+SS	behaviour	An FR line must match `- **FR-ddd**: <text>` at column 0.	lib/reverse.py:82	FR_LINE = re.compile	none
+SS	behaviour	An SC line must match `- **SC-ddd**: <text>` at column 0.	lib/reverse.py:83	SC_LINE = re.compile	none
+SS	stop-reason	Lint error `spec.story-format`: `user story heading must be '### User Story <n> - <title> (Priority: P<n>)'`.	lib/reverse.py:1010	user story heading must be	028 FR-027
+SS	stop-reason	Lint error `spec.story-format`: `no '### User Story <n> - ...' found`.	lib/reverse.py:1015	no '### User Story <n> - 	none
+SS	behaviour	The story heading grammar allows a trailing target emoji suffix after the priority.	lib/reverse.py:87	STORY_HEAD = re.compile	none
+SS	stop-reason	Lint error `spec.story-numbers`: `user story numbers must run 1..<k> in order (got ...)`.	lib/reverse.py:1018	"spec.story-numbers"	none
+SS	stop-reason	Lint error `spec.story-parts`: `User Story <n> lacks **Why this priority**` / `**Independent Test**`.	lib/reverse.py:1029	"User Story %d lacks **%s**"	none
+SS	stop-reason	Lint error `spec.story-parts`: `User Story <n> has no **Given** ... **When** ... **Then** scenario`.	lib/reverse.py:1032	User Story %d has no **Given**	none
+SS	stop-reason	Lint error `spec.clarifications`: more than 3 `[NEEDS CLARIFICATION` markers in spec.md.	lib/reverse.py:1036	"spec.clarifications"	none
+SS	behaviour	`MAX_CLARIFICATIONS` is 3.	lib/reverse.py:112	MAX_CLARIFICATIONS = 3	none
+SS	behaviour	Claims in spec.md are lines starting `- **FR-<digits>**` or `- **SC-<digits>**`.	lib/reverse.py:1040	r'^- \*\*(FR|SC)-\d+\*\*'	028 FR-027
+SS	stop-reason	Lint error `research.decisions`: `no '**Decision**' entry (Decision / Rationale / Alternatives)`.	lib/reverse.py:1050	"research.decisions"	none
+SS	behaviour	A research claim is a line starting (after an optional `-`/`*` bullet) with `**Decision**`.	lib/reverse.py:95	DECISION_LINE = re.compile	none
+SS	stop-reason	Lint warning `data-model.entities`: `no '### <Entity>' heading`.	lib/reverse.py:1060	"data-model.entities"	none
+SS	behaviour	A data-model claim is every `### ` (exactly level 3) heading; each needs an evidence comment on the next line.	lib/reverse.py:96	ENTITY_HEAD = re.compile	none
+SS	stop-reason	Lint error `checklist.items`: `unchecked item without an indented 'Fails:' note`.	lib/reverse.py:1079	unchecked item without an indented	none
+SS	stop-reason	Lint error `checklist.items`: `'Fails:' note carries no evidence comment`.	lib/reverse.py:1083	note carries no evidence comment	none
+SS	stop-reason	Lint error `checklist.items`: `no checklist items`.	lib/reverse.py:1085	"no checklist items"	none
+SS	behaviour	A checklist item is a line `- [ ] ` / `- [x] ` / `- [X] ` at column 0.	lib/reverse.py:1070	re.match(r'^- \[([ xX])\] ', line)	none
+SS	stop-reason	Lint error `tasks.grammar`: each error of the `speckit-tasks` spec validator is reported under this rule.	lib/reverse.py:1104	"tasks.grammar"	none
+SS	stop-reason	Lint error `tasks.line-format`: `task must be '- [ ] T### [P]? [USn]? description'` for any checkbox line that does not match the task grammar.	lib/reverse.py:1126	"tasks.line-format"	none
+SS	behaviour	Task line grammar: `- [ |x|X] Tddd`, optional ` [P]`, optional ` [USn]` (in that order), then a description that does not start with another `[P]`/`[USn]` marker; task id is exactly 3 digits.	lib/reverse.py:89	TASK_LINE = re.compile	none
+SS	behaviour	Checkbox lines inside fenced code and inside the YAML front matter are ignored by the tasks linter.	lib/reverse.py:1114	if fenced or number <= body_offset:	none
+SS	stop-reason	Lint error `tasks.ids`: `T<id> is not unique`.	lib/reverse.py:1137	"T%03d is not unique" % tid	none
+SS	stop-reason	Lint error `tasks.ids`: `T<id> is not increasing (after T<last>)`.	lib/reverse.py:1140	is not increasing (after T%03d)	none
+SS	stop-reason	Lint error `tasks.phase-order`: `the first phase must be Setup (got '<title>')`.	lib/reverse.py:1148	the first phase must be Setup	none
+SS	stop-reason	Lint error `tasks.phase-order`: `the second phase must be Foundational`.	lib/reverse.py:1151	the second phase must be Foundational	none
+SS	stop-reason	Lint error `tasks.phase-order`: `the last phase must be Polish (got '<title>')`; also raised when fewer than 3 task-bearing phases exist.	lib/reverse.py:1154	the last phase must be Polish	none
+SS	stop-reason	Lint error `tasks.phase-order`: `a phase between Foundational and Polish must name a user story (got '<title>')`.	lib/reverse.py:1161	a phase between Foundational and Polish	none
+SS	stop-reason	Lint error `tasks.phase-order`: `user story phases are not in priority order: US..`.	lib/reverse.py:1167	user story phases are not in priority	none
+SS	behaviour	Phase-order checks consider only numbered `## Phase <n>` sections that hold at least one task.	lib/reverse.py:1143	if p[1] is not None and p[3]]	none
+SS	stop-reason	Lint error `tasks.story-labels`: `[US<n>] outside a user-story phase`.	lib/reverse.py:1181	outside a user-story phase	none
+SS	stop-reason	Lint error `tasks.story-labels`: `[US<n>] in the phase of User Story <k>`.	lib/reverse.py:1184	in the phase of User Story %d	none
+SS	stop-reason	Lint error `tasks.story-exists`: `[US<n>] names a story spec.md does not have`.	lib/reverse.py:1186	"tasks.story-exists"	none
+SS	stop-reason	Lint error `tasks.parallel-files`: `[P] task names <path>, as does the [P] task on line <n>` when two `[P]` tasks of one phase name the same path.	lib/reverse.py:1191	"tasks.parallel-files"	none
+SS	behaviour	Paths in a task description are backticked tokens, `dir/file.ext` tokens or `dir/` tokens; FR/SC/US/T ids and URLs are not paths.	lib/reverse.py:1089	def _task_paths(desc):	none
+SS	stop-reason	Lint error `tasks.mode`: `tasks=done but this task is not [x]`.	lib/reverse.py:1200	tasks=done but this task is not [x]	none
+SS	stop-reason	Lint error `tasks.mode`: `tasks=open but this task is ticked`.	lib/reverse.py:1203	tasks=open but this task is ticked	none
+SS	stop-reason	Lint error `tasks.mode`: `unknown tasks mode '<v>'` when the marker names a mode other than done/open.	lib/reverse.py:1205	unknown tasks mode %r	none
+SS	behaviour	The tasks mode is read from the marker `<!-- specstride-reverse: tasks=<mode> -->`; without a marker no box-state check is made.	lib/reverse.py:78	TASKS_MODE_RE = re.compile	none
+SS	stop-reason	Lint error `coverage.fr`: `FR-<id> is not covered by any task`, only at `--upto 5` and above, for each FR of spec.md not mentioned as `FR-ddd` in a task description.	lib/reverse.py:1269	"coverage.fr"	none
+SS	behaviour	FR coverage is checked only when `upto >= 5`.	lib/reverse.py:1264	if upto >= 5:	none
+SS	stop-reason	Lint error `claims.missing`: `claims file not written: <path>`.	lib/reverse.py:1279	claims file not written	none
+SS	stop-reason	Lint error `claims.missing`: `claims file holds no '- ' claim`.	lib/reverse.py:1283	claims file holds no '- ' claim	none
+SS	behaviour	In a claims file every line starting with `- ` is a claim needing an evidence comment; findings name the file by basename.	lib/reverse.py:1284	line.startswith("- "), ectx, "claim")	none
+SS	behaviour	The guard re-walks the source with the baseline's `excludes` plus the output dir and compares `(bytes, sha256)` of every walked and skipped entry.	lib/reverse.py:1297	set(baseline.get("excludes") or [])	028 FR-026
+SS	behaviour	File-level comparison happens only when the recomputed fingerprint differs from the baseline fingerprint.	lib/reverse.py:1303	!= baseline["fingerprint"]	028 SC-006
+SS	output-line	Guard problem `deleted: <path>`.	lib/reverse.py:1306	"deleted: %s" % path	028 FR-026
+SS	output-line	Guard problem `added: <path>`.	lib/reverse.py:1308	"added: %s" % path	028 FR-026
+SS	output-line	Guard problem `changed: <path>`.	lib/reverse.py:1310	"changed: %s" % path	028 FR-026
+SS	output-line	Guard problem `fingerprint differs from the baseline` when the fingerprint differs but no per-path difference is found.	lib/reverse.py:1312	fingerprint differs from the baseline	none
+SS	behaviour	`testautomation/` is never walked, so the guard compares it separately against the baseline's `testautomation` snapshot: a new directory, a new file or a changed file is a problem; deletions there are not reported.	lib/reverse.py:1315	if "testautomation" in baseline:	none
+SS	output-line	testautomation problems carry the suffix ` (verification output landed in the source; pass --test-plan/--generate-tests under the state dir)`.	lib/reverse.py:1313	verification output landed in the source	none
+SS	output-line	Guard problem `added: testautomation/ (...)` when the baseline recorded none and the directory now exists.	lib/reverse.py:1317	if was is None and os.path.isdir	none
+SS	behaviour	With a baseline that predates the snapshot (no `testautomation` key), any `testautomation/` directory is reported as added unless the baseline already lists files under it.	lib/reverse.py:1327	a baseline from before the snapshot	none
+SS	behaviour	Git checks run only when the baseline was walked in `git` mode.	lib/reverse.py:1329	if baseline.get("walk") == "git":	none
+SS	output-line	Guard problem `git HEAD moved: <baseline head> -> <current head>`.	lib/reverse.py:1332	git HEAD moved: %s -> %s	028 FR-026
+SS	output-line	Guard problem `git status: <porcelain entry>` for each status entry that is new since the baseline.	lib/reverse.py:1342	"git status: %s" % entry	028 FR-026
+SS	behaviour	Git status entries under the output dir or the state dir are exempt.	lib/reverse.py:1334	allowed = (out_rel, state_base)	028 FR-026
+SS	behaviour	Git status entries identical to one already in the baseline's `git_status` are exempt, so a tree that was dirty before the run still passes.	lib/reverse.py:1340	if entry in known:	none
+SS	behaviour	Problems are de-duplicated and printed in first-seen order.	lib/reverse.py:1343	sorted(set(problems), key=problems.index	none
+SS	output-line	Each guard problem is printed on stdout as `guard: <problem>`.	lib/reverse.py:1401	print("guard: %s" % problem)	none (contract: cli.md)
+SS	output-line	Failure line `guard: FAILED — <n> change(s) outside <out> and the state dir`.	lib/reverse.py:1403	guard: FAILED	none (contract: cli.md)
+SS	output-line	Success line `guard: ok — source untouched outside the output and state dirs`.	lib/reverse.py:1406	source untouched outside the output	none (contract: cli.md)
+SS	cli-command	`python3 lib/reverse_inventory.py <SRC> --out <inventory.json>` builds the inventory standalone and prints the absolute path of the written file.	lib/reverse_inventory.py:917	prog="reverse_inventory.py"	none
+SS	cli-flag	`reverse_inventory.py` positional `src`; a non-directory fails with `source is not a directory: <src>`.	lib/reverse_inventory.py:814	source is not a directory	none
+SS	cli-flag	`reverse_inventory.py --out` (required): the inventory.json path.	lib/reverse_inventory.py:920	"--out", required=True	none
+SS	cli-flag	`reverse_inventory.py --md PATH` (default none): also write INVENTORY.md there.	lib/reverse_inventory.py:921	"--md", default=None	none
+SS	cli-flag	`reverse_inventory.py --exclude PATH` (repeatable): a SRC-relative path never walked.	lib/reverse_inventory.py:922	"--exclude", action="append"	none
+SS	exit-code	`reverse_inventory.py` exits 3 (`E_INVALID`) on invalid input, printing `reverse_inventory: <message>` on stderr.	lib/reverse_inventory.py:928	reverse_inventory: %s	none
+SS	exit-code	`reverse_inventory.py` exit codes: 0 ok, 3 invalid input, 2 usage (argparse).	lib/reverse_inventory.py:34	Exit codes: 0 ok, 3 invalid input	none
+SS	output-line	`reverse_inventory.py` prints the absolute inventory path on stdout on success.	lib/reverse_inventory.py:934	print(os.path.abspath(args.out))	none
+SS	env	`SPECSTRIDE_REVERSE_MAX_FILE_BYTES` (positive integer, default 1048576): a text file larger than this is skipped as `oversize`.	lib/reverse_inventory.py:345	"SPECSTRIDE_REVERSE_MAX_FILE_BYTES", DEF	none (contract: config-env.md)
+SS	env	`SPECSTRIDE_REVERSE_MAX_TOTAL_BYTES` (positive integer, default 20971520): when the total text bytes exceed it the inventory is `oversize` and the run is split by unit.	lib/reverse_inventory.py:816	"SPECSTRIDE_REVERSE_MAX_TOTAL_BYTES"	none (contract: config-env.md)
+SS	env	`SPECSTRIDE_CONTEXT_BUDGET` (default 24000) is the INVENTORY.md character budget of the standalone CLI.	lib/reverse_inventory.py:932	"SPECSTRIDE_CONTEXT_BUDGET", DEFAULT_MD_	none
+SS	behaviour	Default per-file cap is 1 MiB.	lib/reverse_inventory.py:60	DEFAULT_MAX_FILE_BYTES = 1024 * 1024	none
+SS	behaviour	Default total cap is 20 MiB.	lib/reverse_inventory.py:61	DEFAULT_MAX_TOTAL_BYTES = 20 * 1024 * 10	none
+SS	behaviour	Default INVENTORY.md budget is 24000 characters.	lib/reverse_inventory.py:62	DEFAULT_MD_BUDGET = 24000	none
+SS	stop-reason	An integer env var that is not an integer or is <= 0 raises `<NAME> must be a positive integer (got '<v>')`; unset or empty means the default.	lib/reverse_inventory.py:138	must be a positive integer (got %r)	none
+SS	behaviour	Integer env vars are read under the `SPECSTRIDE_` name first, then under the legacy prefix.	lib/reverse_inventory.py:132	raw = specstride_env.get(name, None, env	none
+SS	behaviour	Git mode is used only when SRC is inside a work tree AND is its top level; a subdirectory of a repository is walked with the filesystem walk.	lib/reverse_inventory.py:173	os.path.realpath(lines[-1]) == os.path.r	none
+SS	behaviour	Git mode lists `git ls-files -co --exclude-standard -z` (tracked plus untracked-not-ignored), 300 s timeout.	lib/reverse_inventory.py:263	"ls-files", "-co", "--exclude-standard"	none
+SS	stop-reason	A failing `git ls-files` raises `git ls-files failed in <src>: <stderr>`.	lib/reverse_inventory.py:266	git ls-files failed in %s: %s	none
+SS	behaviour	In git mode a path is dropped when any of its directory components is a state dir name or when it is under an exclude; `DENY_DIRS` is NOT applied in git mode.	lib/reverse_inventory.py:272	state_parts & set(rel.split("/")[:-1])	none
+SS	behaviour	State dir names never walked: `.specstride`, the legacy state dir name and `.lisa`.	lib/reverse_inventory.py:65	STATE_DIRS = (specstride_env.STATE_DIRNA	none
+SS	behaviour	Non-git walk skips directories named `.git`, `node_modules`, `.venv`, `venv`, `__pycache__`, `dist`, `build`, `target`, `vendor`, `testautomation` and the state dirs, at any depth.	lib/reverse_inventory.py:66	DENY_DIRS = (".git", "node_modules"	none
+SS	behaviour	Non-git walk never follows symlinks; a symlinked directory is recorded as one link entry and not descended.	lib/reverse_inventory.py:285	a symlinked directory is recorded as a l	none
+SS	behaviour	Non-git walk honours only the ROOT `.gitignore`, as a glob subset: `**/` removed, `/**` read as `/*`, no nested ignore files.	lib/reverse_inventory.py:213	def load_gitignore(src):	none
+SS	behaviour	Ignore rules: `!` negates, trailing `/` is directory-only, a pattern with `/` is anchored to the SRC-relative path, others match the basename or the path; the last matching rule wins.	lib/reverse_inventory.py:248	verdict = not negate	none
+SS	behaviour	Candidate paths are sorted; the walk mode is reported as `git` or `walk`.	lib/reverse_inventory.py:298	return sorted(paths), "walk"	none (contract: data-model.md)
+SS	behaviour	Excludes are normalised by stripping leading/trailing `/`, de-duplicated and sorted; an exclude matches itself and everything under it.	lib/reverse_inventory.py:347	excludes = sorted({e.strip("/")	none
+SS	behaviour	A symlink resolving inside SRC is a file entry with `symlink: true`, `target`, `bytes` = length of the target string, `sha256` of the target string, `lines` 0, language `symlink`, role `other`.	lib/reverse_inventory.py:361	"symlink": True, "target": target	none
+SS	behaviour	A symlink resolving outside SRC is skipped with reason `symlink-escape` (still fingerprinted by its target).	lib/reverse_inventory.py:358	"reason": "symlink-escape"	none
+SS	behaviour	A path listed by git but absent from the work tree is silently dropped from the inventory.	lib/reverse_inventory.py:366	tracked but deleted in the work tree	none
+SS	behaviour	A file with a NUL byte in its first 8192 bytes is skipped with reason `binary` (checked before the size cap).	lib/reverse_inventory.py:372	"reason": "binary"	none
+SS	behaviour	`SNIFF_BYTES` is 8192.	lib/reverse_inventory.py:63	SNIFF_BYTES = 8192	none
+SS	behaviour	A file strictly larger than the per-file cap is skipped with reason `oversize` and records `limit`.	lib/reverse_inventory.py:375	"reason": "oversize"	none
+SS	behaviour	Skipped entries still carry `bytes` and `sha256`, so a change to a binary or oversize file is caught by the guard.	lib/reverse_inventory.py:26	but still fingerprinted	none
+SS	behaviour	Line count is the number of newline bytes plus 1 when the file is non-empty and does not end with a newline.	lib/reverse_inventory.py:380	lines = data.count(b"\n")	none
+SS	behaviour	`totals.text_bytes` sums only text files; symlinks and skipped entries do not count towards the oversize limit.	lib/reverse_inventory.py:384	total += size	none
+SS	behaviour	Language is decided by exact file name, then `Dockerfile*`/`*.dockerfile`, then lower-cased extension, then shebang, else `unknown`.	lib/reverse_inventory.py:301	def language_of(rel, head):	none
+SS	behaviour	Role precedence: `ci`, `test`, `schema`, `template`, `doc`, `script`, `source`, `config`, else `other`.	lib/reverse_inventory.py:318	def role_of(rel, language, head):	none
+SS	behaviour	Role `script` applies to shell files, anything under `scripts/` or `bin/`, and any file starting with a shebang (so an executable Python entry script is `script`, not `source`).	lib/reverse_inventory.py:332	rel.startswith(("scripts/", "bin/"))	none
+SS	behaviour	Role `doc` applies to README/CHANGELOG/CONTRIBUTING/LICENSE/AGENTS/CLAUDE style names, markdown/rst/text files and anything under `docs/`.	lib/reverse_inventory.py:108	DOC_NAMES = re.compile	none
+SS	behaviour	Role `test` is decided by path patterns (`tests/`, `__tests__/`, `test_*.py`, `*_test.go`, `*.spec.ts`, `conftest.py`, ...).	lib/reverse_inventory.py:102	TEST_RE = re.compile	none
+SS	behaviour	`fingerprint` is the sha256 of the compact JSON list of sorted `(path, bytes, sha256)` triples over files plus skipped entries.	lib/reverse_inventory.py:405	def fingerprint(files, skipped):	none (contract: data-model.md)
+SS	behaviour	File hashes are sha256 of the content, read in 64 KiB chunks.	lib/reverse_inventory.py:147	handle.read(1 << 16)	none
+SS	behaviour	The `testautomation` snapshot maps each regular, non-symlink file under `<SRC>/testautomation/` to `[bytes, sha256]`, or is null when the directory does not exist.	lib/reverse_inventory.py:388	def testautomation_snapshot(src):	none
+SS	behaviour	`git_head` is `git rev-parse --verify -q HEAD`, or null when there is no commit or git fails (30 s timeout).	lib/reverse_inventory.py:178	"rev-parse", "--verify", "-q", "HEAD"	none (contract: data-model.md)
+SS	behaviour	`git_status` is the sorted list of `XY path` entries from `git status --porcelain=v1 -z --untracked-files=all` (60 s timeout); the source path of a rename/copy is dropped.	lib/reverse_inventory.py:189	"status", "--porcelain=v1", "-z"	none (contract: data-model.md)
+SS	behaviour	`package.json` facts: name, bin, exports (plus main/module/types), scripts, workspaces; dependency names from dependencies, devDependencies, peerDependencies; an unparseable file records `error: unparseable`.	lib/reverse_inventory.py:447	def _package_json_facts(rel, data):	none
+SS	behaviour	`pyproject.toml` facts: name, scripts (PEP 621 and poetry), build backend; any mention of `pytest` in the text counts as the pytest framework.	lib/reverse_inventory.py:511	if text and "pytest" in text.lower():	none
+SS	behaviour	Without `tomllib` (Python < 3.11) TOML manifests yield no parsed facts.	lib/reverse_inventory.py:49	tomllib = None	none
+SS	behaviour	`setup.cfg` facts: metadata name, console_scripts, install_requires.	lib/reverse_inventory.py:516	def _setup_cfg_facts(rel, text):	none
+SS	behaviour	`go.mod` facts: module name, go version, required module paths.	lib/reverse_inventory.py:541	def _go_mod_facts(rel, text):	none
+SS	behaviour	`Cargo.toml` facts: package name, `[[bin]]` names, workspace members, dependencies.	lib/reverse_inventory.py:554	def _cargo_facts(rel, data):	none
+SS	behaviour	`pom.xml`, `build.gradle`, `build.gradle.kts` facts: first `<artifactId>` as name.	lib/reverse_inventory.py:672	"pom.xml", "build.gradle"	none
+SS	behaviour	`Dockerfile`, `Dockerfile.*`, `Containerfile` facts: FROM, ENTRYPOINT, CMD, EXPOSE values.	lib/reverse_inventory.py:580	for key in ("FROM", "ENTRYPOINT", "CMD"	none
+SS	behaviour	Compose files (`compose*.y(a)ml`, `docker-compose*.y(a)ml`) facts: sorted service names.	lib/reverse_inventory.py:676	r'^(docker-)?compose[^/]*\.ya?ml$'	none
+SS	behaviour	`Makefile`/`GNUmakefile` facts: sorted unique target names.	lib/reverse_inventory.py:606	def _makefile_facts(rel, text):	none
+SS	behaviour	`.github/workflows/*.yml|yaml` facts: workflow name and job ids.	lib/reverse_inventory.py:680	rel.startswith(".github/workflows/")	none
+SS	behaviour	Root `pnpm-workspace.yaml` facts: the `packages:` globs.	lib/reverse_inventory.py:682	rel == "pnpm-workspace.yaml"	none
+SS	behaviour	Manifest records drop keys whose value is None, empty string, empty list or empty dict.	lib/reverse_inventory.py:688	if v not in (None, "", [], {})	none
+SS	behaviour	Frameworks are derived only from manifest dependency names through a fixed hint table and are reported sorted.	lib/reverse_inventory.py:690	if dep in FRAMEWORK_HINTS:	none
+SS	behaviour	Entry point kind `bin` (package.json `bin`, Cargo `[[bin]]`).	lib/reverse_inventory.py:694	"kind": "bin", "name": key	none
+SS	behaviour	Entry point kind `console-script` for manifest scripts, except `package.json` scripts, which are not entry points.	lib/reverse_inventory.py:698	"kind": "console-script"	none
+SS	behaviour	Entry point kind `export` with the manifest-relative `resolved` path.	lib/reverse_inventory.py:701	"kind": "export", "target": target	none
+SS	behaviour	Entry point kind `container-entrypoint` from Dockerfile ENTRYPOINT.	lib/reverse_inventory.py:704	"kind": "container-entrypoint"	none
+SS	behaviour	Entry point kind `python-main` for a Python source/script file with an `if __name__ == "__main__":` line.	lib/reverse_inventory.py:713	"kind": "python-main"	none
+SS	behaviour	Entry point kind `go-main` for a Go file with `package main` and `func main()`.	lib/reverse_inventory.py:716	"kind": "go-main"	none
+SS	behaviour	Entry point kind `script` for a role-script file starting with a shebang.	lib/reverse_inventory.py:718	"kind": "script", "target": rel	none
+SS	behaviour	Entry-point detection reads at most the first 256 KiB of a file.	lib/reverse_inventory.py:710	256 * 1024) or ""	none
+SS	behaviour	Entry points are sorted by their sorted-key JSON text.	lib/reverse_inventory.py:728	key=lambda e: json.dumps(e, sort_keys=Tr	none
+SS	behaviour	`languages` counts files per language, sorted by name, excluding `unknown` and `symlink`.	lib/reverse_inventory.py:721	not in ("unknown", "symlink")	none
+SS	behaviour	Workspaces are directories holding a `package.json` or `Cargo.toml` that match a root workspace glob (`**` read as `*`, `!` globs exclude).	lib/reverse_inventory.py:733	def detect_workspaces(src, files	none
+SS	behaviour	Units are the workspace packages plus `.` for the rest when workspaces exist, else the top-level directories plus `.` for root files; each has `path`, `files`, `bytes`; sorted by path.	lib/reverse_inventory.py:758	def units_of(files, workspaces):	none
+SS	behaviour	`specify` facts are read from the filesystem directly (not from the walk): `present`, `constitution`, `templates`, `feature_json`, `spec_numbers`.	lib/reverse_inventory.py:778	def specify_facts(src):	none
+SS	file	inventory.json `schema_version` is 1.	lib/reverse_inventory.py:57	SCHEMA_VERSION = 1	none (contract: data-model.md)
+SS	file	inventory.json key `src` is the realpath of the source.	lib/reverse_inventory.py:823	"src": src,	none (contract: data-model.md)
+SS	file	inventory.json key `walk` is `git` or `walk`.	lib/reverse_inventory.py:824	"walk": mode,	none (contract: data-model.md)
+SS	file	inventory.json key `excludes` is the sorted normalised exclude list.	lib/reverse_inventory.py:825	"excludes": sorted(	none (contract: data-model.md)
+SS	file	inventory.json key `limits` holds `max_file_bytes` and `max_total_bytes` in effect.	lib/reverse_inventory.py:826	"limits": {"max_file_bytes"	none (contract: data-model.md)
+SS	file	inventory.json key `totals` holds `files`, `skipped`, `text_bytes`, `lines`.	lib/reverse_inventory.py:827	"totals": {"files": len(files)	none (contract: data-model.md)
+SS	file	inventory.json key `oversize` is true when total text bytes are strictly greater than the total cap.	lib/reverse_inventory.py:829	"oversize": total > max_total	none (contract: data-model.md)
+SS	file	inventory.json `files[]` entries hold `path`, `bytes`, `lines`, `sha256`, `language`, `role`.	lib/reverse_inventory.py:382	files.append({"path": rel, "bytes": size	none (contract: data-model.md)
+SS	file	inventory.json key `project` holds `manifests`, `languages`, `frameworks`, `entry_points`, `workspaces`.	lib/reverse_inventory.py:832	"project": facts,	none (contract: data-model.md)
+SS	file	inventory.json key `git_head` is set only in git mode, else null.	lib/reverse_inventory.py:836	"git_head": git_head(src) if mode	none (contract: data-model.md)
+SS	file	inventory.json key `git_status` is the porcelain list in git mode, else null.	lib/reverse_inventory.py:837	"git_status": status,	none (contract: data-model.md)
+SS	file	inventory.json key `testautomation` is the snapshot map or null.	lib/reverse_inventory.py:838	"testautomation": testautomation_snapsho	none (contract: data-model.md)
+SS	behaviour	inventory.json is serialised with sorted keys, indent 1, non-ASCII kept as is, plus a trailing newline; it carries no timestamp, so two runs over the same tree are byte-identical.	lib/reverse_inventory.py:843	sort_keys=True, indent=1, ensure_ascii=F	none
+SS	behaviour	Determinism rule as documented: keys and paths sorted, no timestamp in the body.	lib/reverse_inventory.py:30	the body carries no timestamp	none
+SS	file	Files are written atomically: parent dirs created, content written to `<path>.tmp`, then `os.replace`.	lib/reverse_inventory.py:910	tmp = path + ".tmp"	none
+SS	file	INVENTORY.md title is `# Inventory — <src basename>`.	lib/reverse_inventory.py:851	"# Inventory — %s"	none
+SS	file	INVENTORY.md intro names the source, the walk mode and the inventory.json path as the full record.	lib/reverse_inventory.py:853	Deterministic, LLM-free inventory of	none
+SS	file	INVENTORY.md bullet `- Files: <n> text (<lines> lines, <bytes> bytes); <n> skipped`.	lib/reverse_inventory.py:857	- Files: %d text (%d lines, %d bytes)	none
+SS	file	INVENTORY.md bullet `- Oversize: yes|no (limit <n> bytes of text)`.	lib/reverse_inventory.py:860	- Oversize: %s (limit %d bytes of text)	none
+SS	file	INVENTORY.md bullet `- git HEAD: <sha>` or `not a git work tree`.	lib/reverse_inventory.py:862	not a git work tree	none
+SS	file	INVENTORY.md bullet `- Fingerprint: `<sha256>``.	lib/reverse_inventory.py:863	- Fingerprint: `%s`	none
+SS	file	INVENTORY.md bullets `- Languages:` (`none` when empty) and `- Frameworks:` (`none detected`).	lib/reverse_inventory.py:866	or "none detected"	none
+SS	file	INVENTORY.md bullet `- Existing Spec Kit: yes|no; constitution present|absent; specs <NNN list>|none`.	lib/reverse_inventory.py:867	- Existing Spec Kit: %s; constitution	none
+SS	file	INVENTORY.md section `## Manifests`: one bullet per manifest, facts as JSON cut to 600 characters, or `- none`.	lib/reverse_inventory.py:878	json.dumps(rest, sort_keys=True)[:600]	none
+SS	file	INVENTORY.md section `## Entry points`: `- <kind>: `<target>` (<manifest>)` or `- none detected`.	lib/reverse_inventory.py:881	"## Entry points"	none
+SS	file	INVENTORY.md section `## Workspaces and units`.	lib/reverse_inventory.py:885	"## Workspaces and units"	none
+SS	file	INVENTORY.md section `## Skipped`: `- `<path>`: <reason>` or `- none`.	lib/reverse_inventory.py:890	"## Skipped"	none
+SS	file	INVENTORY.md section `## Files` is a table `| Path | Lines | Language | Role |`.	lib/reverse_inventory.py:892	| Path | Lines | Language | Role |	none
+SS	behaviour	File rows are added in order until the text plus the row plus 200 characters would exceed the budget; project facts are never dropped.	lib/reverse_inventory.py:898	if len(text) + len(row) + 200 > budget	none
+SS	file	When rows are dropped INVENTORY.md ends with `_<k> of <n> file rows dropped to stay within <budget> characters; every file is in `<json>`._`.	lib/reverse_inventory.py:903	file rows dropped to stay within	none
+SS	cli-command	`specstride_spec.py numbers --specs F` prints each phase number on its own line.	lib/specstride_spec.py:921	args.subcommand == "numbers"	028 FR-029
+SS	cli-command	`specstride_spec.py title <n> --specs F` prints the title of phase n (an empty line when there is no such phase).	lib/specstride_spec.py:926	args.subcommand == "title"	028 FR-029
+SS	cli-command	`specstride_spec.py slice <n> --specs F` writes the raw, unstripped section of phase n followed by one newline.	lib/specstride_spec.py:940	args.subcommand == "slice"	028 FR-029
+SS	cli-command	`specstride_spec.py validate --specs F` prints the phase count on success; on failure prints each error on its own stderr line and exits 3.	lib/specstride_spec.py:905	args.subcommand == "validate"	028 FR-029
+SS	cli-command	`specstride_spec.py first-unapproved --specs F` prints the first phase number lacking `GATE<n>-APPROVED` in the gates dir; prints nothing when all are approved; exit 0 either way.	lib/specstride_spec.py:954	"GATE%d-APPROVED" % p.n	028 FR-003
+SS	cli-command	`specstride_spec.py detect --specs F` prints the resolved format name.	lib/specstride_spec.py:885	args.subcommand == "detect"	028 FR-002
+SS	cli-command	`specstride_spec.py context --specs F` prints one `name<TAB>path` line per context document; nothing for the native format.	lib/specstride_spec.py:897	print("%s\t%s" % (name, path))	none
+SS	cli-command	`specstride_spec.py render-context --specs F` writes the budgeted context block to stdout with no added newline.	lib/specstride_spec.py:900	args.subcommand == "render-context"	028 FR-029
+SS	cli-command	`specstride_spec.py feature-slug --specs F` prints the feature slug; it is answered before the spec is read, so it works for a missing or odd spec file.	lib/specstride_spec.py:874	args.subcommand == "feature-slug"	none
+SS	cli-command	`specstride_spec.py tick <n> --specs F` ticks phase n's unticked task boxes in the file and prints how many lines changed.	lib/specstride_spec.py:918	print(tick_phase_file(args.specs	028 FR-013
+SS	cli-command	`specstride_spec.py shape <n> --specs F` prints the 16-hex shape digest of phase n (empty line when absent).	lib/specstride_spec.py:933	args.subcommand == "shape"	none
+SS	cli-flag	The subcommand is restricted by argparse `choices` to the 11 names; anything else is a usage error (exit 2).	lib/specstride_spec.py:857	choices=["numbers", "title", "slice"	none
+SS	cli-flag	Optional positional `n`: the phase number for title/slice/tick/shape; a non-integer value raises an uncaught ValueError (traceback, exit 1).	lib/specstride_spec.py:860	ap.add_argument("n", nargs="?"	none
+SS	cli-flag	`--specs` is required for every subcommand.	lib/specstride_spec.py:861	"--specs", required=True	none
+SS	cli-flag	`--workdir` (default `.`) locates the default gates dir for `first-unapproved`.	lib/specstride_spec.py:862	"--workdir", default="."	none
+SS	cli-flag	`--gates-dir` (default none): explicit gates dir for `first-unapproved`; else `<workdir>/<state dir>/gates`.	lib/specstride_spec.py:863	"--gates-dir", default=None	none
+SS	cli-flag	`--format native|speckit-tasks|openspec-change` overrides auto-detection.	lib/specstride_spec.py:866	"--format", default=None	028 FR-002
+SS	exit-code	`specstride_spec.py` documents exit 0 ok and 3 invalid spec / bad usage; argparse usage errors still exit 2.	lib/specstride_spec.py:49	0 ok · 3 invalid spec / bad usage	none
+SS	exit-code	An unreadable spec file prints `specstride_spec: <os error>` on stderr and exits 3.	lib/specstride_spec.py:841	sys.stderr.write("specstride_spec: %s\n"	none
+SS	exit-code	An unknown explicit format prints `specstride_spec: unknown spec format: <v> (native|speckit-tasks|openspec-change)` and exits 3.	lib/specstride_spec.py:409	"unknown spec format: %s "	028 FR-002
+SS	exit-code	`validate` exits 3 on an invalid spec.	lib/specstride_spec.py:909	sys.stderr.write(e + "\n")	none
+SS	output-line	Missing phase number: `specstride_spec: tick needs a phase number` (exit 3).	lib/specstride_spec.py:916	tick needs a phase number	none
+SS	output-line	Missing phase number: `specstride_spec: title needs a phase number` (exit 3).	lib/specstride_spec.py:928	title needs a phase number	none
+SS	output-line	Missing phase number: `specstride_spec: shape needs a phase number` (exit 3).	lib/specstride_spec.py:935	shape needs a phase number	none
+SS	output-line	Missing phase number: `specstride_spec: slice needs a phase number` (exit 3).	lib/specstride_spec.py:942	slice needs a phase number	none
+SS	env	`SPECSTRIDE_SPEC_FORMAT` is the format override used when `--format` is not given (trimmed, lower-cased).	lib/specstride_spec.py:402	os.environ.get("SPECSTRIDE_SPEC_FORMAT",	028 FR-002
+SS	env	`SPECSTRIDE_CONTEXT_BUDGET` (default 24000) is the total character budget of the rendered context; a non-integer value silently falls back to the default.	lib/specstride_spec.py:727	os.environ.get("SPECSTRIDE_CONTEXT_BUDGE	none
+SS	env	Importing the module maps every legacy-prefixed variable onto its `SPECSTRIDE_` name in the process environment (new name wins) and prints one deprecation line on stderr when one was used.	lib/specstride_spec.py:61	specstride_env.apply()	none
+SS	behaviour	Detection step 1: a valid explicit override (flag, then env) wins.	lib/specstride_spec.py:404	if ov in ADAPTERS:	028 FR-002
+SS	behaviour	Detection step 2: a path shaped `openspec/changes/<change>/tasks.md` is `openspec-change`.	lib/specstride_spec.py:412	if is_openspec_tasks_path(path):	028 FR-002
+SS	behaviour	Detection step 3: any other file whose basename is `tasks.md` (case-insensitive) is `speckit-tasks`.	lib/specstride_spec.py:414	os.path.basename(path).lower() == "tasks	028 FR-002
+SS	behaviour	Detection step 4: content with a phase heading (`## Phase N` or `## P<N>`), a `- [ ] T<digit>` task line and NO `### Acceptance criteria` heading is `speckit-tasks`.	lib/specstride_spec.py:423	if has_phase and has_tasks and not has_a	028 FR-002
+SS	behaviour	Detection step 5: content with a `## <N>. title` heading and a `- [ ] N.N` task line is `openspec-change`.	lib/specstride_spec.py:425	_OPENSPEC_HEAD.search(text) and	028 FR-002
+SS	behaviour	Detection step 6: everything else is `native`.	lib/specstride_spec.py:427	return "native"	028 FR-002
+SS	behaviour	Native phase heading: `## Phase <digits>` matched case-sensitively at column 0, spaces or tabs as separators.	lib/specstride_spec.py:85	_NATIVE_HEAD = re.compile	none
+SS	behaviour	Native title: the heading text after the number with the leading run of spaces and `-`, em dash or `:` separators removed.	lib/specstride_spec.py:86	_NATIVE_TITLE_STRIP = re.compile	none
+SS	behaviour	A phase section runs from its heading to the next level-2 heading (or end of file); trailing blank lines are kept in the raw slice.	lib/specstride_spec.py:87	_ANY_L2 = re.compile(r'^##[ \t]')	none
+SS	behaviour	Native criteria block heading: `### Acceptance criteria` (case-sensitive prefix match); the block ends at the next line starting with `###`.	lib/specstride_spec.py:88	_NATIVE_AC = re.compile	none
+SS	behaviour	Checkbox syntax for all formats: optional indent, `-`, optional spaces, `[ ]`, `[x]`, `[X]` or `[]`, then the text.	lib/specstride_spec.py:89	_CHECKBOX = re.compile	none
+SS	behaviour	Native criteria are only the checkbox lines inside the acceptance-criteria block.	lib/specstride_spec.py:127	if cb and cur["in_ac"]:	none
+SS	stop-reason	Native error `spec has zero phases (need at least one "## Phase <N>")`.	lib/specstride_spec.py:141	spec has zero phases	none
+SS	stop-reason	Native error `phase <n> (<raw heading text>) has no "### Acceptance criteria" block`; the block may be empty of checkboxes and still validate.	lib/specstride_spec.py:147	has no "### Acceptance criteria" block	none
+SS	stop-reason	Error `duplicate phase number: <n>` (all formats); a duplicate also yields the non-contiguous message.	lib/specstride_spec.py:152	"duplicate phase number: %d"	none
+SS	stop-reason	Error `non-contiguous phases: <b> follows <a> (must ascend by 1)` (all formats); the first number is free (0, 1 or any).	lib/specstride_spec.py:154	non-contiguous phases: %d follows %d	none
+SS	behaviour	Native error order: per-phase missing-criteria messages first in scan order, then duplicate/contiguity messages.	lib/specstride_spec.py:137	per-phase no-AC messages first	none
+SS	behaviour	Spec Kit phase heading: `## Phase <digits>` with optional `:` and free title text.	lib/specstride_spec.py:189	_SPECKIT_HEAD = re.compile	none
+SS	behaviour	Spec Kit criteria: every checkbox line with non-empty text anywhere in the phase section (not only `T###` lines, and under any `###` subheading).	lib/specstride_spec.py:214	if cb and cb.group(1).strip():	none
+SS	behaviour	Spec Kit priority form: `## P<N>` / `## p<N>` headings with optional `-`, em dash or `:` separator.	lib/specstride_spec.py:190	_SPECKIT_PRIORITY_HEAD = re.compile	none
+SS	behaviour	Explicit `## Phase N` headings win; the priority form is used only when no explicit phase exists.	lib/specstride_spec.py:284	return _parse_speckit_priority(text)	none
+SS	behaviour	Priority form: only sections that hold task checkboxes become phases; they are numbered contiguously in document order starting at the first priority number; repeated priorities are valid.	lib/specstride_spec.py:268	start = int(candidates[0][1].group(2))	none
+SS	behaviour	Priority form: level-2 sections after the last task-bearing group are appended to EVERY phase's section as shared constraints.	lib/specstride_spec.py:274	section = section.rstrip() + "\n\n" + sh	none
+SS	behaviour	Priority form title keeps the priority label (the whole heading text after `##`).	lib/specstride_spec.py:275	title = lines[0].split("##", 1)[1].strip	none
+SS	stop-reason	Spec Kit error `tasks.md has zero phases (need task-bearing "## Phase <N>:" or "## P<N>" sections)`.	lib/specstride_spec.py:292	tasks.md has zero phases	none
+SS	stop-reason	Spec Kit error `phase <n> (<title>) has no task checkboxes ("- [ ] T### ..." lines)`.	lib/specstride_spec.py:297	has no task checkboxes	none
+SS	behaviour	OpenSpec phase heading: `## <digits>` with optional `.` or `)`, then a title.	lib/specstride_spec.py:312	_OPENSPEC_HEAD = re.compile	none
+SS	behaviour	OpenSpec task line: a checkbox followed by a dotted id `N.N[.N...]`; the criterion is `<id> <text>`; checkboxes without such an id are not criteria.	lib/specstride_spec.py:313	_OPENSPEC_TASK = re.compile	none
+SS	stop-reason	OpenSpec error `OpenSpec tasks.md has zero phases (need task-bearing "## <N>. <title>" sections)`.	lib/specstride_spec.py:352	OpenSpec tasks.md has zero phases	none
+SS	stop-reason	OpenSpec error `phase <n> (<title>) has no OpenSpec task checkboxes ("- [ ] N.N ..." lines)`.	lib/specstride_spec.py:358	has no OpenSpec task checkboxes	none
+SS	behaviour	Criteria heading shown to agents per format: native `Acceptance criteria (the phase spec)`, Spec Kit `Tasks to complete (each `- [ ]` is a required deliverable)`, OpenSpec `OpenSpec tasks to complete (each `- [ ]` is required)`.	lib/specstride_spec.py:387	"Acceptance criteria (the phase spec)"	none
+SS	behaviour	`slice_phase()` (the importable form used by the critic) returns the section stripped; the CLI `slice` returns it unstripped.	lib/specstride_spec.py:443	return p.section.strip()	028 FR-029
+SS	behaviour	A missing phase yields an empty slice, title or shape rather than an error.	lib/specstride_spec.py:845	def _raw_slice(text, n, fmt):	none
+SS	behaviour	Phase shape digest: first 16 hex of sha256 over compact JSON `[n, title, [criteria]]` with whitespace runs collapsed; ticking a checkbox never changes it.	lib/specstride_spec.py:462	hexdigest()[:16]	none
+SS	behaviour	`phase_title(section)` with a single argument parses the first heading as native, then Spec Kit, then priority, then OpenSpec form.	lib/specstride_spec.py:477	old critic signature: phase_title	none
+SS	behaviour	Feature slug: an OpenSpec change uses its change directory basename; a spec inside a `.specify` project uses its feature directory basename; anything else, or a spec at the project root, is `default`.	lib/specstride_spec.py:524	def feature_slug(specs_path):	none (contract: data-model.md)
+SS	behaviour	Slug sanitising: runs outside `A-Za-z0-9._-` collapse to `-`, leading/trailing `-` trimmed; an empty result falls back to `default`.	lib/specstride_spec.py:520	re.sub(r'[^A-Za-z0-9._-]+', '-', name	none (contract: data-model.md)
+SS	behaviour	The `.specify` project root is found by walking upward from the spec's directory.	lib/specstride_spec.py:504	def find_specify_root(start):	none
+SS	behaviour	Spec Kit context order: constitution, spec, plan, `contract:<stem>` (sorted), data-model, research, quickstart, `checklist:<stem>` (sorted); each only when the file exists.	lib/specstride_spec.py:638	out["contract:%s" % _stem(p)] = p	none
+SS	behaviour	The constitution is context only when the spec is inside a `.specify` project.	lib/specstride_spec.py:628	".specify", "memory", "constitution.md"	none
+SS	behaviour	OpenSpec context order: `proposal`, `delta-spec:<name>` (recursive, sorted), `design`, then `current-spec:<name>` for each delta with a matching `openspec/specs/` file.	lib/specstride_spec.py:607	out["current-spec:%s" % name] = current	none
+SS	behaviour	Context budget default is 24000 characters across all context documents.	lib/specstride_spec.py:657	CONTEXT_BUDGET_DEFAULT = 24000	none
+SS	behaviour	Per-document floor is 1200 characters: a document that would get less is dropped, unless the whole document fits.	lib/specstride_spec.py:658	CONTEXT_DOC_FLOOR      = 1200	none
+SS	behaviour	Budget allocation walks documents in priority order, giving each the smaller of its size, a fair share (at least the floor) and what remains; leftover cascades forward.	lib/specstride_spec.py:696	share = max(remaining // left, floor)	none
+SS	output-line	A truncated context document ends with the marker `… (context truncated at line boundary) …`.	lib/specstride_spec.py:679	(context truncated at line boundary)	none
+SS	behaviour	Truncation cuts at a line boundary (hard cut only for one over-long line) and closes an unbalanced code fence.	lib/specstride_spec.py:676	if body.count("```") % 2 == 1:	none
+SS	output-line	Each context block starts `## Context: <name> (read-only background, NOT a gate) — <path>`; blocks are joined by a blank line.	lib/specstride_spec.py:748	(read-only background, NOT a gate)	none
+SS	behaviour	The native format renders no context.	lib/specstride_spec.py:895	context = {}	none
+SS	behaviour	Ticking handles only `speckit-tasks` with explicit `## Phase N` headings and `openspec-change`; native specs and the `## P<N>` priority form are left untouched (0 ticked).	lib/specstride_spec.py:802	return text, 0	028 FR-013
+SS	behaviour	An unticked line is a checkbox `[ ]` or `[]` followed by non-empty text; it becomes `[x]`. Already ticked lines and empty boxes are untouched.	lib/specstride_spec.py:784	_UNTICKED = re.compile	none
+SS	behaviour	Only lines inside phase N's section are ticked; any other level-2 heading ends the section. Every unticked checkbox there is ticked, not only task-id lines.	lib/specstride_spec.py:808	inside = int(m.group(1)) == int(n)	none
+SS	behaviour	Line endings and every other byte are preserved (the file is read and written with `newline=""`).	lib/specstride_spec.py:814	ln[len(bare):]	none
+SS	file	A tick rewrites the spec atomically through `<spec>.tick.<pid>.tmp`, copies the file mode, then `os.replace`; nothing is written when no line changed.	lib/specstride_spec.py:826	"%s.tick.%d.tmp" % (path, os.getpid())	none
+SS	file	The five vendored templates are read at run time by the linter when the source has no `.specify/templates/`; they are an unchanged copy of Spec Kit's templates at a recorded commit.	lib/speckit_templates/README.md:3	derives its required headings from when	028 FR-027
+SS	file	spec-template.md makes `## User Scenarios & Testing` mandatory.	lib/speckit_templates/spec-template.md:11	User Scenarios & Testing *(mandatory)*	none
+SS	file	spec-template.md makes `## Requirements` mandatory.	lib/speckit_templates/spec-template.md:81	## Requirements *(mandatory)*	none
+SS	file	spec-template.md makes `## Success Criteria` mandatory.	lib/speckit_templates/spec-template.md:106	## Success Criteria *(mandatory)*	none
+SS	file	spec-template.md `## Assumptions` carries no mark, so a spec without it only gets a `template.expected` warning.	lib/speckit_templates/spec-template.md:120	## Assumptions	none
+SS	file	plan-template.md headings (Summary, Technical Context, Constitution Check, Project Structure, Complexity Tracking) carry no mandatory mark, so each missing one is only a warning.	lib/speckit_templates/plan-template.md:106	## Complexity Tracking	none
+SS	file	tasks-template.md phase headings form the phase family: a tasks.md with no `## Phase <n>:` section is a `template.family` error.	lib/speckit_templates/tasks-template.md:150	## Phase N: Polish & Cross-Cutting	none
+SS	file	tasks-template.md `## Format: `[ID] [P?] [Story] Description`` contains brackets, so it is a family rule (error when no heading of that shape exists).	lib/speckit_templates/tasks-template.md:16	## Format: `[ID] [P?] [Story]	none
+SS	file	checklist-template.md `## [Category 1]` and `## [Category 2]` reduce to one family met by any heading other than the explicit `## Notes`.	lib/speckit_templates/checklist-template.md:25	## [Category 1]	none
+SS	file	constitution-template.md `## Core Principles` and `## Governance` are expected headings (warnings); `## [SECTION_2_NAME]` is a family.	lib/speckit_templates/constitution-template.md:31	## [SECTION_2_NAME]	none
+SS	file	constitution-template.md upper-case tokens such as `[PROJECT_NAME]` are placeholders the linter rejects in a written constitution.	lib/speckit_templates/constitution-template.md:1	[PROJECT_NAME]	none

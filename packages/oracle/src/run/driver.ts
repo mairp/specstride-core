@@ -1164,17 +1164,27 @@ export function driveSide(options: DriveOptions): DriveResult {
   const scriptDir = env["ORACLE_STUB_SCRIPT_DIR"] as string;
   const servers: ServerStub[] = [];
   if (declaredStubs["critic-http"] !== undefined) {
+    const httpScript = join(scriptDir, "critic-http.json");
+    const diagnosticianScript = join(scriptDir, "diagnostician.json");
     const stub = startServerStub({
       kind: "critic-http",
       runRoot,
       env,
       extraEnv: {
-        ORACLE_CRITIC_HTTP_SCRIPT: join(scriptDir, "critic-http.json"),
-        ORACLE_CRITIC_DIAGNOSTICIAN_SCRIPT: join(scriptDir, "diagnostician.json"),
+        ORACLE_CRITIC_HTTP_SCRIPT: httpScript,
+        ORACLE_CRITIC_DIAGNOSTICIAN_SCRIPT: diagnosticianScript,
       },
     });
     servers.push(stub);
     for (const name of CRITIC_STUB_ADDRESS_VARIABLES) env[name] = stub.address;
+    // The script variables stay on the SERVER stub's environment only (they
+    // came in through `extraEnv` above): the golden's harness records name
+    // them for the records the server itself writes (the critic and the
+    // diagnostician of a parity run), never for the proposer or verification
+    // children, whose golden `envNames` carry none of them — putting them in
+    // the shared run environment made every proposer record read as a
+    // different run (F141-FR-003 — the empty environment is the whole
+    // environment).
   }
   if (declaredStubs["telemetry-sink"] !== undefined) {
     const sinkSteps = declaredStubs["telemetry-sink"] as { verbs: readonly string[] }[];

@@ -549,7 +549,21 @@ export type AcceleratedAttemptInputs = {
   readonly signature: string;
   readonly markers: RecoveryMarkers;
   readonly prompt: AcceleratorPromptInputs;
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is accelerator prompt, composed
+   * by the engine byte for byte as the as-is launcher assembled it; where it
+   * stands the block-set prompt of feature 101 is not what the pass is run
+   * with (the golden capture of feature 141 is the authority for the bytes).
+   */
+  readonly asIsPromptText?: string;
   readonly insideAWorkTree: boolean;
+  /**
+   * The pass-ceiling line of the attempt, printed where the as-is engine
+   * printed it: right AFTER the attempt's opening banner — the accelerator's
+   * own banner on an accelerated attempt (the golden of FX-02 names that
+   * order). Absent where the caller printed it with its own banner already.
+   */
+  readonly afterTheStartLine?: () => void;
 };
 
 /** The ports one accelerated phase attempt calls. */
@@ -622,9 +636,11 @@ export async function runAnAcceleratedPhaseAttempt(
       signature: inputs.signature,
     }),
   );
+  // The as-is ceiling line follows the attempt's opening banner.
+  inputs.afterTheStartLine?.();
 
   const blocks = acceleratorPromptBlocks(inputs.prompt, deps.framing);
-  const promptText = acceleratorPromptText(blocks);
+  const promptText = inputs.asIsPromptText ?? acceleratorPromptText(blocks);
   await deps.runThePass(promptText);
 
   const after = treeStateThroughThePort({

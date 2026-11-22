@@ -55,6 +55,15 @@ export type RedGateFeedbackInput = {
   readonly plan: string;
   /** The logical name of the gate result record of this attempt. */
   readonly record: string;
+  /**
+   * The phase evidence, named as the notice's fourth line spells it. The
+   * engine leaves this undefined, so the notice names the logical name
+   * `gate:<N>:evidence` of the layout table — EXCEPT under the `parity`
+   * profile, where the as-is notice named the file by its workspace path
+   * (`gates/GATE<N>-EVIDENCE.md` under the feature directory, F153-FR-061):
+   * the caller passes the path there and only there.
+   */
+  readonly phaseEvidence?: string | undefined;
   /** The ONE ingress, as the engine holds it. */
   readonly ingress: CommandOutputIngress;
 };
@@ -150,5 +159,9 @@ export function redGateFeedbackOf(input: RedGateFeedbackInput): string {
     failureSummary: input.gateResultCode === 3 ? undefined : failureSummaryOf(input),
     plan: input.plan,
     record: input.record,
+    // F153-FR-061 — under `parity` the caller names the phase evidence by its
+    // workspace path, as the as-is notice did; undefined keeps the logical
+    // name of the layout table everywhere else.
+    phaseEvidence: input.phaseEvidence,
   });
 }

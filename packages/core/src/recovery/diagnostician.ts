@@ -625,6 +625,18 @@ export type DiagnosticianPromptInputs = {
   readonly phaseSection?: string | undefined;
   readonly blockSet: BlockSet;
   readonly contextWindow: number;
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is text of the prompt, built by
+   * `asIsDiagnosticianPromptText` from the same inputs: where it is given the
+   * prompt IS that text, byte for byte, and no part is fitted or framed.
+   */
+  readonly asIsText?: string | undefined;
+  /**
+   * F153-FR-061 (`parity` profile) — the files the as-is prompt shows in its
+   * `FULL, UNTRUNCATED` section (the criterion paths the phase names), where
+   * the default changed-files dump is not the as-is selection.
+   */
+  readonly asIsFiles?: readonly FileForTheDump[] | undefined;
 };
 
 /** The prompt, with everything the engine records about how it was built. */
@@ -684,9 +696,12 @@ export function diagnosticianPrompt(
   });
 
   const fitted = fitThePrompt(parts, promptBudgetOf(inputs.contextWindow));
-  const text = [fitted.parts.fixed, fitted.parts.files, fitted.parts.history, fitted.parts.evidence]
-    .filter((part) => part !== "")
-    .join("\n\n");
+  const text =
+    inputs.asIsText !== undefined
+      ? inputs.asIsText
+      : [fitted.parts.fixed, fitted.parts.files, fitted.parts.history, fitted.parts.evidence]
+          .filter((part) => part !== "")
+          .join("\n\n");
   return Object.freeze({
     text,
     parts: fitted.parts,
@@ -695,6 +710,78 @@ export function diagnosticianPrompt(
     fitted,
     boundary: inputs.blockSet === "as-is" ? undefined : framing?.boundary,
   });
+}
+
+/* ==================================================================== *
+ * F153-FR-061 (`parity` profile) — the as-is text of the prompt. The
+ * golden capture of feature 141 is the authority for the bytes: the
+ * sections are ruled with a band of `═`, the files stand fenced and
+ * untruncated, and the prompt ends on the demand of the first line.
+ * ==================================================================== */
+
+const AS_IS_BAND = "═".repeat(22);
+
+const asIsHeaderOf = (title: string): string => `${AS_IS_BAND} ${title} ${AS_IS_BAND}`;
+
+/** The as-is fence of one file of the `FULL, UNTRUNCATED` section. */
+const asIsFileBlockOf = (file: FileForTheDump): string => {
+  if (file.kind !== "text") {
+    return `### \`${file.path}\`\n\`\`\`\n(not shown)\n\`\`\`\n`;
+  }
+  return `### \`${file.path}\`\n\`\`\`\n${file.content}\n\`\`\`\n`;
+};
+
+/**
+ * F153-FR-061 (`parity` profile) — the prompt of the diagnostician AS THE
+ * AS-IS ENGINE WROTE IT, from the same inputs the port's own prompt takes:
+ * the fixed demand, the section of the phase, the latest evidence, the
+ * rejection history, the full files, and the demand of the first line.
+ */
+export function asIsDiagnosticianPromptText(inputs: DiagnosticianPromptInputs): string {
+  const intro = [
+    "You are the DIAGNOSTICIAN in an automated spec-driven loop — NOT the",
+    "critic and NOT the proposer. A critic has REJECTED phase " +
+      `${inputs.phase} at least once,`,
+    "citing the same unmet criteria without resolving them. Your only job: read the",
+    "full, untruncated evidence and files below and determine WHY this keeps getting",
+    "rejected, then write a short, concrete hint the proposer can act on next attempt.",
+    "You have NO byte budget on the files below — if you still cannot find something a",
+    "criterion needs, say so plainly; that itself is diagnostic information.",
+    "",
+    "Distinguish exactly ONE of these two cases and say which one, first line:",
+    "  CASE: GROUNDING — the code/evidence is actually fine; the critic's rejection was",
+    "    caused by ITS OWN byte-budget elision (it could not see enough of a file) or a",
+    "    path-resolution miss, not a real gap. Say exactly what content the critic needs",
+    "    and where it is (line ranges welcome), so the proposer can restage a smaller,",
+    "    targeted proof slice next attempt that the critic's own budget can fit.",
+    "  CASE: REAL-GAP — the code genuinely does not satisfy the criterion. Say exactly",
+    "    what is missing or wrong, and the smallest concrete change that would fix it.",
+    "",
+    "Do not be diplomatic; be specific and short (a few sentences, plus a short",
+    "code/diff sketch if useful). This becomes a hint file the proposer reads verbatim",
+    "alongside the critic's own feedback — it does not override the critic, it exists",
+    "to unblock a loop that is not converging on its own.",
+  ].join("\n");
+  const spec =
+    inputs.phaseSection === undefined
+      ? ""
+      : `${asIsHeaderOf(`SPEC — Phase ${inputs.phase}`)}\n${inputs.phaseSection}\n`;
+  const evidence = `${asIsHeaderOf("LATEST EVIDENCE (proposer-written)")}\n${inputs.phaseEvidence}\n\n`;
+  const history = `${asIsHeaderOf("REJECTION HISTORY (this phase, oldest first)")}\n--- latest (attempt ${inputs.ordinal}) ---\n${inputs.feedback}\n\n\n`;
+  const files = (inputs.asIsFiles ?? inputs.files)
+    .filter((file) => file.kind === "text")
+    .map(asIsFileBlockOf)
+    .join("");
+  return (
+    intro +
+    "\n\n" +
+    spec +
+    evidence +
+    history +
+    `${asIsHeaderOf("FULL, UNTRUNCATED content of the cited/criterion files")}\n${files}` +
+    `${asIsHeaderOf("END")}\n` +
+    'Write your diagnosis now. Start with "CASE: GROUNDING" or "CASE: REAL-GAP" on the\nfirst line.'
+  );
 }
 
 /* ==================================================================== *
@@ -756,6 +843,13 @@ export const EMPTY_REPLY = "(empty diagnostician reply)" as const;
 /** B-0894 — the as-is word the call reports when the hint was written. */
 export const HINT_WRITTEN = hintWritten();
 
+/** F153-FR-061 (`parity` profile) — the as-is notice under the heading. */
+export const AS_IS_HINT_NOTICE = Object.freeze([
+  "Generated because this phase's rejection reasons matched a NEW",
+  "unmet-criteria signature. NOT a critic verdict — a second opinion",
+  "with no grounding byte budget, meant to unblock a stuck loop faster.",
+]);
+
 /**
  * F101-FR-023 — the hint as a record of the phase attempt: the as-is heading
  * with the phase and the ordinal, the notice of three lines, and the reply AS
@@ -765,9 +859,11 @@ export function hintOfTheDiagnostician(inputs: {
   readonly phase: number;
   readonly ordinal: number;
   readonly reply: string;
+  /** The notice under the heading; the port's three-line notice by default. */
+  readonly notice?: readonly string[] | undefined;
 }): string {
   const body = inputs.reply.length === 0 ? EMPTY_REPLY : inputs.reply;
-  return `${[hintHeading(inputs.phase, inputs.ordinal), "", ...HINT_NOTICE, "", body].join("\n")}\n`;
+  return `${[hintHeading(inputs.phase, inputs.ordinal), "", ...(inputs.notice ?? HINT_NOTICE), "", body].join("\n")}\n`;
 }
 
 /* ==================================================================== *
@@ -816,6 +912,12 @@ export type DiagnosisInputs = {
   readonly providersThatProducedPasses?: readonly (string | null | undefined)[] | undefined;
   /** True under the `parity` profile. */
   readonly underParity?: boolean | undefined;
+  /**
+   * F153-FR-061 (`parity` profile) — the notice under the heading of the
+   * hint file; the port's three-line notice by default, the as-is notice
+   * under parity.
+   */
+  readonly hintNotice?: readonly string[] | undefined;
   /** Whether the checks before the call passed (B-1003). */
   readonly checksBeforeTheCallPassed?: boolean | undefined;
   readonly prompt: DiagnosticianPromptInputs;
@@ -874,6 +976,9 @@ export type DiagnosisOutcome = {
   readonly case: DiagnosisCase | undefined;
   /** The hint, where one was written. */
   readonly hint: string | undefined;
+  /** B-0853 — the RAW reply, as it left the call: the as-is `done` event
+   * counted these bytes, never the bytes of the written hint file. */
+  readonly reply: string | undefined;
   readonly hintWasWritten: boolean;
   /** What failed, where something did. A failure only warns (B-0967). */
   readonly failure: string | undefined;
@@ -924,6 +1029,7 @@ export async function runTheDiagnostician(
       warningRaised: false,
       case: undefined,
       hint: undefined,
+      reply: undefined,
       hintWasWritten: false,
       failure: undefined,
       resultCode: RESULT_CODE,
@@ -947,6 +1053,7 @@ export async function runTheDiagnostician(
       warningRaised: false,
       case: undefined,
       hint: undefined,
+      reply: undefined,
       hintWasWritten: false,
       failure: "the checks before the call",
       resultCode: RESULT_CODE,
@@ -1002,6 +1109,7 @@ export async function runTheDiagnostician(
       warningRaised: diversity.warning,
       case: undefined,
       hint: undefined,
+      reply: undefined,
       hintWasWritten: false,
       failure: FAILURE_WHEN_THE_PROOF_REFUSES,
       resultCode: RESULT_CODE,
@@ -1067,6 +1175,7 @@ export async function runTheDiagnostician(
       warningRaised: diversity.warning,
       case: undefined,
       hint: undefined,
+      reply: undefined,
       hintWasWritten: false,
       failure,
       resultCode: RESULT_CODE,
@@ -1082,6 +1191,7 @@ export async function runTheDiagnostician(
     phase: inputs.phase,
     ordinal: inputs.ordinal,
     reply: text,
+    ...(inputs.hintNotice === undefined ? {} : { notice: inputs.hintNotice }),
   });
   let hintWasWritten = false;
   let writeFailure: string | undefined;
@@ -1109,6 +1219,7 @@ export async function runTheDiagnostician(
     warningRaised: diversity.warning,
     case: theCase,
     hint,
+    reply: text,
     hintWasWritten,
     failure: writeFailure,
     resultCode: RESULT_CODE,

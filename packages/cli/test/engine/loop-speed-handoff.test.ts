@@ -120,7 +120,7 @@ if (role === "diagnostician") {
   }
   const skipEvidence = process.env.STUB_HANDOFF_PASSES === "2" && passes === 1;
   if (!skipEvidence) {
-    const evidence = /write (\\.specstride\\S+?):/i.exec(prompt)[1];
+    const evidence = (/Write your evidence to (\\.specstride\\S+?) \\(/i.exec(prompt) ?? /write (\\.specstride\\S+?):/i.exec(prompt))[1];
     fs.mkdirSync(path.dirname(evidence), { recursive: true });
     fs.writeFileSync(evidence, "T001 done\\n");
     const tasks = "specs/001-one/tasks.md";

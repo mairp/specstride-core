@@ -103,7 +103,7 @@ if (role === "diagnostician") {
   const nonce = /VERDICT ([0-9a-f]+): APPROVED/.exec(prompt)[1];
   console.log(JSON.stringify({ type: "result", result: "T001 judged.\\nVERDICT " + nonce + ": APPROVED" }));
 } else {
-  const evidence = /write (\\.specstride\\S+?):/i.exec(prompt)[1];
+  const evidence = (/Write your evidence to (\\.specstride\\S+?) \\(/i.exec(prompt) ?? /write (\\.specstride\\S+?):/i.exec(prompt))[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
   fs.writeFileSync(evidence, "T001 done\\n");
   ${WRITE_CHECKPOINT}
@@ -138,6 +138,8 @@ type ScopedOptions = {
 function scopedFixture(options: ScopedOptions): {
   readonly work: string;
   readonly control: string;
+  /** The as-is control plane the parity profile reads (F153-FR-061). */
+  readonly asIsControl: string;
   readonly restore: () => void;
 } {
   const root = mkdtempSync(join(tmpdir(), "specstride-scoped-"));
@@ -186,14 +188,20 @@ function scopedFixture(options: ScopedOptions): {
   process.env.HOME = root;
   const control = join(root, ".specstride", "workspaces", workspaceIdOfWorkspace(work));
   mkdirSync(join(control, "features", "001-one", "verification"), { recursive: true });
-  writeFileSync(
-    join(control, "features", "001-one", "verification", "verification-commands.json"),
-    JSON.stringify({
-      schema_version: "specstride.verification-commands/1",
-      discovery: "none",
-      commands: commandsOf(work),
-    }),
-  );
+  const declaredDocument = JSON.stringify({
+    schema_version: "specstride.verification-commands/1",
+    discovery: "none",
+    commands: commandsOf(work),
+  });
+  writeFileSync(join(control, "features", "001-one", "verification", "verification-commands.json"), declaredDocument);
+  // Under the `parity` profile the run reads the AS-IS control plane (the
+  // as-is state root of the layout table, `XDG_STATE_HOME`), so the declared
+  // document of the launch stands there too: this fixture stands in for the
+  // oracle's parity drive, which lays the state out where the as-is engine
+  // reads it (F153-FR-061).
+  const asIsControl = join(root, ".local", "state", "specstride", "workspaces", "001-one");
+  mkdirSync(join(asIsControl, "features", "001-one", "verification"), { recursive: true });
+  writeFileSync(join(asIsControl, "features", "001-one", "verification", "verification-commands.json"), declaredDocument);
   if (options.userConfig !== undefined) {
     const userConfig = join(root, ".config", "specstride");
     mkdirSync(userConfig, { recursive: true });
@@ -217,6 +225,7 @@ function scopedFixture(options: ScopedOptions): {
   return {
     work,
     control,
+    asIsControl,
     restore: () => {
       if (before.HOME === undefined) delete process.env.HOME;
       else process.env.HOME = before.HOME;
@@ -464,8 +473,9 @@ test("CT-153-5 T286 under parity the whole inner set runs: the reproduction stan
     for (const name of ["a", "b", "c", "d"]) {
       assert.equal(counterLines(g.work, name).length, 2, `counter-${name}`);
     }
-    // Parity folds the switch off before the table: the rule is WS-1.
-    const records = selectionRecords(g.control);
+    // Parity folds the switch off before the table: the rule is WS-1. The
+    // selection records of a parity run live in the as-is control plane.
+    const records = selectionRecords(g.asIsControl);
     assert.ok(records.length >= 1, "the selection was recorded");
     assert.equal(records[0]?.["rule"], "WS-1");
   } finally {

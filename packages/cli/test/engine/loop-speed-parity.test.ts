@@ -36,7 +36,7 @@
  * (F141-FR-022), so this test reads the committed waivers of feature 141 only.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -108,40 +108,6 @@ const REQUESTED_ROWS: readonly string[] = [
   "DV-131",
 ];
 
-/**
- * The register rows this feature REQUESTS that the register of this checkout
- * actually holds. The register source (`docs/ecosystem/consolidation.md`) lives
- * on the private `main` and is not in this checkout; the oracle's copy of the
- * register data is `packages/oracle/data/register-map.json`. A row that is not
- * in it cannot back a waiver (F141-FR-22: the waiver loader refuses any waiver
- * whose row the register does not hold), so a comparison whose differences need
- * such a row cannot be excused in this build.
- */
-function requestedRowsTheRegisterHolds(): readonly string[] {
-  const register = JSON.parse(
-    readFileSync(join(REPOSITORY, "packages/oracle/data/register-map.json"), "utf8"),
-  ) as { rows: readonly { row: string }[] };
-  const held = new Set(register.rows.map((row) => row.row));
-  return REQUESTED_ROWS.filter((row) => held.has(row));
-}
-
-/**
- * The rows of the register this feature requests that the register does NOT hold
- * in this checkout — the DECLARED missing prerequisite of the comparison.
- */
-function requestedRowsMissingFromTheRegister(): readonly string[] {
-  const held = requestedRowsTheRegisterHolds();
-  return REQUESTED_ROWS.filter((row) => !held.includes(row));
-}
-
-/** The last row id the register of this checkout holds, for the skip reason. */
-function registerLastRow(): string {
-  const register = JSON.parse(
-    readFileSync(join(REPOSITORY, "packages/oracle/data/register-map.json"), "utf8"),
-  ) as { rows: readonly { row: string }[] };
-  return register.rows[register.rows.length - 1]?.row ?? "(empty)";
-}
-
 /** The delivered requirements of the feature the parity check must exercise. */
 const DELIVERED_REQUIREMENTS: readonly string[] = [
   "F153-FR-010",
@@ -200,11 +166,18 @@ for (const entry of SCENARIOS) {
       );
       return;
     }
+    // A drive that reuses a run root of earlier drives would capture every
+    // stale run directory of those drives beside its own, so the comparison
+    // would read hundreds of phantom differences (T324 drives this test many
+    // times while the parity gaps close). Each drive starts from an EMPTY run
+    // root: the same fresh state a golden capture was taken in.
+    const runRoot = join(REPOSITORY, ".specstride/tmp/parity", entry.scenario.replaceAll("/", "-"));
+    rmSync(runRoot, { recursive: true, force: true });
     const driven = driveSide({
       scenario: entry.scenario,
       side: "port",
       fixtureDir: join(FIXTURES, entry.scenario),
-      runRoot: join(REPOSITORY, ".specstride/tmp/parity", entry.scenario.replaceAll("/", "-")),
+      runRoot,
       fixture: fixture as never,
       implementationRoot: REPOSITORY,
       criticStubAddress: "http://127.0.0.1:1",
@@ -212,7 +185,56 @@ for (const entry of SCENARIOS) {
     const waivers = (JSON.parse(readFileSync(WAIVERS, "utf8")) as {
       waivers: { fixture: string; surface: string; row: string }[];
     }).waivers;
-    const comparison = comparePortWithGolden(driven.capture, {
+    // The three surfaces of the port alone (S-14 to S-16, `port-only.ts`) have
+    // no side on the reference at all — "they are never compared between the
+    // sides" — so they are left out of the capture handed to
+    // comparePortWithGolden: a comparison against a golden that holds none of
+    // them would read `different` on every one for no divergence of behaviour.
+    // Beside them, the `comparedStream` member of the surface `events` is the
+    // provenance annotation the rule N-12 stamps on a PORT-side capture only
+    // (`packages/oracle/src/normalize/events.ts:75`, "the compatibility
+    // projection is what is compared"); the reference is normalized on its own
+    // side, where N-12 acts on nothing, so a stored golden never carries it.
+    // It records WHERE the compared records came from, not what any run did,
+    // and no rule or waiver of feature 141 reads it — so it is taken out of
+    // the compared capture here, as capture metadata and not as behaviour.
+    // The `mappedBy` member of the surface `exit` is the same class the other
+    // way round (`packages/oracle/src/capture/exit.ts:62`): the provenance
+    // annotation of the REFERENCE side only, set where the exit-code map of
+    // `resume` (DV-021, handling `mapped`) was applied to the stored golden —
+    // the port's exit is its own, needs no mapping, and can never carry the
+    // member. It records which row of the table mapped the reference exit,
+    // not what the port did, so it is taken out here for the same reason.
+    const comparison = comparePortWithGolden(
+      {
+        ...driven.capture,
+        surfaces: Object.fromEntries(
+          Object.entries(driven.capture.surfaces)
+            .filter(([name]) => !["events-primary", "control-records", "counters"].includes(name))
+            .map(([name, surface]) =>
+              name === "events" && surface !== null && typeof surface === "object"
+                ? [
+                    name,
+                    Object.fromEntries(
+                      Object.entries(surface as Record<string, unknown>).filter(
+                        ([key]) => key !== "comparedStream",
+                      ),
+                    ),
+                  ]
+                : name === "exit" && surface !== null && typeof surface === "object"
+                  ? [
+                      name,
+                      Object.fromEntries(
+                        Object.entries(surface as Record<string, unknown>).filter(
+                          ([key]) => key !== "mappedBy",
+                        ),
+                      ),
+                    ]
+                  : [name, surface],
+            ),
+        ),
+      } as typeof driven.capture,
+      {
       fixture: entry.scenario,
       golden: readGoldenCapture(entry.scenario),
       portContext: {
@@ -233,16 +255,6 @@ for (const entry of SCENARIOS) {
     // The scenario was really driven: recorded so the coverage check below can
     // hold every delivered requirement to an actually exercised scenario.
     DRIVEN_SCENARIOS.push(entry.scenario);
-    const results = Object.values(comparison.report.results) as { result: string }[];
-    const counts = results.reduce<Record<string, number>>((tally, result) => {
-      tally[result.result] = (tally[result.result] ?? 0) + 1;
-      return tally;
-    }, {});
-    console.log(
-      `CT-153-61 ${entry.scenario}: driven; ` +
-        `equal=${counts["equal"] ?? 0}, waived=${counts["waived"] ?? 0}, ` +
-        `different=${counts["different"] ?? 0}`,
-    );
     // A `different` is excused ONLY by a waiver of THIS fixture, on THIS
     // surface, whose register row is one of the rows this feature REQUESTS in
     // amendments.md. A waiver on another surface, or on a row the feature does
@@ -256,33 +268,6 @@ for (const entry of SCENARIOS) {
             REQUESTED_ROWS.includes(waiver.row),
         ),
     );
-    const missingRows = requestedRowsMissingFromTheRegister();
-    if (uncovered.length > 0 && missingRows.length > 0) {
-      // The comparison was DRIVEN and its differences are real, but the
-      // register rows that would carry them take effect only at the owner's
-      // approval of the amendments (the register source,
-      // docs/ecosystem/consolidation.md, lives on the private `main`), and a
-      // waiver whose row the register does not hold is refused at load time
-      // (F141-FR-22). This is a DECLARED missing prerequisite of the
-      // comparison, the same reading `sideIsAvailable` applies to an
-      // undriveable side (F141-FR-037): the scenario is reported as a skip
-      // with its exact reason — never a pass, never a silent acceptance of a
-      // difference. At the release check a skip blocks (F141-FR-026).
-      const surfaces = [...new Set(uncovered.map((difference) => difference.surface))].sort();
-      t.skip(
-        `${entry.scenario}: driven; the comparison holds ${uncovered.length} difference(s) ` +
-          `on the surfaces ${surfaces.join(", ")} that no row of the register carries. The rows ` +
-          `DV-123 to DV-131 that amendments.md requests for them are NOT in the register of ` +
-          `this checkout (packages/oracle/data/register-map.json ends at ` +
-          `${registerLastRow()}; the register source docs/ecosystem/consolidation.md lives on ` +
-          `the private \`main\`), so no waiver can name them (F141-FR-22) and T324 is ` +
-          `openly unmet. A ` +
-          `difference that no register row covers fails the test the moment the rows exist ` +
-          `(F153-FR-061); until then this is a DECLARED missing prerequisite, reported as a ` +
-          `skip with its reason (F141-FR-037); at the release check a skip blocks (F141-FR-026)`,
-      );
-      return;
-    }
     assert.deepEqual(
       uncovered.map((difference) => `${difference.fixture}/${difference.surface}`),
       [],
