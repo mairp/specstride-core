@@ -157,6 +157,13 @@ export type LoopConfiguration = {
    */
   readonly redGateOwnBudget: boolean;
   /**
+   * `commit.gate.beforeCritic` (feature 153, row 140 of annex X §X.7), on by
+   * default and off under `parity`. CQ-153-06 answered A on 2026-11-13: the
+   * pre-critic scan runs only where `commit.backpressure` is also on, so the
+   * composition root reads both switches.
+   */
+  readonly commitGateBeforeCritic: boolean;
+  /**
    * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
    * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
    * The trust class is `N lo` — a rank may only narrow (lower) the value a
@@ -385,6 +392,9 @@ export const RED_GATE_OWN_BUDGET_KEY = "verification.redGate.ownBudget";
 /** The key of the size of the red gate's own budget (F153-FR-021). */
 export const RED_GATE_LIMIT_KEY = "verification.redGate.limit";
 
+/** The key of the pre-critic commit scan switch (feature 153, row 140). */
+export const COMMIT_GATE_BEFORE_CRITIC_KEY = "commit.gate.beforeCritic";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -513,6 +523,11 @@ export function loopConfigurationOf(input: {
     // a rejection with code 10 that counts toward the reject limit.
     redGateOwnBudget:
       resolved.profile !== "parity" && switchIsOn(valueOf(RED_GATE_OWN_BUDGET_KEY).value),
+    // Row 140 of annex X §X.7 (F153-FR-024): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity the scan runs
+    // at the approval commit only.
+    commitGateBeforeCritic:
+      resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_GATE_BEFORE_CRITIC_KEY).value),
     redGateLimit: redGateLimitOf(resolved),
     // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
     // OFF under the `parity` profile (defect D-44 kept — the baseline has no

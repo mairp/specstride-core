@@ -143,6 +143,19 @@ export type PhaseGateDependencies = {
    * the only detail then known.
    */
   readonly detailTextOfTheParse?: (() => string) | undefined;
+  /**
+   * Feature 153, T355 — the commit scan BEFORE the critic (F153-FR-024,
+   * F153-FR-026; CQ-153-06 answered A). The ENGINE owns the scan and every
+   * side effect of a block — the block record, the corrective feedback, the
+   * `commit_gate.blocked` event (step `pre-critic`) and the counters — so
+   * the port is a question only: asked AFTER a passed verification gate and
+   * BEFORE the critic call, it answers whether the candidate change is
+   * blocked. A block returns `commit-blocked`, the kind feature 152 already
+   * gave a blocked approval commit, with `criticWasCalled: false` — the
+   * candidate never reaches the critic (F153-SC-003). Absent, or clear, the
+   * gate runs as today.
+   */
+  readonly scanBeforeTheCritic?: (() => Promise<{ readonly blocked: boolean }>) | undefined;
 };
 
 /**
@@ -155,6 +168,7 @@ export const PHASE_GATE_OUTCOMES = [
   "approved",
   "rejected",
   "gate-failed",
+  "commit-blocked",
   "config-error",
   "no-evidence",
   "blocked",
@@ -261,6 +275,28 @@ export async function runPhaseGate(
         criticWasCalled: false,
         verification,
         feedbackWrittenByTheEngine: feedback,
+      });
+    }
+  }
+
+  // Feature 153, T355 — the commit scan BEFORE the critic (F153-FR-024). It
+  // is NOT a step of the fixed order (the order of F101-FR-005 is unchanged);
+  // it runs where the port is given, after a passed verification gate and
+  // before the critic call. A block ends the phase attempt here — the critic
+  // is NOT called (F153-SC-003) — as `commit-blocked`, the kind feature 152
+  // gave a blocked approval commit; the ENGINE has already written the block
+  // record, the corrective feedback and the `commit_gate.blocked` event
+  // (step `pre-critic`) by the time the port answered.
+  if (deps.scanBeforeTheCritic !== undefined) {
+    const scan = await deps.scanBeforeTheCritic();
+    if (scan.blocked) {
+      return Object.freeze({
+        outcome: "commit-blocked" as const,
+        verdictExists: false,
+        stepsRun: Object.freeze([...stepsRun]),
+        resultCode: RESULT_CODE_OF_A_FAILED_VERIFICATION_GATE,
+        criticWasCalled: false,
+        ...(verification === undefined ? {} : { verification }),
       });
     }
   }

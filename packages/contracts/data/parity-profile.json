@@ -2070,6 +2070,21 @@
       "registerRows": [
         "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
       ]
+    },
+    {
+      "number": 140,
+      "switch": "The commit scan runs after a passed gate and before the critic, too (F153-FR-024)",
+      "key": "commit.gate.beforeCritic",
+      "keys": [
+        "commit.gate.beforeCritic"
+      ],
+      "keyNote": "`commit.gate.beforeCritic` (CQ-153-06 answered A on 2026-11-13: it runs only where `commit.backpressure` is also on)",
+      "default": "on",
+      "parity": "off: the scan runs at the approval commit only",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

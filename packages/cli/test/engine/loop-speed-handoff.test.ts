@@ -112,7 +112,11 @@ if (role === "diagnostician") {
   }
   fs.writeFileSync("made.txt", "work of pass " + passes + "\\n");
   const counter = path.join(home, "critic-calls.txt");
-  const firstAttempt = !(fs.existsSync(counter) && Number(fs.readFileSync(counter, "utf8")) >= 1);
+  // The attempt a pass belongs to is the pass count: the pre-critic commit
+  // scan (feature 153) blocks a candidate BEFORE the critic is ever called,
+  // so a critic-call counter is not an attempt counter — attempt 2's first
+  // pass must remove the secret even though no critic call happened yet.
+  const firstAttempt = passes === 1;
   if (process.env.STUB_SECRET_ATTEMPT1 === "1" && firstAttempt) {
     fs.writeFileSync("planted.txt", process.env.STUB_SECRET + "\\n");
   } else {

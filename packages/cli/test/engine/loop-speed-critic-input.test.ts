@@ -11,6 +11,7 @@
  * CT-153-50, F153-SC-010, CT-153-28.
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -173,17 +174,41 @@ test("the units the runtime checked still reach the critic as facts (T179)", asy
   }
 });
 
-test("CT-153-28 no scan result and no corrective block in any critic prompt (T180)", async () => {
+test("CT-153-28 no pre-critic result either", async () => {
+  // T180 named the commit-time scan; T359 extends the same guard to the
+  // pre-critic scan of F153-FR-024: after a pre-critic block, no critic
+  // prompt of a later attempt holds a rule id, a path of a hit, or the
+  // corrective block (F153-FR-028).
   const fx = commitGateFixture("secret-removed-on-retry");
   try {
     assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
     const criticFiles = readdirSync(fx.scratch).filter((name) =>
       name.startsWith("seen-by-critic-"),
     );
-    assert.ok(criticFiles.length >= 2, "both attempts reached the critic");
+    // F153-FR-024: the pre-critic scan blocks attempt 1 with ZERO critic
+    // calls, so only the later attempt reaches the critic (T180, T359).
+    assert.ok(
+      criticFiles.length >= 1,
+      "the attempt after the pre-critic block reached the critic",
+    );
+    // The corrective block's nonce, from the block record of attempt 1
+    // (the same record CT-152-9 reads): part of the corrective block, so
+    // absent from every critic prompt too.
+    const blockRecord = JSON.parse(
+      readFileSync(fx.control("commit-gate", "phase1.1.block.json"), "utf8"),
+    ) as { nonce: string };
+    assert.ok(blockRecord.nonce.length >= 8, "the block record carries a nonce");
     for (const name of criticFiles) {
       const prompt = readFileSync(join(fx.scratch, name), "utf8");
       assert.ok(!/cg-[a-z0-9-]+/.test(prompt), `${name} holds no cg- rule id`);
+      // The path of the hit: the fixture plants the credential in
+      // `creds.txt` on attempt 1 (the file the pre-critic scan blocks on),
+      // so no critic prompt may name it (F153-FR-028).
+      assert.ok(!prompt.includes("creds.txt"), `${name} holds no path of a hit`);
+      assert.ok(
+        !prompt.includes(blockRecord.nonce),
+        `${name} holds no nonce of the corrective block`,
+      );
       assert.ok(
         !prompt.includes(
           "# Phase 1 — attempt 1 was not approved: the commit gate blocked the approval commit",
@@ -278,6 +303,7 @@ if (critic) {
 function commitGateFixture(name: string): {
   readonly dir: string;
   readonly scratch: string;
+  readonly control: (...parts: string[]) => string;
   readonly restore: () => void;
 } {
   const source = join(import.meta.dirname, "..", "fixtures", "commit-gate", name);
@@ -319,9 +345,18 @@ function commitGateFixture(name: string): {
   process.env.SPECSTRIDE_CRITIC = "claude";
   process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
   process.env.STUB_DIR = scratch;
+  // The workspace's control plane lives under HOME, keyed by the hash of the
+  // workdir (commit-gate-retry.test.ts's layout).
+  const controlRoot = join(
+    dir,
+    ".specstride",
+    "workspaces",
+    createHash("sha256").update(work).digest("hex").slice(0, 16),
+  );
   return {
     dir: work,
     scratch,
+    control: (...parts: string[]): string => join(controlRoot, ...parts),
     restore: () => {
       process.env.HOME = before.HOME;
       process.env.PATH = before.PATH;

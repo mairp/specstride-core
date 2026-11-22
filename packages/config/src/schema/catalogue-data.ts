@@ -38,7 +38,7 @@ export interface CatalogueDataRow {
 }
 
 /** The number of keys the catalogue holds (T004). */
-export const CATALOGUE_SIZE = 266;
+export const CATALOGUE_SIZE = 267;
 
 /** Every row of the catalogue, in the order of §K.3 to §K.6b. */
 export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
@@ -1325,6 +1325,18 @@ export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
     confirmedOrCorrected: "confirmed",
     layers: "F E P U",
     profileRow: "",
+  },
+  {
+    key: "commit.gate.beforeCritic",
+    typeAndRange: "on, off",
+    default: "on",
+    valueUnderParity: "off",
+    trustClass: "N off (snap p)",
+    ownerFeature: "153",
+    proposedBy: "153",
+    confirmedOrCorrected: "confirmed",
+    layers: "F E P U",
+    profileRow: "140",
   },
   {
     key: "harnesses.<id>.tiers",

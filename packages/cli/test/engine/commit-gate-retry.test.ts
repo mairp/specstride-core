@@ -49,7 +49,7 @@ type Fixture = {
  * tasks.md of the fixture, its stub `claude` on `PATH`, a git repository
  * with one init commit, and the switch left at its default (on).
  */
-function fixture(name: string): Fixture {
+function fixture(name: string, beforeCriticOff = false): Fixture {
   const source = join(FIXTURES, name);
   const dir = mkdtempSync(join(tmpdir(), "specstride-commit-gate-"));
   const bin = join(dir, "bin");
@@ -57,6 +57,11 @@ function fixture(name: string): Fixture {
   const scratch = join(dir, "scratch");
   mkdirSync(bin);
   mkdirSync(scratch);
+  // The commit-time cases name the pre-critic scan switch OFF (F110 rule 3),
+  // so the block they prove is the one at the approval commit (F153-FR-025 —
+  // their subject, kept under the new default which blocks before the
+  // critic).
+  if (beforeCriticOff) process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC = "off";
   mkdirSync(join(work, "specs", "001-one"), { recursive: true });
   copyFileSync(join(source, "tasks.md"), join(work, "specs", "001-one", "tasks.md"));
   // A declared test command, so the verification gate runs and says so (the
@@ -139,6 +144,7 @@ function fixture(name: string): Fixture {
       else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
       if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
       else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
+      delete process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC;
       if (before.STUB_DIR === undefined) delete process.env.STUB_DIR;
       else process.env.STUB_DIR = before.STUB_DIR;
       rmSync(dir, { recursive: true, force: true });
@@ -208,7 +214,7 @@ test("CT-152-2 a blocked commit is retried and succeeds on the next attempt", as
 });
 
 test("CT-152-3 a retry is a new attempt in every respect", async () => {
-  const fx = fixture("secret-removed-on-retry");
+  const fx = fixture("secret-removed-on-retry", true);
   try {
     assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
     // A fresh proposer session for attempt 2 (F152-FR-003).
@@ -233,7 +239,7 @@ test("CT-152-3 a retry is a new attempt in every respect", async () => {
 });
 
 test("CT-152-4 nothing of an approval survives a block", async () => {
-  const fx = fixture("secret-removed-on-retry");
+  const fx = fixture("secret-removed-on-retry", true);
   // The critic approves attempt 1 (which the gate blocks) and rejects every
   // later attempt, so the run stops at the reject limit and the state of the
   // phase is read with no approval of it anywhere.
@@ -263,7 +269,7 @@ test("CT-152-4 nothing of an approval survives a block", async () => {
 });
 
 test("CT-152-9 the critic never sees the corrective block", async () => {
-  const fx = fixture("secret-removed-on-retry");
+  const fx = fixture("secret-removed-on-retry", true);
   try {
     assert.equal(await runFeature({ argv: [], workdir: fx.dir }), 0);
     const blockRecord = JSON.parse(

@@ -351,6 +351,9 @@ import {
 // records of the phase read from the control plane, never a counter in
 // memory (F153-FR-006).
 import { redGateCountOf } from "../../../core/src/gate/red-gate-budget.ts";
+// F153-FR-026 (T351) — the commit scan is ONE typed unit; the closure below
+// keeps only what is the composition root's: its two counters and its `say`.
+import { commitScanOf } from "../../../core/src/commit-scan/scan.ts";
 import {
   readCounts,
 } from "../../../core/src/carry/counters.ts";
@@ -371,8 +374,10 @@ import {
   commitBackpressureIsOn,
   commitGate,
   readBlockRecord,
+  signatureOfHits,
   writeBlockRecord,
 } from "../../../core/src/post-approval/commit-gate.ts";
+import { blockingRuleOf } from "@specstride/kernel/redactor/commit-gate-rules";
 import { feedbackOfTheCommitGate, quotedPath, reasonOf } from "../../../core/src/gate/feedback.ts";
 import { newNonce } from "../../../core/src/gate/nonce.ts";
 import {
@@ -3579,28 +3584,144 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     feedback.set(phase, held);
     commitGateFeedbackOfThePhase.set(phase, ordinal);
   };
+  // T352 — the scan itself is `commitScanOf` of core (F153-FR-026): one
+  // result for one tree, the same unit the pre-critic step and the in-pass
+  // command read. The closure keeps only the composition root's own part —
+  // the two counters (T160) and the console line — never a second scan.
   const scanBeforeTheCommit = {
     scan: (files: readonly string[]) => {
-      const present = files.filter((file) => existsSync(join(workdir, file)));
-      const found = ingress.scanCommit(present, workdir);
-      // A line HEAD already holds is not the commit's to answer for (commit-lines.ts).
-      const added = addedLinesAgainstHead(workdir, present);
-      const hits = found.hits.filter(
-        (hit) => hit.pattern !== THE_SHAPE_OF_ORDINARY_CODE && isAddedLine(added, hit),
+      const scan = commitScanOf(
+        { files, ordinaryCodePattern: THE_SHAPE_OF_ORDINARY_CODE },
+        {
+          exists: (file) => existsSync(join(workdir, file)),
+          scan: (present) => ingress.scanCommit(present, workdir),
+          addedLines: (present) => addedLinesAgainstHead(workdir, present),
+          lineIsAdded: isAddedLine,
+        },
       );
-      const blocked = hits.length > 0;
-      if (blocked) {
+      if (scan.blocked) {
         commitsBlocked += 1;
         // T160 — the safety-net count rises with the switch OFF only; with the
         // switch on, the step-6 path is defensive and a void (a later phase)
         // raises this count, never the pre-commit scan here.
         if (!commitBackpressureOn) commitsLeftUncommitted += 1;
         say(
-          `[${slug}] commit blocked: possible secret in ${[...new Set(hits.map((hit) => hit.file))].join(", ")}`,
+          `[${slug}] commit blocked: possible secret in ${[...new Set(scan.hits.map((hit) => hit.file))].join(", ")}`,
         );
       }
-      return { ...found, hits, blocked } as never;
+      return scan as never;
     },
+  };
+
+  // T356 — the commit scan BEFORE the critic (F153-FR-024, F153-FR-026;
+  // CQ-153-06 answered A). With BOTH switches on — `commit.gate.beforeCritic`
+  // and `commit.backpressure` — the phase gate is handed this port, and the
+  // gate asks it after a passed verification gate and before the critic call.
+  // The scan is `commitScanOf` (T352): one result for one tree, over the
+  // files the approval commit would hold AS THEY STAND at that point, with
+  // the rule data pinned at launch (`commitGateRules`, T077). On a block the
+  // F152 branch runs in full — the block record, the corrective feedback of
+  // the attempt, the `commit_gate.blocked` event with the step `pre-critic`
+  // (F111-FR-031, as amended), and the digest counter the scan closure keeps
+  // — and the gate returns `commit-blocked` with the critic NEVER called
+  // (F153-SC-003, F153-FR-028). The end cause is the attempt's own: a
+  // blocked candidate is `rejected` (EC-4). With either switch off the port
+  // is absent and the gate runs as today — parity is today (F153-FR-005).
+  const preCriticScanOfTheCandidate = async (
+    phase: number,
+    ordinal: number,
+    verdictId: string,
+  ): Promise<{ readonly blocked: boolean }> => {
+    const insideAWorkTree = git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0;
+    // File by file, exactly as the approval branch names the change set
+    // (T075): a whole new directory is one line of `git status`.
+    const changed = [
+      ...git(workdir, ["diff", "--name-only", "-z", "HEAD"]).out.split("\0"),
+      ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
+    ].filter((name) => name !== "");
+    if (!insideAWorkTree || changed.length === 0) return { blocked: false };
+    const scan = scanBeforeTheCommit.scan(changed) as {
+      blocked: boolean;
+      hits: readonly {
+        file: string;
+        line: number;
+        matched: "pattern" | "registered-secret" | "unreadable";
+        pattern?: string;
+      }[];
+    };
+    if (!scan.blocked) return { blocked: false };
+    // The RULE each hit answers (a name of versioned data, never its text),
+    // the same mapping the F152 gate unit performs at the approval commit.
+    const blockedHits = scan.hits.flatMap((hit) => {
+      const rule = blockingRuleOf(
+        hit.matched === "pattern"
+          ? { matched: hit.matched, pattern: hit.pattern ?? "" }
+          : { matched: hit.matched },
+        commitGateRules,
+      );
+      return rule === null ? [] : [{ rule, file: hit.file, line: hit.line }];
+    });
+    const signature = signatureOfHits(blockedHits);
+    const nonce = newNonce();
+    await writeBlockRecord(
+      {
+        schema: "specstride.commit-gate-block/1",
+        feature: slug,
+        phase,
+        ordinal,
+        runId,
+        engineStartId,
+        verdictId,
+        hits: blockedHits,
+        hitsOmitted: 0,
+        signature,
+        ruleDataHash: commitGateRuleDataHash,
+        nonce,
+        at: new Date().toISOString(),
+        path: "pre-scan",
+      },
+      {
+        atomicWrite: (file, text) => atomicWrite(file, text, { createDirectory: true }),
+        inControl,
+      },
+    );
+    writeFeedbackFor(
+      phase,
+      ordinal,
+      feedbackOfTheCommitGate({
+        phase,
+        ordinal,
+        nonce,
+        rejectCount: (feedback.get(phase) ?? []).length + 1,
+        rejectLimit: loopConfig.maxRejects,
+        hits: blockedHits.map((hit) => ({
+          rule: hit.rule,
+          reason: reasonOfTheRule(hit.rule),
+          file: quotedPath(hit.file),
+          line: hit.line,
+        })),
+        hitsOmitted: 0,
+      }),
+    );
+    emit(COMMIT_GATE_BLOCKED_EVENT_TYPE, {
+      phase,
+      attempt: ordinal,
+      rules: [...new Set(blockedHits.map((hit) => hit.rule))],
+      fileCount: new Set(blockedHits.map((hit) => hit.file)).size,
+      signature,
+      step: "pre-critic",
+    });
+    // The scan's own block event (T164 — the best-effort stream carries it
+    // whatever step held the candidate back), the same payload the
+    // approval-commit branch emits for a hit set.
+    emit(COMMIT_BLOCKED_EVENT_TYPE, {
+      files: [...new Set(blockedHits.map((hit) => hit.file))],
+      counts: blockedHits.map((hit) => hit.line),
+    });
+    say(
+      `[${slug}] phase ${String(phase)} attempt ${String(ordinal)}: the pre-critic commit scan blocked the candidate`,
+    );
+    return { blocked: true };
   };
 
   /* --- the proposer ------------------------------------------------- */
@@ -5266,6 +5387,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         }),
       },
       {
+        // T356 — F153-FR-024: the pre-critic scan reaches the gate ONLY with
+        // both switches on (`commit.gate.beforeCritic` AND
+        // `commit.backpressure`, CQ-153-06 answered A); with either off the
+        // port is absent and the gate runs as today (F153-FR-005).
+        scanBeforeTheCritic:
+          loopConfig.commitGateBeforeCritic && commitBackpressureOn
+            ? () => preCriticScanOfTheCandidate(phase, ordinal, verdictId)
+            : undefined,
         runVerificationGate: async () => {
           // F153-FR-034 — the timed pair of the gate opens first: the run of
           // the verification gate is on the record from its first statement.
@@ -6394,6 +6523,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             rules: [...new Set(gate.hits.map((hit) => hit.rule))],
             fileCount: new Set(gate.hits.map((hit) => hit.file)).size,
             signature: gate.signature,
+            // F111-FR-031, as amended: the event names the step that blocked.
+            step: "commit",
           });
           emit(COMMIT_BLOCKED_EVENT_TYPE, {
             files: [...new Set(gate.hits.map((hit) => hit.file))],
@@ -6657,6 +6788,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       };
     }
     if (outcome.outcome === "gate-failed") return "gate-failed" as const;
+    // T356 — F153-FR-024: a candidate the pre-critic scan held back ends the
+    // attempt as a `commit-blocked` kind, the kind feature 152 gave a blocked
+    // approval commit; the order after a rejection re-enters the loop through
+    // it, and the end cause table gives it `rejected` (EC-4).
+    if (outcome.outcome === "commit-blocked") return "commit-blocked" as const;
     return outcome.verdict === "MALFORMED" ? ("malformed" as const) : ("rejected" as const);
   };
 

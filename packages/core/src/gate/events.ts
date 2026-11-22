@@ -424,6 +424,13 @@ export type CommitGateBlockedEventData = {
   readonly rules: readonly string[];
   readonly fileCount: number;
   readonly signature: string;
+  /**
+   * Feature 153 (F111-FR-031, as amended): WHICH step blocked — the scan
+   * before the critic (`pre-critic`) or the gate before the approval commit
+   * (`commit`). Absent where an event replayed from an older stream carries
+   * none.
+   */
+  readonly step?: "pre-critic" | "commit";
 };
 
 /**
