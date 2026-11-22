@@ -2085,6 +2085,21 @@
       "registerRows": [
         "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
       ]
+    },
+    {
+      "number": 141,
+      "switch": "The proposer is named the in-pass scan command (F153-FR-027)",
+      "key": "commit.scan.inPass",
+      "keys": [
+        "commit.scan.inPass"
+      ],
+      "keyNote": "`commit.scan.inPass` (CQ-153-17 answered A on 2026-11-13: the command `scan`, codes 0/2/1/3)",
+      "default": "on",
+      "parity": "off: no such command is named to the proposer",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

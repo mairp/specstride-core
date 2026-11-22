@@ -164,6 +164,13 @@ export type LoopConfiguration = {
    */
   readonly commitGateBeforeCritic: boolean;
   /**
+   * `commit.scan.inPass` (feature 153, row 141 of annex X §X.7), on by
+   * default and OFF under `parity`. CQ-153-17 answered A on 2026-11-13: the
+   * switch gates whether the proposer prompt names the read-only command
+   * `scan` (F153-FR-027: the prompt MAY name it only with the switch on).
+   */
+  readonly commitScanInPass: boolean;
+  /**
    * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
    * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
    * The trust class is `N lo` — a rank may only narrow (lower) the value a
@@ -395,6 +402,9 @@ export const RED_GATE_LIMIT_KEY = "verification.redGate.limit";
 /** The key of the pre-critic commit scan switch (feature 153, row 140). */
 export const COMMIT_GATE_BEFORE_CRITIC_KEY = "commit.gate.beforeCritic";
 
+/** The key of the in-pass scan command switch (feature 153, row 141). */
+export const COMMIT_SCAN_IN_PASS_KEY = "commit.scan.inPass";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -528,6 +538,11 @@ export function loopConfigurationOf(input: {
     // at the approval commit only.
     commitGateBeforeCritic:
       resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_GATE_BEFORE_CRITIC_KEY).value),
+    // Row 141 of annex X §X.7 (F153-FR-027): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity no such
+    // command is named to the proposer (CQ-153-17 A, answered 2026-11-13).
+    commitScanInPass:
+      resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_SCAN_IN_PASS_KEY).value),
     redGateLimit: redGateLimitOf(resolved),
     // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
     // OFF under the `parity` profile (defect D-44 kept — the baseline has no

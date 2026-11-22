@@ -2083,6 +2083,21 @@ export function specsPathOfTheLaunch(argv: readonly string[]): string | undefine
   return undefined;
 }
 
+/**
+ * F153-FR-027 — the ONE line of the proposer prompt that names the in-pass
+ * scan command, or the empty string. The prompt names it only with the
+ * switch on (row 141, `commit.scan.inPass`; CQ-153-17 A: the command is
+ * `scan`); the command itself is advice and the line must make that plain.
+ */
+export function theInPassScanLine(namesIt: boolean): string {
+  return namesIt
+    ? `\n# The in-pass scan\nYou may run \`specstride scan\` in your pass: it scans your candidate` +
+        ` change with the rule data pinned at launch and prints what it finds, per hit the rule,` +
+        ` the reason, the file and the line. It is advice only — it gates nothing, writes nothing` +
+        ` and counts nothing.`
+    : "";
+}
+
 /** The engine launcher of the front door (F119-FR-002). */
 export async function runFeature(launch: EngineLaunch): Promise<number> {
   const workdir = launch.workdir;
@@ -3841,6 +3856,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       `\n# Specification\n${readIfThere(explicitSpecPath ?? join(featureDirectory, "spec.md"))}`,
       `\n# Plan\n${readIfThere(join(featureDirectory, "plan.md"))}`,
       `\n# The tasks of this phase\n${sectionOf(phase)}`,
+      // F153-FR-027 — the prompt MAY name the in-pass scan command only with
+      // the switch on (row 141, `commit.scan.inPass`): one line, no more.
+      theInPassScanLine(loopConfig.commitScanInPass),
       last === undefined
         ? ""
         : // T080 — a commit-gate block carries its own heading (E3); the

@@ -765,6 +765,13 @@
       "note": "row 140 of annex X §X.7; the commit scan before the critic of F153-FR-024 (CQ-153-06 answered A on 2026-11-13: it runs only where F152's `commit.backpressure` is also on)"
     },
     {
+      "key": "commit.scan.inPass",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 141 of annex X §X.7; the in-pass scan command of F153-FR-027 (CQ-153-17 answered A on 2026-11-13: the command `scan`)"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",
