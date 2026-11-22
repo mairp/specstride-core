@@ -32,7 +32,10 @@ import { join } from "node:path";
 // (`specstride-*`, `par`/`par<N>-*`). Nothing outside the family, no files,
 // no symlinks, nothing outside tmpdir, and never when tmpdir itself does not
 // look like a temporary directory.
-const REAP_PATTERNS = [/^specstride-[a-z0-9-]+-[A-Za-z0-9]{6}$/, /^par[0-9]*-[a-z0-9-]+-[A-Za-z0-9]{6}$/];
+const REAP_PATTERNS = [
+  /^specstride-[a-z0-9-]+-[A-Za-z0-9]{6}$/,
+  /^par[0-9]*-[a-z0-9-]+-[A-Za-z0-9]{6}$/,
+];
 const REAP_MIN_AGE_MS = Number(process.env.SPECSTRIDE_TEST_REAP_MIN_AGE_MS ?? 30 * 60 * 1000);
 // Test-only override of the swept directory; production always sweeps tmpdir.
 const REAP_DIR = process.env.SPECSTRIDE_TEST_REAP_DIR ?? tmpdir();
