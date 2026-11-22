@@ -73,7 +73,7 @@ const fs = require("node:fs"), path = require("node:path");
 const argv = process.argv.slice(2);
 const prompt = fs.readFileSync(0, "utf8");
 const session = argv[argv.indexOf("--session-id") + 1];
-const critic = argv.includes("--max-turns");
+const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC"); // the parity profile argv carries no --max-turns (F125-FR-009)
 const role = prompt.includes("Diagnostician") ? "diagnostician" : (critic ? "critic" : "proposer");
 fs.appendFileSync("prompts.jsonl", JSON.stringify({ role, prompt }) + "\\n");
 console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));

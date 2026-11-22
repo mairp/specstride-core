@@ -719,7 +719,7 @@ export function diagnosticianPrompt(
  * untruncated, and the prompt ends on the demand of the first line.
  * ==================================================================== */
 
-const AS_IS_BAND = "═".repeat(22);
+const AS_IS_BAND = "═".repeat(24);
 
 const asIsHeaderOf = (title: string): string => `${AS_IS_BAND} ${title} ${AS_IS_BAND}`;
 
@@ -765,9 +765,11 @@ export function asIsDiagnosticianPromptText(inputs: DiagnosticianPromptInputs): 
   const spec =
     inputs.phaseSection === undefined
       ? ""
-      : `${asIsHeaderOf(`SPEC — Phase ${inputs.phase}`)}\n${inputs.phaseSection}\n`;
+      : `${asIsHeaderOf(`SPEC — Phase ${inputs.phase}`)}\n${inputs.phaseSection.replace(/\n+$/, "")}\n\n`;
   const evidence = `${asIsHeaderOf("LATEST EVIDENCE (proposer-written)")}\n${inputs.phaseEvidence}\n\n`;
-  const history = `${asIsHeaderOf("REJECTION HISTORY (this phase, oldest first)")}\n--- latest (attempt ${inputs.ordinal}) ---\n${inputs.feedback}\n\n\n`;
+  // The section and the feedback keep one blank line before the next band
+  // whatever their own endings: the as-is engine joined the trimmed texts.
+  const history = `${asIsHeaderOf("REJECTION HISTORY (this phase, oldest first)")}\n--- latest (attempt ${inputs.ordinal}) ---\n${inputs.feedback.replace(/\n+$/, "")}\n\n\n\n`;
   const files = (inputs.asIsFiles ?? inputs.files)
     .filter((file) => file.kind === "text")
     .map(asIsFileBlockOf)

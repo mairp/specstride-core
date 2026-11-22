@@ -50,6 +50,29 @@ export type AsIsProposerPromptInput = {
    * empty string where the plan has no gate for the phase.
    */
   readonly verificationContext: string;
+  /**
+   * The PRIOR-REJECTION block of the as-is launcher (absent on a first
+   * attempt with no rejected attempt behind the phase): when a previous
+   * attempt of the phase was REJECTED, the as-is proposer prompt carries the
+   * rejection — the heading with the attempt ordinal against the reject
+   * limit, the feedback of the newest rejection in full under its gates
+   * path, and one line per archived attempt with the reason the feedback
+   * gave — between the criteria section and the yield section.
+   */
+  readonly priorRejection?: {
+    /** The ordinal of THIS attempt (1-based), as the heading spells it. */
+    readonly attempt: number;
+    /** The reject limit of the loop, as the heading's `of <N>` spells it. */
+    readonly ofAttempts: number;
+    /** The gates path of the evidence the re-write targets. */
+    readonly evidencePath: string;
+    /** The gates path the feedback is quoted from. */
+    readonly feedbackPath: string;
+    /** The full text of the newest feedback (ends on its own blank line). */
+    readonly feedbackText: string;
+    /** One line per archived attempt: `- attempt<N>: <reason>`. */
+    readonly earlier: readonly string[];
+  };
 };
 
 /** The heading the acceptance section stands under (an as-is literal). */
@@ -104,9 +127,35 @@ export function asIsProposerPrompt(input: AsIsProposerPromptInput): string {
   const verification =
     input.verificationContext === "" ? "" : `\n\n${input.verificationContext.replace(/\n+$/, "")}`;
 
+  // The as-is launcher's prior-rejection block: present only when a previous
+  // attempt of the phase was rejected, always between the criteria section
+  // and the yield section.
+  const rejection = input.priorRejection === undefined ? "" : priorRejectionBlock(input.priorRejection);
+
   const yield_ = yieldBlock(input.workdir, yieldArtifact);
 
-  return head + verification + yield_;
+  return head + rejection + verification + yield_;
+}
+
+/**
+ * The as-is launcher's prior-rejection block, byte for byte: the heading with
+ * the attempt ordinal against the reject limit, the fixed two-and-a-half-line
+ * admonition, the newest feedback quoted in full under its gates path, and
+ * the `### Earlier attempts` list of every archived attempt's reason.
+ */
+function priorRejectionBlock(input: NonNullable<AsIsProposerPromptInput["priorRejection"]>): string {
+  return [
+    "",
+    "",
+    `## A PRIOR ATTEMPT WAS REJECTED — this is attempt ${String(input.attempt)} of ${String(input.ofAttempts)}`,
+    "The critic rejected your last evidence. Read the feedback below and address",
+    `EVERY point before re-writing ${input.evidencePath}. Do not merely`,
+    "reassert; fix the actual gaps.",
+    "",
+    `### Critic feedback (${input.feedbackPath})`,
+    `${input.feedbackText}### Earlier attempts were already rejected for THESE reasons — do NOT repeat those fixes`,
+    ...input.earlier,
+  ].join("\n");
 }
 
 /**

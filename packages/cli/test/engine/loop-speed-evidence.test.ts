@@ -194,28 +194,31 @@ test("F153-SC-012 a big new file is not hidden (T201)", async () => {
 });
 
 test("CT-153-5 switch off is the capped diff (T202)", async () => {
-  // Under `profile: parity` the switch is off, so the block is today's
-  // `changeOf` output; the same block comes out when the switch is turned
-  // off by configuration alone.
-  const parity = await runPinsFixture("schema: 1\nprofile: parity\n");
+  // With the switch stood down by configuration alone the block is today's
+  // `changeOf` output (F153-FR-051): the capped whole diff, no per-task
+  // sections. Under `profile: parity` the switch reads off as the profile's
+  // own row holds it (F110-FR-013), and the parity critic prompt is the AS-IS
+  // one (F153-FR-061 — the golden holds it), which carries no change block at
+  // all — so no per-task section can appear there either.
+  const off = await runPinsFixture("schema: 1\ncritic:\n  evidence:\n    perTask: false\n");
   try {
-    assert.equal(parity.exit, 0);
-    const block = changeBlockOf(normalised(parity.critics[0]!));
+    assert.equal(off.exit, 0);
+    const block = changeBlockOf(normalised(off.critics[0]!));
     assert.ok(block.includes("diff --git"), "the capped whole diff is there");
     assert.ok(block.includes("--- new file src/a.ts"), "the new files' content is there");
     assert.ok(!block.includes("## Task T001"), "no per-task sections with the switch off");
-
-    const off = await runPinsFixture("schema: 1\ncritic:\n  evidence:\n    perTask: false\n");
-    try {
-      assert.equal(off.exit, 0);
-      assert.equal(
-        changeBlockOf(normalised(off.critics[0]!)),
-        block,
-        "switch off by configuration is byte-identical to the parity block",
-      );
-    } finally {
-      off.restore();
-    }
+  } finally {
+    off.restore();
+  }
+  const parity = await runPinsFixture("schema: 1\nprofile: parity\n");
+  try {
+    assert.equal(parity.exit, 0);
+    const prompt = normalised(parity.critics[0]!);
+    assert.ok(!prompt.includes("## Task "), "no per-task section under parity");
+    assert.ok(
+      !prompt.includes("# The change in the working tree"),
+      "the parity prompt is the as-is one, with no change block (F153-FR-061)",
+    );
   } finally {
     parity.restore();
   }

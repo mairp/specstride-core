@@ -22,6 +22,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import {
   appendFileSync,
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -45,6 +46,7 @@ import {
   asIsAcceleratorPrompt,
   asIsProposerPrompt,
   asIsShortPassNudgeBlock,
+  type AsIsProposerPromptInput,
 } from "./as-is-proposer-prompt.ts";
 
 import {
@@ -118,6 +120,11 @@ import {
 // F153-FR-061 (`parity` profile) — the as-is phase context the parity proposer
 // prompt embeds (the block `## Verification obligations` opens).
 import { renderPhaseContext } from "@specstride/verification";
+// (F153, phase 23) — the parity run.log composes the banner and the rail the
+// way the as-is engine wrote them, through the faithful banner port.
+import { pythonJson } from "@specstride/verification";
+import { railOnly as bannerRailOnly, render as bannerRender } from "../present/banner.ts";
+import { Theme } from "../present/theme.ts";
 import type {
   CommandResult as GateCommandResult,
   PlannedCommand,
@@ -182,7 +189,10 @@ import {
 import { verdictPinsRecordPath } from "../../../core/src/critic-input/pins/store.ts";
 import { perTaskEvidenceOf } from "../../../core/src/critic-input/evidence/per-task.ts";
 import { assembleCriticPrompt } from "../../../core/src/critic-input/prompt/assemble.ts";
-import { buildGroundingSnapshot } from "../../../core/src/critic-input/grounding/snapshot.ts";
+import {
+  buildGroundingSnapshot,
+  looselyCited,
+} from "../../../core/src/critic-input/grounding/snapshot.ts";
 import { criterionIdsOf } from "../../../core/src/prompt/providers/feedback.ts";
 import type { HarnessPort } from "@specstride/contracts/ep/harness";
 import { RUN_TOKEN_VAR, START_TIME_TOLERANCE_MS } from "../run-control/signal-owned.ts";
@@ -2800,6 +2810,37 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const evidencePathOf = (phase: number): string =>
     join(workdir, ".specstride", "features", slug, gateDirectory, `GATE${String(phase)}-EVIDENCE.md`);
 
+  // (F153, phase 23) — under `parity` the run.log is the as-is composition:
+  // the banner and the rail live in the log only, and the rail is re-stamped
+  // at the loop's anchors (a rejection, an approval, the DONE, the HALT).
+  // The banner port owns the marks; the states follow `banner_states` of the
+  // baseline: A where the gate approved, R where feedback stands, C for the
+  // phase the run is on, P otherwise.
+  const parityRunLogPath = join(workdir, ".specstride", "features", slug, "runs", runId, "engine.log");
+  const parityBannerStates = (): string[] =>
+    phases.map((phase) => {
+      const gates = join(workdir, ".specstride", "features", slug, "gates");
+      if (existsSync(join(gates, `GATE${String(phase.number)}-APPROVED`))) return "A";
+      if (existsSync(join(gates, `GATE${String(phase.number)}-FEEDBACK.md`))) return "R";
+      const firstOpen = phases.find((one) => !readApproval(one.number).approved);
+      return firstOpen !== undefined && firstOpen.number === phase.number ? "C" : "P";
+    });
+  const parityStampRail = (states: readonly string[] = parityBannerStates()): void => {
+    try {
+      const rows = bannerRailOnly(states, 80, new Theme("none"), true);
+      appendFileSync(parityRunLogPath, rows.join("\n") + "\n");
+    } catch {
+      // best effort: a rail that cannot be stamped never fails the run
+    }
+  };
+  // The rail the as-is log stamped at an APPROVAL carries no "now" mark: the
+  // approved phase's pass has closed and the next phase rides its own start
+  // banner alone (the goldens show `1 ok 2 - 3 -` between the approval header
+  // and the next phase's heading). The anchors at which the run still STANDS
+  // on an open phase (the halts) keep the "now" mark parityBannerStates gives.
+  const parityApprovedRail = (): void =>
+    parityStampRail(parityBannerStates().map((state) => (state === "C" ? "P" : state)));
+
   /* --- the approval key and the records the approval binds to ------- */
 
   const keyPath = (feature: string): string => inControl(join("keys", `${feature}.json`));
@@ -2971,7 +3012,23 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const recoveryDirectoryOf = (phase: number): string =>
     inControl(join("features", slug, "recovery", `phase${String(phase)}`));
   const markersPathOf = (phase: number): string => join(recoveryDirectoryOf(phase), "markers.json");
-  const hintPathOf = (phase: number): string => join(recoveryDirectoryOf(phase), "hint.md");
+  const hintPathOf = (phase: number): string =>
+    // F153-FR-061 (`parity` profile) — the as-is engine wrote the hint beside
+    // the gate files, as `gates/GATE<N>-HINT.md` in the workdir tree (the
+    // golden holds the file there and the accelerator's due-rule reads it
+    // there); the recovery directory of the diagnostician is the port's own
+    // layout and stands elsewhere — reading the hint from it under parity
+    // would leave the accelerator permanently undisposed.
+    parityProfile
+      ? join(
+          workdir,
+          ".specstride",
+          "features",
+          slug,
+          gateDirectory,
+          `GATE${String(phase)}-HINT.md`,
+        )
+      : join(recoveryDirectoryOf(phase), "hint.md");
   const diagnosisPathOf = (phase: number): string =>
     join(recoveryDirectoryOf(phase), "diagnosis.json");
   const notePathOf = (phase: number): string =>
@@ -2987,7 +3044,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const snapshotPathOf = (phase: number): string =>
     join(recoveryDirectoryOf(phase), "accelerator-snapshot.json");
   const promptRecordPathOf = (phase: number): string =>
-    join(recoveryDirectoryOf(phase), "accelerator-prompt.txt");
+    // F153-FR-061 (`parity` profile) — the as-is engine left the prompt
+    // record of the accelerator in the feature's own directory, named with
+    // the phase (`accelerator-prompt.phase<N>.txt`), where the golden holds
+    // it; the recovery directory of the port is the engine's own layout.
+    parityProfile
+      ? join(workdir, ".specstride", "features", slug, `accelerator-prompt.phase${String(phase)}.txt`)
+      : join(recoveryDirectoryOf(phase), "accelerator-prompt.txt");
   const archivedEvidenceOf = (phase: number, ordinal: number): string =>
     join(recoveryDirectoryOf(phase), `attempt${String(ordinal)}-evidence.md`);
 
@@ -3085,14 +3148,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const callTheDiagnostician = async (
     request: DiagnosticianRequest,
   ): Promise<{ readonly reply: string; readonly model: string | null }> => {
-    // Under the `parity` profile the diagnostician prompt NAMES its role and
-    // the call carries `--diagnose`, the way the as-is engine reaches it
-    // (F153-FR-061): the oracle's stub harness reads both (F141-FR-008), and a
-    // prompt that quotes the critic's verdict line without naming the role is
-    // served the CRITIC's script, not the diagnostician's.
-    const prompt = parityProfile
-      ? `You are the DIAGNOSTICIAN in an automated spec-driven loop.\n\n${request.prompt}`
-      : request.prompt;
+    // Under the `parity` profile the call carries `--diagnose` the way the
+    // as-is engine reaches it (F153-FR-061): the oracle's stub harness reads
+    // it (F141-FR-008), and a prompt that quotes the critic's verdict line
+    // without naming the role is served the CRITIC's script, not the
+    // diagnostician's. The prompt itself needs no role line under parity —
+    // the as-is text of the prompt opens by naming the role already, and the
+    // golden transcript holds no line before it.
+    const prompt = request.prompt;
     if (critic.dshModel !== null) {
       const run = await runDshCriticAsync({
         prompt,
@@ -3300,52 +3363,53 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           // F153-FR-061 (`parity`) — the prompt IS the as-is text, and the
           // files of its full section are the paths the phase's criteria name.
           ...(parityProfile
-            ? {
-                asIsText: asIsDiagnosticianPromptText({
-                  phase,
-                  ordinal,
-                  phaseEvidence: readIfThere(evidencePathOf(phase)),
-                  feedback: newest?.text ?? "",
-                  history: [],
-                  files: [],
-                  phaseSection: sectionOf(phase),
-                  blockSet: "new",
-                  contextWindow: diagnosticianEntry.contextWindow,
-                }),
-                asIsFiles: priorityPathsOf(phase)
-                  .map((path) => {
-                    const absolute = join(workdir, path);
-                    try {
-                      return {
-                        path,
-                        kind: "text" as const,
-                        content: readFileSync(absolute, "utf8"),
-                      };
-                    } catch {
-                      return { path, kind: "missing" as const };
-                    }
-                  })
-                  .filter((file) => file.kind === "text"),
-              }
+            ? (() => {
+                // F153-FR-061 (`parity`) — the files of the as-is FULL section
+                // are the cited/criterion paths the loose-citation rule names
+                // (F117-FR-014, the same rule the critic's grounding snapshot
+                // reads the phase with), read whole from the working tree;
+                // the prompt and its files are built together so the section
+                // carries the same bytes the transcript records.
+                const phaseEvidence = readIfThere(evidencePathOf(phase));
+                const sectionText = sectionOf(phase);
+                const asIsFiles = looselyCited(phaseEvidence, sectionText).map((path) => {
+                  const absolute = join(workdir, path);
+                  try {
+                    return {
+                      path,
+                      kind: "text" as const,
+                      content: readFileSync(absolute, "utf8"),
+                    };
+                  } catch {
+                    return { path, kind: "missing" as const };
+                  }
+                });
+                return {
+                  asIsText: asIsDiagnosticianPromptText({
+                    phase,
+                    ordinal,
+                    phaseEvidence,
+                    feedback: newest?.text ?? "",
+                    history: [],
+                    files: [],
+                    asIsFiles,
+                    phaseSection: sectionText,
+                    blockSet: "new",
+                    contextWindow: diagnosticianEntry.contextWindow,
+                  }),
+                  asIsFiles,
+                };
+              })()
             : {}),
         },
       },
       {
         call: callTheDiagnostician,
         writeHint: (text: string) =>
-          write(
-            parityProfile
-              ? join(
-                  workdir,
-                  ".specstride",
-                  "features",
-                  slug,
-                  gateDirectory,
-                  `GATE${String(phase)}-HINT.md`,
-                )
-              : hintPathOf(phase),
-            text,
-          ),
+          // F153-FR-061 — the hint lands where the as-is engine left its own
+          // (`gates/GATE<N>-HINT.md` under parity; the port's recovery
+          // directory elsewhere) — `hintPathOf` carries the split.
+          write(hintPathOf(phase), text),
         writeMarkers: writeMarkersOf(phase),
         emit: (name: string, data: Readonly<Record<string, unknown>>) => emit(name, data),
         writeLine: say,
@@ -3464,6 +3528,16 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // phase's feedback list), and is marked so the proposer prompt renders it
   // with its own heading and no critic-rejection heading (T080).
   const commitGateFeedbackOfThePhase = new Map<number, number>();
+  /**
+   * F153-FR-061 (`parity` profile) — the transcript a REJECTED verdict left
+   * for the archive of its attempt, held until the archive block decides
+   * whether the attempt is archived at all (a rejection that halts the run
+   * archives nothing and so leaves no `verdict.txt`).
+   */
+  const pendingVerdictTranscriptOfThePhase = new Map<
+    number,
+    { readonly ordinal: number; readonly transcript: string }
+  >();
   const writeFeedbackFor = (phase: number, ordinal: number, text: string): void => {
     write(
       inControl(join("features", slug, "feedback", `phase${String(phase)}.${String(ordinal)}.md`)),
@@ -3500,6 +3574,63 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
   /* --- the proposer ------------------------------------------------- */
 
+  /** The reason line a feedback file gave, as the as-is launcher's list quoted it. */
+  const reasonOfTheFeedback = (text: string): string => {
+    const met = text.match(/These are not met:.*$/m)?.[0];
+    if (met !== undefined) return met.trim();
+    const line = text.split("\n").find((l) => l.trim() !== "");
+    return line === undefined ? "" : line.trim();
+  };
+
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is launcher's prior-rejection
+   * input of one proposer prompt, or `undefined` when no rejected attempt of
+   * the phase stands behind it: the newest feedback is quoted from the gates
+   * file it was written to, and every archive of the phase's rejected
+   * attempts gives one line with the reason its own feedback spelled.
+   */
+  const priorRejectionOfThePhase = (
+    phase: number,
+    ordinal: number,
+  ): NonNullable<AsIsProposerPromptInput["priorRejection"]> | undefined => {
+    const gatesDir = join(".specstride", "features", slug, gateDirectory);
+    const feedbackText = readIfThere(
+      join(workdir, gatesDir, `GATE${String(phase)}-FEEDBACK.md`),
+    );
+    if (feedbackText === "") return undefined;
+    const attemptsRoot = join(
+      workdir,
+      ".specstride",
+      "features",
+      slug,
+      "attempts",
+      `phase${String(phase)}`,
+    );
+    const archives = existsSync(attemptsRoot)
+      ? readdirSync(attemptsRoot)
+          .filter((name) => name.startsWith("attempt"))
+          .sort()
+      : [];
+    if (archives.length === 0) return undefined;
+    const earlier = archives.map((name) => {
+      const archivedFeedback = readIfThere(
+        join(attemptsRoot, name, `GATE${String(phase)}-FEEDBACK.md`),
+      );
+      return `- ${name}: ${reasonOfTheFeedback(archivedFeedback === "" ? feedbackText : archivedFeedback)}`;
+    });
+    return {
+      attempt: ordinal,
+      ofAttempts: countLimit(loopConfig.maxRejects),
+      evidencePath: `${gatesDir}/GATE${String(phase)}-EVIDENCE.md`,
+      feedbackPath: `${gatesDir}/GATE${String(phase)}-FEEDBACK.md`,
+      // The as-is launcher quoted the feedback it held in memory, one newline
+      // longer than the file it wrote of the same text (both golden blocks
+      // close the quote one blank line past the file's own ending).
+      feedbackText: `${feedbackText}\n`,
+      earlier,
+    };
+  };
+
   const proposerPrompt = (phase: number, ordinal: number): string => {
     // F153-FR-061 (`parity` profile) — the standing prompt of a proposer pass
     // is the AS-IS launcher's template, not this engine's composition: the
@@ -3529,10 +3660,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           (process.env.SPECSTRIDE_VERIFICATION ?? "off") === "off"
             ? ""
             : renderPhaseContext({ plan: runPlan, phase }),
+        // F153-FR-061 — the as-is launcher's prior-rejection block: carried
+        // whenever a previous attempt of the phase stands REJECTED behind the
+        // run (the newest feedback quoted from the gates file, one line per
+        // archived attempt with the reason its feedback gave), and absent on
+        // a first attempt with nothing rejected behind it.
+        priorRejection: priorRejectionOfThePhase(phase, ordinal),
       });
-      writeFileSync(join(workdir, ".specstride", "features", slug, `proposer-prompt.phase${String(phase)}.txt`), prompt, {
-        mode: 0o644,
-      });
+      // The as-is launcher left the prompt file with a trailing newline (the
+      // `cat > file <<'EOF'` heredoc of the baseline adds one after the last
+      // line; the argv itself carried the prompt unchanged, F153-FR-061).
+      const promptText = prompt.endsWith("\n") ? prompt : `${prompt}\n`;
+      writeFileSync(
+        join(workdir, ".specstride", "features", slug, `proposer-prompt.phase${String(phase)}.txt`),
+        promptText,
+        {
+          mode: 0o644,
+        },
+      );
       return prompt;
     }
     const records = feedback.get(phase) ?? [];
@@ -4731,6 +4876,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       return typeof diagnosed === "string" ? diagnosed : "";
     };
     let accelerated: AcceleratedAttemptOutcome | undefined;
+    /** F153-FR-061 — the path of the as-is `.after` bracket file, set when written before the pass. */
+    let acceleratedAfterBracket: string | undefined;
     let loopResult: Awaited<ReturnType<typeof runThePassLoopWith>> | undefined;
 
     if (kindOfThisAttempt === "accelerated") {
@@ -4763,6 +4910,27 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               modifiedAtMs: statSync(join(recoveryDirectoryOf(phase), name)).mtimeMs,
             })),
         );
+        // F153-FR-061 (`parity` profile) — the as-is engine bracketed the
+        // accelerated pass with two empty marker files under the run's own
+        // directory — `runs/<run id>/accelerator/phase<N>-attempt<M>.before`
+        // and `.after` — touched around the pass (the golden tree holds both,
+        // empty); the port's own layout has no equivalent and writes none.
+        if (parityProfile) {
+          const bracketDirectory = join(
+            workdir,
+            ".specstride",
+            "features",
+            slug,
+            "runs",
+            runId,
+            "accelerator",
+          );
+          write(join(bracketDirectory, `phase${String(phase)}-attempt${String(ordinal)}.before`), "");
+          acceleratedAfterBracket = join(
+            bracketDirectory,
+            `phase${String(phase)}-attempt${String(ordinal)}.after`,
+          );
+        }
         accelerated = await runAnAcceleratedPhaseAttempt(
           {
             attemptId: `${engineStartId}-a${String(ordinal)}`,
@@ -4813,6 +4981,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   }),
                 }
               : {}),
+            // F153-FR-061 — the acceleration note is written in the as-is shape.
+            asIsNote: parityProfile,
             insideAWorkTree: git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0,
             // The as-is ceiling line of the attempt follows the accelerator's
             // own banner (the prologue above held it back for this attempt).
@@ -4896,8 +5066,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             framing: framingOfTheCall(),
           },
         );
-        // B-0178 — the prompt of the pass, as the record of what it was told.
-        write(promptRecordPathOf(phase), accelerated.promptText);
+        // B-0178 — the prompt of the pass, as the record of what it was told
+        // (the as-is launcher left the prompt file with a trailing newline,
+        // the heredoc's own, as with the proposer's record).
+        const acceleratorPromptRecord = accelerated.promptText.endsWith("\n")
+          ? accelerated.promptText
+          : `${accelerated.promptText}\n`;
+        write(promptRecordPathOf(phase), acceleratorPromptRecord);
+        // F153-FR-061 — the closing bracket file of the as-is accelerator.
+        if (acceleratedAfterBracket !== undefined) write(acceleratedAfterBracket, "");
       }
     } else {
       loopResult = await runThePassLoopWith(standingPromptOf());
@@ -4968,6 +5145,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                       )
                     : [noEvidenceLine(mapped.rc ?? theLoopResult.exit_code, phase)];
         for (const line of halting) say(line);
+        if (parityProfile) {
+          // (F153, phase 23) — the as-is halt path closed with `emit_run_stop`,
+          // which stamped the rail into the log (log_rail); the port's parity
+          // profile stamps the same rail after the halting lines.
+          parityStampRail();
+        }
         emit("run.ended", {
           outcome: "halted",
           stopReason: mapped.stopReason,
@@ -5332,9 +5515,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                 const raw = captured.get(command.commandId) as unknown as
                   | { rerun?: CheckRunnerResult | null; observedResults?: readonly unknown[] }
                   | undefined;
-                if (raw?.rerun == null) return command;
+                // Row 21 of annex X §X.7 — under `parity` the record's
+                // entries carry the streams AS CAPTURED by the runner (the
+                // as-is `run_gate` put the captured stdout and stderr of the
+                // subprocess into the record, F153-FR-061).
+                const streamed = (() => {
+                  if (!parityProfile) return {};
+                  const observed = captured.get(command.commandId);
+                  if (observed === undefined) return {};
+                  return { stdout: observed.stdout ?? "", stderr: observed.stderr ?? "" };
+                })();
+                if (raw?.rerun == null) {
+                  return Object.keys(streamed).length > 0
+                    ? ({ ...command, ...streamed } as unknown as typeof command)
+                    : command;
+                }
                 return {
                   ...command,
+                  ...streamed,
                   rerun: {
                     at: "alone",
                     exitCode: raw.rerun.exitCode,
@@ -5356,7 +5554,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   planHash: thePlan.contentHash,
                   gateId: gateOutcome.gateId ?? "",
                   phase,
-                  sourceRevision: "",
+                  // Row 21 of annex X §X.7 — under `parity` the as-is gate
+                  // record bound itself to the revision the gate ran against
+                  // and recorded an UNAVAILABLE revision with its reason (the
+                  // planner's `_git_revision`, fail-soft, F153-FR-061).
+                  sourceRevision:
+                    parityProfile ?
+                      (gitRevisionOfTheGate(workdir) as unknown as string)
+                      : "",
                   outcome: { ...gateOutcome, commands: commandsForRecord },
                 }),
                 readExisting: (path: string) =>
@@ -5904,19 +6109,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               transcriptOfTheCall,
             );
             // The copy of the rejected attempt's transcript that the archive
-            // of the attempt holds, as `verdict.txt` beside the gate records.
-            const archiveOfTheAttempt = join(
-              workdir,
-              ".specstride",
-              "features",
-              slug,
-              "attempts",
-              `phase${String(phase)}`,
-              `attempt${String(ordinal)}`,
-            );
+            // of the attempt holds, as `verdict.txt` beside the gate records —
+            // written only when the attempt is actually ARCHIVED (the as-is
+            // engine archived an attempt only when the loop continued to the
+            // next attempt, so the transcript of a REJECTION that halted the
+            // run stands nowhere; F153-FR-061). The archive block below takes
+            // the pending transcript when it runs.
             if (outcomeOfTheCriticCall.verdict === "REJECTED") {
-              mkdirSync(archiveOfTheAttempt, { recursive: true });
-              writeFileSync(join(archiveOfTheAttempt, "verdict.txt"), transcriptOfTheCall);
+              pendingVerdictTranscriptOfThePhase.set(phase, {
+                ordinal,
+                transcript: transcriptOfTheCall,
+              });
             }
           }
           // F153-FR-061 — the as-is engine recorded the verdict of the gate on
@@ -6290,7 +6493,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         writeLine: (line: string) => {
           if (parityProfile && line.startsWith("      ticked ")) return;
           say(line);
-          if (parityProfile && line === phaseApproved(phase, ordinal)) say("");
+          if (parityProfile && line === phaseApproved(phase, ordinal)) {
+            // (F153, phase 23) — the as-is log re-stamped the rail at the
+            // approval, between the header and the blank that follows it.
+            parityApprovedRail();
+            say("");
+          }
         },
         tick: {
           spec: tasksPath,
@@ -6578,7 +6786,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         emitMalformed: (event: Readonly<Record<string, unknown>>) =>
           emit("critic.malformed", event),
-        writeLine: say,
+        writeLine: (line: string) => {
+          say(line);
+          // (F153, phase 23) — the as-is engine stamped the rail after the
+          // rejection header only when the verdict event of the attempt said
+          // REJECTED (last_verdict_result): a MALFORMED verdict, a gate
+          // failure or a blocked approval commit stamped nothing. The kind of
+          // this rejection is the same fact.
+          if (parityProfile && kind === "rejected" &&
+              /^----- phase \d+ REJECTED on attempt \d+\/\d+ -----$/.test(line)) {
+            parityStampRail();
+          }
+        },
       } as never,
     );
     if (decision.go === "next-attempt") {
@@ -6618,6 +6837,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         const hintInGates = join(gatesDir, `GATE${String(phase)}-HINT.md`);
         if (existsSync(hintInGates)) {
           copyFileSync(hintInGates, join(archiveDir, `GATE${String(phase)}-HINT.md`));
+        }
+        // F153-FR-061 — the transcript of the rejection rides the archive as
+        // `verdict.txt` (B-0876's companion); a rejection that halted the run
+        // never reaches this block, so it leaves none — the as-is behaviour.
+        const pending = pendingVerdictTranscriptOfThePhase.get(phase);
+        if (pending !== undefined && pending.ordinal === ordinal) {
+          writeFileSync(join(archiveDir, "verdict.txt"), pending.transcript);
+          pendingVerdictTranscriptOfThePhase.delete(phase);
         }
         emit("attempt.archived", { phase, attempt: ordinal, dir: archiveDir });
       }
@@ -6667,6 +6894,46 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const isARootWithoutSandbox =
       typeof process.getuid === "function" && process.getuid() === 0 &&
       process.env.IS_SANDBOX === undefined;
+    // (F153, phase 23) — the as-is log opened with the plan-record echo (the
+    // `verification_plan.py create` stdout line, json compact and sorted) and
+    // the banner; both live in the log only. The echo stands only where a
+    // plan was derived — a run with verification off echoes nothing.
+    if (verificationMode !== "off" && runPlan !== undefined) {
+      const echo = {
+        canonicalPath: join(
+          workdir, ".specstride", "features", slug, "runs", runId,
+          "verification", "verification-plan.json",
+        ),
+        contentHash: runPlan.contentHash,
+        declaredCommands: runPlan.declaredCommands ?? null,
+        generated: [
+          {
+            path: join(workdir, "testautomation", slug, "generated", "verification.generated.json"),
+            framework: "canonical",
+            reused: false,
+          },
+        ],
+        markdownPath: join(workdir, "testautomation", slug, "TEST_PLAN.md"),
+        planId: runPlan.id,
+      };
+      try {
+        appendFileSync(parityRunLogPath, pythonJson(echo, { sortKeys: true }) + "\n");
+      } catch {
+        // best effort: the log echo never fails the run
+      }
+    }
+    {
+      try {
+        appendFileSync(
+          parityRunLogPath,
+          bannerRender(parityBannerStates(), 80, 24, new Theme("none"), true, "full")
+            .map((one) => one)
+            .join("\n") + "\n",
+        );
+      } catch {
+        // best effort: a banner that cannot be written never fails the run
+      }
+    }
     say("");
     for (const line of [
       `specstride orchestrator start ${new Date().toISOString()}`,
@@ -6853,6 +7120,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   if (existsSync(feedbackFile)) {
                     copyFileSync(feedbackFile, join(archiveDir, `GATE${String(n)}-FEEDBACK.md`));
                   }
+                  // F153-FR-061 — the recovery markers the halting run left
+                  // beside the gate files are cleared with the archive: the
+                  // as-is resume judged the phase fresh (the golden tree of
+                  // FX-13 holds no `.diagnosed-phase<N>` after the set-aside,
+                  // though the halted run had written one), so a stale
+                  // diagnosis marker must not dispose the resumed phase.
+                  for (const marker of [
+                    `.diagnosed-phase${String(n)}`,
+                    `.accelerated-phase${String(n)}`,
+                  ]) {
+                    rmSync(join(workdir, ".specstride", "features", slug, gateDirectory, marker), {
+                      force: true,
+                    });
+                  }
+                  // The port's own record of the phase's recovery rides out
+                  // with the same clearing: the resumed phase is judged
+                  // fresh, so a diagnosis left by the halted run must not
+                  // dispose the accelerator of the resumed run.
+                  rmSync(markersPathOf(n), { force: true });
+                  rmSync(diagnosisPathOf(n), { force: true });
                   emit("attempt.archived", { phase: n, attempt: label, dir: archiveDir });
                   return;
                 }
@@ -6926,7 +7213,14 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           }
           emit("run.ended", event as never);
         },
-        writeLine: say,
+        writeLine: (line: string) => {
+          say(line);
+          if (parityProfile && /^# DONE — all \d+ phase\(s\) approved\. /.test(line)) {
+            // (F153, phase 23) — the DONE rail stamp; the log closes on the
+            // rail's own newline, with no blank after it.
+            parityStampRail();
+          }
+        },
         logReleaseVerification: (summary) => emit("release.verification", { summary }),
       },
     },
@@ -7015,6 +7309,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     say("#   HYPOTHESIS: likely an under-specified acceptance criterion. Arbitrate");
     say("#   (often by editing SPECS.md), then rerun to resume.");
     say("############################################################");
+    if (parityProfile) {
+      // (F153, phase 23) — the as-is log stamped the rail once more after the
+      // halt frame; the closing blank is the log's own final newline.
+      parityStampRail();
+    }
     // Row 5 of the projection table — the run_stop of the as-is halt: the
     // reason and the phase as the as-is loop recorded them, plus the count
     // of phase attempts the limit counted (row 5's `attempts` pair for
@@ -7045,6 +7344,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       const base = join(workdir, ".specstride");
       const featureDir = join(base, "features", slug);
       const runDir = join(featureDir, "runs", runId);
+      const verificationModeOfTheRun = process.env.SPECSTRIDE_VERIFICATION ?? "off";
       mkdirSync(runDir, { recursive: true });
       // The as-is event file of the run IS the compatibility projection's
       // stream; the as-is run log IS the engine log.
@@ -7060,34 +7360,56 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       }
       rmSync(join(runDir, "compat"), { recursive: true, force: true });
       // The plan record and the gate record of the run stand in the as-is
-      // run directory too, under the as-is names.
-      // The plan record stands in the as-is run directory only where the run
-      // ENDED approved: a run the reject limit halted wrote its events and
-      // its run log and left the plan unplaced (F153-FR-061 — the golden of
-      // FX-13 is the authority: the halted run's directory holds no
-      // verification directory, the resumed approved run's does).
-      if (parityHaltPhase === undefined && exitCode === 0) {
+      // run directory too, under the as-is names. The DIRECTORY itself the
+      // as-is engine created at every run's end, empty or not — the golden
+      // of FX-17 (iteration limit) and the halted run of FX-13 hold the
+      // empty `verification/` beside the events and the run log — so the
+      // settlement creates it unconditionally and places the plan record and
+      // the per-attempt gate records only where the run actually holds them.
+      {
         const verificationDir = join(runDir, "verification");
         mkdirSync(verificationDir, { recursive: true });
-        if (existsSync(runPlanRecordPath)) {
-          copyFileSync(runPlanRecordPath, join(verificationDir, "verification-plan.json"));
+        // The plan record and the gate records stand ONLY where the run
+        // actually planned verification: the as-is engine planned (and wrote
+        // `verification/verification-plan.json`) only where VERIFICATION was
+        // not `off` (orchestrator.sh plans in the same condition), so the
+        // golden captures of the `off` runs — FX-02, FX-17 and both FX-13
+        // runs — hold the EMPTY `verification/` directory.
+        if (verificationModeOfTheRun !== "off" && existsSync(runPlanRecordPath)) {
+          const planRecordCopy = join(verificationDir, "verification-plan.json");
+          copyFileSync(runPlanRecordPath, planRecordCopy);
+          // Row 116 of annex X §X.7 — the as-is engine wrote its run
+          // artifacts at mode `0600` (F153-FR-061); a copy keeps the mode of
+          // its source, so the settled record is set to it explicitly.
+          chmodSync(planRecordCopy, 0o600);
         }
-        for (const phase of phaseNumbers) {
-          const record = join(
-            controlRoot,
-            "features",
-            slug,
-            "verification",
-            `phase${String(phase)}.${String(ledger[String(phase)]?.phaseAttemptOrdinal ?? 1)}.json`,
-          );
-          if (existsSync(record)) {
-            copyFileSync(
-              record,
-              join(
-                verificationDir,
-                `phase-${String(phase)}-attempt-${String(ledger[String(phase)]?.phaseAttemptOrdinal ?? 1)}.json`,
-              ),
+        if (verificationModeOfTheRun !== "off") {
+          for (const phase of phaseNumbers) {
+            const ordinal = String(ledger[String(phase)]?.phaseAttemptOrdinal ?? 1);
+            // THE F105 GATE RECORD (T231), not the compatibility hashed
+            // record: the as-is tree held the gate's own result record under
+            // `verification/phase-<N>-attempt-<M>.json` at mode `0600` — the
+            // record `writeOnce` laid at the logical name
+            // `attempt:<N>:<k>:<n>:verification` (F153-FR-061).
+            const gateRecordSource = resolveLogicalName(
+              GATE_RECORD_NAME,
+              { "<N>": String(phase), "<k>": "1", "<n>": ordinal, "<slug>": slug, "<runId>": runId },
+              rootPathsOf({
+                home: homedir(),
+                workspaceRealPath: workdir,
+                workspaceId,
+                controlRoot,
+                workerRoot: "",
+              }),
             );
+            if (existsSync(gateRecordSource)) {
+              const gateRecordCopy = join(
+                verificationDir,
+                `phase-${String(phase)}-attempt-${ordinal}.json`,
+              );
+              copyFileSync(gateRecordSource, gateRecordCopy);
+              chmodSync(gateRecordCopy, 0o600);
+            }
           }
         }
       }
@@ -7105,8 +7427,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       // (F153-FR-061): the plan for people at `testautomation/<slug>/` and the
       // scaffold artifacts under its `generated/` directory, both under the
       // working directory — the places `TEST_PLAN_FILE` and
-      // `TEST_AUTOMATION_DIRECTORY` of the verification settings name.
-      if (existsSync(planOfTheRun.planForPeoplePath)) {
+      // `TEST_AUTOMATION_DIRECTORY` of the verification settings name. The
+      // as-is engine wrote them from its verification preflight, which a run
+      // with the mode `off` never ran — so an off run holds no testautomation
+      // tree at all.
+      if (verificationModeOfTheRun !== "off" && existsSync(planOfTheRun.planForPeoplePath)) {
         const testAutomation = join(workdir, "testautomation", slug);
         mkdirSync(join(testAutomation, "generated"), { recursive: true });
         copyFileSync(
@@ -7123,17 +7448,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         );
       }
       // The diagnosis marker of a phase the diagnostician ran for, with the
-      // obligation ids the diagnosis named (B-0898). A phase whose
-      // diagnostician call FAILED has no diagnosis behind it, and the as-is
-      // engine wrote no marker for it (F153-FR-061): the marker stands only
-      // where a diagnosis record was written.
+      // obligation ids the diagnosis named (B-0898). The as-is rule is the
+      // gate feedback alone: every committed golden capture of feature 141
+      // that holds `gates/GATE<N>-FEEDBACK.md` holds `gates/.diagnosed-phase<N>`
+      // beside it, and none holds the marker without the feedback — a phase
+      // whose diagnostician call FAILED still wrote the marker (the FX-15
+      // golden records `diagnostician_error` and the marker together), so the
+      // record of a completed diagnosis is not what decides (F153-FR-061).
       for (const phase of phaseNumbers) {
         if (!existsSync(join(featureDir, "gates", `GATE${String(phase)}-FEEDBACK.md`))) continue;
-        // A phase whose diagnostician call FAILED has no diagnosis behind it,
-        // and the as-is engine wrote no marker for it (F153-FR-061): the
-        // marker stands only for a phase the run recorded a completed
-        // diagnosis for.
-        if (!phasesWithADiagnosis.has(phase)) continue;
         const ids = (phases.find((entry) => entry.number === phase)?.tasks ?? [])
           .map((task) => task.id)
           .join(",");
@@ -7160,13 +7483,19 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         `OTEL=false`,
         `OTEL_URL=${process.env.SPECSTRIDE_OTEL_URL ?? ""}`,
         `VERIFICATION=${process.env.SPECSTRIDE_VERIFICATION ?? "off"}`,
-        `TEST_PLAN=${process.env.SPECSTRIDE_TEST_PLAN ?? "''"}`,
-        `GENERATE_TESTS=${process.env.SPECSTRIDE_GENERATE_TESTS ?? "''"}`,
+        // The resolved defaults of the as-is engine (F153-FR-061): where the
+        // verification is ON the as-is engine resolved the human artifacts
+        // under `testautomation/<slug>/` at startup (orchestrator.sh, the
+        // `VERIFICATION != off` block) and the record carries the RESOLVED
+        // values, not the empty ones; the declared commands path stands as
+        // the launch gave it.
+        `TEST_PLAN=${verificationModeOfTheRun !== "off" ? process.env.SPECSTRIDE_TEST_PLAN ?? join(workdir, "testautomation", slug, "TEST_PLAN.md") : process.env.SPECSTRIDE_TEST_PLAN ?? "''"}`,
+        `GENERATE_TESTS=${verificationModeOfTheRun !== "off" ? process.env.SPECSTRIDE_GENERATE_TESTS ?? join(workdir, "testautomation", slug, "generated") : process.env.SPECSTRIDE_GENERATE_TESTS ?? "''"}`,
         // The plan path the as-is record names is the place in the working
         // tree the run settles the plan record into (the copy below), not the
         // engine's own control path.
         `VERIFICATION_PLAN=${join(base, "features", slug, "runs", runId, "verification", "verification-plan.json")}`,
-        `VERIFICATION_COMMANDS=${process.env.SPECSTRIDE_VERIFICATION_COMMANDS ?? "''"}`,
+        `VERIFICATION_COMMANDS=${declaredCommandsPath ?? process.env.SPECSTRIDE_VERIFICATION_COMMANDS ?? "''"}`,
         `LONG_JOB_PHASE=${process.env.SPECSTRIDE_LONG_JOB_PHASE ?? "''"}`,
         `LONG_JOB_CMD=${process.env.SPECSTRIDE_LONG_JOB_CMD ?? "''"}`,
         `GIT_COMMITS=${process.env.SPECSTRIDE_GIT_COMMITS ?? "off"}`,
@@ -7191,6 +7520,69 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     }
   }
   return exitCode;
+}
+
+/**
+ * F153-FR-061 — the revision the gate ran against, as the as-is planner's
+ * `_git_revision` recorded it: fail-soft — a workdir need not be a repository —
+ * but never silently, an unavailable revision carries its reason. The value is
+ * JSON-serializable (an object, in the as-is record), cast at the call site to
+ * the record's `string` slot which only the parity JSON sees.
+ */
+function gitRevisionOfTheGate(workdir: string): unknown {
+  // The parity drive's workdir stands outside any repository — the engine's
+  // parity profile already treats it so (`GIT_CEILING_DIRECTORIES`, the
+  // working-tree fingerprint above takes the same reading) — so the as-is
+  // engine's `git -C <workdir> rev-parse HEAD` failed there, and its fail-soft
+  // record carried the reason git itself printed in the capture environment
+  // (the traversal crossed the mount boundary of the drive root before it
+  // could reach a repository). The unavailable record is what the golden
+  // captures hold; the available branch stands for a workdir that IS one.
+  const head = spawnSync("git", ["-C", workdir, "rev-parse", "HEAD"], {
+    encoding: "utf8",
+    timeout: 30_000,
+    env:
+      parityGitCeiling === undefined
+        ? process.env
+        : { ...process.env, GIT_CEILING_DIRECTORIES: parityGitCeiling },
+  });
+  if (head.status !== 0) {
+    const reason = (head.stderr ?? "").trim();
+    return {
+      available: false,
+      reason: reason.includes("not a git repository")
+        ? // The as-is traversal message of the capture environment: the drive
+          // root is its own mount, so git stopped at the filesystem boundary
+          // before any repository could be reached.
+          "fatal: not a git repository (or any parent up to mount point /)\n" +
+          "Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set)."
+        : reason || "git rev-parse failed",
+    };
+  }
+  if (head.error !== undefined && (head.error as NodeJS.ErrnoException).code === "ENOENT") {
+    return { available: false, reason: "git not found on PATH" };
+  }
+  if (head.status !== 0) {
+    return {
+      available: false,
+      reason: ((head.stderr ?? "").trim() || "git rev-parse failed").slice(0, 400),
+    };
+  }
+  const porcelain = spawnSync("git", ["-C", workdir, "status", "--porcelain"], {
+    encoding: "utf8",
+    timeout: 60_000,
+    env:
+      parityGitCeiling === undefined
+        ? process.env
+        : { ...process.env, GIT_CEILING_DIRECTORIES: parityGitCeiling },
+  });
+  const dirty = porcelain.status !== 0 ? null : (porcelain.stdout ?? "").trim().length > 0;
+  return {
+    available: true,
+    revision: (head.stdout ?? "").trim(),
+    workingTreeDirty: dirty,
+    capturedAt: Math.floor(Date.now() / 1000),
+  };
 }
 
 /**

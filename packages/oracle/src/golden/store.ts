@@ -147,11 +147,21 @@ export function quoted(literal: string): string {
  * root is a whole path component: `<local-path>` and `/tmp` are, `/rootless` and
  * `/tmpfiles` are not. A relative mention of the word (`the repository root`) is
  * not a path at all.
+ *
+ * The placeholder `<local-path>` — the token this documentation (`VALIDATION.md`)
+ * uses to stand for a path under the local machine's own home — is read as that
+ * root: a capture that still holds it names a place of ONE machine, so the scan
+ * reports the home of the machine that reads it.
  */
+const LOCAL_PATH_PLACEHOLDER = "<local-path>" as const;
+
 export function machinePathsIn(text: string): readonly string[] {
   const found: string[] = [];
+  const scanned = text.includes(LOCAL_PATH_PLACEHOLDER)
+    ? text.split(LOCAL_PATH_PLACEHOLDER).join(homedir())
+    : text;
   for (const root of MACHINE_PATH_ROOTS) {
-    if (new RegExp(`${quoted(root)}(?:/|$|["'\\s,;:)\\]}])`).test(text)) found.push(root);
+    if (new RegExp(`${quoted(root)}(?:/|$|["'\\s,;:)\\]}])`).test(scanned)) found.push(root);
   }
   return Object.freeze(found);
 }

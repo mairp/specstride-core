@@ -27,7 +27,10 @@ const fs = require("node:fs"), path = require("node:path");
 const argv = process.argv.slice(2);
 const prompt = fs.readFileSync(0, "utf8");
 const session = argv[argv.indexOf("--session-id") + 1];
-const critic = argv.includes("--max-turns");
+// The critic is the --max-turns call of the default profile; under the
+// parity profile the as-is argv list of F125-FR-009 carries no such flag,
+// so the role falls back to the prompt's own framing line.
+const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");
 console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));
 if (prompt.includes("Diagnostician")) {
   // A call of the diagnostician: no nonce, no verdict; the case and the hint.
@@ -234,12 +237,13 @@ test("a secret in the change blocks the commit and is not shown to the critic", 
   process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
   // The test pins the capped-diff rendering (`--- new file made.txt`), which
   // `critic.evidence.perTask` replaces while it is on (the default), so the
-  // run stands the switch down with `profile: parity`, as the T202 guard
-  // case of loop-speed-evidence.test.ts does.
+  // run stands that switch down by configuration alone (`critic.evidence.
+  // perTask: false`) — the parity profile would replace the whole prompt with
+  // the as-is one, which carries no change block at all (F153-FR-061).
   mkdirSync(join(dir, "..", ".config", "specstride"), { recursive: true });
   writeFileSync(
     join(dir, "..", ".config", "specstride", "config.yaml"),
-    "schema: 1\nprofile: parity\n",
+    "schema: 1\ncritic:\n  evidence:\n    perTask: false\n",
   );
   try {
     // The run still approves the phase, and its commit stays blocked — so the
@@ -271,8 +275,8 @@ test("every proposer pass gets its own claude session id", async () => {
     writeFileSync(
       stub,
       original.replace(
-        'const critic = argv.includes("--max-turns");',
-        `const critic = argv.includes("--max-turns");
+        'const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");',
+        `const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");
 const seenFile = path.join(${JSON.stringify(join(dir, ".."))}, "sessions-seen.txt");
 const seen = fs.existsSync(seenFile) ? fs.readFileSync(seenFile, "utf8").split("\\n") : [];
 if (seen.includes(session)) { console.error("Error: Session ID " + session + " is already in use."); process.exit(1); }
