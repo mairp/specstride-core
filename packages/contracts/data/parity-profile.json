@@ -2115,6 +2115,21 @@
       "registerRows": [
         "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
       ]
+    },
+    {
+      "number": 143,
+      "switch": "The gate stands on a green in-pass result (F153-FR-013) — refused: CQ-153-02 answered B on 2026-11-13, the behaviour is not built (F153-FR-015)",
+      "key": "verification.gate.reuse",
+      "keys": [
+        "verification.gate.reuse"
+      ],
+      "keyNote": "`verification.gate.reuse` (CQ-153-02 answered B on 2026-11-13: refused; the key exists, the behaviour is not built — the gate executes every time, F153-FR-015)",
+      "default": "off",
+      "parity": "off: the gate executes every time",
+      "owner": "153",
+      "registerRows": [
+        "none (CQ-153-02 answered B on 2026-11-13)"
+      ]
     }
   ]
 }

@@ -45,16 +45,16 @@ const fileKeys = committed
   .slice(1)
   .map((l) => l.split("\t")[0]);
 
-test("T004: the file holds exactly those 269 keys of §K.3 to §K.6b, and each once", () => {
+test("T004: the file holds exactly those 270 keys of §K.3 to §K.6b, and each once", () => {
   const tableKeys = parseSpecTables(specText).map((r) => r.key);
   const excluded = new Set<string>(EXCLUDED_KEYS);
   const specKeys = tableKeys.filter((k) => !excluded.has(k));
   assert.equal(new Set(tableKeys).size, tableKeys.length, "no key is written twice in the spec");
   assert.equal(new Set(fileKeys).size, fileKeys.length, "no key is written twice in the file");
   assert.deepEqual(fileKeys, specKeys, "same keys, same order");
-  // T004's acceptance fixes the count: "the file holds exactly those 269 keys".
-  assert.equal(CATALOGUE_KEY_COUNT, 269);
-  assert.equal(fileKeys.length, 269, "the catalogue holds exactly 269 keys");
+  // T004's acceptance fixes the count: "the file holds exactly those 270 keys".
+  assert.equal(CATALOGUE_KEY_COUNT, 270);
+  assert.equal(fileKeys.length, 270, "the catalogue holds exactly 270 keys");
   assert.equal(specKeys.length, CATALOGUE_KEY_COUNT);
 });
 
@@ -75,7 +75,7 @@ test("T004: the four keys of feature 107 are in the tables and out of the catalo
     // ...and really absent from the catalogue of this feature.
     assert.ok(!fileKeys.includes(key), `contracts/config-keys.tsv does not carry ${key}`);
   }
-  // 269 carried + 4 left to feature 107 = every key the tables write.
+  // 270 carried + 4 left to feature 107 = every key the tables write.
   assert.equal(fileKeys.length + EXCLUDED_KEYS.length, tableKeys.size);
 });
 
