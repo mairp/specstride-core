@@ -1,0 +1,15 @@
+{
+  "name": "@specstride/test-isolate",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests of the test isolation wrapper: the stale mkdtemp fixture reaping of tests/isolate.ts (2026-11-17: leaked specstride-* fixture directories accumulated toward /tmp ENOSPC)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node ../../tests/isolate.ts node --test \"test/**/*.test.*\"",
+    "typecheck": "tsc -p ."
+  }
+}
