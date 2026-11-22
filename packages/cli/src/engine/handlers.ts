@@ -10,6 +10,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,6 +22,7 @@ import {
   launcherPathUnderState,
 } from "../../../pipeline/src/contract/commands/render.ts";
 import { derive } from "../../../pipeline/src/contract/commands/derive.ts";
+import { loopConfigurationOf } from "./loop-config.ts";
 import {
   physicalPathOfLogicalName,
   contractStateName,
@@ -529,6 +531,15 @@ export function contractDeriveHandler(argv: readonly string[], io: RouteIo): num
     repo: root,
     feature: features,
     output: draftFile ?? physicalPathOfLogicalName(root, contractStateName(pipelineId)),
+    // F153-FR-054 (feature 153, phase 27, T375) — the derivation slices and
+    // freezes the task groups only with the switch `loop.taskGroups` ON, as
+    // the loop configuration resolves it (already OFF under the `parity`
+    // profile, rule TG-1); OFF by default, so a plain derive writes nothing.
+    loopTaskGroups: loopConfigurationOf({
+      home: homedir(),
+      workdir: root,
+      environment: process.env,
+    }).taskGroupsAreSliced,
     ...(comment === undefined ? {} : { comment }),
     ...(nextBatch ? { nextBatch } : {}),
     ...(answer === undefined ? {} : { answer: { batch: answer.batch, picks } }),

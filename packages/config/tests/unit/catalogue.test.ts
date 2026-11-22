@@ -78,10 +78,10 @@ const SOUND_ROW: CatalogueDataRow = Object.freeze({
 });
 
 describe("CT-110-108 — every key has a class, a snapshot class, an owner and a default of its own type (F110-FR-010)", () => {
-  it("reads the whole catalogue: 268 keys, every one with all seven columns of §K.1", () => {
-    assert.equal(CATALOGUE.length, 268);
-    assert.equal(CATALOGUE_SIZE, 268);
-    assert.equal(new Set(CATALOGUE_KEYS).size, 268, "every spelling is unique");
+  it("reads the whole catalogue: 269 keys, every one with all seven columns of §K.1", () => {
+    assert.equal(CATALOGUE.length, 269);
+    assert.equal(CATALOGUE_SIZE, 269);
+    assert.equal(new Set(CATALOGUE_KEYS).size, 269, "every spelling is unique");
   });
 
   it("the shipped catalogue data equals the contract of T004", () => {
@@ -170,7 +170,7 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
       kinds.set(entry.type.kind, (kinds.get(entry.type.kind) ?? 0) + 1);
     assert.equal(
       [...kinds.values()].reduce((a, b) => a + b, 0),
-      268,
+      269,
       "every key has a type the reader could read",
     );
   });

@@ -772,6 +772,13 @@
       "note": "row 141 of annex X §X.7; the in-pass scan command of F153-FR-027 (CQ-153-17 answered A on 2026-11-13: the command `scan`)"
     },
     {
+      "key": "loop.taskGroups",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 142 of annex X §X.7; the task groups of F153-FR-054 (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5; off until one trial run with groups on has been read with `specstride report`)"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",

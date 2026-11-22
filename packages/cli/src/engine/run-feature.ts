@@ -303,6 +303,7 @@ import {
 } from "../../../observability/src/writer/pairs.ts";
 import { callTheCritic, criticCallInputs } from "../../../core/src/gate/critic-call.ts";
 import { parseVerdict } from "../../../core/src/gate/verdict-parser.ts";
+import { type TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import {
   gistOf,
   signatureHoldsTaskIds,
@@ -1509,6 +1510,69 @@ export function launchScopesOf(controlRoot: string): LaunchContractScopes | unde
   return Object.freeze({ verificationCommands: Object.freeze(verificationCommands) });
 }
 
+/**
+ * F153-FR-054 (feature 153, phase 27, T379) — the task groups the
+ * derivation FROZE, read from the LAUNCH RECORD of the run
+ * (`launch:<launchId>:record`, annex G `configuration.taskGroups`, the
+ * `specstride.task-groups-frozen/1` block of the contract), where the run is
+ * a child of a launch — the runtime root names the launch through
+ * `SPECSTRIDE_LAUNCH_ID`, the same way `launchScopesOf` above does.
+ *
+ * The engine recomputes the slicing NOWHERE at run time: whatever this
+ * reader returns is the record's word. THE STATED FALLBACK (rule TG-1's
+ * safe side): no launch id, an unreadable record, a record without the
+ * block, or a block of another schema gives NO groups — the unit of the
+ * pass stays the checkpoint claim and the run says so — and the engine
+ * never silently re-slices in its place.
+ */
+export function frozenTaskGroupsOfTheLaunchRecord(controlRoot: string): readonly TaskGroup[] {
+  const launchId = process.env["SPECSTRIDE_LAUNCH_ID"];
+  if (launchId === undefined || launchId === "") return [];
+  const roots = rootPathsOf({
+    home: homedir(),
+    workspaceRealPath: process.cwd(),
+    workspaceId: "",
+    controlRoot,
+    workerRoot: "",
+  });
+  let path: string;
+  try {
+    path = resolveLogicalName("launch:<launchId>:record", { "<launchId>": launchId }, roots);
+  } catch {
+    return [];
+  }
+  let record: unknown;
+  try {
+    record = JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return [];
+  }
+  const frozen = (
+    record as {
+      configuration?: { taskGroups?: { schema?: unknown; groups?: unknown } | null };
+    }
+  )?.configuration?.taskGroups;
+  if (frozen === null || typeof frozen !== "object") return [];
+  if (frozen.schema !== "specstride.task-groups-frozen/1") return [];
+  if (!Array.isArray(frozen.groups)) return [];
+  const groups: TaskGroup[] = [];
+  for (const one of frozen.groups) {
+    if (one === null || typeof one !== "object") continue;
+    const group = one as {
+      groupId?: unknown;
+      phase?: unknown;
+      taskIds?: unknown;
+    };
+    if (typeof group.groupId !== "string") continue;
+    if (typeof group.phase !== "number") continue;
+    if (!Array.isArray(group.taskIds) || !group.taskIds.every((id) => typeof id === "string")) {
+      continue;
+    }
+    groups.push(group as unknown as TaskGroup);
+  }
+  return Object.freeze(groups);
+}
+
 export async function verificationPlanOfTheRun(input: {
   readonly workdir: string;
   readonly workspaceId: string;
@@ -1688,6 +1752,27 @@ function resolveExecutable(name: string, searchPath: string): string | undefined
     }
   }
   return undefined;
+}
+
+/**
+ * F153-FR-054/-055 (feature 153, phase 27, T379) — the executable of a
+ * group's FROZEN acceptance check, resolved over the search path of the
+ * launch exactly as the plan's manifests resolve theirs (`resolveExecutable`
+ * above). The derivation froze the DECLARED argv, whose executable may be a
+ * bare name (`node`), and the check runner pins only an executable it can
+ * stat (F148-FR-001). THE GROUPS STAY THE RECORD'S: only the executable of
+ * the check is resolved — never the slicing, never a re-slice.
+ */
+function withResolvedCheckExecutableOf(group: TaskGroup, searchPath: string): TaskGroup {
+  if (group.acceptanceCheck.kind !== "declared") return group;
+  const [named, ...rest] = group.acceptanceCheck.argv;
+  if (named === undefined || named === "" || named.includes("/")) return group;
+  const resolved = resolveExecutable(named, searchPath);
+  if (resolved === undefined) return group;
+  return {
+    ...group,
+    acceptanceCheck: { ...group.acceptanceCheck, argv: [resolved, ...rest] },
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -3060,6 +3145,95 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   const priorityPathsOf = (phase: number): readonly string[] =>
     [...new Set(taskPathsOf(phase).flatMap((task) => task.paths))].sort();
 
+  // F153-FR-054 (feature 153, phase 27, T379) — the frozen task groups of a
+  // phase, read from the LAUNCH RECORD the derivation wrote
+  // (`configuration.taskGroups` of `launch:<launchId>:record`, through
+  // `frozenTaskGroupsOfTheLaunchRecord` above). The engine recomputes the
+  // slicing NOWHERE at run time: the record is the one source, so a unit of
+  // the pass is the group as the contract froze it. With the switch
+  // `loop.taskGroups` off (row 142: off by default and off under `parity`,
+  // where a unit is the checkpoint claim, F115-FR-009 — rule TG-1), and with
+  // the STATED FALLBACK of the reader (no launch id, an unreadable record, a
+  // record without the block — an older contract among them), the answer is
+  // NO groups: the unit stays the checkpoint claim and the run says so —
+  // never a silent re-slice.
+  const frozenGroupsOfThePhase = (phase: number): readonly TaskGroup[] =>
+    loopConfig.taskGroupsAreSliced
+      ? frozenTaskGroupsOfTheLaunchRecord(controlRoot)
+          .filter((group) => group.phase === phase)
+          .map((group) => withResolvedCheckExecutableOf(group, searchPathAtLaunch))
+      : [];
+
+  // F153-FR-056/-057 (feature 153, phase 27, T380) — the GROUP REVIEW: after
+  // a group's acceptance check passed (T379), the composition root makes the
+  // review, the critic call of the phase gate with the evidence of T206 (the
+  // per-task evidence) limited to the group's tasks. A critic-class call with
+  // a fresh session, a nonce and no tools. Its ONLY durable effect is
+  // `updatePinsAfterVerdict` (CQ-153-07 answered A on 2026-11-13): it writes
+  // no approval record, spends no outer counter, and adds no exit code and no
+  // stop reason — approval and commit stay per phase (F153-FR-057).
+  const reviewTheTaskGroup = async (
+    group: { readonly groupId: string; readonly taskIds: readonly string[] },
+    phase: number,
+  ): Promise<void> => {
+    // A nonce of a call is 16 lower-case hexadecimal characters (F101-FR-006).
+    const nonce = randomUUID().replace(/-/g, "").slice(0, 16);
+    const evidence = perTaskEvidenceOf({
+      tasks: taskPathsOf(phase).filter((task) => group.taskIds.includes(task.id)),
+      changedPaths: changedPathsOf(workdir),
+      contentOf: (path: string) => {
+        try {
+          return readFileSync(join(workdir, path), "utf8");
+        } catch {
+          return undefined;
+        }
+      },
+      windowTokens: Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || undefined,
+      totalBudgetBytes: CHANGE_CAP_BYTES,
+    }).text;
+    const prompt = [
+      "You are the CRITIC (an automated approval gate).",
+      `You are an independent critic. You review the completed task group ${group.groupId}` +
+        ` of phase ${String(phase)}. You have no tools; judge from what is below.` +
+        ` The evidence is a claim by the implementer, not a fact.`,
+      `\n# The tasks of the group\n${group.taskIds.join(", ")}`,
+      `\n# The change in the working tree, for the tasks of the group\n${redacted(evidence)}`,
+      `\nEnd with exactly one line: \`VERDICT ${nonce}: APPROVED\` or` +
+        ` \`VERDICT ${nonce}: REJECTED\`.`,
+    ].join("\n");
+    const reply = await callClaude(
+      buildCriticArgv({
+        role: "critic",
+        profile: parityProfile ? "parity" : "default",
+        authTier: 1,
+        model: criticModel,
+        // A fresh session for every review — never the phase gate's session.
+        sessionId: randomUUID(),
+      }),
+      prompt,
+      workdir,
+      timeLimitMs(CRITIC_LIMIT_MS),
+      () => undefined,
+    );
+    const verdict = parseVerdict(reply.reply, nonce).result;
+    // F153-FR-033 — no prompt and no reply enters the event; the group id,
+    // the phase and the verdict of the closed set do.
+    emit("group.review", { groupId: group.groupId, phase, outcome: verdict, synthesized: false });
+    if (verdict === "REJECTED") {
+      const knownIds = taskIdsOfThePhase(phase);
+      updatePinsAfterVerdict({
+        verdict: "REJECTED",
+        phase,
+        recordPath: verdictPinsRecordPath(inControl(join("features", slug, "phases")), phase),
+        allIds: new Set(knownIds),
+        reply: reply.reply,
+        hash: createHash("sha256").update(evidence).digest("hex"),
+        reader: nodeFileReader(),
+        findCriterionIds: (text) => criterionIdsOf(text, { knownCriterionIds: knownIds }),
+      });
+    }
+  };
+
   const recoveryDirectoryOf = (phase: number): string =>
     inControl(join("features", slug, "recovery", `phase${String(phase)}`));
   const markersPathOf = (phase: number): string => join(recoveryDirectoryOf(phase), "markers.json");
@@ -4065,6 +4239,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         statePath: inControl(join("features", slug, "micro", `phase${String(phase)}.json`)),
         manifestPath: inControl(join("features", slug, "manifests", `phase${String(phase)}.json`)),
         phaseTaskIds: taskIdsOfThePhase(phase),
+        // F153-FR-054 (T379) — the frozen groups of the phase; empty unless
+        // `loop.taskGroups` is on, so the unit stays the checkpoint claim.
+        taskGroups: frozenGroupsOfThePhase(phase),
         caps: loopConfig.caps,
         closingCheckOn: loopConfig.closingCheck,
         // F153-FR-012 (feature 153, T249) — the equality test of the
@@ -4704,6 +4881,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       // runner, decides keep, repair or unresolved, and returns the
       // directives of the ended pass (the give-back among them, F115-FR-027).
       let microExemptShortPass = false;
+      let completedGroupOfThePass:
+        | { readonly groupId: string; readonly checkPassed: boolean }
+        | undefined;
       if (machine !== undefined && unitId !== undefined) {
         const outcome = await machine.afterPass({
           unitId,
@@ -4714,6 +4894,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         microExemptShortPass = outcome.exemptShortPass;
         microRepairBlock = outcome.repairBlockText;
         if (outcome.givenBack) lastMicroOutcome = { givenBack: true };
+        if (outcome.completedGroup !== undefined && outcome.completedGroup.checkPassed) {
+          completedGroupOfThePass = outcome.completedGroup;
+        }
+      }
+
+      // F153-FR-056/-057 (feature 153, phase 27, T380) — after the group's
+      // acceptance check passed, the group review runs. Its only durable
+      // effect is `updatePinsAfterVerdict`; it moves no outer counter, adds
+      // no exit code and no stop reason, and approval and commit stay per
+      // phase (CQ-153-07 A; F153-FR-057). Under `parity` no review runs at
+      // all: a unit is the checkpoint claim (F115-FR-009).
+      if (completedGroupOfThePass !== undefined) {
+        const groupOfTheRun = frozenGroupsOfThePhase(phase).find(
+          (group) => group.groupId === completedGroupOfThePass?.groupId,
+        );
+        if (groupOfTheRun !== undefined) {
+          await reviewTheTaskGroup(groupOfTheRun, phase);
+        }
       }
 
       if (kill !== undefined) {

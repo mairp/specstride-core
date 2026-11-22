@@ -171,6 +171,16 @@ export type LoopConfiguration = {
    */
   readonly commitScanInPass: boolean;
   /**
+   * `loop.taskGroups` (feature 153, row 142 of annex X §X.7), OFF by default
+   * and OFF under `parity`. CQ-153-15 answered A on 2026-11-13: a group of at
+   * most the sibling size key's tasks (default 5, a starting value with low
+   * confidence; a project file may lower it, not raise it), groups in task
+   * order and never splitting a task (F153-FR-054). The switch stays off
+   * until one trial run with groups on has been read with `specstride
+   * report`; under `parity` a unit is a checkpoint claim (F115-FR-009).
+   */
+  readonly taskGroupsAreSliced: boolean;
+  /**
    * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
    * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
    * The trust class is `N lo` — a rank may only narrow (lower) the value a
@@ -405,6 +415,9 @@ export const COMMIT_GATE_BEFORE_CRITIC_KEY = "commit.gate.beforeCritic";
 /** The key of the in-pass scan command switch (feature 153, row 141). */
 export const COMMIT_SCAN_IN_PASS_KEY = "commit.scan.inPass";
 
+/** The key of the task-groups switch (feature 153, row 142). */
+export const LOOP_TASK_GROUPS_KEY = "loop.taskGroups";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -543,6 +556,12 @@ export function loopConfigurationOf(input: {
     // command is named to the proposer (CQ-153-17 A, answered 2026-11-13).
     commitScanInPass:
       resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_SCAN_IN_PASS_KEY).value),
+    // Row 142 of annex X §X.7 (F153-FR-054): OFF by default — off until one
+    // trial run with groups on has been read with `specstride report` — and
+    // OFF under the `parity` profile whatever a source holds, where a unit
+    // stays a checkpoint claim (CQ-153-15 A, answered 2026-11-13).
+    taskGroupsAreSliced:
+      resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_TASK_GROUPS_KEY).value),
     redGateLimit: redGateLimitOf(resolved),
     // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
     // OFF under the `parity` profile (defect D-44 kept — the baseline has no

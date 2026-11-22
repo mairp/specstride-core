@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specstride.dev/schemas/task-group.schema.json",
+  "title": "Task group (F153-FR-054 to -056; data-model.md D9)",
+  "description": "One task group of a phase, sliced at derivation by the pure table core/src/spec-groups/slicer.ts and frozen, with its hash, in the launch contract under configuration (CQ-153-07 answered A on 2026-11-13).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "groupId", "phase", "taskIds", "writeScope", "acceptanceCheck", "sizeRuleId"],
+  "properties": {
+    "schema": { "const": "specstride.task-group/1" },
+    "groupId": { "type": "string", "description": "The id of the group, `phase<N>-g<M>`, M counting from 1 in task order." },
+    "phase": { "type": "integer", "minimum": 1 },
+    "taskIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "The ordered task ids of the group; a task is never split and the groups follow task order (CQ-153-15 A)."
+    },
+    "writeScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefixes", "source"],
+      "properties": {
+        "prefixes": { "type": "array", "items": { "type": "string" } },
+        "source": { "const": "task-text", "description": "Never the proposer (F142-FR-009)." },
+        "caseFolded": { "type": "boolean" }
+      }
+    },
+    "acceptanceCheck": {
+      "description": "The declared acceptance check of fixed argv (F105-FR-015), or the record `unchecked` — never rejected, never passed (F153-FR-055).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "argv"],
+          "properties": {
+            "kind": { "const": "declared" },
+            "id": { "type": "string" },
+            "argv": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "unchecked" } }
+        }
+      ]
+    },
+    "sizeRuleId": { "enum": ["TG-1", "TG-2", "TG-3"] }
+  }
+}

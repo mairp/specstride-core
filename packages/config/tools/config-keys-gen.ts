@@ -77,8 +77,8 @@ export const EXCLUDED_KEYS: readonly string[] = [
   "verification.scopes.<commandId>.sideEffects",
 ];
 
-/** The number of keys `contracts/config-keys.tsv` holds, per T004 as carried forward (feature 152's `commit.backpressure` and feature 153's four switches included). */
-export const CATALOGUE_KEY_COUNT = 268;
+/** The number of keys `contracts/config-keys.tsv` holds, per T004 as carried forward (feature 152's `commit.backpressure` and feature 153's switches included). */
+export const CATALOGUE_KEY_COUNT = 269;
 
 /** A row of `contracts/config-keys.tsv`. */
 export interface CatalogueRow {

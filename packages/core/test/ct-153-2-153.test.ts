@@ -158,13 +158,16 @@ test("the record and the verdict are bound as before", () => {
   const engine = sourceOf("packages/cli/src/engine/run-feature.ts");
   assert.ok(engine !== null, "packages/cli/src/engine/run-feature.ts exists");
 
-  // Both critic-class argv builds of the engine — the critic's own call and
-  // the diagnostician's, which is critic-class too — carry no `allowedTools`.
+  // The critic-class argv builds of the engine — the critic's own call, the
+  // diagnostician's (critic-class too) and, since phase 27 (T380, F153-FR-056),
+  // the review of a completed task group — carry no `allowedTools`. The group
+  // review is a critic-class call by the spec, so the guard holds the same
+  // property over all of them rather than pinning a count the spec moved.
   const criticCallHeads = [...engine.matchAll(/buildCriticArgv\(/g)].map((m) => m.index ?? 0);
   assert.equal(
     criticCallHeads.length,
-    2,
-    "the engine builds a critic-class argv twice: the critic and the diagnostician",
+    3,
+    "the engine builds a critic-class argv three times: the critic, the diagnostician and the group review",
   );
   for (const at of criticCallHeads) {
     const call = balancedCall(engine.slice(at), "buildCriticArgv(");

@@ -2100,6 +2100,21 @@
       "registerRows": [
         "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
       ]
+    },
+    {
+      "number": 142,
+      "switch": "A phase is sliced into task groups at derivation (F153-FR-054)",
+      "key": "loop.taskGroups",
+      "keys": [
+        "loop.taskGroups"
+      ],
+      "keyNote": "`loop.taskGroups` (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5 — a starting value with low confidence; a project file may lower it, not raise it; off until one trial run with groups on has been read with `specstride report`)",
+      "default": "off",
+      "parity": "off: a unit is a checkpoint claim",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

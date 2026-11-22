@@ -26,6 +26,7 @@ import {
   DEFAULT_MAX_OUTPUT_BYTES,
 } from "../../../check-runner/src/command/lisa-executor.ts";
 import { runEngineCheck, timeLimitMsOf } from "./check-run.ts";
+import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import { closingCheckSkipOf } from "../../../core/src/gate/closing-check-skip.ts";
 import type { LoopLayer } from "@specstride/contracts/ep/loop-layer";
 import { checkpointContractBlock } from "../../../layer-micro/src/callpoints/contribute-prompt.ts";
@@ -107,6 +108,18 @@ export type MachineAfterPass = {
   readonly givenBack: boolean;
   /** F115-FR-027 — a valid checkpoint leaves the short-pass counter alone. */
   readonly exemptShortPass: boolean;
+  /**
+   * F153-FR-056 (feature 153, phase 27, T379) — the checkpoint of the pass
+   * COMPLETED this frozen task group, and the group's acceptance check ran
+   * and PASSED through the check runner (T038). The composition root runs
+   * the group review for it (`run-feature.ts`, T380); its only durable
+   * effect is pins. `undefined` — no group completed, or the check did not
+   * pass. It moves no counter of the layer and adds no exit code or stop
+   * reason.
+   */
+  readonly completedGroup?:
+    | { readonly groupId: string; readonly checkPassed: boolean }
+    | undefined;
   /** The outcome of the unit, when a check ran (`unchecked` included). */
   readonly outcome: "kept" | "repair" | "unresolved" | "unchecked" | "none";
   /** The failure block of the next pass prompt, when the outcome is a repair. */
@@ -247,6 +260,17 @@ export function createMicroAttempt(input: {
   readonly statePath: string;
   readonly manifestPath: string;
   readonly phaseTaskIds: readonly string[];
+  /**
+   * F153-FR-054 (feature 153, phase 27, T379) — the frozen task groups of
+   * the phase, read from the launch contract (`configuration.taskGroups`),
+   * present only with `loop.taskGroups` on (off by default and off under
+   * `parity`, where a unit is the checkpoint claim, F115-FR-009). When a
+   * claimed pass falls inside a group, the UNIT of the pass is the frozen
+   * group's ordered task ids, not the checkpoint claim's task set; the
+   * checkpoint that completes the group runs the group's acceptance check
+   * through the check runner (T038, `runEngineCheck`).
+   */
+  readonly taskGroups?: readonly TaskGroup[];
   readonly caps: MachineCaps;
   readonly closingCheckOn: boolean;
   /**
@@ -519,10 +543,55 @@ export function createMicroAttempt(input: {
         return classic;
       }
       const taskIds = [...(claim.tasks ?? [])];
+      // F153-FR-054/-055 (feature 153, phase 27, T379) — with
+      // `loop.taskGroups` on, the unit of the pass comes from the FROZEN
+      // groups: the group the claimed tasks fall inside is the unit, in the
+      // group's own task order. When the checkpoint completes the group, the
+      // group's acceptance check runs through the check runner (T038,
+      // `runEngineCheck`); a group whose check resolves to `unchecked` is
+      // never rejected and never passed (F153-FR-055). The completion moves
+      // no counter of the layer and adds no exit code or stop reason.
+      const theGroup = input.taskGroups?.find((group) =>
+        group.taskIds.some((taskId) => taskIds.includes(taskId)),
+      );
+      let unitTaskIds = taskIds;
+      let completedGroup:
+        | { readonly groupId: string; readonly checkPassed: boolean }
+        | undefined;
+      if (theGroup !== undefined) {
+        unitTaskIds = [...theGroup.taskIds];
+        if (theGroup.taskIds.every((taskId) => taskIds.includes(taskId))) {
+          if (theGroup.acceptanceCheck.kind === "declared") {
+            const result = await runEngineCheck(
+              {
+                id: theGroup.acceptanceCheck.id,
+                argv: theGroup.acceptanceCheck.argv,
+                cwd: process.cwd(),
+                timeLimitMs: 300_000,
+                phase: input.phase,
+              },
+              "default",
+            );
+            input.emit("group.checked", {
+              groupId: theGroup.groupId,
+              ruleId: theGroup.acceptanceCheck.id,
+              outcome: result.passed ? "passed" : "failed",
+              exitCode: result.exitCode,
+            });
+            completedGroup = { groupId: theGroup.groupId, checkPassed: result.passed };
+          } else {
+            input.emit("group.checked", {
+              groupId: theGroup.groupId,
+              ruleId: "unchecked",
+              outcome: "unchecked",
+            });
+          }
+        }
+      }
       emitEvent(
         checkpointAccepted({
           unitId: pass.unitId,
-          taskIds,
+          taskIds: unitTaskIds,
           checkpointRef: `unit:${pass.unitId}:checkpoint`,
         }),
       );
@@ -540,7 +609,7 @@ export function createMicroAttempt(input: {
           budgetAvailable: () => true,
           enterQuotaPause: async () => {},
         },
-        taskIds,
+        taskIds: unitTaskIds,
         // F115-FR-022 — the budget hands the repairs LEFT per task id: the
         // cap less the repairs already spent. A task spent to the cap is
         // present with 0 (it can no longer take a repair); a task never
@@ -568,7 +637,7 @@ export function createMicroAttempt(input: {
       state = { ...state, cyclesSpent: state.cyclesSpent + 1 };
       if (decision.outcome === "repair") {
         const repairs = { ...state.repairsByTask };
-        for (const taskId of taskIds) repairs[taskId] = (repairs[taskId] ?? 0) + 1;
+        for (const taskId of unitTaskIds) repairs[taskId] = (repairs[taskId] ?? 0) + 1;
         state = { ...state, repairsByTask: repairs };
       }
       if (decision.outcome === "unresolved") {
@@ -581,7 +650,7 @@ export function createMicroAttempt(input: {
           ...state.units,
           {
             unitId: pass.unitId,
-            tasks: taskIds,
+            tasks: unitTaskIds,
             outcome: decision.outcome,
             results: results.map((result) => ({
               id: result.id,
@@ -604,8 +673,8 @@ export function createMicroAttempt(input: {
         innerCount: innerSet().length,
         uncheckedStreak: state.uncheckedStreak,
         phaseTasks: taskCount,
-        unitTasks: taskIds.length,
-        unitCoversPhaseAtFirstUnit: state.units.length === 1 && taskIds.length === taskCount,
+        unitTasks: unitTaskIds.length,
+        unitCoversPhaseAtFirstUnit: state.units.length === 1 && unitTaskIds.length === taskCount,
         ...(check.integrityEvent !== undefined ? { integrityKind: check.integrityEvent.kind } : {}),
       });
       if (route.decided && route.ruleId !== undefined && route.choice !== undefined) {
@@ -649,7 +718,7 @@ export function createMicroAttempt(input: {
 
       const repairBlockText =
         decision.outcome === "repair" && state.off === false
-          ? repairBlockFor(input.runId, results, tree, state.repairsByTask, taskIds)
+          ? repairBlockFor(input.runId, results, tree, state.repairsByTask, unitTaskIds)
           : "";
       return {
         result: "accept",
@@ -658,6 +727,10 @@ export function createMicroAttempt(input: {
         exemptShortPass: true,
         outcome: decision.outcome,
         repairBlockText,
+        // F153-FR-056 (T379) — the completed group and its check outcome,
+        // for the composition root to review (T380). No counter of the
+        // layer moved, no exit code and no stop reason added.
+        ...(completedGroup !== undefined ? { completedGroup } : {}),
       };
     },
     async closingCheck(): Promise<{ readonly ran: boolean; readonly passed: boolean }> {

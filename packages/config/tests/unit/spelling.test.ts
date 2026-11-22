@@ -185,7 +185,7 @@ describe("CT-110-102 rule 3 — the environment name of a key", () => {
       assert.equal(already, undefined, `${key} and ${already} derive the same name ${name}`);
       seen.set(name, key);
     }
-    assert.equal(seen.size, 268);
+    assert.equal(seen.size, 269);
   });
 
   it("the as-is name of the baseline replaces the derived name where there is one", () => {
@@ -229,8 +229,8 @@ describe("CT-110-102 rule 4 — `--set <path>=<value>` reaches every key", () =>
     });
   });
 
-  it("reaches all 268 keys of the catalogue, templates bound to a concrete segment", () => {
-    assert.equal(CATALOGUE.length, 268);
+  it("reaches all 269 keys of the catalogue, templates bound to a concrete segment", () => {
+    assert.equal(CATALOGUE.length, 269);
     for (const entry of CATALOGUE) {
       const key = concrete(entry.key);
       const flag = setFlagFor(key, "x");
