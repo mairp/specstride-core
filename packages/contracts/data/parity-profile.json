@@ -2055,6 +2055,21 @@
       "parity": "off: the whole diff capped at 200,000 bytes",
       "owner": "153",
       "registerRows": []
+    },
+    {
+      "number": 139,
+      "switch": "A red gate spends a budget of its own, none of the reject limit (F153-FR-020)",
+      "key": "verification.redGate.ownBudget",
+      "keys": [
+        "verification.redGate.ownBudget"
+      ],
+      "keyNote": "`verification.redGate.ownBudget` (its size is `verification.redGate.limit`, default 3)",
+      "default": "on",
+      "parity": "off: a red gate is a rejection with code 10 that counts toward the reject limit",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

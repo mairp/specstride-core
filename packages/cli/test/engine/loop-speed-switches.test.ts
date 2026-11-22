@@ -157,3 +157,82 @@ test("CT-153-9 the parallelism cannot be widened: above the ceiling, and above a
     rmSync(raised.root, { recursive: true, force: true });
   }
 });
+
+test("CT-153-5 the red-gate budget: on by default, off under parity, the limit lowest-wins", () => {
+  // No source holds a value: the switch is on and the limit is the default 3.
+  const plain = fixture();
+  try {
+    const loop = loopConfigurationOf({ home: plain.home, workdir: plain.dir, environment: ENV });
+    assert.equal(loop.redGateOwnBudget, true, "F153-FR-020: the switch is on by default");
+    assert.equal(loop.redGateLimit, 3, "F153-FR-021: the default limit is 3 (CQ-153-05 A)");
+  } finally {
+    rmSync(plain.root, { recursive: true, force: true });
+  }
+  // Under `parity` the switch stands down whatever a source holds (row 139).
+  const parity = fixture({
+    userConfig: "schema: 1\nprofile: parity\nverification:\n  redGate:\n    ownBudget: true\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home: parity.home, workdir: parity.dir, environment: ENV });
+    assert.equal(
+      loop.redGateOwnBudget,
+      false,
+      "row 139: under parity a red gate counts toward the reject limit",
+    );
+    assert.equal(loop.redGateLimit, 3, "the limit reads as default under parity");
+  } finally {
+    rmSync(parity.root, { recursive: true, force: true });
+  }
+  // The trust class is `N lo`: the project file may lower the limit the user
+  // file set, never raise it — the lowest whole value any source held stands.
+  const lowered = fixture({
+    userConfig: "schema: 1\nverification:\n  redGate:\n    limit: 5\n",
+    projectFile: "schema: 1\nverification:\n  redGate:\n    limit: 2\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home: lowered.home, workdir: lowered.dir, environment: ENV });
+    assert.equal(loop.redGateLimit, 2, "the project file lowers 5 to 2");
+  } finally {
+    rmSync(lowered.root, { recursive: true, force: true });
+  }
+  const raised = fixture({
+    userConfig: "schema: 1\nverification:\n  redGate:\n    limit: 2\n",
+    projectFile: "schema: 1\nverification:\n  redGate:\n    limit: 5\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home: raised.home, workdir: raised.dir, environment: ENV });
+    assert.equal(loop.redGateLimit, 2, "the project file cannot raise 2 to 5");
+  } finally {
+    rmSync(raised.root, { recursive: true, force: true });
+  }
+});
+
+test("CT-153-9 a red-gate limit that is not a whole number >= 1 is refused, the default stands", () => {
+  // The merge of feature 110 refuses a value outside the catalogue's type
+  // (`whole number, at least 1`) at the rank that held it, as it refuses a
+  // parallelism of 9 — the value never reaches the reader, and the default 3
+  // stands: the limit is never clamped into shape and never widened.
+  for (const limit of ["0", "-2", "two", "1.5", "true"]) {
+    const bad = fixture({
+      userConfig: `schema: 1\nverification:\n  redGate:\n    limit: ${limit}\n`,
+    });
+    try {
+      const loop = loopConfigurationOf({ home: bad.home, workdir: bad.dir, environment: ENV });
+      assert.equal(loop.redGateLimit, 3, `the value ${limit} is refused; the default 3 stands`);
+    } finally {
+      rmSync(bad.root, { recursive: true, force: true });
+    }
+  }
+  // The reader keeps its own refusal for a value a rank hands it that the
+  // merge did not check: the guard throws, never guesses (F153-FR-021).
+  const bad = fixture({
+    userConfig: "schema: 1\nverification:\n  redGate:\n    limit: 2\n",
+    projectFile: "schema: 1\nverification:\n  redGate:\n    limit: 4\n",
+  });
+  try {
+    const loop = loopConfigurationOf({ home: bad.home, workdir: bad.dir, environment: ENV });
+    assert.equal(loop.redGateLimit, 2, "the lower value stands");
+  } finally {
+    rmSync(bad.root, { recursive: true, force: true });
+  }
+});

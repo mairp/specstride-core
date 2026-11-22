@@ -744,6 +744,20 @@
       "note": "row 138 of annex X §X.7; the per-task critic evidence of F153-FR-051"
     },
     {
+      "key": "verification.redGate.ownBudget",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 139 of annex X §X.7; the red gate's own budget of F153-FR-020 (CQ-153-05 answered A on 2026-11-13: budget A, stop A, block A)"
+    },
+    {
+      "key": "verification.redGate.limit",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "the size of the red-gate budget of F153-FR-021 (a finite integer >= 1, default 3; a project file may lower it, not raise it)"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",

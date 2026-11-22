@@ -50,3 +50,6 @@ export * from "./end-cause.ts";
 // T242 — the pure equality test of the closing check against the gate
 // (feature 153, F153-FR-012): the engine's CLI wiring imports it from here.
 export * from "./closing-check-skip.ts";
+// T339 — the pure red-gate budget of a phase (feature 153, F153-FR-020…-023,
+// budget A of CQ-153-05): the engine's CLI wiring imports it from here.
+export * from "./red-gate-budget.ts";

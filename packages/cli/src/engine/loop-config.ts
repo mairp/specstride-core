@@ -150,6 +150,23 @@ export type LoopConfiguration = {
    * and the `parity` profile reads 1, as the profile's own row 7 does.
    */
   readonly verificationParallelism: number;
+  /**
+   * `verification.redGate.ownBudget` (feature 153, row 139 of annex X §X.7),
+   * on by default and OFF under `parity` (F153-FR-020: under parity a red
+   * gate is a rejection with code 10 that counts toward the reject limit).
+   */
+  readonly redGateOwnBudget: boolean;
+  /**
+   * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
+   * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
+   * The trust class is `N lo` — a rank may only narrow (lower) the value a
+   * rank above it held — so the effective value is the LOWEST whole value
+   * any source held; a source value that is not a finite whole number ≥ 1 is
+   * refused at launch, never clamped into shape. No setting makes it
+   * unbounded (F153-FR-021): the key reads no `SPECSTRIDE_LIMITS` and no
+   * limits-off state.
+   */
+  readonly redGateLimit: number;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
   /**
@@ -362,6 +379,42 @@ function verificationParallelismOf(
   return Math.min(Math.max(lowest, 1), PARALLELISM_CEILING);
 }
 
+/** The key of the red gate's own budget switch (feature 153, row 139). */
+export const RED_GATE_OWN_BUDGET_KEY = "verification.redGate.ownBudget";
+
+/** The key of the size of the red gate's own budget (F153-FR-021). */
+export const RED_GATE_LIMIT_KEY = "verification.redGate.limit";
+
+/** The default of the red-gate budget (CQ-153-05, budget A). */
+export const RED_GATE_LIMIT_DEFAULT = 3;
+
+/**
+ * The value of `verification.redGate.limit` (F153-FR-021): a whole number,
+ * at least 1, default 3. The trust class is `N lo` — a rank may only narrow
+ * (lower) the value a rank above it held — so the effective value is the
+ * LOWEST whole value any source held (the built-in default of the catalogue
+ * is not a competing source, as with the parallelism above). A source value
+ * that is not a finite whole number ≥ 1 is refused at launch (T341), never
+ * guessed or clamped; and the budget is finite under every profile — this
+ * reading consults neither `SPECSTRIDE_LIMITS` nor the limits-off state, so
+ * no setting makes it unbounded.
+ */
+function redGateLimitOf(resolved: ResolvedConfiguration): number {
+  const held = offersOf(resolved, RED_GATE_LIMIT_KEY).filter(
+    (offer) => offer.layer !== "default",
+  );
+  for (const offer of held) {
+    const number = Number(offer.value);
+    if (!Number.isFinite(number) || !Number.isInteger(number) || number < 1) {
+      throw new Error(
+        `configuration: ${RED_GATE_LIMIT_KEY} must be a whole number of at least 1 — ` +
+          `refused the value ${String(offer.value)} from ${offer.layer}`,
+      );
+    }
+  }
+  return held.length === 0 ? RED_GATE_LIMIT_DEFAULT : Math.min(...held.map((o) => Number(o.value)));
+}
+
 /**
  * Resolve the loop keys of a run through the real configuration: the files
  * the loader finds (the user file of `user:config`, the project file
@@ -455,6 +508,12 @@ export function loopConfigurationOf(input: {
       return Number.isSafeInteger(number) && number > 0 ? number : MAX_BYTES_DEFAULT;
     })(),
     verificationParallelism: verificationParallelismOf(resolved, resolved.profile),
+    // Row 139 of annex X §X.7 (F153-FR-020): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity a red gate is
+    // a rejection with code 10 that counts toward the reject limit.
+    redGateOwnBudget:
+      resolved.profile !== "parity" && switchIsOn(valueOf(RED_GATE_OWN_BUDGET_KEY).value),
+    redGateLimit: redGateLimitOf(resolved),
     // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
     // OFF under the `parity` profile (defect D-44 kept — the baseline has no
     // structured no-progress measurement, so under parity the breaker is not

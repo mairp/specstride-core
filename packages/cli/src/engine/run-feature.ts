@@ -347,6 +347,10 @@ import {
   NO_COUNTS,
   type Counts,
 } from "../../../core/src/gate/limits.ts";
+// F153-FR-021 (T342) — the red-gate count is DERIVED over the gate result
+// records of the phase read from the control plane, never a counter in
+// memory (F153-FR-006).
+import { redGateCountOf } from "../../../core/src/gate/red-gate-budget.ts";
 import {
   readCounts,
 } from "../../../core/src/carry/counters.ts";
@@ -2231,7 +2235,34 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         mkdirSync(inControl(dir), { recursive: true });
       },
     };
-    void setAsideBlockRecords(gatePorts, new Date().toISOString().replace(/[:.]/g, "-"));
+    // F153-FR-021 — the same reset sets the gate result records of the red
+    // gate's own budget aside the SAME way: the directory that holds the
+    // per-attempt verification records moves by rename into
+    // `verification/reset-<at>/`, so the count `redGateCountOf` derives reads
+    // no record from before the reset. The budget is derived from these
+    // records (F153-FR-006), so a reset of the ledger sets it aside too.
+    const atOfTheReset = new Date().toISOString().replace(/[:.]/g, "-");
+    // The records stand directly in `features/<slug>/verification/`; the
+    // F152 shape — a `reset-<at>/` directory inside, the top-level files
+    // moved by rename — is kept.
+    const verificationDirectory = inControl(join("features", slug, "verification"));
+    const resetDirectory = join("features", slug, "verification", `reset-${atOfTheReset}`);
+    if (existsSync(verificationDirectory)) {
+      try {
+        mkdirSync(inControl(resetDirectory), { recursive: true });
+        for (const name of readdirSync(verificationDirectory)) {
+          if (name.startsWith("reset-")) continue;
+          renameSync(
+            inControl(join("features", slug, "verification", name)),
+            inControl(join(resetDirectory, name)),
+          );
+        }
+      } catch {
+        // Best effort: a reset that cannot move the records leaves them
+        // where they stand; the launch itself never fails on this.
+      }
+    }
+    void setAsideBlockRecords(gatePorts, atOfTheReset);
   }
 
   const events = inControl(
@@ -6663,6 +6694,36 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             outcome === "commit-blocked"
             ? "commit-blocked"
             : "rejected";
+    // F153-FR-020/-021 (T342) — the red-gate budget is fed to the rejection
+    // order only for the kind `gate-failed`, and its count is DERIVED: the
+    // per-attempt verification records of the phase are read from the control
+    // plane (`features/<slug>/verification/phase<N>.<k>.json`, the hashed
+    // record every gate run writes, the gate that could not run included —
+    // its record folds the code 3 into a non-zero `exit_code`, so it counts
+    // like a code 10, as F105-FR-005 counts both failed). The records UP TO
+    // AND INCLUDING the ordinal of this attempt are read, so the gate just
+    // failed is counted when the decision is made (T339's `count >= limit`
+    // reading). No in-memory counter (F153-FR-006), and the `--reset-counts`
+    // boundary above moved the pre-reset records aside (F153-FR-021).
+    const redGateRecordsOfThePhase = (upTo: number): readonly { code: number }[] => {
+      const records: { code: number }[] = [];
+      for (let k = 1; k <= upTo; k += 1) {
+        const file = inControl(
+          join("features", slug, "verification", `phase${String(phase)}.${String(k)}.json`),
+        );
+        if (!existsSync(file)) continue;
+        try {
+          const parsed = JSON.parse(readFileSync(file, "utf8")) as { exit_code?: unknown };
+          const code = Number(parsed.exit_code);
+          if (Number.isFinite(code)) records.push({ code });
+        } catch {
+          // A record that cannot be read is not a red gate: it adds nothing
+          // and it never fails the run.
+        }
+      }
+      return records;
+    };
+
     const records = feedback.get(phase) ?? [];
     // The ids of the one grammar owner: the signature of unmet criteria names
     // the tasks the phase holds, and only those (F101-FR-019).
@@ -6742,6 +6803,20 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           : {}),
         rejectLimit: countLimit(loopConfig.maxRejects),
         malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
+        // F153-FR-020 (T342) — the budget of the red gate: the switch as
+        // configuration holds it (OFF under `parity`, row 139), the count
+        // derived over the gate result records of the phase up to and
+        // including this attempt, and the limit as configuration holds it
+        // (a finite whole number ≥ 1, never unbounded — F153-FR-021).
+        ...(kind === "gate-failed"
+          ? {
+              redGate: {
+                switchOn: loopConfig.redGateOwnBudget,
+                count: redGateCountOf(redGateRecordsOfThePhase(ordinal)),
+                limit: loopConfig.redGateLimit,
+              },
+            }
+          : {}),
         feedbackRecords: records,
         taskIds: { knownTaskIds },
         signatures,
