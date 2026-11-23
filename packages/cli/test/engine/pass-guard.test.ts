@@ -15,6 +15,7 @@ import {
   rmSync,
   symlinkSync,
   writeFileSync,
+  lchmodSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -28,7 +29,12 @@ function hungPass(as: string): Promise<number> {
   return new Promise((done) => {
     const bin = join(mkdtempSync(join(tmpdir(), "guard-pass-")), as);
     symlinkSync(process.execPath, bin);
-    chmodSync(bin, 0o755);
+    // On Linux a symlink carries no mode of its own: the permission that governs
+    // exec is the target's, and the target is this very interpreter. chmodSync
+    // would follow the link and chmod the installed node — permitted to root
+    // only, so a non-root runner (CI) meets EPERM here. Where the platform
+    // records a mode on the link itself, chmod the LINK.
+    if (lchmodSync !== undefined) lchmodSync(bin, 0o755);
     const child = spawn(bin, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
     child.on("spawn", () => done(child.pid!));
   });

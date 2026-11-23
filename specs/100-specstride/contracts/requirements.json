@@ -1313,7 +1313,7 @@
       "id": "F100-FR-148",
       "annex": "E",
       "section": "§E.3",
-      "text": "The stop reasons of the product MUST be exactly the 15 members of §E.3, each with its engine exit code and its attribute `transient`. The terminal record MUST carry one of them on every exit that has a member in the column \"Stop reasons\" of the engine table of §E.4. On an exit that has none (0, 5, 70, and the causes of 1 and 3 without a member) the field MUST be null, `retryable` MUST be false, and an as-is stop line MUST NOT be written. A reader that finds another value MUST treat the stop as not retryable and report it.",
+      "text": "The stop reasons of the product MUST be exactly the 16 members of §E.3, each with its engine exit code and its attribute `transient`. The terminal record MUST carry one of them on every exit that has a member in the column \"Stop reasons\" of the engine table of §E.4. On an exit that has none (0, 5, 70, and the causes of 1 and 3 without a member) the field MUST be null, `retryable` MUST be false, and an as-is stop line MUST NOT be written. A reader that finds another value MUST treat the stop as not retryable and report it.",
       "test": "CT-100-248",
       "assumption": "CQ-174"
     },
@@ -1857,7 +1857,7 @@
       "id": "F100-FR-213",
       "annex": "X",
       "section": "§X.8",
-      "text": "The normalization rules MUST be exactly N-01 to N-29 of §X.8. A rule MUST be added only with a row of the divergence register, or with a statement that the value is not deterministic in the reference itself. A rule that replaces nothing in any fixture MUST fail the suite. N-02 MUST apply to the text of messages as well as to captured trees.",
+      "text": "The normalization rules MUST be exactly N-01 to N-30 of §X.8. A rule MUST be added only with a row of the divergence register, or with a statement that the value is not deterministic in the reference itself. A rule that replaces nothing in any fixture MUST fail the suite. N-02 MUST apply to the text of messages as well as to captured trees.",
       "divergence": "DV-006; DV-007; DV-008; DV-065; DV-066; DV-116",
       "test": "CT-100-313"
     },

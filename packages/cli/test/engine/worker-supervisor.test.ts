@@ -21,13 +21,13 @@
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import {
-  chmodSync,
   existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
+  lchmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -141,7 +141,12 @@ async function stubbornWorker(): Promise<{
   const dir = mkdtempSync(join(tmpdir(), "worker-stubborn-"));
   const bin = join(dir, "dsh");
   symlinkSync(process.execPath, bin);
-  chmodSync(bin, 0o755);
+  // On Linux a symlink carries no mode of its own: the permission that governs
+  // exec is the target's, and the target is this very interpreter. chmodSync
+  // would follow the link and chmod the installed node — permitted to root
+  // only, so a non-root runner (CI) meets EPERM here. Where the platform
+  // records a mode on the link itself, chmod the LINK.
+  if (lchmodSync !== undefined) lchmodSync(bin, 0o755);
   // The worker writes its ready file AFTER the SIGTERM handler is
   // registered, so a ready file is proof the handler is in place — no
   // timing settle, and the default disposition can never win the race.

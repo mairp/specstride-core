@@ -1714,6 +1714,12 @@
           "Yes"
         ],
         [
+          "`commitGateRulesHash`",
+          "The canonical hash of the commit-gate rule data in force (feature 152, F152-FR-017), pinned at the launch",
+          "Text",
+          "No"
+        ],
+        [
           "`acceptedChanges`",
           "Every intended change accepted on `resume`: time, file, old hash, new hash",
           "List of records",

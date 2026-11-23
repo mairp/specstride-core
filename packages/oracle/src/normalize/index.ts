@@ -1,7 +1,7 @@
 /**
  * T052 to T057 — the normalizer (F141-FR-020).
  *
- * "The normalizer MUST implement the rules N-01 to N-29 of feature 100, annex X
+ * "The normalizer MUST implement the rules N-01 to N-30 of feature 100, annex X
  * §X.8, and no other rule."
  *
  * `RULES` is the list of implementations, and `assertTheRulesAreThoseOfFeature100`
@@ -23,7 +23,7 @@ import { N08 } from "./temporary-names.ts";
 import { N09, N10, N11 } from "./hashes.ts";
 import { N12, N13, N14 } from "./events.ts";
 import { N15, N16, N17, N18, N19, N20 } from "./text.ts";
-import { N21, N22, N23, N24, N25, N26, N27, N28, N29 } from "./rest.ts";
+import { N21, N22, N23, N24, N25, N26, N27, N28, N29, N30 } from "./rest.ts";
 import { suiteReport, type FixtureReport, type ReplacementCounts } from "./report.ts";
 import {
   NormalizationError,
@@ -78,6 +78,7 @@ export {
   N27,
   N28,
   N29,
+  N30,
   RULES_ON_THE_PORT_ALONE,
   REVERSE_INVENTORY_SCHEMA_FIELD,
   REVERSE_INVENTORY_SCHEMA_ID,
@@ -131,6 +132,7 @@ export const RULES: readonly Rule[] = Object.freeze([
   N27,
   N28,
   N29,
+  N30,
 ]);
 
 /**

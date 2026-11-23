@@ -634,7 +634,28 @@ export function comparePortWithGolden(
     surfaces: options.golden.surfaces,
     missing: options.golden.missing,
   });
-  const goldenSurfaces = goldenDropped.capture.surfaces;
+  // A golden capture is stored normalized, but under the rule set of ITS OWN
+  // capture. A rule added since (F100-FR-213: only with a register row or with
+  // the statement that the value is not deterministic in the reference itself)
+  // would otherwise act on the port side alone and read `different` on every
+  // member it removes — the exact failure the rows DV-061 and DV-097 forbid.
+  // The rules are deterministic, and the placeholders they leave (a folded
+  // path, a `<time>` stamp) match none of their patterns again, so normalizing
+  // the stored capture under the CURRENT rule set, on the reference side, with
+  // the context the comparison already holds, is the same act `compare()`
+  // performs on a live reference and keeps the two sides under one rule set.
+  const normalizedGolden = normalize(
+    {
+      scenario: options.fixture,
+      side: "reference" as const,
+      suite: options.golden.suite ?? portAsCaptured.suite ?? "first",
+      layer: options.golden.layer ?? portAsCaptured.layer ?? "off",
+      surfaces: goldenDropped.capture.surfaces,
+      missing: goldenDropped.capture.missing ?? {},
+    },
+    options.portContext,
+  );
+  const goldenSurfaces = normalizedGolden.surfaces;
   const normalizedPort = normalize(
     {
       scenario: options.fixture,

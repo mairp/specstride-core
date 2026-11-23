@@ -220,8 +220,8 @@ A closed set. Each ends the engine with a stop reason of §E.3 and the state `bl
 
 ## §E.3 Stop-reason enumeration
 
-Schema id `specstride.stop-reason/1`. A closed, versioned enumeration of 15 members: the 14
-literals of the Specstride baseline and `paused_quota_ceiling`.
+Schema id `specstride.stop-reason/1`. A closed, versioned enumeration of 16 members: the 14
+literals of the Specstride baseline, `paused_quota_ceiling`, and `commit_gate`.
 
 "Transient" is the attribute of the member: whether a stop with this reason may be relaunched at
 all. "`retryable` in the terminal record" is the value the engine writes for one stop; it is never
@@ -244,12 +244,13 @@ true for a member that is not transient.
 | 13 | `max_rejects` | Engine | 2 | No | false | No |
 | 14 | `release_verification` | Engine | 2 | No | false | No |
 | 15 | `paused_quota_ceiling` | Engine | 4 | No | false | — (new) |
+| 16 | `commit_gate` | Engine | 2 | No | false | — (new) |
 
 Not members, and never to be added as members: a quota pause (a run state); `blocked` (an event);
 outcomes of the micro-loop layer and of parallel units (they switch a layer off); integrity events
 (reported to the critic, no halt); the two extra reasons that Lisa emits.
 
-- **F100-FR-148**: The stop reasons of the product MUST be exactly the 15 members of §E.3, each with its engine exit code and its attribute `transient`. The terminal record MUST carry one of them on every exit that has a member in the column "Stop reasons" of the engine table of §E.4. On an exit that has none (0, 5, 70, and the causes of 1 and 3 without a member) the field MUST be null, `retryable` MUST be false, and an as-is stop line MUST NOT be written. A reader that finds another value MUST treat the stop as not retryable and report it.
+- **F100-FR-148**: The stop reasons of the product MUST be exactly the 16 members of §E.3, each with its engine exit code and its attribute `transient`. The terminal record MUST carry one of them on every exit that has a member in the column "Stop reasons" of the engine table of §E.4. On an exit that has none (0, 5, 70, and the causes of 1 and 3 without a member) the field MUST be null, `retryable` MUST be false, and an as-is stop line MUST NOT be written. A reader that finds another value MUST treat the stop as not retryable and report it.
   - test: CT-100-248
   - assumption: CQ-174
 
@@ -276,7 +277,7 @@ engine child of the runtime root.
 |---|---|---|
 | 0 | Every phase approved, in this run or before it, and release verification passed or not required | — |
 | 1 | Internal error (no member); the working directory cannot be entered (no member); the MALFORMED limit reached (`critic_unavailable`); the proposer ended without phase evidence on a status that has no mapping (`proposer_no_evidence`) | `critic_unavailable`, `proposer_no_evidence` |
-| 2 | Rejects exceeded (`max_rejects`); oscillation (`gate_oscillation`); release verification failed (`release_verification`) | `max_rejects`, `gate_oscillation`, `release_verification` |
+| 2 | Rejects exceeded (`max_rejects`); the commit-gate halt (`commit_gate`); oscillation (`gate_oscillation`); release verification failed (`release_verification`) | `max_rejects`, `commit_gate`, `gate_oscillation`, `release_verification` |
 | 3 | Invalid spec, configuration or argument (no member); the preflight of verification failed (no member); a configuration error of the critic (`critic_config`); a changed source (`critic_config`, the blocked reason `source-changed` of §E.2) | `critic_config` |
 | 4 | Wall-clock budget; the results 4, 7, 8, 9, 10 of the pass loop; the wait ceiling of a quota pause | `wall_budget`, `proposer_max_iter`, `proposer_consecutive_errors`, `proposer_no_progress`, `proposer_yield_budget`, `proposer_yield_timeout`, `proposer_cap_exhausted`, `paused_quota_ceiling` |
 | 5 | The workspace lock is held (start mode `standalone`) | — |

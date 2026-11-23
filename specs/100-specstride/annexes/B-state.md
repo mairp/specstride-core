@@ -475,6 +475,7 @@ Request types are a closed set: `stop`, `hold-relaunch`, `host-event`.
 | `profile` | Name of the profile in force, or null | Text, or null | Yes |
 | `keys` | For every resolved configuration key: `value`, `source` (rank of §X.2), `class` (`pinned` or `tunable`), and for a learned value the id of the decision | Map from key to record | Yes |
 | `sourceHashes` | For each of the files `spec`, `plan`, `tasks`: logical path, content hash, and for `tasks` also the hash that ignores checkboxes | Map from file to record | Yes |
+| `commitGateRulesHash` | The canonical hash of the commit-gate rule data in force (feature 152, F152-FR-017), pinned at the launch | Text | No |
 | `acceptedChanges` | Every intended change accepted on `resume`: time, file, old hash, new hash | List of records | No |
 
 - **F100-FR-066**: The run snapshot MUST hold every resolved key with its source and its class, and the source hashes of the run as pinned values. A failed write of the snapshot MUST be a launch error. Secret references MUST be stored as references. On `resume`, a pinned key MUST rank below flags and above the environment, and a tunable key MUST rank below the environment.

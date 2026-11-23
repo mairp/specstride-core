@@ -2,8 +2,9 @@
  * T074 — `normalization.json` as versioned data with a loader (annex X, §X.8;
  * F100-FR-213, F100-FR-215).
  *
- * The 29 rules N-01 to N-29 with the assertion that no rule is added without a
- * register row, the mode map, the exit-code map of `resume`, the key-name map
+ * The 30 rules N-01 to N-30 with the assertion that no rule is added without a
+ * register row or a statement that the value is not deterministic in the
+ * reference itself, the mode map, the exit-code map of `resume`, the key-name map
  * of the launch contract, and the variables of the hermetic environment of
  * the oracle as a documented mapping.
  */
@@ -14,7 +15,7 @@ export const SCHEMA_ID: string = (normalization as { schema: string }).schema;
 
 /** One normalization rule of §X.8. */
 export type NormalizationRule = {
-  /** `N-01` to `N-29`. */
+  /** `N-01` to `N-30`. */
   readonly id: string;
   /** What the rule is about. */
   readonly subject: string;
@@ -24,10 +25,10 @@ export type NormalizationRule = {
 
 type RawRule = { Id: string; Subject: string; Rule: string };
 
-/** F100-FR-213 — the rules are exactly N-01 to N-29. */
-export const RULE_COUNT = 29 as const;
+/** F100-FR-213 — the rules are exactly N-01 to N-30. */
+export const RULE_COUNT = 30 as const;
 export const FIRST_RULE = "N-01" as const;
-export const LAST_RULE = "N-29" as const;
+export const LAST_RULE = "N-30" as const;
 
 /** Load the rules from `data/normalization.json` (F100-FR-213). */
 export function loadRules(): readonly NormalizationRule[] {
@@ -38,13 +39,18 @@ export function loadRules(): readonly NormalizationRule[] {
   );
 }
 
-/** The 29 rules, in the order of the annex. */
+/** The 30 rules, in the order of the annex. */
 export const rules: readonly NormalizationRule[] = loadRules();
 
 /** The rule of an id, or `undefined`. */
 export function rule(id: string): NormalizationRule | undefined {
   return rules.find((r) => r.id === id);
 }
+
+/** A rule set the loader refuses. */
+/** The phrase of the second escape of F100-FR-213, as the annex states it. */
+export const NOT_DETERMINISTIC_IN_THE_REFERENCE =
+  "not deterministic in the reference itself" as const;
 
 /** A rule set the loader refuses. */
 export class NormalizationError extends Error {
@@ -55,11 +61,12 @@ export class NormalizationError extends Error {
 }
 
 /**
- * F100-FR-213 — the rules MUST be exactly N-01 to N-29; a rule is added only
+ * F100-FR-213 — the rules MUST be exactly N-01 to N-30; a rule is added only
  * with a row of the divergence register, or with a statement that the value
  * is not deterministic in the reference itself. `assertRules` is the
- * assertion the loader makes: the ids are the 29 of the annex, each once, in
- * order, and a rule beyond them carries a register row.
+ * assertion the loader makes: the ids are the 30 of the annex, each once, in
+ * order, and a rule beyond them carries a register row or carries that
+ * statement in its own rule text.
  */
 export function assertRules(
   loaded: readonly NormalizationRule[] = rules,
@@ -77,13 +84,20 @@ export function assertRules(
         `(F100-FR-213)`,
     );
   }
-  for (const id of ids) {
+  for (const entry of loaded) {
+    const id = entry.id;
     if (expected.includes(id)) continue;
     const row = registerRowOf(id);
-    if (row === undefined) {
+    // The second escape of F100-FR-213: the rule's own text states that the
+    // value is not deterministic in the reference itself, so the rule removes
+    // an environment-conditional value instead of a difference of behaviour.
+    const stated =
+      typeof entry.rule === "string" && entry.rule.includes(NOT_DETERMINISTIC_IN_THE_REFERENCE);
+    if (row === undefined && !stated) {
       throw new NormalizationError(
         `the normalization rule ${id} is not one of ${FIRST_RULE} to ${LAST_RULE} and ` +
-          `carries no row of the divergence register (F100-FR-213)`,
+          `carries no row of the divergence register and no statement that the value ` +
+          `is not deterministic in the reference itself (F100-FR-213)`,
       );
     }
   }

@@ -597,6 +597,15 @@
           "No",
           "false",
           "— (new)"
+        ],
+        [
+          "16",
+          "`commit_gate`",
+          "Engine",
+          "2",
+          "No",
+          "false",
+          "— (new)"
         ]
       ]
     },
@@ -622,8 +631,8 @@
         ],
         [
           "2",
-          "Rejects exceeded (`max_rejects`); oscillation (`gate_oscillation`); release verification failed (`release_verification`)",
-          "`max_rejects`, `gate_oscillation`, `release_verification`"
+          "Rejects exceeded (`max_rejects`); the commit-gate halt (`commit_gate`); oscillation (`gate_oscillation`); release verification failed (`release_verification`)",
+          "`max_rejects`, `commit_gate`, `gate_oscillation`, `release_verification`"
         ],
         [
           "3",

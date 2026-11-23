@@ -3,8 +3,8 @@
  *
  * What the test proves.
  *
- * - **one test per rule N-01 to N-29**: there is a named test for every one of the
- *   twenty-nine rules, each on RECORDED INPUT OF THE REFERENCE — the event lines,
+ * - **one test per rule N-01 to N-30**: there is a named test for every one of the
+ *   thirty rules, each on RECORDED INPUT OF THE REFERENCE — the event lines,
  *   the standard output, the file names and the state of a real run of the
  *   Specstride and mixture-of-loops baselines at their pinned commits, written into
  *   this file as data;
@@ -161,7 +161,7 @@ const asText = (surfaces: Record<string, unknown>): string => JSON.stringify(sur
 // ---------------------------------------------------------------------------
 
 test("CT-141-120: the rules are exactly those of feature 100, in its order", () => {
-  assert.equal(RULES.length, 29);
+  assert.equal(RULES.length, 30);
   assert.deepEqual(
     RULES.map((r) => r.id),
     [...ruleIds()],
@@ -183,7 +183,7 @@ test("CT-141-120: the rules are exactly those of feature 100, in its order", () 
     () =>
       assertTheRulesAreThoseOfFeature100([
         ...RULES,
-        { id: "N-30", subject: "invented here", surfaces: [], apply: () => 0 },
+        { id: "N-90", subject: "invented here", surfaces: [], apply: () => 0 },
       ]),
     NormalizationError,
   );
@@ -1096,6 +1096,43 @@ test("CT-141-120 / N-29: the field `schema` is removed from the inventory of the
   assert.ok(!asText(fromText.surfaces).includes(REVERSE_INVENTORY_SCHEMA_ID));
 });
 
+test("CT-141-120 / N-30: the root note of the banner is removed from both sides", () => {
+  // Input in the reference's form: the recorded banner of FX-27, captured by a
+  // recording that ran as root with `IS_SANDBOX` unset, so the note is there.
+  const recorded = {
+    stdout: {
+      text:
+        "repository ready\n\n" +
+        "specstride orchestrator start <time>\n" +
+        "  workdir  : <WORK>\n" +
+        "  feature  : commits-off   (state: .specstride/features/commits-off/)\n" +
+        "  resume   : phase 1\n" +
+        "  run_id   : <run-id-1>\n" +
+        "  stop with: touch <WORK>/.specstride/stop.flag\n" +
+        "  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n" +
+        "\n\n===== PHASE 1 — The only phase  (<time>) =====\n",
+    },
+  };
+  const fromTheReference = one("N-30", recorded, { side: "reference" });
+  assert.equal(fromTheReference.count, 1);
+  const text = asText(fromTheReference.surfaces);
+  assert.ok(!text.includes("auto-set IS_SANDBOX"), "the note line is gone");
+  assert.ok(text.includes("stop with"), "the lines around the note are kept");
+  assert.ok(text.includes("PHASE 1"), "the run after the note is kept");
+  // A capture that runs where the note is not printed — the same banner without
+  // the line, as a later environment holds it — is normalized by no means.
+  const withoutTheNote = JSON.parse(JSON.stringify(recorded)) as typeof recorded;
+  (withoutTheNote.stdout as { text: string }).text = (
+    withoutTheNote.stdout as { text: string }
+  ).text.replace("  note     : root + IS_SANDBOX unset -> auto-set IS_SANDBOX=1\n", "");
+  assert.equal(one("N-30", withoutTheNote, { side: "port" }).count, 0);
+  assert.equal(one("N-30", withoutTheNote, { side: "reference" }).count, 0);
+  // The rule is not one of the port alone: the two sides lose the line alike.
+  const onThePort = one("N-30", recorded, { side: "port" });
+  assert.equal(onThePort.count, 1);
+  assert.ok(!asText(onThePort.surfaces).includes("auto-set IS_SANDBOX"));
+});
+
 // ---------------------------------------------------------------------------
 // The counts, and the rule that replaced nothing
 // ---------------------------------------------------------------------------
@@ -1110,7 +1147,7 @@ test("CT-141-120: the normalizer reports one count per rule, for every rule", ()
     CONTEXT,
   );
   assert.deepEqual(Object.keys(normalized.counts), [...ruleIds()]);
-  assert.equal(Object.keys(normalized.counts).length, 29);
+  assert.equal(Object.keys(normalized.counts).length, 30);
   // The capture that went in was not changed.
   assert.ok(normalized.counts["N-01"] !== undefined);
 });
@@ -1122,7 +1159,7 @@ test("CT-141-120: a rule that replaced nothing in any fixture fails the suite, b
   ]);
   assert.deepEqual([...good.replacedNothing], []);
   assertEveryRuleEarnedItsPlace(good);
-  assert.equal(good.rows.length, 29);
+  assert.equal(good.rows.length, 30);
 
   // One rule at zero over the whole suite: the suite fails and names it.
   const idle = { ...everyRuleFired, "N-17": 0, "N-22": 0 };

@@ -13,7 +13,7 @@
  * 2. a surface that one side could not capture gives `different` — never `equal`,
  *    which is why `captureSurfaces` records a missing surface with its reason
  *    instead of an empty value;
- * 3. both captures through the rules N-01 to N-29;
+ * 3. both captures through the rules N-01 to N-30;
  * 4. the differences of each surface. No difference is `equal`. Every difference
  *    matched by a waiver of this fixture and this surface is `waived (<row>)`.
  *    Anything else is `different`;
@@ -180,7 +180,7 @@ export type Comparison = {
    * The key-name map of the launch contract, as it was applied to the port's
    * capture: how many names it replaced and the rows of the register it is the
    * handling of (DV-055, DV-120). It is not a normalization rule and is therefore
-   * not in `report.replacements`, which counts N-01 to N-29 only.
+   * not in `report.replacements`, which counts N-01 to N-30 only.
    */
   readonly keyNames: KeyNameMapping;
   /**

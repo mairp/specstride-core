@@ -44,7 +44,7 @@ export const TIME_PATTERNS: readonly RegExp[] = Object.freeze([
   // occurs, which is why the pattern is anchored there: a bare `HH:MM:SS`
   // anywhere in a line would also eat a value that is no time. It is a time
   // field of an output line, so it is this rule's subject and not a rule of its
-  // own (the oracle implements N-01 to N-29 and no other rule).
+  // own (the oracle implements N-01 to N-30 and no other rule).
   /(?<=(?:^|\n) *)\d{2}:\d{2}:\d{2}(?=\s)/g,
 ]);
 

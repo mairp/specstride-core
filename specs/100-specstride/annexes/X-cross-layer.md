@@ -256,7 +256,7 @@ what a reader does with a value outside the set.
 | 82 | Reasons of a launch | `first`, `resume`, `relaunch`, `manual` | 122 | Design | `manual` |
 | 83 | Classes of implementation of an extension point | Data, first-party code, third-party code | 100 | Owner decision | Refused at registration |
 | 84 | Capabilities of a host | The six of annex H §H.1 | 113 | Design | Ignored |
-| 85 | Normalization rules | N-01 to N-29 of §X.8 | 100 | Owner decision | A rule is added only with a register row |
+| 85 | Normalization rules | N-01 to N-30 of §X.8 | 100 | Owner decision | A rule is added only with a register row |
 | 86 | Results of the comparator | `equal`, `waived` with its register row, `different` | 141 | Design | `different` |
 | 87 | Auth schemes of a descriptor | `bearer`, `x-api-key`, `none` | 109 | Design | The descriptor is refused |
 | 88 | Scopes of an overlay | `none`, `pass`, `attempt` | 109 | Design | Configuration error (exit 3) |
@@ -619,7 +619,17 @@ row DV-058 waives that scenario, and the row is read as written.
 | 131 | Customisations of a harness that are loaded into a proposer pass by themselves: project instruction files, and the auto-loaded context of a harness (extensions, skills, context files, prompt templates). Row 29 covers harness-native memory only | `harnesses.<id>.proposerCustomisations` | off; never loaded into a critic-class call | `as-is`: no flag about customisations is passed | 131, 134 | DV-047; DV-002 |
 | 132 | The reading of `retryable` in the observation of a stopped launcher by `supervise observe` (DV-114). The reading of the blocked reason (row O-33 of table 1, refusal `blocked-on-human`) is not switched by the profile: it is on under every profile, `parity` included (CQ-238) | — (follows the tables `relaunch-observe` and `relaunch-root`) | on: table 1 reads `retryable` from the terminal record and refuses with `stop-not-retryable` (row O-34) | off: row O-34 is inactive and a stop that is not blocked is classified by the as-is classifier of DV-074 | 123 | DV-114 |
 | 133 | A missing credential of the critic is a configuration error, found before the call by `preflight` and refused with engine exit 3 and `critic_config`; no count changes | — (none; feature 110 may name one) | on | off: the missing credential is raised inside the call and scored as a failed call (DV-117) | 101 | DV-117 |
-| 134 | A blocked approval commit becomes the next phase attempt with a corrective block, and a repeated block halts blocked on a human | `commit.backpressure` | on | off: the block is reported, the run goes on, and the run exits 1 at its end (DV-122) | 152 | DV-121 |
+| 134 | The commit gate holds an approval commit back on a hit of the scan (F152-FR-021) | `commit.backpressure` | on | off: the approval commit is made with no gate of its own (DV-121) | 152 | DV-121 |
+| 135 | The time limit of the check is enforced (F153-FR-029) | `verification.timeLimit.enforce` | on | on: a ruled defect fix (CQ-153-13 A) | 153 | DV-123 (the defect-fix row requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
+| 136 | The closing check skips when the gate result equals the check's (F153-FR-012) | `loop.micro.closingCheck.skipWhenEqualToGate` | on | off: the closing check runs whenever the layer is on | 153 | — |
+| 137 | The inner check set is scoped to the touched paths (F153-FR-045) | `verification.inner.scoped` | on | off: every command of the inner set runs (F115-FR-013) | 153 | — |
+| 138 | The critic reads the evidence of each task, not the whole diff (F153-FR-051) | `critic.evidence.perTask` | on | off: the whole diff capped at 200,000 bytes | 153 | — |
+| 139 | A red gate spends a budget of its own, none of the reject limit (F153-FR-020) | `verification.redGate.ownBudget` (its size is `verification.redGate.limit`, default 3) | on | off: a red gate is a rejection with code 10 that counts toward the reject limit | 153 | new (requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
+| 140 | The commit scan runs after a passed gate and before the critic, too (F153-FR-024) | `commit.gate.beforeCritic` (CQ-153-06 answered A on 2026-11-13: it runs only where `commit.backpressure` is also on) | on | off: the scan runs at the approval commit only | 153 | new (requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
+| 141 | The proposer is named the in-pass scan command (F153-FR-027) | `commit.scan.inPass` (CQ-153-17 answered A on 2026-11-13: the command `scan`, codes 0/2/1/3) | on | off: no such command is named to the proposer | 153 | new (requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
+| 142 | A phase is sliced into task groups at derivation (F153-FR-054) | `loop.taskGroups` (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5 — a starting value with low confidence; a project file may lower it, not raise it; off until one trial run with groups on has been read with `specstride report`) | off | off: a unit is a checkpoint claim | 153 | new (requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
+| 143 | The gate stands on a green in-pass result (F153-FR-013) — refused: CQ-153-02 answered B on 2026-11-13, the behaviour is not built (F153-FR-015) | `verification.gate.reuse` (CQ-153-02 answered B on 2026-11-13: refused; the key exists, the behaviour is not built — the gate executes every time, F153-FR-015) | off | off: the gate executes every time | 153 | none (CQ-153-02 answered B on 2026-11-13) |
+| 144 | The commit gate is timed (F153-FR-036) | `events.commitGateTiming` (CQ-153-09 answered A on 2026-11-13: the timed pair is additive catalogue rows — `commit_gate.started` opens, `commit_gate.ended` closes — and no new end cause is named) | on | off: the projection drops the new types | 153 | new (requested in specs/153-loop-feedback-speed/amendments.md, at approval) |
 
 - **F100-FR-210**: The product MUST ship the named profile `parity` as versioned data with one row per switch, as in §X.7. Selecting the profile MUST set every switch to its value of the column "Under `parity`" and MUST do nothing else. The profile MUST be selected by ordinary configuration.
   - parity: the profile itself (annex X §X.7)
@@ -671,6 +681,7 @@ alias table and the component-name table. Feature 141 implements them.
 | N-27 | Sorting that depends on the locale | Both sides run with the same locale; the comparator does not sort for them |
 | N-28 | Legacy state and names | The behaviour of the legacy command names, legacy variables and the pre-v2 layout is not compared |
 | N-29 | Field `schema` of a reverse-run source inventory | The key `schema` is removed from the source inventory of a reverse run before the inventory is compared (DV-116: the as-is inventory carries `schema_version` 1 and no field `schema`) |
+| N-30 | The root note of the banner | The banner line that reports the automatic setting of `IS_SANDBOX` under a root that runs without a sandbox is removed from both sides before the comparison (the line is not deterministic in the reference itself: the recording holds it because the recording ran as root with the variable unset, and a later capture holds it or not as its environment runs) |
 
 ### Layout table, old side
 
@@ -796,7 +807,7 @@ the exit-code map of `resume` (the as-is 1 to 5 and to 3); the key-name map of t
 (the as-is relaunch key to `configuration.relaunch`; the as-is key `schema_version` with the value `1.0` to the key `schema` with the value `specstride.launch-contract/1`, register row DV-120, which also applies to the text of a message of validation that names the key; the value of `configuration.learning.source_path`, which the baseline writes relative to the repository root, to the logical name of the decision log through the old side of the layout table); the argument table of each harness adapter,
 which the harness adapter owns.
 
-- **F100-FR-213**: The normalization rules MUST be exactly N-01 to N-29 of §X.8. A rule MUST be added only with a row of the divergence register, or with a statement that the value is not deterministic in the reference itself. A rule that replaces nothing in any fixture MUST fail the suite. N-02 MUST apply to the text of messages as well as to captured trees.
+- **F100-FR-213**: The normalization rules MUST be exactly N-01 to N-30 of §X.8. A rule MUST be added only with a row of the divergence register, or with a statement that the value is not deterministic in the reference itself. A rule that replaces nothing in any fixture MUST fail the suite. N-02 MUST apply to the text of messages as well as to captured trees.
   - divergence: DV-006; DV-007; DV-008; DV-065; DV-066; DV-116
   - test: CT-100-313
 

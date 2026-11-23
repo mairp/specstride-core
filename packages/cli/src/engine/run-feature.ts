@@ -2399,7 +2399,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         flag: "a",
       });
     } catch {
-      /* the events file is best effort; the run goes on (F153-FR-033) */
+      // The events file is best effort; the run goes on (F153-FR-033). But a
+      // file wedged shut mid-run (a chmod 0444 from a check under test) stays
+      // wedged for every later line: the closers never land and the reader
+      // loses the run's shape. Where the directory is still ours, rebuild the
+      // file — the bytes already there are still readable — and append the
+      // line once more. No decision reads this path, and a rebuild that fails
+      // again is swallowed like the first refusal.
+      try {
+        const held = existsSync(events) ? readFileSync(events) : undefined;
+        rmSync(events, { force: true });
+        mkdirSync(dirname(events), { recursive: true });
+        if (held !== undefined) writeFileSync(events, held);
+        writeFileSync(events, `${JSON.stringify({ type, at, data })}\n`, {
+          flag: "a",
+        });
+      } catch {
+        /* the events file is best effort; the run goes on (F153-FR-033) */
+      }
     }
     // F144-FR-011 — the compatibility projection is a SINK: it is handed the
     // event after the primary line is on disk, best effort, and nothing it

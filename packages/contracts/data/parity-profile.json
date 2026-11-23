@@ -2014,7 +2014,7 @@
       "parity": "on: a ruled defect fix (CQ-153-13 A)",
       "owner": "153",
       "registerRows": [
-        "DV-123 (the defect-fix row requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        "DV-123"
       ]
     },
     {
@@ -2067,9 +2067,7 @@
       "default": "on",
       "parity": "off: a red gate is a rejection with code 10 that counts toward the reject limit",
       "owner": "153",
-      "registerRows": [
-        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
-      ]
+      "registerRows": []
     },
     {
       "number": 140,
@@ -2082,9 +2080,7 @@
       "default": "on",
       "parity": "off: the scan runs at the approval commit only",
       "owner": "153",
-      "registerRows": [
-        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
-      ]
+      "registerRows": []
     },
     {
       "number": 141,
@@ -2097,9 +2093,7 @@
       "default": "on",
       "parity": "off: no such command is named to the proposer",
       "owner": "153",
-      "registerRows": [
-        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
-      ]
+      "registerRows": []
     },
     {
       "number": 142,
@@ -2112,9 +2106,7 @@
       "default": "off",
       "parity": "off: a unit is a checkpoint claim",
       "owner": "153",
-      "registerRows": [
-        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
-      ]
+      "registerRows": []
     },
     {
       "number": 143,
@@ -2127,9 +2119,7 @@
       "default": "off",
       "parity": "off: the gate executes every time",
       "owner": "153",
-      "registerRows": [
-        "none (CQ-153-02 answered B on 2026-11-13)"
-      ]
+      "registerRows": []
     },
     {
       "number": 144,
@@ -2142,9 +2132,7 @@
       "default": "on",
       "parity": "off: the projection drops the new types",
       "owner": "153",
-      "registerRows": [
-        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
-      ]
+      "registerRows": []
     }
   ]
 }

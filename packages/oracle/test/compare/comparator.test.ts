@@ -356,7 +356,7 @@ test("CT-141-121: the report has the shape of `schemas/result.schema.json`", () 
   assert.equal(comparison.report.fixture, "FX-01/three-phases");
   assert.deepEqual(Object.keys(comparison.report.results).sort(), ["exit", "stdout"]);
   // One count per rule of feature 100, both sides added together.
-  assert.equal(Object.keys(comparison.report.replacements).length, 29);
+  assert.equal(Object.keys(comparison.report.replacements).length, 30);
   assert.deepEqual([...check(schemaOf("result.schema.json"), comparison.report)], []);
 });
 
@@ -403,7 +403,7 @@ test("CT-141-121: the outcome of a suite names every surface that is different",
   const outcome = suiteOutcome([one, two], []);
   assert.deepEqual([...outcome.different], ["FX-01/three-phases / exit"]);
   assert.deepEqual([...outcome.waiverUse], []);
-  assert.equal(outcome.normalization.rows.length, 29);
+  assert.equal(outcome.normalization.rows.length, 30);
 });
 
 // ---------------------------------------------------------------------------
@@ -458,7 +458,7 @@ test("CT-141-121: a launch contract of the port compares through the key-name ma
   assert.equal(resultOf(comparison.report, "tree"), "equal");
   assert.equal(comparison.keyNames.replaced, 1);
   assert.deepEqual([...comparison.keyNames.rows], [...MAPPED_ROWS]);
-  // It is not a normalization rule, so it is not counted among N-01 to N-29.
+  // It is not a normalization rule, so it is not counted among N-01 to N-30.
   assert.deepEqual(
     Object.keys(comparison.report.replacements).filter((id) => !/^N-[0-9]{2}$/.test(id)),
     [],
@@ -608,7 +608,7 @@ test("CT-141-121: a draft of the product compares `equal` with a draft of the ba
   assert.equal(comparison.notCompared.dropped, 6);
   assert.deepEqual([...comparison.notCompared.rows], [...NOT_COMPARED_ROWS]);
   // Like the key-name map it is the handling of a register row, not a rule of the
-  // normalizer, so it is not counted among N-01 to N-29.
+  // normalizer, so it is not counted among N-01 to N-30.
   assert.deepEqual(
     Object.keys(comparison.report.replacements).filter((id) => !/^N-[0-9]{2}$/.test(id)),
     [],

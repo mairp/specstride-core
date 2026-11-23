@@ -1094,7 +1094,7 @@
         [
           "85",
           "Normalization rules",
-          "N-01 to N-29 of §X.8",
+          "N-01 to N-30 of §X.8",
           "100",
           "Owner decision",
           "A rule is added only with a register row"
@@ -3922,12 +3922,102 @@
         ],
         [
           "134",
-          "A blocked approval commit becomes the next phase attempt with a corrective block, and a repeated block halts blocked on a human",
+          "The commit gate holds an approval commit back on a hit of the scan (F152-FR-021)",
           "`commit.backpressure`",
           "on",
-          "off: the block is reported, the run goes on, and the run exits 1 at its end (DV-122)",
+          "off: the approval commit is made with no gate of its own (DV-121)",
           "152",
           "DV-121"
+        ],
+        [
+          "135",
+          "The time limit of the check is enforced (F153-FR-029)",
+          "`verification.timeLimit.enforce`",
+          "on",
+          "on: a ruled defect fix (CQ-153-13 A)",
+          "153",
+          "DV-123 (the defect-fix row requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        ],
+        [
+          "136",
+          "The closing check skips when the gate result equals the check's (F153-FR-012)",
+          "`loop.micro.closingCheck.skipWhenEqualToGate`",
+          "on",
+          "off: the closing check runs whenever the layer is on",
+          "153",
+          "—"
+        ],
+        [
+          "137",
+          "The inner check set is scoped to the touched paths (F153-FR-045)",
+          "`verification.inner.scoped`",
+          "on",
+          "off: every command of the inner set runs (F115-FR-013)",
+          "153",
+          "—"
+        ],
+        [
+          "138",
+          "The critic reads the evidence of each task, not the whole diff (F153-FR-051)",
+          "`critic.evidence.perTask`",
+          "on",
+          "off: the whole diff capped at 200,000 bytes",
+          "153",
+          "—"
+        ],
+        [
+          "139",
+          "A red gate spends a budget of its own, none of the reject limit (F153-FR-020)",
+          "`verification.redGate.ownBudget` (its size is `verification.redGate.limit`, default 3)",
+          "on",
+          "off: a red gate is a rejection with code 10 that counts toward the reject limit",
+          "153",
+          "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        ],
+        [
+          "140",
+          "The commit scan runs after a passed gate and before the critic, too (F153-FR-024)",
+          "`commit.gate.beforeCritic` (CQ-153-06 answered A on 2026-11-13: it runs only where `commit.backpressure` is also on)",
+          "on",
+          "off: the scan runs at the approval commit only",
+          "153",
+          "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        ],
+        [
+          "141",
+          "The proposer is named the in-pass scan command (F153-FR-027)",
+          "`commit.scan.inPass` (CQ-153-17 answered A on 2026-11-13: the command `scan`, codes 0/2/1/3)",
+          "on",
+          "off: no such command is named to the proposer",
+          "153",
+          "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        ],
+        [
+          "142",
+          "A phase is sliced into task groups at derivation (F153-FR-054)",
+          "`loop.taskGroups` (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5 — a starting value with low confidence; a project file may lower it, not raise it; off until one trial run with groups on has been read with `specstride report`)",
+          "off",
+          "off: a unit is a checkpoint claim",
+          "153",
+          "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+        ],
+        [
+          "143",
+          "The gate stands on a green in-pass result (F153-FR-013) — refused: CQ-153-02 answered B on 2026-11-13, the behaviour is not built (F153-FR-015)",
+          "`verification.gate.reuse` (CQ-153-02 answered B on 2026-11-13: refused; the key exists, the behaviour is not built — the gate executes every time, F153-FR-015)",
+          "off",
+          "off: the gate executes every time",
+          "153",
+          "none (CQ-153-02 answered B on 2026-11-13)"
+        ],
+        [
+          "144",
+          "The commit gate is timed (F153-FR-036)",
+          "`events.commitGateTiming` (CQ-153-09 answered A on 2026-11-13: the timed pair is additive catalogue rows — `commit_gate.started` opens, `commit_gate.ended` closes — and no new end cause is named)",
+          "on",
+          "off: the projection drops the new types",
+          "153",
+          "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
         ]
       ]
     },
@@ -4085,6 +4175,11 @@
           "N-29",
           "Field `schema` of a reverse-run source inventory",
           "The key `schema` is removed from the source inventory of a reverse run before the inventory is compared (DV-116: the as-is inventory carries `schema_version` 1 and no field `schema`)"
+        ],
+        [
+          "N-30",
+          "The root note of the banner",
+          "The banner line that reports the automatic setting of `IS_SANDBOX` under a root that runs without a sandbox is removed from both sides before the comparison (the line is not deterministic in the reference itself: the recording holds it because the recording ran as root with the variable unset, and a later capture holds it or not as its environment runs)"
         ]
       ]
     },

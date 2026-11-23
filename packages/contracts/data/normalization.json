@@ -147,6 +147,11 @@
       "Id": "N-29",
       "Subject": "Field `schema` of a reverse-run source inventory",
       "Rule": "The key `schema` is removed from the source inventory of a reverse run before the inventory is compared (DV-116: the as-is inventory carries `schema_version` 1 and no field `schema`)"
+    },
+    {
+      "Id": "N-30",
+      "Subject": "The root note of the banner",
+      "Rule": "The banner line that reports the automatic setting of `IS_SANDBOX` under a root that runs without a sandbox is removed from both sides before the comparison (the line is not deterministic in the reference itself: the recording holds it because the recording ran as root with the variable unset, and a later capture holds it or not as its environment runs)"
     }
   ],
   "environmentAliases": [

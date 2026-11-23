@@ -1,12 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "specstride.commit-gate-timing/1",
+  "x-schema-id": "specstride.commit-gate-timing/1",
   "title": "Commit-gate timing pair (F153-FR-036; CQ-153-09 answered A on 2026-11-13)",
   "description": "The data of the timed pair of the commit gate: `commit_gate.started` opens the scan of one candidate, `commit_gate.ended` closes it. The pair is ADDITIVE catalogue rows — no new end cause is named (CQ-153-09 A) — and under the profile `parity` the switch `events.commitGateTiming` is off (row 144 of annex X §X.7), so the compatibility projection drops both types. The opener carries what is known before the scan runs (`durationMs` 0, `outcome` `clear`, `hits` 0); the closer carries the measured duration, the outcome and the hit count. No free text: a hit names a rule id, never the matched text, and `hits` is a count (F111-FR-031, F152-FR-010). PROPOSAL of spec 153 — not normative until its tasks land.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["phase", "attempt", "step", "durationMs", "outcome", "hits"],
+  "required": [
+    "schema",
+    "phase",
+    "attempt",
+    "step",
+    "durationMs",
+    "outcome",
+    "hits"
+  ],
   "properties": {
+    "schema": {
+      "const": "specstride.commit-gate-timing/1",
+      "$comment": "the schema id of the record (LR-11, F100-FR-011): the required discriminator every record schema of the control plane declares, as the sibling `specstride.commit-gate-rules/1` does"
+    },
     "phase": {
       "type": "integer",
       "minimum": 1,
