@@ -383,6 +383,8 @@ import { feedbackOfTheCommitGate, quotedPath, reasonOf } from "../../../core/src
 import { newNonce } from "../../../core/src/gate/nonce.ts";
 import {
   COMMIT_GATE_BLOCKED_EVENT_TYPE,
+  COMMIT_GATE_ENDED_EVENT_TYPE,
+  COMMIT_GATE_STARTED_EVENT_TYPE,
   dataThroughTheIngress,
 } from "../../../core/src/gate/events.ts";
 import {
@@ -3778,7 +3780,32 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // command read. The closure keeps only the composition root's own part —
   // the two counters (T160) and the console line — never a second scan.
   const scanBeforeTheCommit = {
-    scan: (files: readonly string[]) => {
+    // F153-FR-036 — the caller names the candidate: which phase attempt and
+    // which step (`pre-critic` at T356's scan, `commit` at the approval
+    // commit's port, whose caller in core passes files only). With the switch
+    // `events.commitGateTiming` on (row 144), the scan is timed: the opener
+    // `commit_gate.started` goes out before the scan runs and the closer
+    // `commit_gate.ended` after it, whatever the scan answered (CQ-153-09 A:
+    // additive catalogue rows, no new end cause). Best effort, like every
+    // event of the stream (F111-FR-019): `emit` already swallows a refused
+    // write.
+    scan: (
+      files: readonly string[],
+      phase = 0,
+      attempt = 0,
+      step: "pre-critic" | "commit" = "commit",
+    ) => {
+      const timed = loopConfig.eventsCommitGateTiming;
+      if (timed)
+        emit(COMMIT_GATE_STARTED_EVENT_TYPE, {
+          phase,
+          attempt,
+          step,
+          durationMs: 0,
+          outcome: "clear",
+          hits: 0,
+        });
+      const startedAt = Date.now();
       const scan = commitScanOf(
         { files, ordinaryCodePattern: THE_SHAPE_OF_ORDINARY_CODE },
         {
@@ -3788,6 +3815,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           lineIsAdded: isAddedLine,
         },
       );
+      if (timed)
+        emit(COMMIT_GATE_ENDED_EVENT_TYPE, {
+          phase,
+          attempt,
+          step,
+          durationMs: Date.now() - startedAt,
+          outcome: scan.blocked ? "blocked" : "clear",
+          hits: scan.hits.length,
+        });
       if (scan.blocked) {
         commitsBlocked += 1;
         // T160 — the safety-net count rises with the switch OFF only; with the
@@ -3829,7 +3865,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       ...git(workdir, ["ls-files", "--others", "--exclude-standard", "-z"]).out.split("\0"),
     ].filter((name) => name !== "");
     if (!insideAWorkTree || changed.length === 0) return { blocked: false };
-    const scan = scanBeforeTheCommit.scan(changed) as {
+    const scan = scanBeforeTheCommit.scan(changed, phase, ordinal, "pre-critic") as {
       blocked: boolean;
       hits: readonly {
         file: string;
@@ -6936,7 +6972,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           },
         },
         commitPorts: {
-          scan: scanBeforeTheCommit,
+          // F153-FR-036 — the approval commit's scan is timed as the step
+          // `commit`: the phase and the attempt ordinal the gate held are
+          // named, so the pair folds per candidate (T397).
+          scan: {
+            scan: (files: readonly string[]) =>
+              scanBeforeTheCommit.scan(files, phase, ordinal, "commit"),
+          },
           run: (argv: readonly string[]) =>
             spawnSync(argv[0] as string, argv.slice(1), { cwd: workdir }).status ?? 1,
         },

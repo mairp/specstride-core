@@ -786,6 +786,13 @@
       "note": "row 143 of annex X §X.7; the gate reuse of F153-FR-013 — CQ-153-02 answered B (refused) on 2026-11-13: the key exists, the behaviour is not built (F153-FR-015: the gate executes every time)"
     },
     {
+      "key": "events.commitGateTiming",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 144 of annex X §X.7; the timed pair of the commit gate of F153-FR-036 (CQ-153-09 answered A on 2026-11-13: the pair is additive catalogue rows, no new end cause)"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",

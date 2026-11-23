@@ -2130,6 +2130,21 @@
       "registerRows": [
         "none (CQ-153-02 answered B on 2026-11-13)"
       ]
+    },
+    {
+      "number": 144,
+      "switch": "The commit gate is timed (F153-FR-036)",
+      "key": "events.commitGateTiming",
+      "keys": [
+        "events.commitGateTiming"
+      ],
+      "keyNote": "`events.commitGateTiming` (CQ-153-09 answered A on 2026-11-13: the timed pair is additive catalogue rows — `commit_gate.started` opens, `commit_gate.ended` closes — and no new end cause is named)",
+      "default": "on",
+      "parity": "off: the projection drops the new types",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

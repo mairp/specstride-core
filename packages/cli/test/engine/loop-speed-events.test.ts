@@ -21,8 +21,11 @@
  * No paid or external model API is called (F153-FR-060): the agents are stub
  * executables, and the check is a script this file writes.
  */
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import process from "node:process";
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -30,6 +33,134 @@ import test from "node:test";
 import { runFeature } from "../../src/engine/run-feature.ts";
 import { workspaceIdOfWorkspace } from "../../src/engine/workspace-control-root.ts";
 import { stubClaude, fixture, type Fixture } from "./loop-speed-helpers.ts";
+
+/** The directory of the commit-gate fixtures of feature 152. */
+const COMMIT_GATE_FIXTURES = join(import.meta.dirname, "..", "fixtures", "commit-gate");
+/** The planted secret the fixture's stub takes from the environment. */
+const FIXTURE_SECRET = `ghp_${"a1b2c3d4e5f6".repeat(3)}`;
+
+/**
+ * A workspace built from the fixture `secret-removed-on-retry` (quickstart
+ * scenario 1 of feature 152): its tasks.md, its stub `claude` on `PATH` —
+ * the proposer plants a `ghp_` token in `creds.txt` on attempt 1 and removes
+ * the file on every later attempt, the critic approves every time — a git
+ * repository with one init commit, and a declared test command.
+ */
+function commitGateFixture(): Fixture {
+  const source = join(COMMIT_GATE_FIXTURES, "secret-removed-on-retry");
+  const root = mkdtempSync(join(tmpdir(), "specstride-ct-153-36-"));
+  const bin = join(root, "bin");
+  const work = join(root, "work");
+  mkdirSync(bin);
+  mkdirSync(join(work, "specs", "001-one"), { recursive: true });
+  copyFileSync(join(source, "tasks.md"), join(work, "specs", "001-one", "tasks.md"));
+  copyFileSync(join(source, "stub-claude"), join(bin, "claude"));
+  chmodSync(join(bin, "claude"), 0o755);
+  writeFileSync(
+    join(work, "package.json"),
+    JSON.stringify({ name: "x", private: true, scripts: { test: 'node -e ""' } }),
+  );
+  for (const argv of [
+    ["init", "-q"],
+    ["config", "user.email", "t@t"],
+    ["config", "user.name", "t"],
+    ["add", "-A"],
+    ["commit", "-qm", "init"],
+  ]) {
+    spawnSync("git", ["-C", work, ...argv]);
+  }
+  const before = {
+    HOME: process.env.HOME,
+    PATH: process.env.PATH,
+    PROPOSER: process.env.SPECSTRIDE_PROPOSER,
+    CRITIC: process.env.SPECSTRIDE_CRITIC,
+    PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
+    SECRET: process.env.STUB_SECRET,
+    STUB_DIR: process.env.STUB_DIR,
+    PROFILE: process.env.SPECSTRIDE_PROFILE,
+    TRACES: process.env.SPECSTRIDE_TEST_CONTROL,
+    LIMITS: process.env.SPECSTRIDE_LIMITS,
+    FEATURE: process.env.SPECSTRIDE_FEATURE,
+  };
+  const traces = join(root, "traces");
+  mkdirSync(traces, { recursive: true });
+  process.env.HOME = root;
+  process.env.PATH = `${bin}:${before.PATH ?? ""}`;
+  delete process.env.SPECSTRIDE_FEATURE;
+  process.env.SPECSTRIDE_PROPOSER = "claude";
+  process.env.SPECSTRIDE_CRITIC = "claude";
+  process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = "0";
+  process.env.SPECSTRIDE_LIMITS = "on";
+  process.env.STUB_SECRET = FIXTURE_SECRET;
+  // The stub's own traces go OUTSIDE the work tree, so no later critic prompt
+  // quotes them as part of the diff.
+  process.env.STUB_DIR = traces;
+  delete process.env.SPECSTRIDE_TEST_CONTROL;
+  delete process.env.SPECSTRIDE_PROFILE;
+  return {
+    dir: work,
+    restore: () => {
+      process.env.HOME = before.HOME;
+      process.env.PATH = before.PATH;
+      if (before.PROPOSER === undefined) delete process.env.SPECSTRIDE_PROPOSER;
+      else process.env.SPECSTRIDE_PROPOSER = before.PROPOSER;
+      if (before.CRITIC === undefined) delete process.env.SPECSTRIDE_CRITIC;
+      else process.env.SPECSTRIDE_CRITIC = before.CRITIC;
+      if (before.PAUSE === undefined) delete process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC;
+      else process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC = before.PAUSE;
+      if (before.SECRET === undefined) delete process.env.STUB_SECRET;
+      else process.env.STUB_SECRET = before.SECRET;
+      if (before.STUB_DIR === undefined) delete process.env.STUB_DIR;
+      else process.env.STUB_DIR = before.STUB_DIR;
+      if (before.PROFILE === undefined) delete process.env.SPECSTRIDE_PROFILE;
+      else process.env.SPECSTRIDE_PROFILE = before.PROFILE;
+      if (before.TRACES === undefined) delete process.env.SPECSTRIDE_TEST_CONTROL;
+      else process.env.SPECSTRIDE_TEST_CONTROL = before.TRACES;
+      if (before.LIMITS === undefined) delete process.env.SPECSTRIDE_LIMITS;
+      else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
+      if (before.FEATURE === undefined) delete process.env.SPECSTRIDE_FEATURE;
+      else process.env.SPECSTRIDE_FEATURE = before.FEATURE;
+      rmSync(root, { recursive: true, force: true });
+    },
+  };
+}
+
+/** The event stream of the (single) run of a fixture workspace, whatever
+ * layout the profile wrote (the engine's own, or the as-is one of `parity`). */
+function commitGateEvents(work: string): readonly EngineEvent[] {
+  const root = join(
+    process.env.HOME ?? "",
+    ".specstride",
+    "workspaces",
+    workspaceIdOfWorkspace(work),
+  );
+  const candidates = [
+    join(root, "runs"),
+    join(root, "features", "001-one", "runs"),
+    join(root, "..", "..", "..", ".local", "state", "specstride", "workspaces", "001-one", "runs"),
+    join(
+      root,
+      "..",
+      "..",
+      "..",
+      ".local",
+      "state",
+      "specstride",
+      "workspaces",
+      "001-one",
+      "features",
+      "001-one",
+      "runs",
+    ),
+  ];
+  for (const runsDir of candidates) {
+    if (!existsSync(runsDir)) continue;
+    const file = join(runsDir, readdirSync(runsDir)[0]!, "events.jsonl");
+    if (!existsSync(file)) continue;
+    return eventsOf(file);
+  }
+  throw new Error(`no run found under ${root}`);
+}
 
 /** The control root the engine of this fixture's workspace writes. */
 function controlRoot(work: string): string {
@@ -485,6 +616,101 @@ test("CT-153-45 an unwritable events file changes no decision", async () => {
     if (before === undefined) delete process.env.SPECSTRIDE_TEST_CONTROL;
     else process.env.SPECSTRIDE_TEST_CONTROL = before;
     for (const file of eventsFilesOf(control)) chmodSync(file, 0o644);
+    fx.restore();
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * CT-153-36 (T396) — the timed pair of the commit gate's scan.
+ * ------------------------------------------------------------------ */
+
+test("CT-153-36 the commit scan has a pair", async () => {
+  // The default: the switch `events.commitGateTiming` is on (row 144), so
+  // every scan of the commit gate — the step `pre-critic` and the step
+  // `commit` — opens with `commit_gate.started` and closes with
+  // `commit_gate.ended`, and a blocked scan also carries its
+  // `commit_gate.blocked` naming the step that blocked.
+  const fx = commitGateFixture();
+  try {
+    const exit = await runFeature({ argv: [], workdir: fx.dir });
+    assert.equal(exit, 0, "the retry removes the secret and the phase is approved");
+    const events = commitGateEvents(fx.dir);
+    const started = events.filter((event) => event.type === "commit_gate.started");
+    const ended = events.filter((event) => event.type === "commit_gate.ended");
+    const blocked = events.filter((event) => event.type === "commit_gate.blocked");
+    // One scan of one candidate at the approval commit of attempt 1, and one
+    // at the approval commit of attempt 2 (which is clean and commits): two
+    // pairs on the record, attempt 1's closed before attempt 2's opens.
+    assert.equal(started.length, ended.length, "every scan opened is closed");
+    assert.ok(started.length >= 2, `both approval-commit scans are timed, got ${started.length}`);
+    for (const open of started) {
+      const close = ended.find(
+        (event) =>
+          event.data.phase === open.data.phase &&
+          event.data.attempt === open.data.attempt &&
+          event.data.step === open.data.step,
+      );
+      assert.ok(close !== undefined, `the scan of ${JSON.stringify(open.data.step)} is closed`);
+      assert.ok(
+        events.indexOf(open) < events.indexOf(close),
+        "the opener stands before its closer",
+      );
+      // The catalogue's fields, no free text (F111-FR-031 as amended).
+      assert.equal(typeof open.data.phase, "number");
+      assert.equal(typeof open.data.attempt, "number");
+      assert.ok(open.data.step === "pre-critic" || open.data.step === "commit");
+      assert.equal(open.data.durationMs, 0, "the opener knows no duration yet");
+      assert.equal(open.data.outcome, "clear");
+      assert.equal(open.data.hits, 0);
+      assert.equal(close!.data.durationMs >= 0, true, "the closer carries the measured duration");
+      assert.ok(close!.data.outcome === "clear" || close!.data.outcome === "blocked");
+      assert.equal(typeof close!.data.hits, "number");
+    }
+    // Attempt 1 was blocked: its closer says `blocked` with its hit, and the
+    // block event names the same step.
+    const blockedClose = ended.find((event) => event.data.outcome === "blocked");
+    assert.ok(blockedClose !== undefined, "attempt 1's scan was blocked");
+    assert.ok(
+      blockedClose!.data.step === "pre-critic" || blockedClose!.data.step === "commit",
+      "the closer names which step blocked",
+    );
+    const named = blocked.find(
+      (event) =>
+        event.data.phase === blockedClose!.data.phase &&
+        event.data.attempt === blockedClose!.data.attempt &&
+        event.data.step === blockedClose!.data.step,
+    );
+    assert.ok(named !== undefined, "the block is on the record too");
+    assert.equal(named!.data.step, blockedClose!.data.step, "the block event names the same step");
+    // No closer of the pair carries the secret itself: `hits` is a count.
+    for (const event of [...started, ...ended, ...blocked]) {
+      const text = JSON.stringify(event.data);
+      assert.ok(!text.includes(FIXTURE_SECRET), "no event of the pair carries the secret");
+    }
+  } finally {
+    fx.restore();
+  }
+});
+
+test("CT-153-36 under parity neither type of the pair is emitted", async () => {
+  // Row 144 — under the `parity` profile the switch `events.commitGateTiming`
+  // reads off, so the scan runs untimed (F153-FR-005).
+  const fx = commitGateFixture();
+  process.env.SPECSTRIDE_PROFILE = "parity";
+  try {
+    await runFeature({ argv: [], workdir: fx.dir });
+    const events = commitGateEvents(fx.dir);
+    assert.equal(
+      events.filter((event) => event.type === "commit_gate.started").length,
+      0,
+      "no commit_gate.started under parity",
+    );
+    assert.equal(
+      events.filter((event) => event.type === "commit_gate.ended").length,
+      0,
+      "no commit_gate.ended under parity",
+    );
+  } finally {
     fx.restore();
   }
 });

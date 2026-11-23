@@ -433,6 +433,45 @@ export type CommitGateBlockedEventData = {
   readonly step?: "pre-critic" | "commit";
 };
 
+/* ------------------------------------------------------------------ *
+ * F153-FR-036 — the timed pair of the commit gate (CQ-153-09 answered A
+ * on 2026-11-13: the pair is additive catalogue rows — `commit_gate.started`
+ * opens, `commit_gate.ended` closes — and no new `endCause` is named).
+ * ------------------------------------------------------------------ */
+
+/** The catalogue type that opens the timed pair of the commit gate. */
+export const COMMIT_GATE_STARTED_EVENT_TYPE = "commit_gate.started" as const;
+
+/** The catalogue type that closes the timed pair of the commit gate. */
+export const COMMIT_GATE_ENDED_EVENT_TYPE = "commit_gate.ended" as const;
+
+/**
+ * The data both events of the timed pair carry. The opener carries what is
+ * known before the scan runs: `durationMs` 0, `outcome` `clear`, `hits` 0.
+ * The closer carries the measured duration, the outcome and the hit count.
+ * No free text: a rule id is a name of versioned data, and `hits` is a
+ * count, so the one line F111-FR-031 draws holds here too.
+ */
+export type CommitGateTimingEventData = {
+  readonly phase: number;
+  readonly attempt: number;
+  /** Which commit-gate step is timed: the scan before the critic or the gate before the approval commit. */
+  readonly step: "pre-critic" | "commit";
+  /** The wall time of the scan in milliseconds; 0 on the opener. */
+  readonly durationMs: number;
+  /** Whether the scan blocked the candidate; `clear` on the opener. */
+  readonly outcome: "clear" | "blocked";
+  /** The number of hits the scan answered; 0 on the opener. */
+  readonly hits: number;
+  /**
+   * True where the closer was written for an opener left open by a run that
+   * died mid-scan (the same mark the pair table's synthesized closers carry).
+   * The engine writes no synthesized member of this pair today; a reader
+   * folds the field either way.
+   */
+  readonly synthesized?: boolean;
+};
+
 /**
  * True when the `data` of an event holds a nonce, a prompt or a reply. The check
  * is over the KEYS, and over a value that is a nonce in the form F101-FR-006

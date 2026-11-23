@@ -82,6 +82,38 @@ export const SPEC_FILE = join(ROOT, "specs/111-event-schema-and-projection/spec.
 /** The second copy of the marks F111-FR-016 names (T074). */
 export const DATA_MODEL_FILE = join(ROOT, "specs/111-event-schema-and-projection/data-model.md");
 
+/**
+ * The two ADDITIVE types feature 153 proposed for the catalogue (T394;
+ * CQ-153-09 answered A on 2026-11-13: additive rows, no new end cause). The
+ * package's code copy carries the rows already (the writer reads it); the
+ * owner's copies under `specs/111-event-schema-and-projection/` are NOT
+ * edited by feature 153 — the rows and the "Pairs" entry go to their owner
+ * through `specs/153-loop-feedback-speed/amendments.md`, section "F111
+ * catalogue". Until the owner takes them, the four guards that read the
+ * owner's copies exempt EXACTLY these two types and no other row.
+ */
+export const TYPES_PENDING_THE_OWNER_OF_SPEC_111 = [
+  "commit_gate.started",
+  "commit_gate.ended",
+] as const;
+
+/** The shipped copy without the rows the owner of spec 111 has not taken yet. */
+function catalogueWithoutThePendingTypes(): string {
+  return CATALOGUE_TEXT.split("\n")
+    .filter(
+      (line) =>
+        !TYPES_PENDING_THE_OWNER_OF_SPEC_111.some((type) => line.startsWith(`${type}\t`)),
+    )
+    .join("\n");
+}
+
+/** The parsed rows without the types the owner of spec 111 has not taken yet. */
+function rowsWithoutThePendingTypes(): CatalogueRow[] {
+  return ROWS.filter(
+    (row) => !(TYPES_PENDING_THE_OWNER_OF_SPEC_111 as readonly string[]).includes(row.type),
+  );
+}
+
 /** The columns of the catalogue, in order. */
 export const COLUMNS = ["type", "kind", "partner", "data_fields", "free_text_fields"] as const;
 
@@ -491,14 +523,19 @@ test("T002: the package ships the catalogue, byte-identical with the contract so
     return;
   }
   assert.equal(
-    CATALOGUE_TEXT,
+    // Feature 153's two additive rows ride in the package copy until spec
+    // 111's owner takes them (T394, amendments.md); the identity holds for
+    // everything the owner ships.
+    catalogueWithoutThePendingTypes(),
     readFileSync(CONTRACT_FILE, "utf8"),
     "the copy is byte-identical with the contract source",
   );
 });
 
-test("T002: the catalogue parses: five columns, 124 rows, every type once", () => {
-  assert.deepEqual(readCatalogue(CATALOGUE_TEXT).length, 124);
+test("T002: the catalogue parses: five columns, 126 rows, every type once", () => {
+  // 124 rows through 2026-09-30; the pair of the commit gate (F153, T394)
+  // adds `commit_gate.started` and `commit_gate.ended` additively (F111-FR-001).
+  assert.deepEqual(readCatalogue(CATALOGUE_TEXT).length, 126);
   assert.equal(new Set(ROWS.map((row) => row.type)).size, ROWS.length, "no type twice");
   for (const row of ROWS) {
     // The name is lower-case words, in one or two parts (`blocked`,
@@ -527,7 +564,9 @@ test("T002 check 2: every type of the catalogue is written in spec.md", () => {
     return;
   }
   const specification = readFileSync(SPEC_FILE, "utf8");
-  assert.deepEqual([...typesWrittenInSpec(ROWS, specification)], []);
+  // Feature 153's two additive rows are pending their owner (T394); the
+  // owner's spec.md is not edited, so exactly those two are exempt here.
+  assert.deepEqual([...typesWrittenInSpec(rowsWithoutThePendingTypes(), specification)], []);
   // Negative control: a type the specification does not write is a finding.
   const broken = [{ ...rowOf("run.started"), type: "run.notInTheSpecification" }];
   assert.deepEqual(
@@ -646,7 +685,9 @@ test("T074 check 2 extended: every type is written in the CATALOGUE of spec.md",
     return;
   }
   const specification = readFileSync(SPEC_FILE, "utf8");
-  assert.deepEqual([...typesWrittenInTheCatalogue(ROWS, specification)], []);
+  // Feature 153's two additive rows are pending their owner (T394); the
+  // owner's spec.md is not edited, so exactly those two are exempt here.
+  assert.deepEqual([...typesWrittenInTheCatalogue(rowsWithoutThePendingTypes(), specification)], []);
   // The haystack is narrower than the whole file: the two retired types are
   // named in spec.md and are not types of the catalogue, and the narrowed
   // prose does not hold them as a type of the catalogue table.
@@ -711,8 +752,11 @@ test("T074 check 3 extended: the two copies of the marks say the same thing", ()
   }
   const dataModel = readFileSync(DATA_MODEL_FILE, "utf8");
   const theirs = readDataModelMarks(dataModel);
-  assert.equal(theirs.size, ROWS.length, "data-model.md holds a row for every type");
-  assert.deepEqual([...marksAgreeWithTheDataModel(ROWS, dataModel)], []);
+  // Feature 153's two additive rows are pending their owner (T394); the
+  // owner's data-model.md is not edited, so exactly those two are exempt here.
+  const ownRows = rowsWithoutThePendingTypes();
+  assert.equal(theirs.size, ownRows.length, "data-model.md holds a row for every type");
+  assert.deepEqual([...marksAgreeWithTheDataModel(ownRows, dataModel)], []);
   // The reader really reads marks, so the agreement above is not two empties.
   const marked = [...theirs.values()].filter((own) => own.length > 0);
   assert.ok(marked.length > 30, `${marked.length} rows of data-model.md carry a mark`);

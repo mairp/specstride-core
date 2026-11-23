@@ -181,6 +181,14 @@ export type LoopConfiguration = {
    */
   readonly taskGroupsAreSliced: boolean;
   /**
+   * `events.commitGateTiming` (feature 153, row 144 of annex X §X.7), ON by
+   * default and OFF under `parity`. CQ-153-09 answered A on 2026-11-13: the
+   * timed pair of the commit gate (`commit_gate.started`, `commit_gate.ended`)
+   * is additive catalogue rows — no new `endCause` — and under `parity` the
+   * compatibility projection drops the new types, so the engine emits neither.
+   */
+  readonly eventsCommitGateTiming: boolean;
+  /**
    * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
    * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
    * The trust class is `N lo` — a rank may only narrow (lower) the value a
@@ -418,6 +426,9 @@ export const COMMIT_SCAN_IN_PASS_KEY = "commit.scan.inPass";
 /** The key of the task-groups switch (feature 153, row 142). */
 export const LOOP_TASK_GROUPS_KEY = "loop.taskGroups";
 
+/** The key of the commit-gate timing switch (feature 153, row 144). */
+export const EVENTS_COMMIT_GATE_TIMING_KEY = "events.commitGateTiming";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -562,6 +573,13 @@ export function loopConfigurationOf(input: {
     // stays a checkpoint claim (CQ-153-15 A, answered 2026-11-13).
     taskGroupsAreSliced:
       resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_TASK_GROUPS_KEY).value),
+    // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
+    // `parity` profile whatever a source holds — under parity the
+    // compatibility projection drops the new types (CQ-153-09 A, answered
+    // 2026-11-13: the timed pair is additive catalogue rows, no new end
+    // cause), so the engine emits neither of them.
+    eventsCommitGateTiming:
+      resolved.profile !== "parity" && switchIsOn(valueOf(EVENTS_COMMIT_GATE_TIMING_KEY).value),
     redGateLimit: redGateLimitOf(resolved),
     // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
     // OFF under the `parity` profile (defect D-44 kept — the baseline has no
