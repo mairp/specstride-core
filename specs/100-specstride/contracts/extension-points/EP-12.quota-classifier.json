@@ -1,0 +1,68 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-12",
+  "ids": [
+    "specstride.quota-classifier/1"
+  ],
+  "annex": "annex C, §C.13",
+  "operations": [
+    "classify",
+    "observe"
+  ],
+  "requirements": [
+    "F100-FR-109"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.quota-classifier/1`."
+    ],
+    "Purpose": [
+      "To tell a limit of a provider apart from every other failure, so that a run waits instead of",
+      "counting an error."
+    ],
+    "Caller and time": [
+      "The engine, on every failure that a harness adapter reports, and on every gauge it observes."
+    ],
+    "Inputs": [
+      "`classify`: what the harness adapter saw. `observe`: a gauge of remaining allowance, or a fact a",
+      "host observed (from the inbox)."
+    ],
+    "Outputs": [
+      "`classify`: class, confidence, `resetsAt` or null, `retryable`. `observe`: an alert level or",
+      "nothing. Classes are a closed set: `quota_window`, `quota_credit`, `rate_limit_transient`,",
+      "`overload`, `auth`, `context_window`, `agent_failure`, `provider_other`, `budget_cap`. Confidence",
+      "is a closed set: `structured`, `status`, `text`, `stall`, `host`."
+    ],
+    "Errors": [
+      "None. An input that matches no entry is `provider_other` with confidence `text`."
+    ],
+    "Guarantees of the core": [
+      "The engine acts on the class only. The quota classes spend no pass, no reject, no MALFORMED",
+      "count, no error count, no wall-clock budget and no relaunch budget. A classification with the",
+      "confidence `text`, `stall` or `host` pauses only after a confirming probe. `quota_credit`, `auth`",
+      "and a hard budget cap lead to the state `blocked-on-human`."
+    ],
+    "Guarantees of an implementation": [
+      "A classifier is a pure table or pure code: no I/O, no clock, no model."
+    ],
+    "Failure of an implementation": [
+      "A classifier that fails gives `provider_other`; the failure takes the as-is path of consecutive",
+      "errors."
+    ],
+    "Unknown-value rule": [
+      "An unknown class from an implementation is read as `provider_other`. An unknown confidence is read",
+      "as `text`."
+    ],
+    "Wave 1 implementations": [
+      "The `failures` map of a descriptor; code in the tested harness adapters; a default text classifier",
+      "whose confidence is `text`."
+    ],
+    "Content owner": [
+      "127. The classifier entries of a harness: its harness adapter."
+    ],
+    "Proving test": [
+      "Classifier fixtures per tested harness. A declared map for a fake harness pauses a fixture run and",
+      "the reject count stays unchanged."
+    ]
+  }
+}

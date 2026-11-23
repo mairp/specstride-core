@@ -1,0 +1,45 @@
+{
+  "schema": "specstride.profile/1",
+  "feature": "146",
+  "owned": [
+    87,
+    88,
+    89
+  ],
+  "shared": [],
+  "read": [
+    19
+  ],
+  "rows": [
+    {
+      "row": 87,
+      "switch": "Discovery",
+      "key": "discovery.enabled",
+      "default": "on",
+      "parity": "off",
+      "register": "DV-064",
+      "requirement": "F146-FR-012",
+      "status": "confirmed"
+    },
+    {
+      "row": 88,
+      "switch": "Metadata pass of discovery",
+      "key": "discovery.online",
+      "default": "on where a credential reference exists",
+      "parity": "off",
+      "register": "DV-064",
+      "requirement": "F146-FR-012",
+      "status": "confirmed"
+    },
+    {
+      "row": 89,
+      "switch": "Safety margin on a context window from the catalogue",
+      "key": "critic.catalogueWindowMargin",
+      "default": "20 per cent",
+      "parity": "not used",
+      "register": "DV-049",
+      "requirement": "F146-FR-016",
+      "status": "confirmed"
+    }
+  ]
+}

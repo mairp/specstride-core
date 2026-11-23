@@ -1,0 +1,19 @@
+{
+  "schema": "specstride.lines/1",
+  "feature": "146",
+  "note": "Product line of default output, grammar of annex G section G.3. Not printed under the parity profile. At most 1 line and 200 bytes per launch.",
+  "lines": [
+    {
+      "label": "SPECSTRIDE-DISCOVERY",
+      "keys": [
+        "ignored",
+        "reason"
+      ],
+      "when": "a widening entry of project configuration is ignored",
+      "requirement": "F146-FR-010"
+    }
+  ],
+  "eventsProposed": [
+    "harness.discovered"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.commit-gate-timing/1",
+  "title": "Commit-gate timing pair (F153-FR-036; CQ-153-09 answered A on 2026-11-13)",
+  "description": "The data of the timed pair of the commit gate: `commit_gate.started` opens the scan of one candidate, `commit_gate.ended` closes it. The pair is ADDITIVE catalogue rows — no new end cause is named (CQ-153-09 A) — and under the profile `parity` the switch `events.commitGateTiming` is off (row 144 of annex X §X.7), so the compatibility projection drops both types. The opener carries what is known before the scan runs (`durationMs` 0, `outcome` `clear`, `hits` 0); the closer carries the measured duration, the outcome and the hit count. No free text: a hit names a rule id, never the matched text, and `hits` is a count (F111-FR-031, F152-FR-010). PROPOSAL of spec 153 — not normative until its tasks land.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phase", "attempt", "step", "durationMs", "outcome", "hits"],
+  "properties": {
+    "phase": {
+      "type": "integer",
+      "minimum": 1,
+      "$comment": "the phase whose candidate the commit gate scanned"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "$comment": "the attempt ordinal of the candidate within the phase"
+    },
+    "step": {
+      "type": "string",
+      "enum": ["pre-critic", "commit"],
+      "$comment": "which commit-gate step is timed: the scan before the critic (F153-FR-024) or the gate before the approval commit (F152)"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "the wall time of the scan in milliseconds; 0 on the opener"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["clear", "blocked"],
+      "$comment": "whether the scan blocked the candidate; `clear` on the opener"
+    },
+    "hits": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "the number of hits the scan answered; 0 on the opener"
+    },
+    "synthesized": {
+      "type": "boolean",
+      "$comment": "true where the closer was written for an opener left open by a run that died mid-scan; the engine writes no synthesized member of this pair today, and the opener carries none"
+    }
+  }
+}

@@ -1,0 +1,147 @@
+[
+  {
+    "id": "CT-134-1",
+    "subject": "registration",
+    "asserts": "adapter is a new registry entry; no core file names it"
+  },
+  {
+    "id": "CT-134-2",
+    "subject": "detect",
+    "asserts": "fake executable found, version read, help checked; no model call"
+  },
+  {
+    "id": "CT-134-3",
+    "subject": "version",
+    "asserts": "outside range gives a doctor warning; change between passes warns"
+  },
+  {
+    "id": "CT-134-4",
+    "subject": "credential",
+    "asserts": "key by environment, never argument; missing key fails before pass 1"
+  },
+  {
+    "id": "CT-134-5",
+    "subject": "terms",
+    "asserts": "provider row decides; unknown provider warns and is never auto-picked"
+  },
+  {
+    "id": "CT-134-6",
+    "subject": "tier3",
+    "asserts": "OAuth path of a Claude subscription refused for both audiences; no process starts"
+  },
+  {
+    "id": "CT-134-7",
+    "subject": "no-login",
+    "asserts": "no login command among the calls; no auth or trust file written"
+  },
+  {
+    "id": "CT-134-8",
+    "subject": "containment",
+    "asserts": "no opt-in: launch refused, doctor line; opt-in: protection=detect"
+  },
+  {
+    "id": "CT-134-9",
+    "subject": "parallel",
+    "asserts": "off unless allow_detect; reason stated"
+  },
+  {
+    "id": "CT-134-10",
+    "subject": "doctor",
+    "asserts": "five checks, no write, no paid call"
+  },
+  {
+    "id": "CT-134-11",
+    "subject": "proposer-invocation",
+    "asserts": "stdin, workdir, allow-list environment, process group"
+  },
+  {
+    "id": "CT-134-12",
+    "subject": "tool-allow-list",
+    "asserts": "allow-list in the invocation record; no deny list"
+  },
+  {
+    "id": "CT-134-13",
+    "subject": "continuation",
+    "asserts": "exact id, per-attempt directory, removed at end"
+  },
+  {
+    "id": "CT-134-14",
+    "subject": "fresh-session",
+    "asserts": "each listed case starts fresh; no session kept where none can follow; parity: none kept"
+  },
+  {
+    "id": "CT-134-15",
+    "subject": "home",
+    "asserts": "real home untouched at Tier 1; overlay removed at Tier 2 even when killed"
+  },
+  {
+    "id": "CT-134-16",
+    "subject": "telemetry-off",
+    "asserts": "switch in the environment of every process; a process that ignores it is still handled"
+  },
+  {
+    "id": "CT-134-17",
+    "subject": "project-trust",
+    "asserts": "no approval option; ignore option passed; fake project resource not loaded"
+  },
+  {
+    "id": "CT-134-18",
+    "subject": "critic-flags",
+    "asserts": "full flag set; no flag that allows a tool"
+  },
+  {
+    "id": "CT-134-19",
+    "subject": "critic-proof",
+    "asserts": "initial record accepted; a listed tool refused; unstated list gives weaker proof"
+  },
+  {
+    "id": "CT-134-20",
+    "subject": "critic-session",
+    "asserts": "no critic record carries a session id a pass used"
+  },
+  {
+    "id": "CT-134-21",
+    "subject": "critic-forms",
+    "asserts": "only tool-less; auto-pick only as tested and with the provider's row"
+  },
+  {
+    "id": "CT-134-22",
+    "subject": "window",
+    "asserts": "smaller of declared and effective; unknown model not offered"
+  },
+  {
+    "id": "CT-134-23",
+    "subject": "dialect",
+    "asserts": "recorded streams pass the reader; header version 2 gives unsupported-schema terminal; no terminal gives missing_terminal"
+  },
+  {
+    "id": "CT-134-24",
+    "subject": "classifier",
+    "asserts": "error text with reset time and without"
+  },
+  {
+    "id": "CT-134-25",
+    "subject": "terminal",
+    "asserts": "success decided by terminal record whatever the exit code"
+  },
+  {
+    "id": "CT-134-26",
+    "subject": "usage",
+    "asserts": "increments per message; cost null when absent"
+  },
+  {
+    "id": "CT-134-27",
+    "subject": "captures",
+    "asserts": "four captures on disk with logs"
+  },
+  {
+    "id": "CT-134-28",
+    "subject": "conformance",
+    "asserts": "port suite with fake executable; reader suite with dialect pi; classifier fixtures; no paid call"
+  },
+  {
+    "id": "CT-134-29",
+    "subject": "context-off",
+    "asserts": "customisations and native memory off for the proposer by default; opt-in recorded"
+  }
+]

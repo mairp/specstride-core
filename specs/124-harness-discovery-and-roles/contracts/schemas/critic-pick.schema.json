@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "criticPick",
+  "description": "Field list of data-model.md of feature 124. Types are fixed when the code is written; unknown fields are ignored by a reader.",
+  "type": "object",
+  "properties": {
+    "step": {},
+    "automatic": {},
+    "harness": {},
+    "model": {},
+    "state": {},
+    "form": {},
+    "window": {},
+    "windowSource": {},
+    "cap": {},
+    "diversity": {},
+    "sameModelWarning": {},
+    "runnersUp": {},
+    "notQualified": {},
+    "passedOver": {},
+    "table": {}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.deliver-101/1",
+  "note": "Files of feature 101 that the sync script of feature 100 delivers into packages/contracts/ after its clean copies. Keys are the target names in the package; values are paths relative to this directory. Without this manifest the sync's clean rebuild drops the package copy of the gate halts that packages/core/src/gate/halts.ts loads (found when feature 152's T096 reran the sync). The target carries the feature number, per the delivery naming rule.",
+  "owner": "101",
+  "data": {
+    "gate-halts-101.json": "gate-halts.json"
+  },
+  "schemas": {}
+}

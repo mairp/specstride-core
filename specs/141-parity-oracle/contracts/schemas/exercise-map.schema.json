@@ -1,0 +1,76 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:internal:141:oracle-exercise-map/1",
+ "title": "Exercise map",
+ "type": "object",
+ "required": [
+  "schema",
+  "pins",
+  "scenarios"
+ ],
+ "properties": {
+  "schema": {
+   "const": "urn:specstride:schema:internal:141:oracle-exercise-map/1"
+  },
+  "pins": {
+   "type": "object"
+  },
+  "scenarios": {
+   "type": "object",
+   "description": "per scenario id, per file of the reference, the executed lines as ranges",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     }
+    }
+   }
+  },
+  "unreached": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "item",
+     "evidence",
+     "familiesNamed"
+    ],
+    "properties": {
+     "item": {
+      "type": "string"
+     },
+     "evidence": {
+      "type": "string"
+     },
+     "familiesNamed": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "executedBy": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "proposal": {
+      "enum": [
+       "another family",
+       "a new scenario",
+       "a characterization test",
+       "a register row"
+      ]
+     }
+    }
+   }
+  }
+ }
+}

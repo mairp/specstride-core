@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:specstride:schema:specstride.spend/1",
+  "title": "specstride.spend/1 (the logical name run:<runId>:spend of annex B section B.5 of feature 100)",
+  "type": "object",
+  "required": ["schema", "runId", "generation", "roles", "run", "windows"],
+  "properties": {
+    "schema": {"const": "specstride.spend/1"},
+    "runId": {"type": "string"},
+    "generation": {"type": "integer", "minimum": 0},
+    "partial": {"type": "boolean", "description": "true when rebuilt from zero after an unreadable ledger with no hard ceiling set"},
+    "seenUsageIds": {"type": "array", "items": {"type": "string"}, "description": "bounded list for deduplication; oldest dropped"},
+    "lastSeen": {"type": "object", "description": "per session id: the last cumulative value seen, for conversion to increments"},
+    "roles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "byBilling": {
+            "type": "object",
+            "propertyNames": {"enum": ["api", "subscription", "unknown"]},
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "inputTokens": {"type": ["integer", "null"]},
+                "outputTokens": {"type": ["integer", "null"]},
+                "cacheReadTokens": {"type": ["integer", "null"]},
+                "cacheWriteTokens": {"type": ["integer", "null"]},
+                "reasoningTokens": {"type": ["integer", "null"]},
+                "realCostUsd": {"type": ["number", "null"]},
+                "notionalCostUsd": {"type": ["number", "null"]},
+                "estimatedCostUsd": {"type": ["number", "null"]},
+                "calls": {"type": "integer"},
+                "passesWithKnownCost": {"type": "integer"},
+                "passesTotal": {"type": "integer"}
+              }
+            }
+          },
+          "probesUsd": {"type": ["number", "null"]}
+        }
+      }
+    },
+    "run": {"type": "object", "properties": {"phaseAttempts": {"type": "integer"}, "pausedMs": {"type": "integer"}}},
+    "windows": {
+      "type": "object",
+      "description": "limit-window facts per harness and model tier, and the start of the pause episode",
+      "properties": {
+        "episodeStart": {"type": ["string", "null"], "format": "date-time"},
+        "byTarget": {
+          "type": "object",
+          "description": "one limit-window fact per target; the property name is `<harness>/<model tier>` (F127-FR-009, F127-FR-031)",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["quotaClass", "resetsAt", "utilization", "rateLimitType", "observedAt"],
+            "properties": {
+              "quotaClass": {"type": "string", "description": "a member of closed set row 46"},
+              "resetsAt": {"type": ["string", "null"], "format": "date-time"},
+              "utilization": {"type": ["number", "null"]},
+              "rateLimitType": {"type": ["string", "null"]},
+              "observedAt": {"type": "string", "format": "date-time", "description": "the time the fact was observed"}
+            }
+          }
+        }
+      }
+    },
+    "alertsFired": {"type": "array", "items": {"type": "string"}, "description": "deduplication keys (kind, role, threshold) that have fired and not re-armed"}
+  }
+}

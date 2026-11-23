@@ -1,0 +1,9 @@
+{"schema":"specstride.quota-classifier/1","entries":[
+{"tier":1,"match":"text: 5-hour or weekly limit, 'Try again in'","class":"quota_window","confidence":"text","retryable":true,"resetsAt":"parsed from text or null","status":"unverified (capture 1)"},
+{"tier":2,"match":"status 429, no exhausted-credit body code","class":"rate_limit_transient","confidence":"status","retryable":true,"status":"unverified"},
+{"tier":2,"match":"body code insufficient_quota","class":"quota_credit","confidence":"status","retryable":false,"status":"unverified"},
+{"tier":2,"match":"status 401","class":"auth","confidence":"status","retryable":false,"status":"unverified"},
+{"any":true,"match":"no entry","class":"provider_other","confidence":"text","retryable":true}],
+"retryableByClass":{"quota_window":true,"rate_limit_transient":true,"overload":true,"agent_failure":true,"provider_other":true,"quota_credit":false,"auth":false,"context_window":false,"budget_cap":false},
+"retryableSource":"feature 100, annex E §E.3; F131-FR-033",
+"structured":"none until capture 1"}

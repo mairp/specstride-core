@@ -1,0 +1,79 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-08",
+  "ids": [
+    "specstride.event-sink/1"
+  ],
+  "annex": "annex C, §C.10",
+  "operations": [
+    "open",
+    "write",
+    "flush",
+    "close",
+    "status"
+  ],
+  "requirements": [
+    "F100-FR-104",
+    "F100-FR-105",
+    "F100-FR-106"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.event-sink/1`."
+    ],
+    "Purpose": [
+      "To deliver events to a destination other than the primary event file."
+    ],
+    "Caller and time": [
+      "The one event writer, after it has written an event to the primary file."
+    ],
+    "Inputs": [
+      "`open`: the context of the run. `write`: one event, in the order of `seq`. `flush`, `close` and",
+      "`status`: nothing. A sink declares the range of event schema majors it accepts.",
+      "The context of `open` holds: the identifiers of the run (`runId`, `launchId`, `engineStartId`,",
+      "feature, workspace); the four as-is labels `job`, `service.name`, `task` and `backend`, which the",
+      "as-is form of a payload needs; the profile and the resolved switches that concern sinks; a",
+      "content accessor, which returns content by reference, redacted, and returns nothing while",
+      "capture is off; and read access to the table of the compatibility projection, from which a sink",
+      "learns the as-is name of an event. The content accessor serves the compatibility projection with",
+      "its own as-is snippets whatever the switch of content capture says."
+    ],
+    "Outputs": [
+      "None that the run depends on. `status` returns the delivery status of the sink as one line and",
+      "as a record: sink label, receiver state, the last delivery status and its reason."
+    ],
+    "Errors": [
+      "Every error is contained in the sink. The writer records `telemetry.delivery` and goes on."
+    ],
+    "Guarantees of the core": [
+      "Local first: the primary file is written before any sink is called, and it is authoritative. The",
+      "primary file writer is part of the core and is not replaceable. Events reach a sink already",
+      "redacted. The event file holds references to content and never content; content reaches a sink",
+      "only through the redaction point and only while content capture is on."
+    ],
+    "Guarantees of an implementation": [
+      "A sink never blocks the writer beyond its time limit, never throws into the loop, and never reads",
+      "the control plane."
+    ],
+    "Failure of an implementation": [
+      "A slow, failing or dead sink is skipped for the event, its failure is recorded, and the outcome of",
+      "the run and the primary event file are unchanged."
+    ],
+    "Unknown-value rule": [
+      "A sink ignores fields and event types it does not know. Event types that start with `x.` belong to",
+      "third parties; they are never projected and never change the read model."
+    ],
+    "Wave 1 implementations": [
+      "The compatibility projection sink; the OTLP exporter; the Loki sink."
+    ],
+    "Content owner": [
+      "111 (core side, writer, conformance suite, sample sink). The compatibility projection sink: 144.",
+      "The OTLP exporter and the Loki sink: 128."
+    ],
+    "Proving test": [
+      "Sink conformance: a slow sink, a throwing sink and a dead collector leave the outcome and the",
+      "event file of a fixture run unchanged. A sample sink that keeps events in memory is registered",
+      "from the test tree."
+    ]
+  }
+}

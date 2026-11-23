@@ -1,0 +1,44 @@
+{
+  "schema": "specstride.table/1",
+  "id": "task-group.slicer",
+  "version": "1.0.0",
+  "sizeRule": {
+    "key": "loop.taskGroups.size",
+    "default": 5,
+    "minimum": 1,
+    "projectFileMayLower": true,
+    "projectFileMayRaise": false,
+    "note": "CQ-153-15 answered A on 2026-11-13: a group of at most the size key's tasks, default 5, a starting value with low confidence; a project file may lower it, not raise it."
+  },
+  "points": {
+    "task-group-slicer": {
+      "signals": {
+        "switchOn": "boolean",
+        "profileIsParity": "boolean",
+        "taskCountBelowSize": "boolean"
+      },
+      "choices": ["no-groups", "one-group", "groups-of-size"]
+    }
+  },
+  "rows": {
+    "task-group-slicer": [
+      {
+        "ruleId": "TG-1",
+        "when": {
+          "op": "or",
+          "of": [
+            { "op": "equal", "signal": "switchOn", "value": false },
+            { "op": "equal", "signal": "profileIsParity", "value": true }
+          ]
+        },
+        "choice": "no-groups"
+      },
+      {
+        "ruleId": "TG-2",
+        "when": { "op": "equal", "signal": "taskCountBelowSize", "value": true },
+        "choice": "one-group"
+      },
+      { "ruleId": "TG-3", "choice": "groups-of-size" }
+    ]
+  }
+}

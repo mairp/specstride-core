@@ -1,0 +1,119 @@
+{
+ "schema": "specstride.closed-sets-123/1",
+ "launchCheckRefusals": [
+  "already-running",
+  "draft-contract",
+  "dry-run-failed",
+  "invalid-contract",
+  "launcher-edited",
+  "launcher-not-found",
+  "launcher-syntax-error",
+  "learning-decisions-changed",
+  "open-blocker",
+  "stale-sources",
+  "unauthorized-root"
+ ],
+ "relaunchRefusals": [
+  "blocked-on-human",
+  "budget-deadline-exceeded",
+  "budget-exhausted",
+  "child-exit-not-retryable",
+  "completed",
+  "contract-digest-changed",
+  "deliberate-stop",
+  "exec-error",
+  "interrupted",
+  "invalid-contract",
+  "launcher-edited",
+  "launcher-exit-<n>",
+  "learning-decisions-changed",
+  "lease-lost",
+  "lock-conflict",
+  "operator-stop",
+  "postcondition-failure",
+  "preflight-blocked",
+  "relaunch-disabled",
+  "relaunch-held",
+  "setup-required",
+  "signal-stop",
+  "stage-did-not-fail",
+  "stage-did-not-run",
+  "stage-precondition",
+  "stage-reason-not-transient",
+  "stale-sources",
+  "state-not-failed",
+  "still-running",
+  "stop-not-retryable",
+  "stop-reason-not-allowed",
+  "unknown-launcher-exit",
+  "unknown-stage",
+  "unknown-terminal"
+ ],
+ "relaunchApprovals": [
+  "classified-crash",
+  "classified-transient"
+ ],
+ "resolveRefusals": [
+  "launcher-missing",
+  "launcher-not-found",
+  "launcher-not-generated",
+  "launcher-ambiguous",
+  "launcher-unreadable"
+ ],
+ "holdRefusals": [
+  "no-live-run"
+ ],
+ "stageReasonsTransient": [
+  "exit",
+  "timeout",
+  "recovery-deadline",
+  "recovery-exhausted"
+ ],
+ "stageReasonsDeliberate": [
+  "postcondition",
+  "stage-precondition",
+  "setup-required",
+  "interrupted",
+  "existing-prerequisite",
+  "completed",
+  "exec-error:"
+ ],
+ "digestStates": [
+  "completed",
+  "failed",
+  "stopped",
+  "dry-run"
+ ],
+ "supervisionOutcomes": {
+  "completed": 0,
+  "stopped": 2,
+  "unknown-terminal": 3,
+  "refused": 4,
+  "supervision-expired": 5,
+  "failed": 22,
+  "lock-conflict": 24
+ },
+ "relaunchOwner": [
+  "root",
+  "supervise"
+ ],
+ "runRequestKinds": [
+  "pipeline",
+  "engine"
+ ],
+ "stageKinds": [
+  "setup",
+  "decision",
+  "command",
+  "specstride",
+  "smoke"
+ ],
+ "preconditionChecks": [
+  "file_exists",
+  "dir_exists",
+  "env_set",
+  "command_available",
+  "command_success",
+  "json_field_equals"
+ ]
+}

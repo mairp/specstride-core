@@ -1,0 +1,46 @@
+{
+  "schema": "specstride.closed-sets/1",
+  "feature": "146",
+  "sets": [
+    {
+      "name": "harness-states",
+      "annexRow": 34,
+      "members": [
+        "tested",
+        "locally-verified",
+        "declared",
+        "detected"
+      ],
+      "closedBy": "design",
+      "unknown": "detected"
+    },
+    {
+      "name": "discovery-sources",
+      "annexRow": null,
+      "members": [
+        "harness-adapter",
+        "binary",
+        "config-home",
+        "host",
+        "endpoint",
+        "gateway",
+        "declared"
+      ],
+      "closedBy": "owner decision",
+      "unknown": "the candidate is dropped, with a doctor finding"
+    },
+    {
+      "name": "probe-steps",
+      "annexRow": null,
+      "members": [
+        "presence",
+        "version-help",
+        "credential-presence",
+        "metadata",
+        "catalogue"
+      ],
+      "closedBy": "design",
+      "unknown": "the value is read as null"
+    }
+  ]
+}

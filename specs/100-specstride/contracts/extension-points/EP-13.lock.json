@@ -1,0 +1,82 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-13",
+  "ids": [
+    "specstride.lock/1"
+  ],
+  "annex": "annex F, §F.5",
+  "operations": [
+    "acquire",
+    "heartbeat",
+    "release",
+    "probe",
+    "reclaim",
+    "handDown",
+    "verify"
+  ],
+  "requirements": [
+    "F100-FR-061",
+    "F100-FR-147",
+    "F100-FR-156",
+    "F100-FR-164"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.lock/1`."
+    ],
+    "Purpose": [
+      "To make sure that one run at a time works in a workspace, and to tell a live owner from a dead one."
+    ],
+    "Caller and time": [
+      "The runtime root (the engine in start mode `standalone`) at launch, at a heartbeat, at the end.",
+      "The engine at every boundary (`verify`). The CLI and the doctor (`probe`). `resume` (`reclaim`)."
+    ],
+    "Inputs": [
+      "`acquire`: the scope (the workspace) and the owner record of annex B §B.9. `heartbeat`,",
+      "`release`: the lease. `probe`, `reclaim`: the scope. `handDown`: the lease. `verify`: a token."
+    ],
+    "Outputs": [
+      "`acquire`: a lease, or a conflict that names the holder. `probe`: one of the closed set `free`,",
+      "`held-live`, `held-foreign`, `stale-owner-dead`, `owner-dead-group-alive`, `unknown`. `reclaim`:",
+      "a lease, or `lost-race`. `handDown`: a token for a child. `verify`: whether the parent still",
+      "holds the lease."
+    ],
+    "Errors": [
+      "`conflict` (engine code 5, pipeline code 24); `foreign-owner`, which is never reclaimed",
+      "automatically; `unknown`, which counts as held."
+    ],
+    "Guarantees of the core": [
+      "One run per workspace. The scope is the workspace. A lease is handed down, so a child never takes",
+      "a second lock. `owner-dead-group-alive` refuses a start and names the survivors; `adoptable`",
+      "processes never cause it. A signal is sent only when pid, start time and run token all match. The",
+      "provider in use is recorded in the workspace record; a different provider refuses."
+    ],
+    "Guarantees of an implementation": [
+      "Exclusion is atomic. A lock never exists without its owner record. Reclaim is atomic and never a",
+      "removal followed by a creation. Liveness rests on something the kernel releases when the owner",
+      "dies. Behaviour is the same on Linux and macOS. No component is compiled at install."
+    ],
+    "Failure of an implementation": [
+      "A provider that fails in `acquire` or `probe` gives `unknown`, which counts as held: the launch is",
+      "refused with exit 5 or 24. A provider that fails in `verify` makes the engine treat the owner as",
+      "lost."
+    ],
+    "Unknown-value rule": [
+      "An unknown result of `probe` is read as `unknown`. An owner record with an unknown field is",
+      "accepted; one that lacks a required field is `unknown`."
+    ],
+    "Wave 1 implementations": [
+      "One provider: a directory lock with the owner record renamed into place, reclaim by rename, and",
+      "liveness backed by the kernel through something the runtime platform ships."
+    ],
+    "Content owner": [
+      "122."
+    ],
+    "Proving test": [
+      "Provider conformance: 8 contenders over 300 rounds give exactly one winner in every round; the",
+      "owner killed without warning; the owner dead with a live child; a reused pid after a changed boot",
+      "identity; a foreign host name. A sample provider that keeps locks in memory is registered from the",
+      "test tree."
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "specstride.deliver-113/1",
+  "note": "Files of feature 113 that the sync script of feature 100 delivers into packages/contracts/ after its clean copy (T299 of specs/100-specstride/tasks.md). Keys are the target names in the package; values are paths relative to this directory. A target name that another source already delivered fails the sync.",
+  "owner": "113",
+  "data": {
+    "closed-sets-113.json": "closed-sets.json"
+  }
+}

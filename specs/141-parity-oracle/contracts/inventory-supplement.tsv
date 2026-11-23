@@ -1,0 +1,3 @@
+b_item	system	kind	item	evidence	as_is_coverage	area	same_evidence_as	proposed_cluster	proposed_disposition	proposed_feature	proposed_proof
+B-2784	SS	stop-reason	`run_stop reason=proposer_cap_exhausted` written on the structured path of the pass loop, with fields `iter`, `kill_reason`, `consec`; followed by exit 10.	proposer.sh:2253	none	ss-proposer		C-055	ported	118-pass-supervision-and-jobs	FX-20; PT-118-C-055-*
+B-2785	SS	stop-reason	`run_stop reason=proposer_consecutive_errors` written on the structured path of the pass loop, with fields `iter`, `subtype`, `kill_reason`, `kill_class`; followed by exit 7.	proposer.sh:2259	none	ss-proposer		C-055	ported	103-proposer-pass	FX-18; PT-103-C-055-*

@@ -1,0 +1,43 @@
+{
+  "schema": "specstride.table/1",
+  "id": "red-gate-budget",
+  "version": "1.0.0",
+  "points": {
+    "red-gate-budget": {
+      "signals": {
+        "switchOn": "boolean",
+        "profileParity": "boolean",
+        "budgetSpent": "boolean"
+      },
+      "choices": ["count-as-rejection", "spend", "halt"]
+    }
+  },
+  "rows": {
+    "red-gate-budget": [
+      {
+        "ruleId": "RGB-1-count-as-rejection",
+        "when": {
+          "op": "or",
+          "of": [
+            { "op": "equal", "signal": "switchOn", "value": false },
+            { "op": "equal", "signal": "profileParity", "value": true }
+          ]
+        },
+        "choice": "count-as-rejection"
+      },
+      {
+        "ruleId": "RGB-2-halt",
+        "when": {
+          "op": "and",
+          "of": [
+            { "op": "equal", "signal": "switchOn", "value": true },
+            { "op": "equal", "signal": "profileParity", "value": false },
+            { "op": "equal", "signal": "budgetSpent", "value": true }
+          ]
+        },
+        "choice": "halt"
+      },
+      { "ruleId": "RGB-3-spend", "choice": "spend" }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:specstride:schema:specstride.state-archive/1",
+  "title": "State archive of one feature (feature 122, F122-FR-033)",
+  "description": "The decompressed content of the archive. Assumption CQ-139 bears on `keys`.",
+  "type": "object",
+  "required": ["schema", "manifest", "members", "sig"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "specstride.state-archive/1"},
+    "manifest": {
+      "type": "object",
+      "required": ["feature", "workspaceId", "productVersion", "createdAt", "hashes"],
+      "properties": {
+        "feature": {"type": "string"},
+        "workspaceId": {"type": "string"},
+        "productVersion": {"type": "string"},
+        "createdAt": {"type": "string", "format": "date-time"},
+        "hashes": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "members": {
+      "type": "object",
+      "required": ["approvals", "ledger", "learning"],
+      "properties": {
+        "approvals": {"type": "array", "description": "records of specstride.approval/1"},
+        "ledger": {"type": "array", "description": "records of specstride.ledger/1, in order"},
+        "learning": {"type": "object", "description": "the decision log and the learning events of the feature, as text"},
+        "keys": {"type": "object", "description": "approval key and ledger key of the feature (CQ-139)"}
+      }
+    },
+    "sig": {"type": "string", "description": "signature over the canonical hash of the manifest"}
+  }
+}

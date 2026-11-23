@@ -1,0 +1,110 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:specstride.inspect.events/1",
+ "title": "The `--json` record of `events` (F119-FR-033; annex B §B.20)",
+ "type": "object",
+ "required": [
+  "schema",
+  "cmd",
+  "ok"
+ ],
+ "properties": {
+  "schema": {
+   "const": "specstride.inspect.events/1"
+  },
+  "cmd": {
+   "const": "events"
+  },
+  "ok": {
+   "type": "boolean"
+  },
+  "feature": {
+   "type": "string",
+   "description": "The feature slug."
+  },
+  "reason": {
+   "type": "string",
+   "description": "A member of the closed set of F119-FR-030; required when ok is false."
+  },
+  "fix": {
+   "type": "string",
+   "description": "The fixed fix text of the reason; required when ok is false."
+  },
+  "events": {
+   "type": "array",
+   "description": "Required when ok is true.",
+   "items": {
+    "type": "object",
+    "properties": {
+     "seq": {
+      "type": [
+       "integer",
+       "null"
+      ],
+      "description": "A value that is not known is null."
+     },
+     "type": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "phase": {
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "attempt": {
+      "type": [
+       "integer",
+       "null"
+      ],
+      "description": "The number of the phase attempt, as in the default line `attempt=<n>`."
+     }
+    }
+   }
+  },
+  "left": {
+   "type": "integer",
+   "description": "The entries left out by the byte limit; required when ok is true."
+  }
+ },
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": false
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "reason",
+     "fix"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": true
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "events"
+    ]
+   }
+  }
+ ]
+}

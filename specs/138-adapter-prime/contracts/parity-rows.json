@@ -1,0 +1,26 @@
+{
+  "rows": [
+    { "row": 10, "key": "carry.continuation", "parity": "off", "register": "DV-010" },
+    { "row": 25, "key": "sandbox.level", "parity": "as at the baseline: none (C0 stands for the opt-in)", "register": "DV-030" },
+    { "row": 26, "key": "sandbox.permissionMode", "parity": "argument table, column parity", "register": "DV-031" },
+    { "row": 28, "key": "roles.critic.transport", "parity": "text mode", "register": "DV-001; DV-081; DV-090" },
+    { "row": 29, "key": "memory.native.proposer", "parity": "as-is: no flag about memory is passed", "register": "DV-047" },
+    { "row": 30, "key": "harnesses.prime.overlay", "parity": "none", "register": "DV-002" },
+    { "row": 34, "key": "distribution.audience", "parity": "personal", "register": "DV-048" },
+    { "row": 35, "key": "critic.autoPick", "parity": "not reached", "register": "DV-049" },
+    { "row": 79, "key": "stream.tap", "parity": "on", "register": "DV-065" },
+    { "row": 92, "key": "critic.warnSameModel", "parity": "not printed", "register": "DV-034" },
+    { "row": 131, "key": "harnesses.prime.proposerCustomisations", "parity": "as-is: no flag about customisations is passed", "register": "DV-047; DV-002" }
+  ],
+  "settings": [
+    { "key": "harnesses.prime.bin", "alias": "SPECSTRIDE_PRIME_AGENT_BIN" },
+    { "key": "harnesses.prime.launcher", "alias": "SPECSTRIDE_PRIME_FLEET_BIN; SPECSTRIDE_PRIME_BIN", "order": "the first is read; the second when the first is unset, as at the baseline", "status": "key confirmed; the first variable and the order are reported to features 100 and 110" },
+    { "key": "stream.tap", "alias": "SPECSTRIDE_AGENT_STREAM", "parity": "on", "status": "confirmed; rows 79 and 86 of annex X §X.7" },
+    { "key": "harnesses.prime.tools", "parity": "not used", "status": "confirmed" },
+    { "key": "harnesses.prime.envAllow", "status": "confirmed" },
+    { "key": "roles.critic.contextTokens", "alias": "SPECSTRIDE_CRITIC_CONTEXT_TOKENS", "parity": "98304 for an unseen model" }
+  ],
+  "registerRowsChanged": [
+    { "id": "DV-112", "as_is": "The baseline sets no variable that switches the harness's own telemetry off", "new": "Every process started for prime carries the telemetry switch of the dialect row and the do-not-track variable", "oracle": "waiver on the transcript surface for the names of these two variables, in the scenarios of FX-01, FX-06 and FX-26 in which the prime stub is started", "note": "the row exists and names FX-18 as well; no scenario of FX-18 starts the prime stub; the wording is reported" }
+  ]
+}

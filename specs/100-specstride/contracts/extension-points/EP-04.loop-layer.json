@@ -1,0 +1,219 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-04",
+  "ids": [
+    "specstride.loop-layer/1"
+  ],
+  "annex": "annex D, §D.1",
+  "operations": [
+    "contributePrompt",
+    "afterPass",
+    "betweenPasses",
+    "nextPassBlock",
+    "onEvidence",
+    "contributeCriticInput",
+    "resume",
+    "report"
+  ],
+  "requirements": [
+    "F100-FR-031",
+    "F100-FR-114",
+    "F100-FR-115",
+    "F100-FR-116",
+    "F100-FR-117",
+    "F100-FR-118",
+    "F100-FR-119",
+    "F100-FR-120",
+    "F100-FR-121",
+    "F100-FR-122",
+    "F100-FR-123",
+    "F100-FR-124",
+    "F100-FR-125"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.loop-layer/1`."
+    ],
+    "Purpose": [
+      "To let a kind of loop work inside a phase attempt of the one engine, between the passes of the",
+      "proposer, without being able to touch the phase gate. The classic loop is the engine with the",
+      "layer `none`."
+    ],
+    "Caller and time": [
+      "The engine calls a layer at eight fixed call points of a phase attempt. After a pass the order is",
+      "fixed: kill check, yield check, layer, classic accounting.",
+      {
+        "table": {
+          "header": [
+            "#",
+            "Call point",
+            "When",
+            "What the layer returns"
+          ],
+          "rows": [
+            [
+              "1",
+              "`contributePrompt`",
+              "Before a pass, when the prompt is assembled",
+              "Prompt blocks (the form of §D.5)"
+            ],
+            [
+              "2",
+              "`afterPass`",
+              "After a pass has exited",
+              "`accept`, `refuse` or `none`, for the checkpoint found in the outbox"
+            ],
+            [
+              "3",
+              "`betweenPasses`",
+              "While no session is open",
+              "An outcome with directives"
+            ],
+            [
+              "4",
+              "`nextPassBlock`",
+              "Before the next pass",
+              "The block for the next pass, or `none`"
+            ],
+            [
+              "5",
+              "`onEvidence`",
+              "When phase evidence appears",
+              "Whether a closing check runs, or `none`"
+            ],
+            [
+              "6",
+              "`contributeCriticInput`",
+              "Before the critic prompt is assembled",
+              "The rows of the fact block (§D.7), or `none`"
+            ],
+            [
+              "7",
+              "`resume`",
+              "At a start of the engine inside a phase attempt",
+              "What to do with open work, from the state of the ledger"
+            ],
+            [
+              "8",
+              "`report`",
+              "At the end of the run",
+              "The fields of the `[LOOP]` line"
+            ]
+          ]
+        }
+      }
+    ],
+    "Inputs": [
+      "A read-only view of the phase attempt (counters, check manifest, fingerprints, and with parallel",
+      "units on `workerId` and `groupId`); a namespace of the layer's own in the ledger, written through",
+      "the engine; the working directory as a parameter; the check runner; a handle on the router; the",
+      "services the layer declared and the engine offers."
+    ],
+    "Outputs": [
+      "Directives from a closed set, executed and accounted by the engine:",
+      {
+        "table": {
+          "header": [
+            "Directive",
+            "Meaning"
+          ],
+          "rows": [
+            [
+              "`keep`",
+              "The unit of work is kept: a ledger record bound to the tree fingerprint"
+            ],
+            [
+              "`repair`",
+              "The proposer gets the output of the check on the current tree"
+            ],
+            [
+              "`unresolved`",
+              "The unit stays as it is; the tree is not touched"
+            ],
+            [
+              "`layerOffForAttempt`",
+              "The layer is off for the rest of the phase attempt"
+            ],
+            [
+              "`layerOffForRun`",
+              "The layer is off for the rest of the run"
+            ],
+            [
+              "`giveIterationBack`",
+              "The pass is given back: it does not count towards the pass limit. The literal keeps the retired word"
+            ],
+            [
+              "`exemptShortPass`",
+              "The pass leaves the short-pass counter as it was"
+            ],
+            [
+              "`exemptRepeatCounter`",
+              "The exact argument lists of the inner check set are exempt from the process-level repeat counter"
+            ],
+            [
+              "`requestPass`",
+              "The engine runs one pass: prompt block, working directory, session directive, time limit, worker id"
+            ],
+            [
+              "`requestPassGroup`",
+              "The engine runs a list of `requestPass` with a concurrency limit and returns when every pass has ended"
+            ],
+            [
+              "`integrateGroup`",
+              "The engine integrates the results of a group through the tree-store service (§D.2). It carries, per worker, `accepted` or the refusal reason, which is how the verdicts of the audits of feature 142 reach the engine before `compose`"
+            ]
+          ]
+        }
+      },
+      "The engine reports to the layer, and the layer acts on, four further facts: a missing object in the",
+      "tree store, a changed ledger, an application of a group that was not completed, and a harness",
+      "adapter that declares no spending limit (features 143 and 142)."
+    ],
+    "Errors": [
+      "A thrown error, an invalid ledger, a spent cap and a check that cannot start. Each switches the",
+      "layer off for the phase attempt. None stops a run."
+    ],
+    "Guarantees of the core": [
+      "The order after a pass is fixed. With the layer `none`, and with a layer that never engages,",
+      "output is identical to the classic loop apart from the fields the divergence register names. The",
+      "strategy is pinned at launch and recorded per run and per phase attempt. Withheld from every",
+      "layer by construction: every writer of the phase gate (approval, verdict, feedback, hint, recovery",
+      "markers); every counter of the outer loop; a harness handle; the event writer and the ledger",
+      "writer; the project's repository; any path of the workspace or of a worker tree as a writable",
+      "handle."
+    ],
+    "Guarantees of an implementation": [
+      "A layer declares at registration the directives and the services it uses. It holds no state",
+      "outside its ledger namespace. It adds nothing to a prompt and executes nothing in a phase attempt",
+      "in which no unit of work was declared, apart from its protocol block. It reveals nothing to the",
+      "critic beyond the fact block."
+    ],
+    "Failure of an implementation": [
+      "The layer is off for the phase attempt and the classic loop carries on, announced and recorded. A",
+      "failure of the application of a group switches the layer off for the run. No exit code and no stop",
+      "reason results."
+    ],
+    "Unknown-value rule": [
+      "A directive or a service that the engine does not offer refuses the layer at registration; a new",
+      "directive is therefore a minor version. An unknown return value at a call point is read as `none`",
+      "and switches the layer off for the phase attempt."
+    ],
+    "Wave 1 implementations": [
+      "`none` (built in, the classic loop); `micro` (on by default where the verification gate",
+      "executes); `parallel`, stacked above `micro`, as an option that is off by default. Reserved and",
+      "not built: `autoresearch`."
+    ],
+    "Content owner": [
+      "103. The implementation `micro`: 115. The implementation `parallel`: 142. The engine services",
+      "behind the group directives: 143."
+    ],
+    "Proving test": [
+      "(i) The inertness suite: every fixture of the oracle with the layer on and stub agents that never",
+      "declare a unit of work. (ii) A sample layer `noop` in the test tree passes the whole oracle.",
+      "(iii) A second sample layer stacks above `noop`, requests a group of two stub passes and",
+      "integrates them, and the whole oracle still passes with the sample unregistered. (iv) Static: the",
+      "package of a layer imports no writer of the phase gate, and the build fails if a core file names",
+      "`micro` or `parallel`."
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "specstride.table/1",
+  "id": "attempt-planner.tier-bump",
+  "version": "1.0.0",
+  "points": {
+    "attempt-tier": {
+      "signals": {
+        "optionOn": "boolean",
+        "criticRejections": "integer",
+        "k": "integer",
+        "alreadyBumped": "boolean",
+        "hasHigherTier": "boolean",
+        "targetIsCriticModel": "boolean",
+        "targetQuotaExhausted": "boolean"
+      },
+      "choices": ["bump", "skip", "none"]
+    }
+  },
+  "rows": {
+    "attempt-tier": [
+      { "ruleId": "TB-01-option-off", "when": { "equal": ["optionOn", false] }, "choice": "none" },
+      { "ruleId": "TB-02-below-k", "when": { "less": ["criticRejections", "k"] }, "choice": "none" },
+      { "ruleId": "TB-03-already-bumped", "when": { "equal": ["alreadyBumped", true] }, "choice": "none" },
+      { "ruleId": "TB-04-ladder-top", "when": { "equal": ["hasHigherTier", false] }, "choice": "skip" },
+      { "ruleId": "TB-05-critic-model", "when": { "equal": ["targetIsCriticModel", true] }, "choice": "skip" },
+      { "ruleId": "TB-06-quota-exhausted", "when": { "equal": ["targetQuotaExhausted", true] }, "choice": "skip" },
+      { "ruleId": "TB-07-bump", "when": { "present": ["criticRejections"] }, "choice": "bump" },
+      { "ruleId": "TB-00-default", "choice": "none" }
+    ]
+  }
+}

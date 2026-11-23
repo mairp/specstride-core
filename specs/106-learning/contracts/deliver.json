@@ -1,0 +1,12 @@
+{
+ "schema": "specstride.deliver-106/1",
+ "note": "Schemas of feature 106 that the sync script of feature 100 delivers into packages/contracts/schemas/ (the mechanism of T299 of feature 100). Keys are the target names in the package; values are paths relative to this directory. Every target ends in `-106`, so the sync keeps it and none takes the name of a file of feature 100 or of another feature. These four are the records of annex B §B.20 (the retrospective was added by T068); the records that are not there (the advice rows, the mode selector result) stay internal to the package, in packages/learning/schemas/, with an internal $id (row 32 of 'What the other features must follow').",
+ "owner": "106",
+ "data": {},
+ "schemas": {
+  "learn-applied-106.schema.json": "schemas/learn-applied.schema.json",
+  "learn-summary-106.schema.json": "schemas/learn-summary.schema.json",
+  "learn-observation-106.schema.json": "schemas/learn-observation.schema.json",
+  "retrospective-106.schema.json": "schemas/retrospective.schema.json"
+ }
+}

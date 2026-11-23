@@ -1,0 +1,468 @@
+{
+ "schema": "specstride.traceability-rows/1",
+ "feature": "130-adapter-dsh",
+ "items": [
+  {
+   "item": "B-0426",
+   "cluster": "C-035",
+   "disposition": "ported",
+   "requirement": "F130-FR-001",
+   "proof": "FX-26; PT-130-C-035-*"
+  },
+  {
+   "item": "B-0433",
+   "cluster": "C-036",
+   "disposition": "translated",
+   "requirement": "F130-FR-031",
+   "proof": "FX-17, FX-18; PT-130-C-036-*"
+  },
+  {
+   "item": "B-0434",
+   "cluster": "C-037",
+   "disposition": "translated",
+   "requirement": "F130-FR-031",
+   "proof": "FX-17, FX-18; PT-130-C-037-*"
+  },
+  {
+   "item": "B-0435",
+   "cluster": "C-038",
+   "disposition": "translated",
+   "requirement": "F130-FR-031",
+   "proof": "FX-17, FX-18; PT-130-C-038-*"
+  },
+  {
+   "item": "B-0436",
+   "cluster": "C-038",
+   "disposition": "translated",
+   "requirement": "F130-FR-031",
+   "proof": "FX-17, FX-18; PT-130-C-038-*"
+  },
+  {
+   "item": "B-0437",
+   "cluster": "C-039",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-039-*"
+  },
+  {
+   "item": "B-0438",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0439",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0440",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0441",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0442",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0443",
+   "cluster": "C-040",
+   "disposition": "ported",
+   "requirement": "F130-FR-032",
+   "proof": "FX-17, FX-18; PT-130-C-040-*"
+  },
+  {
+   "item": "B-0508",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-01, FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0509",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0510",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0513",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-01, FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0514",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-01, FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0515",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-01, FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0516",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-008",
+   "proof": "FX-01, FX-26; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0536",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-033",
+   "proof": "FX-17, FX-18; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0542",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "requirement": "F130-FR-033",
+   "proof": "FX-17, FX-18; PT-130-C-052-*"
+  },
+  {
+   "item": "B-0551",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-053-*"
+  },
+  {
+   "item": "B-0552",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-053-*"
+  },
+  {
+   "item": "B-0553",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-053-*"
+  },
+  {
+   "item": "B-0563",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "requirement": "F130-FR-019",
+   "proof": "FX-19, FX-22; PT-130-C-053-*"
+  },
+  {
+   "item": "B-0571",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "requirement": "F130-FR-009",
+   "proof": "FX-18; PT-130-C-054-*"
+  },
+  {
+   "item": "B-0585",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-054-*"
+  },
+  {
+   "item": "B-0586",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-054-*"
+  },
+  {
+   "item": "B-0587",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17; PT-130-C-054-*"
+  },
+  {
+   "item": "B-0618",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "requirement": "F130-FR-033",
+   "proof": "FX-17, FX-18; PT-130-C-056-*"
+  },
+  {
+   "item": "B-0619",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "requirement": "F130-FR-033",
+   "proof": "FX-17, FX-18; PT-130-C-056-*"
+  },
+  {
+   "item": "B-0621",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "requirement": "F130-FR-014",
+   "proof": "FX-26; PT-130-C-056-*"
+  },
+  {
+   "item": "B-0624",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "requirement": "F130-FR-014",
+   "proof": "FX-26; PT-130-C-056-*"
+  },
+  {
+   "item": "B-0642",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "requirement": "F130-FR-014",
+   "proof": "FX-18; PT-130-C-057-*"
+  },
+  {
+   "item": "B-0650",
+   "cluster": "C-057",
+   "disposition": "ported",
+   "requirement": "F130-FR-035",
+   "proof": "FX-17, FX-18; PT-130-C-057-*"
+  },
+  {
+   "item": "B-0653",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-057-*"
+  },
+  {
+   "item": "B-0654",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "requirement": "F130-FR-036",
+   "proof": "FX-17, FX-18; PT-130-C-057-*"
+  },
+  {
+   "item": "B-0676",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-012",
+   "proof": "FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0677",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-013",
+   "proof": "FX-01, FX-26; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0678",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-012",
+   "proof": "FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0679",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-012",
+   "proof": "FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0686",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-012",
+   "proof": "FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0687",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-012",
+   "proof": "FX-26; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0688",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-007",
+   "proof": "FX-01, FX-26; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0757",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-035",
+   "proof": "FX-17, FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0764",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-020",
+   "proof": "FX-16, FX-20, FX-22, FX-24; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0768",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-035",
+   "proof": "FX-17, FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0769",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "requirement": "F130-FR-035",
+   "proof": "FX-17, FX-18; PT-130-C-058-*"
+  },
+  {
+   "item": "B-0817",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0818",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0819",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0820",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0821",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0822",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0823",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0824",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0825",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-06, FX-07; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0826",
+   "cluster": "C-061",
+   "disposition": "translated",
+   "requirement": "F130-FR-022",
+   "proof": "FX-01, FX-06; PT-130-C-061-*"
+  },
+  {
+   "item": "B-0912",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-029",
+   "proof": "FX-25; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0983",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-027",
+   "proof": "FX-06, FX-07; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0984",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-013",
+   "proof": "FX-06, FX-07; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0985",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-028",
+   "proof": "FX-06, FX-07; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0986",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-028",
+   "proof": "FX-01, FX-06; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0987",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-023",
+   "proof": "FX-01, FX-06; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0988",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-021",
+   "proof": "FX-01, FX-06; PT-130-C-066-*"
+  },
+  {
+   "item": "B-0990",
+   "cluster": "C-066",
+   "disposition": "ported",
+   "requirement": "F130-FR-026",
+   "proof": "FX-06, FX-07; PT-130-C-066-*"
+  }
+ ]
+}

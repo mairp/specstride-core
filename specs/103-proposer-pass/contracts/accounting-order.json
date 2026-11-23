@@ -1,0 +1,18 @@
+{
+  "schema": "specstride.internal/accounting-order",
+  "note": "F103-FR-022 and the reading of proposer.sh at 9cab15d, lines 2047 to 2360. The engine's harness port call, then the fixed order of annex D section D.1.",
+  "beforeEveryPass": ["stop flag", "source check (F103-FR-021)", "prompt built (F103-FR-030)", "session directive (F103-FR-042)"],
+  "afterEveryPass": [
+    {"step": 1, "name": "betweenPasses of the harness port", "requirement": "F103-FR-010"},
+    {"step": 2, "name": "kill check", "requirement": "F103-FR-022", "owner": "118"},
+    {"step": 3, "name": "yield check", "requirement": "F103-FR-022", "owner": "118"},
+    {"step": 4, "name": "loop layer, call point afterPass", "requirement": "F103-FR-022"},
+    {"step": 5, "name": "phase evidence exists: end with 0", "requirement": "F103-FR-005"},
+    {"step": 6, "name": "quota class: give the pass number back, change no counter", "requirement": "F103-FR-020"},
+    {"step": 7, "name": "short-pass counter", "requirement": "F103-FR-022", "owner": "118"},
+    {"step": 8, "name": "error accounting, legacy or structured path; cap counter", "requirement": "F103-FR-012, F103-FR-013, F103-FR-015"},
+    {"step": 9, "name": "no-progress measurement and counter", "requirement": "F103-FR-016, F103-FR-017"},
+    {"step": 10, "name": "stop flag", "requirement": "F103-FR-019"},
+    {"step": 11, "name": "iter_done, then the pause unless this was the last pass", "requirement": "F103-FR-004, F103-FR-003"}
+  ]
+}

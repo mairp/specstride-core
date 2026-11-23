@@ -35,7 +35,6 @@ import {
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 import assert from "node:assert/strict";

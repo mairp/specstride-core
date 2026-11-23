@@ -1,0 +1,15 @@
+{
+  "schema": "specstride.adapter-diagnostics/1",
+  "codes": [
+    { "code": "malformed_json", "severity": "error", "messages": ["Malformed Prime JSON: <error>", "Prime record is not a JSON object"], "requirement": "F138-FR-026" },
+    { "code": "absent_schema", "severity": "error", "messages": ["Prime stream has no schema declaration", "Prime session omitted schema version"], "extras": ["provider_record_type"], "requirement": "F138-FR-025" },
+    { "code": "unsupported_schema", "severity": "error", "messages": ["Unsupported Prime schema version <v>"], "requirement": "F138-FR-025" },
+    { "code": "unknown_record", "severity": "warning", "messages": ["Unknown Prime record type: <type|<absent>>"], "requirement": "F138-FR-026" },
+    { "code": "provider_retry", "severity": "warning", "messages": ["<reason> | Prime started an internal retry"], "extras": ["attempt", "delay_ms"], "requirement": "F138-FR-034" },
+    { "code": "provider_auth", "severity": "error", "messages": ["<provider message>"], "match": ["auth", "authentication", "authorization", "credential", "api[ _-]?key"], "requirement": "F138-FR-032" },
+    { "code": "provider_error", "severity": "error", "messages": ["<provider message> | Prime reported an error | Prime message ended with an error"], "requirement": "F138-FR-032" },
+    { "code": "abandoned_tool", "severity": "warning", "messages": ["Prime stream ended before tool <id> completed"], "extras": ["tool_id", "tool", "provider_record_type=tool_execution"], "requirement": "F138-FR-031" }
+  ],
+  "commonFields": ["code", "severity", "message (redacted, 1024 bytes)", "provider_record_type", "redacted", "truncated", "original_bytes", "retained_bytes"],
+  "caps": { "text": 4096, "toolSummary": 2048, "progress": 1024, "toolResult": 4096, "diagnosticMessage": 1024, "targets": 8 }
+}

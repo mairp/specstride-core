@@ -1,0 +1,85 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-18",
+  "ids": [
+    "specstride.critic-strategy/1",
+    "specstride.attempt-planner/1"
+  ],
+  "annex": "annex E, §E.1",
+  "operations": [
+    "judge",
+    "next"
+  ],
+  "requirements": [
+    "F100-FR-138",
+    "F100-FR-139",
+    "F100-FR-140"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.critic-strategy/1` and `specstride.attempt-planner/1`. Internal seams: versioned and",
+      "tested as every extension point, with no promise outside the product's repository in Wave 1."
+    ],
+    "Purpose": [
+      "The critic strategy decides how a phase gate is judged. The attempt planner decides of which kind",
+      "the next phase attempt is. Both are seams so that a later strategy needs no change of the loop."
+    ],
+    "Caller and time": [
+      "The engine calls `judge` once per phase gate, after the verification gate. The engine calls `next`",
+      "after every rejection."
+    ],
+    "Inputs": [
+      "`judge`: the input of the phase gate (phase evidence, grounding snapshot, result of the",
+      "verification gate, fact block, the role plan), and the call function of the engine, which makes",
+      "one `completion` call with a nonce and a fresh session of its own and returns the reply with",
+      "the facts of the proof. A critic strategy reaches a harness through this function only. `next`:",
+      "the history of the phase attempts of the phase (verdicts, signatures of unmet criteria, counts",
+      "from the ledger), and two facts that the engine works out and hands over: whether a diagnosis",
+      "was made for the newest signature, and whether an accelerated phase attempt is due."
+    ],
+    "Outputs": [
+      "`judge`: one verdict record, from the closed set APPROVED, REJECTED, MALFORMED. `next`: the kind",
+      "of the next phase attempt, from the closed set `plain`, `diagnosed`, `accelerated`, `bumped`."
+    ],
+    "Errors": [
+      "`judge`: a configuration error of the critic (engine exit 3, `critic_config`); a transport error,",
+      "which is scored as MALFORMED. A missing credential of the critic is a configuration error under",
+      "the default profile and a failed call, scored as MALFORMED, under the `parity` profile, where the",
+      "finding before the call is inactive (row 133 of annex X §X.7; DV-117). `next`: none."
+    ],
+    "Guarantees of the core": [
+      "Every `completion` call inside `judge` has a nonce of its own, of 64 bits from a secure random",
+      "source, and is a fresh session. A verdict is parsed only from the reply, as a full line, with",
+      "exactly one match; everything else is MALFORMED, which rejects. Only the engine writes the",
+      "approval record. The model of a critic-class call never equals a model that produced passes in the",
+      "phase attempt without the critic-diversity warning being raised and recorded. The warning is",
+      "raised for the results `same-model` and `unverified` of the diversity test. Ruling 49 calls it",
+      "\"the same-model warning\", which is the narrower name of the first result; the specifications",
+      "write \"critic-diversity warning\"."
+    ],
+    "Guarantees of an implementation": [
+      "A critic strategy returns exactly one verdict record and never approves on a MALFORMED reply of",
+      "any of its calls. An attempt planner is a pure function of the history."
+    ],
+    "Failure of an implementation": [
+      "A critic strategy that fails gives MALFORMED, counted by the MALFORMED limit. An attempt planner",
+      "that fails gives `plain`."
+    ],
+    "Unknown-value rule": [
+      "An unknown verdict is MALFORMED. An unknown kind of phase attempt is `plain`."
+    ],
+    "Wave 1 implementations": [
+      "Critic strategy: one critic. Attempt planner: the recovery cycle as at the baseline (the",
+      "diagnostician on a new signature of unmet criteria, the accelerator when due); and the model-tier",
+      "bump after K rejections by the critic, as an option that is off by default."
+    ],
+    "Content owner": [
+      "149. Feature 101 consumes both seams."
+    ],
+    "Proving test": [
+      "Seam conformance: a sample critic strategy that makes two calls and a sample attempt planner, both",
+      "in the test tree, run a fixture with no change to the loop. The verdict parser is fuzzed with",
+      "every ledger record and every row of the fact block."
+    ]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-06",
+  "ids": [
+    "specstride.router-rules/1"
+  ],
+  "annex": "annex D, §D.4",
+  "operations": [
+    "route.decided"
+  ],
+  "requirements": [
+    "F100-FR-129",
+    "F100-FR-130"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.router-rules/1`. Data."
+    ],
+    "Purpose": [
+      "To decide, from recorded signals only, among choices that are already fixed. The router runs",
+      "nothing."
+    ],
+    "Caller and time": [
+      "The engine and a loop layer, at three decision points inside a phase attempt.",
+      {
+        "table": {
+          "header": [
+            "Decision point",
+            "Chooses",
+            "Never"
+          ],
+          "rows": [
+            [
+              "`tools`",
+              "The order of, and exclusions among, entries of the frozen check manifest of the phase",
+              "Adds a command or builds an argument list"
+            ],
+            [
+              "`loop`",
+              "A registered loop layer, or off for this phase attempt",
+              "Switches a layer on; replaces the gated loop"
+            ],
+            [
+              "`escalation`",
+              "The next rung of the pinned model-tier ladder of the same harness, or `skip` with a reason",
+              "Moves to another harness; targets a rung that equals a critic-class call of the run in model and in effort (signal `targetIsCriticModel`)"
+            ]
+          ]
+        }
+      }
+    ],
+    "Inputs": [
+      "The decision point; signals (counts, exit codes, the failure signature as the ordered list of",
+      "failed command ids with their exit codes, tree fingerprints, measured durations, caps left, the state of the limit window of the target of an escalation);",
+      "configuration; the model-tier ladder. Never task prose, output of a check or anything a model",
+      "wrote."
+    ],
+    "Outputs": [
+      "The choice, the id of the rule that fired, the signals, the table version."
+    ],
+    "Errors": [
+      "A table without a default row for a decision point fails validation at load."
+    ],
+    "Guarantees of the core": [
+      "One function evaluates the table, with no I/O, no clock and no model. Once a loop layer is engaged in the phase attempt, every decision is an event",
+      "(`route.decided`), including one that changes nothing. No routing decision reaches the critic.",
+      "Choosing the proposer and the critic is role resolution and not routing."
+    ],
+    "Guarantees of an implementation": [
+      "For every vector of signals exactly one row fires. A row holds a rule id, a predicate over named",
+      "signals and a choice from the closed choice set of its decision point."
+    ],
+    "Failure of an implementation": [
+      "An invalid table switches routing off for the run, announced, and `route.decided` carries the rule",
+      "id `config-off`. The loop then runs in manifest order, on the base model tier, with the pinned layer."
+    ],
+    "Unknown-value rule": [
+      "An unknown decision point, an unknown signal name and a choice outside the choice set each make the",
+      "table invalid."
+    ],
+    "Wave 1 implementations": [
+      "The shipped table. A loop layer contributes the rows of the decision points it consults."
+    ],
+    "Content owner": [
+      "115."
+    ],
+    "Proving test": [
+      "Golden decisions per row. The property that exactly one row fires for every vector of signals. The",
+      "sample layer of EP-04 adds a decision point with two rows, and the engine is unchanged."
+    ]
+  }
+}

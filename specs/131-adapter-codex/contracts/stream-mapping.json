@@ -1,0 +1,10 @@
+{"schema":"specstride.stream-mapping/1","status":"unverified: only event names are documented; item kinds come from captures 1 and 2",
+"rows":[
+{"record":"thread.started","kind":"init","fields":{"sessionId":"thread id"}},
+{"record":"item.completed (agent message)","kind":"text"},
+{"record":"item.completed (command, file change, tool call)","kind":"tool"},
+{"record":"turn.completed","kind":["usage","terminal"],"terminal":"success","usage":{"input":"input_tokens","cachedInput":"cached_input_tokens","output":"output_tokens"}},
+{"record":"turn.failed","kind":["error","terminal"],"terminal":"failure"},
+{"record":"error","kind":"error"},
+{"record":"turn.started","kind":"ignore"},{"record":"item.started","kind":"ignore"}],
+"otherwise":"dropped with a diagnostic event","noTerminal":"missing_terminal"}

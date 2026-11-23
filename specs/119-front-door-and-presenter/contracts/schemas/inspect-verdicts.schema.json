@@ -1,0 +1,107 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:specstride.inspect.verdicts/1",
+ "title": "The `--json` record of `verdicts` (F119-FR-033; annex B §B.20)",
+ "type": "object",
+ "required": [
+  "schema",
+  "cmd",
+  "ok"
+ ],
+ "properties": {
+  "schema": {
+   "const": "specstride.inspect.verdicts/1"
+  },
+  "cmd": {
+   "const": "verdicts"
+  },
+  "ok": {
+   "type": "boolean"
+  },
+  "feature": {
+   "type": "string",
+   "description": "The feature slug."
+  },
+  "reason": {
+   "type": "string",
+   "description": "A member of the closed set of F119-FR-030; required when ok is false."
+  },
+  "fix": {
+   "type": "string",
+   "description": "The fixed fix text of the reason; required when ok is false."
+  },
+  "verdicts": {
+   "type": "array",
+   "description": "Required when ok is true.",
+   "items": {
+    "type": "object",
+    "required": [
+     "name",
+     "bytes",
+     "hash",
+     "result"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "The logical name."
+     },
+     "bytes": {
+      "type": "integer"
+     },
+     "hash": {
+      "type": "string"
+     },
+     "result": {
+      "type": "string"
+     },
+     "text": {
+      "type": "string",
+      "description": "Only with `--verbose`, after the redactor; optional."
+     }
+    }
+   }
+  },
+  "left": {
+   "type": "integer",
+   "description": "The entries left out by the byte limit; required when ok is true."
+  }
+ },
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": false
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "reason",
+     "fix"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": true
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "verdicts"
+    ]
+   }
+  }
+ ]
+}

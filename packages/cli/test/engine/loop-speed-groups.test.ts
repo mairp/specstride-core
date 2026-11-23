@@ -286,7 +286,6 @@ test("CT-153-56 a completed group is checked and reviewed", async () => {
     // F153-SC-015 — the review's only durable effect is pins: it wrote no
     // approval record, and an APPROVED review leaves no pins record either.
     assert.deepEqual(approvalRecords(g.control), ["phase-1.json"], "one approval, the gate's");
-    const phasesDir = join(g.control, "features", "001-one", "phases");
     assert.ok(
       !listTree(join(g.control, "features", "001-one")).some((p) => p.includes("verdict-pins")),
       "the only files a review may leave are pins records — an APPROVED review leaves none",

@@ -1,0 +1,83 @@
+{
+  "schema": "specstride.table/1",
+  "id": "workspace-selection",
+  "version": "1.0.0",
+  "points": {
+    "workspace-selection": {
+      "signals": {
+        "switchOn": "boolean",
+        "callerIsGate": "boolean",
+        "graphUnreadable": "boolean",
+        "graphHashChanged": "boolean",
+        "changedPathUnmapped": "boolean",
+        "commandUnmapped": "boolean"
+      },
+      "choices": [
+        "full",
+        "scoped"
+      ]
+    }
+  },
+  "rows": {
+    "workspace-selection": [
+      {
+        "ruleId": "WS-1",
+        "when": {
+          "op": "equal",
+          "signal": "switchOn",
+          "value": false
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-2",
+        "when": {
+          "op": "equal",
+          "signal": "callerIsGate",
+          "value": true
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-3",
+        "when": {
+          "op": "equal",
+          "signal": "graphUnreadable",
+          "value": true
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-4",
+        "when": {
+          "op": "equal",
+          "signal": "graphHashChanged",
+          "value": true
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-5",
+        "when": {
+          "op": "equal",
+          "signal": "changedPathUnmapped",
+          "value": true
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-6",
+        "when": {
+          "op": "equal",
+          "signal": "commandUnmapped",
+          "value": true
+        },
+        "choice": "full"
+      },
+      {
+        "ruleId": "WS-7",
+        "choice": "scoped"
+      }
+    ]
+  }
+}

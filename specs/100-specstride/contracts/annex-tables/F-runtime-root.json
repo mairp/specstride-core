@@ -1,0 +1,220 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "annex": "F",
+  "tables": [
+    {
+      "section": "§F.1",
+      "heading": "Process model",
+      "subheading": null,
+      "header": [
+        "Process",
+        "Started by",
+        "Lifetime",
+        "Class in the process registry"
+      ],
+      "rows": [
+        [
+          "CLI command",
+          "The consumer or a host",
+          "Short. `launch` exits after the handshake",
+          "—"
+        ],
+        [
+          "Runtime root",
+          "The detach strategy, once per launch",
+          "The leader of a process session of its own; lives until the run rests or ends",
+          "—"
+        ],
+        [
+          "Stage child (stage kinds `setup`, `command`, `smoke`)",
+          "Runtime root",
+          "One stage attempt",
+          "`owned`"
+        ],
+        [
+          "Engine (stage kind `specstride`, or a run request of kind `engine`)",
+          "Runtime root; or the consumer in the foreground",
+          "One engine start; one at a time per workspace",
+          "`owned`"
+        ],
+        [
+          "Harness process, one per pass or critic-class call",
+          "Engine",
+          "One call; in a process group of its own",
+          "`owned`"
+        ],
+        [
+          "Check command",
+          "Engine",
+          "One command; in a process group of its own",
+          "`owned`"
+        ],
+        [
+          "Detached job of a yield",
+          "Engine",
+          "Outlives the pass; in a process session of its own",
+          "`adoptable`"
+        ],
+        [
+          "Worker pass of a parallel group",
+          "Engine",
+          "One worker pass; in a process group of its own",
+          "`owned`"
+        ]
+      ]
+    },
+    {
+      "section": "§F.2",
+      "heading": "Run requests",
+      "subheading": null,
+      "header": [
+        "Kind",
+        "What it is",
+        "Produced by",
+        "Has a launch contract and stages"
+      ],
+      "rows": [
+        [
+          "`pipeline`",
+          "A promoted launch contract",
+          "The host skill `specstride-run`; `launch`",
+          "Yes"
+        ],
+        [
+          "`engine`",
+          "One engine start with its arguments",
+          "The host skill `specstride-reverse`; `specstride run --detach`",
+          "No"
+        ]
+      ]
+    },
+    {
+      "section": "§F.3",
+      "heading": "Handshake",
+      "subheading": null,
+      "header": [
+        "Step",
+        "Actor",
+        "Act"
+      ],
+      "rows": [
+        [
+          "1",
+          "CLI",
+          "Resolves the run request, runs the launch checks (the launch-blocking subset of the doctor's checks), writes the launch record with a fresh launch nonce"
+        ],
+        [
+          "2",
+          "CLI",
+          "Calls the detach strategy"
+        ],
+        [
+          "3",
+          "Runtime root",
+          "Takes the workspace lock; writes the lease with the launch nonce; emits `run.launched`"
+        ],
+        [
+          "4",
+          "CLI",
+          "Waits for a lease with its nonce, for a bounded time and no longer; records the outcome in the launch record; prints one line; exits"
+        ]
+      ]
+    },
+    {
+      "section": "§F.3",
+      "heading": "Handshake",
+      "subheading": null,
+      "header": [
+        "Outcome",
+        "Meaning",
+        "The CLI prints",
+        "Exit of `launch`"
+      ],
+      "rows": [
+        [
+          "`started`",
+          "A lease with the nonce of this launch exists",
+          "The launch line with the run and its state",
+          "0"
+        ],
+        [
+          "`attached`",
+          "Another launch holds the lease of a live run",
+          "The run that lives",
+          "4 (the supervisor's code for the launch decision `attach`)"
+        ],
+        [
+          "`refused`",
+          "A launch check failed, the lock is in conflict, or no lease appeared in time",
+          "The refusal with its reason",
+          "4 (the supervisor's refusal code) for every refusal of the closed set of annex X §X.6 row 212, except `lock-conflict` and `lock-unknown`, which give 24; the pipeline code 20, 21 or 23 where the refusal is one of the pipeline's; 3 for a refusal of role resolution in the foreground `run`"
+        ]
+      ]
+    },
+    {
+      "section": "§F.4",
+      "heading": "Who relaunches",
+      "subheading": null,
+      "header": [
+        "`relaunch.owner`",
+        "Behaviour",
+        "Where"
+      ],
+      "rows": [
+        [
+          "`root` (default)",
+          "After a failed stage the runtime root stays alive and consults the second relaunch classifier table, which has a row for a crashed engine. The inbox accepts `hold-relaunch`. The as-is relaunch line is projected from the root's event",
+          "Normal runs"
+        ],
+        [
+          "`supervise`",
+          "At a failed stage the runtime root exits with the pipeline code. `specstride supervise observe` classifies and relaunches as at the baseline, with every named refusal, and prints the as-is relaunch line",
+          "The `parity` profile; consumers who want supervision by the host"
+        ]
+      ]
+    },
+    {
+      "section": "§F.8",
+      "heading": "Exit codes of the runtime root and the pipeline entry",
+      "subheading": null,
+      "header": [
+        "Code",
+        "Meaning"
+      ],
+      "rows": [
+        [
+          "0",
+          "Every stage complete, or a dry run"
+        ],
+        [
+          "2",
+          "Usage error"
+        ],
+        [
+          "20",
+          "The launch contract is invalid at start"
+        ],
+        [
+          "21",
+          "A launch check of the pipeline (preflight) failed"
+        ],
+        [
+          "22",
+          "A stage failed; also when the child exited 6 and the state is `stopped`"
+        ],
+        [
+          "23",
+          "Stale sources"
+        ],
+        [
+          "24",
+          "The lock is held"
+        ],
+        [
+          "128+N",
+          "Ended by the signal N (interrupt, termination, hang-up)"
+        ]
+      ]
+    }
+  ]
+}

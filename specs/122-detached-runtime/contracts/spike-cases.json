@@ -1,0 +1,24 @@
+{
+  "requirement": "F122-FR-040",
+  "dimensions": {
+    "platform": ["linux", "macos"],
+    "session": ["interactive", "headless"],
+    "shellSandbox": ["off", "on"],
+    "sessionEnd": ["exit", "kill"]
+  },
+  "cases": 16,
+  "paid": "the headless cases and every case that needs a model turn of the host are paid; each is logged with date, host version and cost; none is run by a specification agent",
+  "observations": ["rootLivesAfter60s", "logFills", "shellToolWroteControlRoot", "detachedRootWroteControlRoot"],
+  "result": {
+    "fields": {
+      "caseId": "text, for example linux-interactive-off-exit",
+      "result": "survived | ended | skipped",
+      "reason": "text; required with skipped and ended",
+      "observations": "record of the four observations, each true, false or null",
+      "host": "host id and version",
+      "os": "name and version",
+      "verifiedOn": "date",
+      "strategy": "id of the detach strategy"
+    }
+  }
+}

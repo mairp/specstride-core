@@ -1,0 +1,164 @@
+{
+ "schema": "specstride.experiments-115/1",
+ "note": "Data of feature 115. spec.md stands where the two differ.",
+ "window": {
+  "opens": "the first valid pair after X0 passed",
+  "closes": "48 valid paired phases or 6 weeks, whichever comes first"
+ },
+ "order": [
+  "X0",
+  "X1",
+  "X12 (i) to (iii)",
+  "X5",
+  "X6",
+  "X9",
+  "X10",
+  "X11",
+  "tier-bump arm",
+  "X7",
+  "X8",
+  "X12 (iv)"
+ ],
+ "experiments": [
+  {
+   "id": "X0",
+   "question": "Cost accounting: is cost counted for every pass?",
+   "metric": "Share of passes whose usage is complete or explicitly unavailable; totals against the harness's own session total",
+   "fixture": "Stub agents that emit usage and are killed mid-pass; then 20 live passes, 5 killed on purpose",
+   "rule": "100 per cent of passes accounted for; totals within 2 per cent",
+   "cost": "Stubs: none. Live part: paid",
+   "owner": "115 runs it; the counting is of 111",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X1",
+   "question": "What share of past rejections would a deterministic command have caught?",
+   "metric": "Share of rejected and gate-failed attempts whose stated reason a manifest command would have failed",
+   "fixture": "Feedback files of past runs; two independent readers",
+   "rule": "Below 20 per cent: X5 is run for killed passes and quality only",
+   "cost": "None",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X2",
+   "question": "What does fail-fast save?",
+   "metric": "Hours after the first failed step",
+   "fixture": "Replay and a synthetic job",
+   "rule": "Owned by feature 118",
+   "cost": "None",
+   "owner": "118",
+   "runByThisFeature": false
+  },
+  {
+   "id": "X3",
+   "question": "How much prompt does the obligations index remove?",
+   "metric": "First-turn tokens",
+   "fixture": "Recorded passes",
+   "rule": "Owned by feature 103",
+   "cost": "None",
+   "owner": "103",
+   "runByThisFeature": false
+  },
+  {
+   "id": "X4",
+   "question": "Why do fresh passes miss the cache?",
+   "metric": "First-turn cache-read tokens",
+   "fixture": "Replay",
+   "rule": "Owned by features 103 and 125",
+   "cost": "None or a few small calls",
+   "owner": "103, 125",
+   "runByThisFeature": false
+  },
+  {
+   "id": "X5",
+   "question": "Does the default configuration meet the targets of decision 21?",
+   "metric": "Alive hours per approved phase; passes ended by a time limit or watchdog and runs stopped by the pass limit; first-attempt approval; cost per approved phase",
+   "fixture": "The ordinary stratum live; the long stratum by replay and a synthetic job; 50:50",
+   "rule": "All four targets of F115-SC-001, or the default returns to classic",
+   "cost": "Paid: about 100 h alive and about 1,342 dollars notional per arm",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X6",
+   "question": "Does the layer itself earn its place?",
+   "metric": "As X5",
+   "fixture": "The ordinary stratum; default configuration against the same without the layer",
+   "rule": "F115-SC-002",
+   "cost": "Paid, as X5",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X7",
+   "question": "Repair cap and repair context",
+   "metric": "Units resolved per minute and per token; share later rejected",
+   "fixture": "Unit level; cap 1, 2, 3 by continued against fresh",
+   "rule": "A default changes only on a difference larger than the noise at unit level",
+   "cost": "Paid, smaller",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X8",
+   "question": "Unit size and units per pass",
+   "metric": "Alive hours per approved phase; share of check time; passes per phase attempt",
+   "fixture": "Phases with 10 tasks or more; task against group against phase",
+   "rule": "Input to the prompt guidance",
+   "cost": "Paid, smaller",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X9",
+   "question": "Ablation: continuation off",
+   "metric": "Cost per pass; minutes to first action",
+   "fixture": "Phases with short passes",
+   "rule": "Continuation stays on only if cost per pass is no worse and first-attempt rejects do not rise",
+   "cost": "Paid, smaller",
+   "owner": "115 runs it; the switch is row 10",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X10",
+   "question": "Ablation: escalation off",
+   "metric": "Cost and time per resolved unit; rescue rate; unresolved units",
+   "fixture": "Paired arms",
+   "rule": "Escalation stays on only if success per dollar and per hour on the higher tier are no worse than at the base",
+   "cost": "Paid, smaller",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X11",
+   "question": "Ablation: obligations index off",
+   "metric": "Input tokens per pass; passes per approved phase",
+   "fixture": "About 60 passes per arm",
+   "rule": "Off if a guardrail is breached",
+   "cost": "Paid, smaller",
+   "owner": "115 runs it; the switch is row 9",
+   "runByThisFeature": true
+  },
+  {
+   "id": "X12",
+   "question": "Gate integrity and gaming",
+   "metric": "(i) output difference with stubs that never declare a unit; (ii) the condition recorded per seeded tampering; (iii) a check that passes half the time; (iv) detection of seeded defects by the critic with and without the fact block",
+   "fixture": "Oracle fixtures; seeded features; the tamper fixtures of the owner of the result conditions",
+   "rule": "(i) and (ii) block a release; (iii) reported; (iv) wording changes and the test is repeated if detection falls by more than 5 points",
+   "cost": "(i) to (iii): none. (iv): paid",
+   "owner": "115",
+   "runByThisFeature": true
+  },
+  {
+   "id": "model-tier-bump arm",
+   "question": "Ablation: model-tier bump after K critic rejections",
+   "metric": "As X10, at the level of the phase attempt",
+   "fixture": "Paired arms",
+   "rule": "Reported to the owner of the option, feature 149",
+   "cost": "Paid, smaller",
+   "owner": "115 runs it; the switch is row 24",
+   "runByThisFeature": true
+  }
+ ]
+}

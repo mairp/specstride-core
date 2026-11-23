@@ -1,0 +1,20 @@
+{
+  "schema": "specstride.adapter-reader-records/1",
+  "rows": [
+    { "type": "session", "normalized": "init", "event": "agent_init", "line": "  · init prime-v3 session=<id|?>", "requirement": "F138-FR-027" },
+    { "type": "message_start", "normalized": "init (update only)", "event": "agent_init", "line": null, "requirement": "F138-FR-027" },
+    { "type": "message_update", "normalized": "(accumulate text)", "event": null, "line": null, "requirement": "F138-FR-028" },
+    { "type": "message_end", "normalized": "text; error", "event": "agent_text; agent_diagnostic", "line": "<text>; ! <code>: <message>", "requirement": "F138-FR-028, F138-FR-032" },
+    { "type": "turn_end", "normalized": "usage", "event": null, "line": null, "requirement": "F138-FR-035, F138-FR-040" },
+    { "type": "auto_retry_start", "normalized": "error (warning)", "event": "agent_diagnostic provider_retry", "line": "  ! provider_retry: <message>", "requirement": "F138-FR-034" },
+    { "type": "error", "normalized": "error", "event": "agent_diagnostic", "line": "  ! <code>: <message>", "requirement": "F138-FR-032" },
+    { "type": "tool_execution_start", "normalized": "tool", "event": "agent_tool; evidence_writing", "line": "  → <tool> <summary>", "requirement": "F138-FR-029, F138-FR-030" },
+    { "type": "tool_execution_update", "normalized": "tool", "event": "agent_tool progress", "line": null, "requirement": "F138-FR-029" },
+    { "type": "tool_execution_end", "normalized": "tool", "event": "agent_tool end", "line": "  ← <tool> error|done", "requirement": "F138-FR-029" },
+    { "type": "toolcall_start | toolcall_delta | toolcall_end", "normalized": "(accumulate arguments)", "event": null, "line": null, "requirement": "F138-FR-029, F138-FR-030" },
+    { "type": "agent_end", "normalized": "terminal; usage; error (abandoned tools)", "event": "terminal of the invocation", "line": null, "requirement": "F138-FR-031, F138-FR-033" },
+    { "type": "agent_start | turn_start | auto_retry_end", "normalized": null, "event": null, "line": null, "requirement": "F138-FR-026" },
+    { "type": "type beginning with tool, not in the known set", "normalized": null, "event": null, "line": null, "requirement": "F138-FR-026" },
+    { "type": "any other type, or none", "normalized": "error (warning)", "event": "agent_diagnostic unknown_record", "line": "  ! unknown_record: Unknown Prime record type: <type|<absent>>", "requirement": "F138-FR-026" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "candidate",
+  "description": "Field list of data-model.md of feature 146. Types are fixed when the code is written; unknown fields are ignored by a reader.",
+  "type": "object",
+  "properties": {
+    "id": {},
+    "sources": {},
+    "state": {},
+    "origin": {},
+    "kind": {},
+    "version": {},
+    "descriptorHash": {},
+    "resolvedPath": {},
+    "endpoint": {},
+    "provider": {},
+    "capabilities": {},
+    "window": {},
+    "credential": {},
+    "termsRef": {},
+    "informational": {},
+    "findings": {}
+  },
+  "additionalProperties": true
+}

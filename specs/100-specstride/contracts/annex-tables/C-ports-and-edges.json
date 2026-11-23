@@ -1,0 +1,782 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "annex": "C",
+  "tables": [
+    {
+      "section": "§C.1",
+      "heading": "EP-02 Harness port",
+      "subheading": "Inputs",
+      "header": [
+        "Operation",
+        "Inputs"
+      ],
+      "rows": [
+        [
+          "`detect`",
+          "Nothing beyond the descriptor"
+        ],
+        [
+          "`capabilities`",
+          "Nothing beyond the descriptor and the detection result"
+        ],
+        [
+          "`preflight`",
+          "The role"
+        ],
+        [
+          "`startPass`",
+          "Reference to the prompt; working directory; session directive (`fresh`, with a minted id where the harness takes one from the caller, or `continue` with an id); model; model tier or effort; containment level; write root; environment allow-list; time limits; trace parent; transport; process-level spending limit where the harness adapter declares that capability"
+        ],
+        [
+          "`complete`",
+          "Prompt; model; output cap; budget cap; form of the `completion` level; for the tool-less form an empty working directory; for the form with read-only tools the working tree and the withheld paths of §C.4; the minted session id"
+        ],
+        [
+          "`stop`",
+          "The handle of a pass and one of `polite`, `terminate`, `kill`"
+        ],
+        [
+          "`betweenPasses`",
+          "The handle of the pass that ended, its result, the working directory"
+        ],
+        [
+          "`classify`",
+          "What the harness adapter saw: a stream record, a status with headers and body code, an exit code, error text"
+        ]
+      ]
+    },
+    {
+      "section": "§C.1",
+      "heading": "EP-02 Harness port",
+      "subheading": "Outputs",
+      "header": [
+        "Operation",
+        "Outputs"
+      ],
+      "rows": [
+        [
+          "`detect`",
+          "Presence, version, whether a configuration home exists"
+        ],
+        [
+          "`capabilities`",
+          "A map of capabilities. Every entry carries its provenance (`declared`, `probed`, `adapter`, `catalogue`) or is null: containment ceiling, continuation, model-tier ladder, usage source, switch for harness-native memory, tool-less mode, read-only critic mode, context window, `concurrentSessions`, process-level spending limit, transports"
+        ],
+        [
+          "`preflight`",
+          "Whether the credential of the role is present and not refused; never a paid call"
+        ],
+        [
+          "`startPass`",
+          "A handle with the identity of the process, the raw stream and the session id"
+        ],
+        [
+          "`complete`",
+          "The reply, usage, and the facts of the initial record: tool list, session id, sandbox mode, network state"
+        ],
+        [
+          "`stop`",
+          "Whether the process ended"
+        ],
+        [
+          "`betweenPasses`",
+          "One of the closed set: `continue`; `stop` with the result 4; `stop` with the result 7"
+        ],
+        [
+          "`classify`",
+          "A typed failure from the closed vocabulary under \"Errors\", which the quota classifier (§C.13) refines"
+        ]
+      ]
+    },
+    {
+      "section": "§C.2",
+      "heading": "Harness descriptor, version 1",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`descriptorVersion`",
+          "Version of the descriptor schema",
+          "Whole number; 1",
+          "Yes"
+        ],
+        [
+          "`id`",
+          "Id of the harness, unique in the resolved registry",
+          "Lower-case text with digits and hyphens",
+          "Yes"
+        ],
+        [
+          "`displayName`",
+          "Name for people",
+          "Text",
+          "No"
+        ],
+        [
+          "`kind`",
+          "`cli`, `openai-chat`, `anthropic-messages`, or another registered kind",
+          "Member of an open set",
+          "Yes"
+        ],
+        [
+          "`provider.id`",
+          "Identity used for the diversity test and for the terms lookup",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`provider.termsRef`",
+          "Row of the terms-gate data, or null for unknown terms",
+          "Text, or null",
+          "Yes"
+        ],
+        [
+          "`origin`",
+          "Set by the loader: `adapter`, `bundled`, `user`, `detected`",
+          "Member of a closed set",
+          "Set by the loader"
+        ],
+        [
+          "`detect`",
+          "How presence is established free of charge: variables whose presence counts; for `cli` the executable, how to read its version, which help text must be present, the configuration home",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`auth.tiers`",
+          "Auth tiers offered: 1, 2 or both. 3 is never valid",
+          "List of whole numbers",
+          "Yes"
+        ],
+        [
+          "`auth.credential`",
+          "Secret reference, or null when the harness owns its login",
+          "Secret reference, or null",
+          "Yes"
+        ],
+        [
+          "`auth.scheme`",
+          "`bearer`, `x-api-key`, `none`",
+          "Member of a closed set",
+          "For endpoint kinds"
+        ],
+        [
+          "`auth.preflight`",
+          "A free read-only request and the statuses that mean an auth failure; redirects refused",
+          "Record, or `none`",
+          "No"
+        ],
+        [
+          "`endpoint`",
+          "Base address, path of the chat call, path of the model list",
+          "Record",
+          "For endpoint kinds"
+        ],
+        [
+          "`models`",
+          "Default model; whether the list is probed or declared; the context window with its source; the output cap with its source; how a model is selected",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`roles`",
+          "Per role: whether supported, with the reason if not; for a critic: `toolless` (`structural`, `flag`, `config`, `none`), `readOnlyTools` (supported or not), `freshSession`",
+          "Map from role to record",
+          "Yes"
+        ],
+        [
+          "`invoke`",
+          "Per role, for `cli`: argument list as a list, how the prompt is given and its size limit, working directory, environment, permission mechanism, files to write before the call",
+          "Map from role to record",
+          "For `cli`"
+        ],
+        [
+          "`stream.format`",
+          "`text`, `jsonl`, `sse-openai`, `sse-anthropic`, or a registered tested format",
+          "Member of an open set",
+          "Yes"
+        ],
+        [
+          "`stream.tolerate`",
+          "Irregularities to accept",
+          "List of text",
+          "No"
+        ],
+        [
+          "`stream.usage`",
+          "Where input, output and cache tokens are found",
+          "Record of field paths",
+          "No"
+        ],
+        [
+          "`stream.mapping`",
+          "A data mapping from the harness's records to the six normalized records of §C.5: selector of the record kind and field paths",
+          "Record",
+          "No"
+        ],
+        [
+          "`stream.dialect`",
+          "Name of a row of the dialect table of §C.5",
+          "Text",
+          "No"
+        ],
+        [
+          "`continuation`",
+          "Whether supported, how an id is given, and `cacheTtlSec`, the cache lifetime of a session in seconds (300 where none is declared)",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`session`",
+          "Where session state lives and how it is redirected",
+          "Record",
+          "No"
+        ],
+        [
+          "`tiers`",
+          "The model-tier ladder of the harness, lowest first",
+          "List of records",
+          "No"
+        ],
+        [
+          "`failures`",
+          "Map from the typed failure vocabulary of §C.1 to what signals it: statuses, body patterns, exit codes, stream records",
+          "Map",
+          "Yes (may be empty)"
+        ],
+        [
+          "`cost`",
+          "Class (`subscription`, `metered`, `local`, `unknown`) and prices with their date, or null",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`isolation.envAllow`",
+          "The only variables handed to a call",
+          "List of text",
+          "Yes"
+        ],
+        [
+          "`isolation.configHome`",
+          "Variables and seeds of an overlay (§C.16)",
+          "Record",
+          "No"
+        ],
+        [
+          "`containment.ceiling`",
+          "Highest containment level the harness can enforce, with provenance",
+          "Member of §C.15, with provenance",
+          "Yes"
+        ],
+        [
+          "`memory`",
+          "Whether the harness has native memory and how it is switched off",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`telemetry.off`",
+          "Variables or flags that switch the harness's own telemetry off",
+          "Record",
+          "No"
+        ],
+        [
+          "`concurrentSessions`",
+          "Whether several processes may run at once under one configuration home and one login, with separate session stores",
+          "Truth value with provenance, or null",
+          "No"
+        ],
+        [
+          "`spendLimit`",
+          "Whether a process-level spending limit can be set, and how",
+          "Record with provenance, or null",
+          "No"
+        ],
+        [
+          "`transports`",
+          "The transports offered, each with auth tier and terms row",
+          "List of records",
+          "No; default one `subprocess` or `direct-call` by kind"
+        ],
+        [
+          "`versionRange`, `verifiedOn`",
+          "Tested range and date; present only on a tested harness adapter",
+          "Text, date",
+          "For a tested harness adapter"
+        ]
+      ]
+    },
+    {
+      "section": "§C.3",
+      "heading": "Forms of the `completion` level",
+      "subheading": null,
+      "header": [
+        "Form",
+        "Id",
+        "Meaning",
+        "Open to",
+        "Proof"
+      ],
+      "rows": [
+        [
+          "First",
+          "`tool-less`",
+          "No tools by any route",
+          "Every harness that qualifies",
+          "The initial record of the call shows an empty tool list and the session identity that F100-FR-230 asks for. For a harness whose stream has no initial record: an exact version pin together with the preflight of the harness adapter and the flag set of the call, open to a tested harness adapter only, and recorded as the weaker proof (F100-FR-230, case 3)"
+        ],
+        [
+          "Second",
+          "`read-only-tools`",
+          "The critic runs in the working tree inside a read-only sandbox of the operating system and may read project files by itself. It cannot write, cannot run a command that writes and cannot reach the network",
+          "A tested harness adapter only",
+          "The call record shows the read-only sandbox mode, the network off, and the confirmation of the harness adapter that the withheld paths of §C.4 cannot be read"
+        ]
+      ]
+    },
+    {
+      "section": "§C.4",
+      "heading": "Withheld paths",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.withheld-paths/1`"
+        ],
+        [
+          "Writer",
+          "Engine, per critic-class call of the second form"
+        ],
+        [
+          "Readers",
+          "The harness adapter of the critic; the call record"
+        ],
+        [
+          "Content owner",
+          "117"
+        ]
+      ]
+    },
+    {
+      "section": "§C.4",
+      "heading": "Withheld paths",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`deny`",
+          "Real paths the sandbox must deny for reading: the workspace part, the control plane, the event stream, the worker root, the tree store",
+          "List of records of logical root and real path",
+          "Yes"
+        ],
+        [
+          "`moved`",
+          "The proposer's files moved out of the working tree for the call: notebook, handoff, outbox, each with where it was and where it is kept",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`confirmed`",
+          "Whether the harness adapter confirmed the denial before the call",
+          "Truth value",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§C.5",
+      "heading": "Stream readers and the dialect table",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.stream-dialect/1`"
+        ],
+        [
+          "Content",
+          "One row per harness of the family that shares the JSONL reader for stream schema version 3"
+        ],
+        [
+          "Writer",
+          "Product data. One row per harness adapter of the family"
+        ],
+        [
+          "Readers",
+          "The JSONL reader; the harness adapters of the family; the doctor"
+        ],
+        [
+          "Content owner",
+          "138 for the reader and the table; 134 for one row. A later harness of the family adds a row and no code"
+        ]
+      ]
+    },
+    {
+      "section": "§C.5",
+      "heading": "Stream readers and the dialect table",
+      "subheading": null,
+      "header": [
+        "Field of a row",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`dialect`",
+          "Name of the dialect",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`schemaVersions`",
+          "Versions of the stream's session header that the row accepts",
+          "List of whole numbers",
+          "Yes"
+        ],
+        [
+          "`providerFormat`",
+          "The literal by which the stream names its provider format",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`telemetryOff`",
+          "Variables and flags that switch the harness's telemetry off",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`sessionControl`",
+          "Variables and flags that switch sessions off, name a session directory, and continue a session by id",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`extraRecords`",
+          "Record types of this dialect beyond the common ones, each with the normalized kind it maps to, or `ignore`",
+          "Map",
+          "Yes (may be empty)"
+        ],
+        [
+          "`usageNames`",
+          "Names under which the dialect reports input, output, cache and reasoning tokens and cost",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`terminalDecides`",
+          "Whether success is decided by the terminal record of the stream and not by the exit code",
+          "Truth value",
+          "Yes"
+        ],
+        [
+          "`limits`",
+          "The cap on the size of a line and on the rate of lines, where the dialect needs other values than the stream seam",
+          "Record",
+          "No"
+        ],
+        [
+          "`endWords`",
+          "The words at the end of an agent's stream that mean an error and those that mean success, where the dialect needs other words than the reader's",
+          "Record of two lists",
+          "No"
+        ]
+      ]
+    },
+    {
+      "section": "§C.6",
+      "heading": "Resolved registry and role plan",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.registry/1`"
+        ],
+        [
+          "Logical name",
+          "`run:<runId>:registry`"
+        ],
+        [
+          "Writer",
+          "CLI at launch"
+        ],
+        [
+          "Readers",
+          "Engine, quota and fallback handling, doctor, digest"
+        ],
+        [
+          "Content owner",
+          "124"
+        ]
+      ]
+    },
+    {
+      "section": "§C.6",
+      "heading": "Resolved registry and role plan",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`harnesses`",
+          "Every harness of the registry: id, state, origin, version, hash of the descriptor, resolved path, capabilities with provenance, containment ceiling, source of each value",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`roles`",
+          "The registered roles. Wave 1 registers `proposer` and `critic`; `diagnostician` and `accelerator` run under the critic-class and proposer rules",
+          "List of records: role id, capability level required, independence constraints, budget key",
+          "Yes"
+        ],
+        [
+          "`plan`",
+          "Per phase and per role: the ordered list of entries to use, first the primary and then the fallbacks the consumer opted into. Each entry: harness, model, model tier, auth tier, transport, form of the `completion` level, containment level, decision of the terms gate with the row it rests on",
+          "Map",
+          "Yes"
+        ],
+        [
+          "`criticPick`",
+          "How the critic was chosen: step of the critic order, state, window and its source, the reason, and whether the critic-diversity warning was raised",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`runnersUp`",
+          "The ranked candidates that were not picked, each with the reason, in the order in which a pass-over takes them",
+          "List of records",
+          "Yes (may be empty)"
+        ],
+        [
+          "`announced`",
+          "The lines announced at launch",
+          "List of text",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§C.6",
+      "heading": "Resolved registry and role plan",
+      "subheading": null,
+      "header": [
+        "Step",
+        "Candidate"
+      ],
+      "rows": [
+        [
+          "1",
+          "The critic the consumer configured. Discovery never overrides it"
+        ],
+        [
+          "2",
+          "A second model through the gateway of the host"
+        ],
+        [
+          "3",
+          "A qualifying discovered harness, tested before unverified. Inside this step every tool-less candidate stands before every candidate with read-only tools"
+        ],
+        [
+          "4",
+          "The default harness on a different model tier, in a fresh session, without tools, with a set budget"
+        ]
+      ]
+    },
+    {
+      "section": "§C.7",
+      "heading": "EP-03 Spec-format adapter, and the canonical spec model",
+      "subheading": "Proving test",
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`format`",
+          "Id of the format",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`feature`",
+          "Feature slug",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`sources`",
+          "The source files with kind (`spec`, `plan`, `tasks`, other) and hashes",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`phases`",
+          "Per phase: number, title, section, acceptance criteria",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`phases[].tasks`",
+          "Per task: id, markers (for example `[P]` and story tags), text, whether ticked, line",
+          "List of records",
+          "Yes (may be empty)"
+        ]
+      ]
+    },
+    {
+      "section": "§C.15",
+      "heading": "Containment levels",
+      "subheading": null,
+      "header": [
+        "Level",
+        "Meaning"
+      ],
+      "rows": [
+        [
+          "C0",
+          "No containment. The harness runs with all tools as the consumer"
+        ],
+        [
+          "C1",
+          "A restriction at tool level that the harness enforces: no bypass flag, an allow list, project settings of the harness ignored"
+        ],
+        [
+          "C2",
+          "A sandbox of the operating system for commands, the network off or allow-listed, the control plane and credential paths denied. Whether the sandbox of a given harness denies reads of these paths is `unverified` until a capture of that harness shows it"
+        ],
+        [
+          "C3",
+          "The whole run inside a container or a virtual machine, supplied by the consumer and detected"
+        ]
+      ]
+    },
+    {
+      "section": "§C.16",
+      "heading": "Overlay schema",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride-overlay/v1` (the as-is name is kept)"
+        ],
+        [
+          "Writer",
+          "The harness layer, per pass or per phase attempt"
+        ],
+        [
+          "Readers",
+          "The harness layer"
+        ],
+        [
+          "Content owner",
+          "109"
+        ]
+      ]
+    },
+    {
+      "section": "§C.16",
+      "heading": "Overlay schema",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`contract`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`key`",
+          "Id of the harness",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`vars`",
+          "The variables that are redirected to the overlay",
+          "List of text",
+          "Yes"
+        ],
+        [
+          "`seeds`",
+          "Files placed in the overlay before the call: variable, path, content",
+          "List of records",
+          "No"
+        ],
+        [
+          "`unset`",
+          "Derived: base directories that are not themselves overlaid, when the home is overlaid",
+          "List of text",
+          "Derived"
+        ],
+        [
+          "`scope`",
+          "`none`, `pass` or `attempt`",
+          "Member of a closed set",
+          "Yes"
+        ],
+        [
+          "`ownerPid`, `ownerStart`, `createdAt`",
+          "In the marker of an overlay tree: the process that owns the tree, its start time, and the time of creation",
+          "Whole number, text, timestamp",
+          "In the marker"
+        ],
+        [
+          "`markerScope`",
+          "In the marker only: `pass`, `attempt` or `critic`",
+          "Member of a closed set",
+          "In the marker"
+        ]
+      ]
+    }
+  ]
+}

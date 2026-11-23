@@ -1,0 +1,41 @@
+{
+  "dialect": "pi",
+  "schemaVersions": [
+    3
+  ],
+  "providerFormat": "openai-completions",
+  "providerFormatProvenance": "CAP-1 stream: every assistant message carries \"api\": \"openai-completions\"; the session header record is {\"type\": \"session\", \"version\": 3}",
+  "telemetryOff": {
+    "env": {
+      "PI_TELEMETRY": "0"
+    }
+  },
+  "sessionControl": {
+    "env": [
+      "PI_CODING_AGENT_SESSION_DIR"
+    ],
+    "options": {
+      "noSession": "--no-session",
+      "dir": "--session-dir",
+      "byId": "--session-id"
+    }
+  },
+  "extraRecords": {
+    "auto_retry_start": "ignore",
+    "auto_retry_end": "ignore",
+    "compaction_start": "ignore",
+    "compaction_end": "ignore"
+  },
+  "usageNames": {
+    "input": "input",
+    "output": "output",
+    "cache": "cacheRead, cacheWrite",
+    "reasoning": null,
+    "cost": "cost (an object with input, output, cacheRead, cacheWrite, total; present on every message, zero where unknown)"
+  },
+  "usageProvenance": "CAP-1 stream: usage object of the assistant messages of tests/characterization/134/fixtures/error-exit-code/stream.json; no reasoning field is present, so reasoning stays null",
+  "terminalDecides": true,
+  "verifiedOn": "2026-10-28",
+  "pin": ">=0.80.6 <0.81",
+  "status": "providerFormat and usageNames settled by CAP-1 (verified 2026-10-28); the <captured> fields of a live proposer pass and a critic call (capture 2) and the exact-session-id behaviour in print mode (capture 4) remain capture-pending"
+}

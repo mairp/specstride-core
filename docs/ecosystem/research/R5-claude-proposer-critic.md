@@ -30,7 +30,7 @@ The message stream is the same protocol in both.
 |---|---|---|
 | What runs | The user's installed `claude` | A binary bundled with the SDK version (or the installed one via `pathToClaudeCodeExecutable`) |
 | Version under test | The installed CLI; the doctor reads `claude --version` | SDK 0.3.284 tracks CLI 2.1.284; two versions to pin unless the path is overridden |
-| Auth | Everything in the precedence list, including the `/login` subscription | Same binary, so technically the same. **Policy**: the SDK overview states third-party developers may not offer claude.ai login or rate limits in their products without prior approval, and says to use API key methods |
+| Auth | Everything in the precedence list, including the `/login` subscription | Same binary, so technically the same. **Policy**: the SDK overview states third-party developers may not offer claude web login or rate limits in their products without prior approval, and says to use API key methods |
 | Stream | NDJSON on stdout; needs `--verbose` | Typed `SDKMessage` async iterator |
 | Extras | None beyond flags | `canUseTool` callback, in-process hooks, in-process MCP servers, `interrupt()`, `listSessions()`, `getSessionMessages()`, `sessionStore` |
 | Dependencies | None (a subprocess) | Peer deps `zod ^4`, `@anthropic-ai/sdk >=0.93.0`, `@modelcontextprotocol/sdk ^1.29.0`; about eight platform binary packages; licence "SEE LICENSE IN README.md" (Anthropic Commercial Terms, not MIT) |
@@ -39,7 +39,7 @@ The message stream is the same protocol in both.
 Meaning for the tiers (decision 6):
 
 - **Tier 1** is the CLI subprocess. It uses the consumer's own installed and logged-in CLI, which is what
-  decision 6 defines. It is also the only option that does not make Specstride a product "offering claude.ai
+  decision 6 defines. It is also the only option that does not make Specstride a product "offering claude's web app
   login" through the SDK. R8 owns the ruling; this report supplies the fact.
 - **Tier 2** has two legitimate forms. The proposer needs an agent loop with tools, so it is either the same CLI
   subprocess with `ANTHROPIC_API_KEY` (optionally `--bare`), or the Agent SDK with an API key. The critic needs
@@ -200,7 +200,7 @@ directory. A fresh `CLAUDE_CONFIG_DIR` therefore has **no login**. That is the w
 | Option | Isolation achieved | Tier 1 auth | Cost |
 |---|---|---|---|
 | A. Real config dir, `--safe-mode`, `--strict-mcp-config`, `--disable-slash-commands`, explicit `--permission-mode` | No hooks, plugins, skills, MCP, CLAUDE.md, auto memory. Transcripts and `~/.claude.json` still written to the real home | Works | Not a throwaway home: the run leaves transcripts behind and reads managed settings. Project CLAUDE.md is also dropped, which may be unwanted for a proposer |
-| B. Real config dir, `--setting-sources` narrowed, `--settings <file>` | Finer control than A; project settings can stay | Works | More to get wrong; managed settings, `~/.claude.json`, auto memory and claude.ai connectors load regardless of setting sources |
+| B. Real config dir, `--setting-sources` narrowed, `--settings <file>` | Finer control than A; project settings can stay | Works | More to get wrong; managed settings, `~/.claude.json`, auto memory and claude's web app connectors load regardless of setting sources |
 | C. Throwaway `CLAUDE_CONFIG_DIR` plus `CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token` | Full throwaway home | Works, still subscription | The consumer must mint a one-year token once and store it as an `env:`/`file:`/keychain reference. Whether this counts as Tier 1 or Tier 3 is R8's call. Token can only make model requests |
 | D. Throwaway `CLAUDE_CONFIG_DIR` plus API key (optionally `--bare`) | Full throwaway home | None; this is Tier 2 | Real money |
 | E. Throwaway dir seeded by copying or linking the credentials file | Full | Works | **Rejected**: Specstride would handle the credential file, and refresh-token rotation in a copy can invalidate the original login |
@@ -219,7 +219,7 @@ unlisted is denied and the run continues), or `--permission-mode auto`. Both sat
 
 | Signal | Where | Content |
 |---|---|---|
-| `rate_limit_event` | Stream message | `rate_limit_info.status`: `allowed`, `allowed_warning`, `rejected`; `resetsAt` (number); `rateLimitType`: `five_hour`, `seven_day`, `seven_day_opus`, `seven_day_sonnet`, `seven_day_overage_included`, `overage`; `utilization`; overage fields; `errorCode: "credits_required"`. Documented as "for claude.ai subscription users", emitted "when rate limit info changes" |
+| `rate_limit_event` | Stream message | `rate_limit_info.status`: `allowed`, `allowed_warning`, `rejected`; `resetsAt` (number); `rateLimitType`: `five_hour`, `seven_day`, `seven_day_opus`, `seven_day_sonnet`, `seven_day_overage_included`, `overage`; `utilization`; overage fields; `errorCode: "credits_required"`. Documented as "for claude's web app subscription users", emitted "when rate limit info changes" |
 | `system/api_retry` | Stream message | `attempt`, `max_retries`, `retry_delay_ms`, `error_status`, `error` category, one of which is `rate_limit`; others include `overloaded`, `billing_error`, `authentication_failed`, `server_error` |
 | `assistant.error` | Stream message | Same category enum |
 | `result` | Final stream message | `is_error: true`, `subtype: error_during_execution`, optional `api_error_status`, and the human message in `result` / `errors` |
@@ -239,7 +239,7 @@ page, so it is less stable than the documented fields.
 | F1 | Installed CLI is 2.1.284 at `/usr/bin/claude`, a native ELF binary | verified-local | `claude --version` gave `2.1.284 (Claude Code)`; `file -L /usr/bin/claude` |
 | F2 | The SDK runs the Claude Code binary; `claude -p` is the SDK via the CLI | verified-doc | https://code.claude.com/docs/en/agent-sdk/overview , https://code.claude.com/docs/en/headless |
 | F3 | SDK latest is 0.3.284, modified 2026-09-28, with eight platform binary optional deps and three peer deps | verified-local | `npm view @anthropic-ai/claude-agent-sdk version optionalDependencies peerDependencies license time.modified` |
-| F4 | Third-party developers may not offer claude.ai login or rate limits for products, including SDK agents, without approval | verified-doc | https://code.claude.com/docs/en/agent-sdk/overview (Note under "Get started") |
+| F4 | Third-party developers may not offer claude web login or rate limits for products, including SDK agents, without approval | verified-doc | https://code.claude.com/docs/en/agent-sdk/overview (Note under "Get started") |
 | F5 | `--tools ""` disables all built-in tools; it does not affect MCP tools; `--disallowedTools "mcp__*"` removes them | verified-doc | https://code.claude.com/docs/en/cli-reference ; `--tools` also in local `--help` |
 | F6 | `--allowedTools` auto-approves and does not restrict | verified-doc | cli-reference: "To restrict which tools are available, use `--tools` instead" |
 | F7 | `--max-budget-usd`, `--no-session-persistence`, `--session-id`, `--fork-session`, `--setting-sources`, `--strict-mcp-config`, `--safe-mode`, `--restricted`, `--permission-prompts`, `--system-prompt-snapshot`, `--fallback-model` exist in 2.1.284 | verified-local | `claude --help` output |
@@ -254,7 +254,7 @@ page, so it is less stable than the documented fields.
 | F16 | System prompt is recorded on first request and reused on resume | verified-doc | cli-reference, "System prompt flags in resumed conversations" |
 | F17 | SIGTERM gives exit 143 and an unfinished turn | verified-doc | headless, "Stop a run with SIGTERM" |
 | F18 | Credentials and transcripts live under `CLAUDE_CONFIG_DIR`; macOS Keychain entry is keyed to it | verified-doc | authentication, "Credential management"; https://code.claude.com/docs/en/sessions ; https://code.claude.com/docs/en/env-vars |
-| F19 | Managed settings, `~/.claude.json`, auto memory and claude.ai connectors load regardless of setting sources | verified-doc | https://code.claude.com/docs/en/agent-sdk/claude-code-features |
+| F19 | Managed settings, `~/.claude.json`, auto memory and claude's web app connectors load regardless of setting sources | verified-doc | https://code.claude.com/docs/en/agent-sdk/claude-code-features |
 | F20 | Bypass mode is refused as root or under sudo outside a recognised sandbox | verified-doc | https://code.claude.com/docs/en/permission-modes ; the message string occurs in the installed binary (`grep -a -c` gave 3) |
 | F21 | This effort's shell runs as uid 0 | verified-local | `id -u` gave `0` |
 | F22 | Whether today's Claude proposer arm actually starts as root on this host | unverified | Would need a paid call; not run. The default proposer today is not Claude, so the arm may never have been exercised here |
@@ -325,7 +325,7 @@ transport interface so an SDK transport can be added later for Tier 2 without to
 
 | harness | tested or unverified | detect/version command | headless invocation | stream format | TS SDK | auth modes | tier | proposer? | tool-less critic? | quota signal | terms status | version pin + verified-on | delivery wave |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Claude (Claude Code CLI) | tested adapter; flags verified by `--help` and docs, no live call in this research | `command -v claude`; `claude --version`; `claude auth status` | `claude -p --output-format stream-json --verbose`, prompt on stdin | NDJSON: `system/init`, `assistant`, `user`, `system/api_retry`, `rate_limit_event`, `result` | `@anthropic-ai/claude-agent-sdk` 0.3.284 (spawns the same binary); not used in Wave 1 | `/login` subscription OAuth; `CLAUDE_CODE_OAUTH_TOKEN`; `ANTHROPIC_API_KEY`; `ANTHROPIC_AUTH_TOKEN`; `apiKeyHelper`; Bedrock, Vertex, Foundry | 1 (CLI with login, default); 2 (API key, `--bare` allowed; critic by direct HTTP) | yes | yes: `--tools "" --disallowedTools "mcp__*" --strict-mcp-config`, verified from `init` | `rate_limit_event` (status, `resetsAt`, `utilization`); `api_retry.error = rate_limit`; `result.is_error` with limit text | defer to R8; SDK docs restrict offering claude.ai login in third-party products | CLI 2.1.259 to 2.1.284, verified 2026-09-29 | Wave 1 |
+| Claude (Claude Code CLI) | tested adapter; flags verified by `--help` and docs, no live call in this research | `command -v claude`; `claude --version`; `claude auth status` | `claude -p --output-format stream-json --verbose`, prompt on stdin | NDJSON: `system/init`, `assistant`, `user`, `system/api_retry`, `rate_limit_event`, `result` | `@anthropic-ai/claude-agent-sdk` 0.3.284 (spawns the same binary); not used in Wave 1 | `/login` subscription OAuth; `CLAUDE_CODE_OAUTH_TOKEN`; `ANTHROPIC_API_KEY`; `ANTHROPIC_AUTH_TOKEN`; `apiKeyHelper`; Bedrock, Vertex, Foundry | 1 (CLI with login, default); 2 (API key, `--bare` allowed; critic by direct HTTP) | yes | yes: `--tools "" --disallowedTools "mcp__*" --strict-mcp-config`, verified from `init` | `rate_limit_event` (status, `resetsAt`, `utilization`); `api_retry.error = rate_limit`; `result.is_error` with limit text | defer to R8; SDK docs restrict offering claude web login in third-party products | CLI 2.1.259 to 2.1.284, verified 2026-09-29 | Wave 1 |
 
 ## Open questions / risks
 

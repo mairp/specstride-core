@@ -41,7 +41,7 @@ Confidence is the confidence of the supporting research after its verifier, wher
 
 | # | Decision | Alternatives considered | Evidence | Confidence | Reversibility | Pending |
 |---|---|---|---|---|---|---|
-| C1 | Claude adapter on the `claude -p` subprocess with the prompt on stdin; no Agent SDK dependency in Wave 1 | Agent SDK | R5; R8v: SDK docs restrict offering claude.ai login in third-party products. Flags confirmed by R3v; the combination has had no live call | High on structure, medium on the flag set | Moderate | DP-021 |
+| C1 | Claude adapter on the `claude -p` subprocess with the prompt on stdin; no Agent SDK dependency in Wave 1 | Agent SDK | R5; R8v: SDK docs restrict offering claude web login in third-party products. Flags confirmed by R3v; the combination has had no live call | High on structure, medium on the flag set | Moderate | DP-021 |
 | C2 | Tier 3 ships as an empty allowlist | Enable per provider | R8, R8v: no provider's own page permits it; every "prohibited" cell confirmed | High | Easy (data) | DP-020 |
 | C3 | Two audiences in the terms gate. Personal: Tier 1 default. Distributed: Tier 2 default for Claude, Codex and the z.ai Coding Plan, with Tier 1 as a consumer opt-in | Tier 1 default for everyone, as decision 6 reads | R8v: 5 of 42 cells downgraded, each with the quoted sentence. **Hard evidence against part of decision 6** | High | Easy (data) | DP-042, DP-057 |
 | C4 | opencode is a later tested adapter, not a universal proposer | Universal proposer to reduce the adapter count | R10: it replaces vendor CLIs (breaks Tier 1), coarse stream, headless hangs, 130+ releases in 6 months | Medium-high | Easy | — |

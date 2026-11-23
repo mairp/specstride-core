@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.commit-scan-result/1",
+  "title": "Commit-scan result (F153-FR-026; data-model.md D11 — the one typed unit)",
+  "description": "What one scan of one candidate tree with one rule set pinned at launch answers: the hits that decide, whether the tree is blocked, the files scanned and the per-file counts. A hit names the rule and never the match text (F152-FR-010, F153-FR-027). The one result the pre-critic step, the commit-time step and the in-pass command consume, so no second implementation can disagree with the gate it advises on (F153-FR-026). PROPOSAL of spec 153 — not normative until its tasks land.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["hits", "blocked", "files", "counts"],
+  "properties": {
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "line"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "the file of the commit, as the caller named it"
+          },
+          "line": {
+            "type": "integer",
+            "$comment": "the line, 1-indexed; 0 where the file could not be read (the gate fails closed)"
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "the NAME of the value pattern that matched — never the matched text"
+          },
+          "registeredSecret": {
+            "type": "boolean",
+            "$comment": "true where the hit is a registered secret"
+          },
+          "unreadable": {
+            "type": "boolean",
+            "$comment": "true where the file could not be read at all"
+          }
+        }
+      }
+    },
+    "blocked": {
+      "type": "boolean",
+      "$comment": "true where at least one deciding hit stands: the commit gate holds the commit back"
+    },
+    "files": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "$comment": "the files that were hit, in the order the caller gave them"
+    },
+    "counts": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "$comment": "the count of hits of each file of `files`, aligned with it"
+    }
+  }
+}

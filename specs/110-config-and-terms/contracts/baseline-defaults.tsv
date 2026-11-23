@@ -1,0 +1,106 @@
+as_is_variable	baseline_default	source	key	catalogue_default	verdict	note
+ANTHROPIC_API_KEY		lib/critic.py:1880	harnesses.claude.auth.credential	none	same (spelled)	empty means no credential (B-0812)
+ANTHROPIC_BASE_URL		lib/critic.py:1889	harnesses.claude.endpoint.base	the descriptor's	same (spelled)	empty; the baseline falls back to https://api.anthropic.com, which the harness descriptor carries in the port (B-0814)
+DSH_HOME	$HOME/.dsh	proposer.sh:409	harnesses.dsh.home	the consumer's home of the harness	same (spelled)	$HOME/.dsh is the consumer’s home of that harness (B-0509)
+OPENAI_API_KEY		lib/critic.py:2363	harnesses.codex.auth.credential	none	same (spelled)	empty means no credential (B-0833)
+OPENAI_BASE_URL	https://api.openai.com/v1	lib/critic.py:2362	harnesses.codex.endpoint.base	the descriptor's	same (spelled)	the baseline literal is the endpoint the harness descriptor of codex carries in the port (B-0832)
+RALPH_LOKI_MAX_BATCH_BYTES	str(3 * 1024 * 1024	lib/ralph_loki_ship.py:32	telemetry.loki.maxBatchBytes	3145728	same (spelled)	3 * 1024 * 1024 = 3145728 (B-2276)
+RALPH_LOKI_TIMEOUT	2.5	lib/ralph_loki_ship.py:31	telemetry.loki.timeoutMs	2500	same (spelled)	the as-is value is seconds, decimal; §K.8 converts it to milliseconds: 2.5 s = 2500 ms (B-2275)
+RALPH_LOKI_URL	http://localhost:3100	lib/ralph_loki_ship.py:292	telemetry.loki.url	http://localhost:3100	same	
+RALPH_OTEL_MAX_BATCH_BYTES	str(3 * 1024 * 1024	lib/ralph_otel_ship.py:40	telemetry.otel.maxBatchBytes	3145728	same (spelled)	3 * 1024 * 1024 = 3145728 (B-2311)
+RALPH_OTEL_TIMEOUT	2.5	lib/ralph_otel_ship.py:39	telemetry.otel.timeoutMs	2500	same (spelled)	the as-is value is seconds, decimal; §K.8 converts it to milliseconds: 2.5 s = 2500 ms (B-2310)
+RALPH_OTEL_URL	http://localhost:4318	lib/ralph_otel_ship.py:462	telemetry.otel.url	http://localhost:4318	same	
+SPECSTRIDE_ACCELERATOR	true	orchestrator.sh:1105	roles.accelerator.enabled	true	same	
+SPECSTRIDE_ACCELERATOR_BACKEND		orchestrator.sh:1106	roles.accelerator.harness	the baseline's: the role runs as critic-class or proposer-class	same (spelled)	empty means the role runs on the proposer’s harness (orchestrator.sh:1791); the catalogue writes that as `the baseline’s: the role runs as critic-class or proposer-class`
+SPECSTRIDE_AGENT_STREAM	true	lib/critic.py:2281	stream.tap	on	same (spelled)	true is the switch spelling `on` of §K.2 (B-0495)
+SPECSTRIDE_AGENT_TAP		proposer.sh:1729	stream.tapExecutable	unset	same (spelled)	empty means unset (B-0535)
+SPECSTRIDE_ANCHOR_MAX_BYTES_CEIL	49152	lib/critic.py:241	roles.critic.anchorMaxBytes	49152	same	
+SPECSTRIDE_ATTEMPT	1	proposer.sh:290	(no key)		n/a (no key)	
+SPECSTRIDE_BACKEND_LABEL		lib/agent_stream.py:314	harnesses.claude.label	unset	same (spelled)	empty means unset; the label falls back to the harness id (B-0062)
+SPECSTRIDE_BANNER_BG		orchestrator.sh:917	output.bannerBg	unset	same (spelled)	empty means unset (B-0069)
+SPECSTRIDE_BEBOP_BACKEND	compass	lib/critic.py:207	(not carried)		n/a (DV-064)	the inner backend of the locally registered backend; the inventory writes it as SPECSTRIDE_<LOCAL_BACKEND>_BACKEND (B-0519, B-0835)
+SPECSTRIDE_CLAUDE_CRITIC_API_KEY		lib/critic.py:1879	harnesses.claude.auth.credential	none	same (spelled)	empty means no credential (B-0811)
+SPECSTRIDE_CLAUDE_CRITIC_BASE_URL		lib/critic.py:1888	harnesses.claude.endpoint.base	the descriptor's	same (spelled)	empty; as ANTHROPIC_BASE_URL (B-0813)
+SPECSTRIDE_CLAUDE_CRITIC_MODEL	claude-opus-4-8	lib/critic.py:193	roles.critic.model	the harness default, on a model tier other than the proposer's	same (spelled)	the baseline pins a model id; in the port the harness descriptor carries the harness default (B-0830)
+SPECSTRIDE_CODEX_CRITIC_MODEL	gpt-5	lib/critic.py:198	roles.critic.model	the harness default, on a model tier other than the proposer's	same (spelled)	the baseline pins a model id; in the port the harness descriptor carries the harness default (B-0831)
+SPECSTRIDE_COMPASS_KEY		lib/critic.py:2381	(not carried)		n/a (DV-064)	the gateway key of the locally registered backend; the inventory writes it as SPECSTRIDE_<GATEWAY>_KEY (B-0837)
+SPECSTRIDE_COMPASS_URL	http://localhost:4000/v1/chat/completions	lib/critic.py:2376	(not carried)		n/a (DV-064)	the gateway URL of the locally registered backend; the inventory writes it as SPECSTRIDE_<GATEWAY>_URL (B-0836)
+SPECSTRIDE_CONTEXT_BUDGET	CONTEXT_BUDGET_DEFAULT	lib/specstride_spec.py:727	spec.contextBudget; reverse.contextBudget	24000	same (spelled)	CONTEXT_BUDGET_DEFAULT = 24000 at lib/specstride_spec.py:657
+SPECSTRIDE_CRITIC	claude	orchestrator.sh:203	roles.critic.harness	by the critic order (annex C §C.6)	differs	the baseline default critic is `claude`; the port resolves the critic by the critic order of annex C §C.6 (feature 124, `critic.autoPick`). The literal default is not carried. For the orchestrator.
+SPECSTRIDE_CRITIC_GROUNDING	true	lib/critic.py:2488	roles.critic.grounding	true	same	
+SPECSTRIDE_CRITIC_MALFORMED_LIMIT	3	orchestrator.sh:223	roles.critic.malformedLimit	3	same	
+SPECSTRIDE_CRITIC_TIMEOUT	300	orchestrator.sh:219	roles.critic.timeoutSec	300	same	
+SPECSTRIDE_CRITIC_VIA	bebop	lib/critic.py:2373	(not carried)		n/a (DV-064)	the transport of the locally registered backend’s critic (B-0834)
+SPECSTRIDE_DIAGNOSTICIAN	true	orchestrator.sh:1073	roles.diagnostician.enabled	true	same	
+SPECSTRIDE_DSH_BIN	dsh	lib/critic.py:2102	harnesses.dsh.bin	found by the descriptor	differs	the baseline default launcher of that harness is the literal `dsh`; the catalogue default of `harnesses.<id>.bin` is `found by the descriptor`. For the orchestrator.
+SPECSTRIDE_DSH_MODEL	$backend_model	proposer.sh:547	roles.proposer.model; roles.critic.model	<differing defaults: the harness default | the harness default, on a model tier other than the proposer's>	same (spelled)	the baseline default is the resolved model of the backend name, not a literal (B-0515)
+SPECSTRIDE_DSH_PERMISSION_MODE	${DSH_PERMISSION_MODE:-workspace-write}	proposer.sh:562	sandbox.permissionMode	contained (acceptEdits for Claude)	differs	the baseline default permission mode is `workspace-write`; the catalogue default of `sandbox.permissionMode` is `contained (acceptEdits for Claude)`. §K.9 row 26 reserves the literal `baseline` for this key under `parity`, so the baseline value is reached through the profile and not through the default. Owner 109. For the orchestrator.
+SPECSTRIDE_DSH_PLUGIN_ALLOWLIST		lib/dsh_plugin_requests.py:129	harnesses.dsh.pluginAllowlist	empty	same (spelled)	empty means the empty list (B-0379)
+SPECSTRIDE_DSH_PLUGIN_TIMEOUT	600	lib/dsh_plugin_requests.py:132	harnesses.dsh.pluginTimeoutSec	600	same	
+SPECSTRIDE_DSH_PROFILE	headless	lib/critic.py:2103	harnesses.dsh.profile	none	differs	the baseline default profile of that harness is `headless`; the catalogue default of `harnesses.<id>.profile` is `none`. The value belongs in the harness descriptor of feature 130, not in a built-in default of the catalogue. For the orchestrator.
+SPECSTRIDE_DSH_PROVIDER		lib/critic.py:1958	harnesses.dsh.provider	none	same (spelled)	empty means none (B-0508)
+SPECSTRIDE_DSH_REASONING_EFFORT		proposer.sh:410	roles.proposer.effort	the harness default	same (spelled)	empty means the harness decides (B-0510)
+SPECSTRIDE_EVENTS		lib/agent_stream.py:309	(no key)		n/a (no key)	
+SPECSTRIDE_FAILURE_LEDGER	true	proposer.sh:1227	loop.yield.failureLedger	true	same	
+SPECSTRIDE_FAILURE_LEDGER_MAX	150	proposer.sh:1228	loop.yield.failureLedgerMax	150	same	
+SPECSTRIDE_FEATURE		orchestrator.sh:199	spec.feature	the last active	same (spelled)	empty means the orchestrator resolves the slug itself (B-0036); the catalogue writes that as `the last active`
+SPECSTRIDE_GENERATE_TESTS		orchestrator.sh:229	verification.generateTests	testautomation/<slug>/generated, unless the mode is off	same (spelled)	empty is filled at orchestrator.sh:481 with $TEST_AUTOMATION_DIR/generated
+SPECSTRIDE_GIT_COMMITS	auto	orchestrator.sh:225	loop.gitCommits	auto	same	
+SPECSTRIDE_GROUNDING_MAX_FILES	80	lib/critic.py:44	roles.critic.groundingMaxFiles	80	same	
+SPECSTRIDE_INVOCATION_ID		proposer.sh:295	(no key)		n/a (no key)	
+SPECSTRIDE_LEARNING		orchestrator.sh:1661	learning.mode	off	same (spelled)	empty means learning is off (B-0077)
+SPECSTRIDE_LIVE	auto	orchestrator.sh:211	output.live	auto	same	
+SPECSTRIDE_LIVE_DETAIL	tools	lib/present.py:1032	output.liveDetail	tools	same	
+SPECSTRIDE_LOKI_URL	http://localhost:3100	orchestrator.sh:207	telemetry.loki.url	http://localhost:3100	same	
+SPECSTRIDE_LONG_JOB_CMD		orchestrator.sh:231	verification.longJob.cmd	none	same (spelled)	empty means no long job (B-0056)
+SPECSTRIDE_LONG_JOB_PHASE		orchestrator.sh:230	verification.longJob.phase	none	same (spelled)	empty means no long job (B-0055)
+SPECSTRIDE_MAX_ITER	30	orchestrator.sh:205	loop.maxIter	30	same	
+SPECSTRIDE_MAX_REJECTS	3	orchestrator.sh:204	loop.maxRejects	3	same	
+SPECSTRIDE_MAX_WALL_MIN	0	orchestrator.sh:224	loop.maxWallMin	0	same	
+SPECSTRIDE_OSC_MAX	2	orchestrator.sh:1308	loop.oscMax	2	same	
+SPECSTRIDE_OTEL_ENABLED	false	orchestrator.sh:208	telemetry.otel.enabled	false	same	
+SPECSTRIDE_OTEL_SHIP		specstride-lib.sh:139	(no key)		n/a (no key)	
+SPECSTRIDE_OTEL_TRACES	true	lib/ralph_otel_spans.py:77	telemetry.otel.traces	on	same (spelled)	true is the switch spelling `on` of §K.2 (B-2336)
+SPECSTRIDE_OTEL_URL	http://localhost:4318	orchestrator.sh:209	telemetry.otel.url	http://localhost:4318	same	
+SPECSTRIDE_PHASE	0	proposer.sh:289	(no key)		n/a (no key)	
+SPECSTRIDE_PRIME_AGENT_BIN	prime-agent	lib/critic.py:2200	harnesses.prime.bin	found by the descriptor	differs	the baseline default is the literal `prime-agent`; the catalogue default of `harnesses.<id>.bin` is `found by the descriptor`. For the orchestrator.
+SPECSTRIDE_PRIME_BIN	prime	lib/critic.py:2197	harnesses.prime.launcher	the as-is default name	same (spelled)	`the as-is default name` is `prime` (B-0518)
+SPECSTRIDE_PRIME_FLEET_BIN	${SPECSTRIDE_PRIME_BIN:-prime}	proposer.sh:609	harnesses.prime.launcher	the as-is default name	same (spelled)	the fleet variable falls back to SPECSTRIDE_PRIME_BIN, whose default is `prime` (B-0518)
+SPECSTRIDE_PROMPT_MAX_BYTES	180000	orchestrator.sh:1430	loop.promptMaxBytes	180000	same	
+SPECSTRIDE_PROPOSER	dsh	orchestrator.sh:202	roles.proposer.harness	the shipped default, Claude in Wave 1	differs	the baseline default proposer is `dsh`; the port ships Claude as the Wave 1 default. The as-is item is `superseded-by DV-004` (traceability.md, row 028 FR-021), so the port does not carry the baseline value. For the orchestrator.
+SPECSTRIDE_PROPOSER_IDLE_TIMEOUT	900	proposer.sh:155	roles.proposer.idleTimeoutSec	900	same	
+SPECSTRIDE_PROPOSER_MAX_CAPS	3	proposer.sh:1912	roles.proposer.maxCaps	3	same	
+SPECSTRIDE_PROPOSER_MAX_ERRORS	2	proposer.sh:1897	roles.proposer.maxErrors	2	same	
+SPECSTRIDE_PROPOSER_MAX_NOPROGRESS	3	proposer.sh:1934	roles.proposer.maxNoProgress	3	same	
+SPECSTRIDE_PROPOSER_PROGRESS_PATHS		proposer.sh:304	roles.proposer.progressPaths	the working directory	same (spelled)	empty means the working directory (B-0506)
+SPECSTRIDE_PROPOSER_PROGRESS_TIMEOUT	1800	proposer.sh:165	roles.proposer.progressTimeoutSec	1800	same	
+SPECSTRIDE_PROPOSER_REPEAT_LIMIT	12	proposer.sh:166	roles.proposer.repeatLimit	12	same	
+SPECSTRIDE_PROPOSER_SKILLS	0	proposer.sh:1634	harnesses.claude.proposerSkills	off	same (spelled)	1 re-enables, any other value disables (B-0534); 0 is `off`
+SPECSTRIDE_PROPOSER_TIMEOUT	1800	orchestrator.sh:212	roles.proposer.timeoutSec	1800	same	
+SPECSTRIDE_ROLE	proposer	proposer.sh:288	(no key)		n/a (no key)	
+SPECSTRIDE_RUN_ID		lib/agent_stream.py:310	(no key)		n/a (no key)	
+SPECSTRIDE_RUN_START_EPOCH		proposer.sh:1537	(no key)		n/a (no key)	
+SPECSTRIDE_SHIP		specstride-lib.sh:131	(no key)		n/a (no key)	
+SPECSTRIDE_SHORT_PASS_NUDGE_AFTER	2	proposer.sh:1946	loop.shortPass.nudgeAfter	2	same	
+SPECSTRIDE_SHORT_PASS_SEC	180	proposer.sh:1945	loop.shortPass.sec	180	same	
+SPECSTRIDE_SPEC_FORMAT		orchestrator.sh:198	spec.format	detected	same (spelled)	empty means auto-detect (B-0035); the catalogue writes that as `detected`
+SPECSTRIDE_STATE_NOTICE_SHOWN		specstride-lib.sh:43	(no key)		n/a (no key)	
+SPECSTRIDE_STDIN_FILE		proposer.sh:1026	(no key)		n/a (no key)	
+SPECSTRIDE_TASK		lib/agent_stream.py:311	(no key)		n/a (no key)	
+SPECSTRIDE_TELEMETRY	false	specstride-lib.sh:131	(no key)		n/a (no key)	
+SPECSTRIDE_TELEMETRY_ENABLED	false	orchestrator.sh:206	telemetry.enabled	false	same	
+SPECSTRIDE_TEST_PLAN		orchestrator.sh:227	verification.testPlan	testautomation/<slug>/TEST_PLAN.md, unless the mode is off	same (spelled)	empty is filled at orchestrator.sh:480 with $TEST_AUTOMATION_DIR/TEST_PLAN.md
+SPECSTRIDE_TICK_TASKS	true	orchestrator.sh:2082	loop.tickTasks	true	same	
+SPECSTRIDE_TRACE_ID		orchestrator.sh:702	(no key)		n/a (no key)	
+SPECSTRIDE_VERIFICATION	required	orchestrator.sh:226	verification.mode	required	same	
+SPECSTRIDE_VERIFICATION_COMMANDS		orchestrator.sh:228	verification.commands	none	same (spelled)	empty means no commands document (B-0053)
+SPECSTRIDE_VERIFY_TAIL_ERR_LINES	40	lib/verification_failure_digest.py:25	verification.summary.tailErrLines	40	same	
+SPECSTRIDE_VERIFY_TAIL_LINES	80	lib/verification_failure_digest.py:24	verification.summary.tailLines	80	same	
+SPECSTRIDE_WATCHDOG_TICK	15	proposer.sh:1003	loop.watchdogTickSec	15	same	
+SPECSTRIDE_YIELD_ALLOW_COMMAND	false	proposer.sh:1216	loop.yield.allowCommand	false	same	
+SPECSTRIDE_YIELD_COUNTS_AS_ITER	false	proposer.sh:1218	loop.yield.countsAsIter	false	same	
+SPECSTRIDE_YIELD_LOG_HEAD	40	proposer.sh:1223	loop.yield.logHead	40	same	
+SPECSTRIDE_YIELD_LOG_TAIL	80	proposer.sh:1224	loop.yield.logTail	80	same	
+SPECSTRIDE_YIELD_MAX_PER_ATTEMPT	4	proposer.sh:1212	loop.yield.maxPerAttempt	4	same	
+SPECSTRIDE_YIELD_POLL	30	proposer.sh:1209	loop.yield.pollSec	30	same	
+SPECSTRIDE_YIELD_WAIT_EVERY	10	proposer.sh:1221	loop.yield.waitEvery	10	same	

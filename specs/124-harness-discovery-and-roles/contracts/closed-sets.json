@@ -1,0 +1,68 @@
+{
+  "schema": "specstride.closed-sets/1",
+  "feature": "124",
+  "sets": [
+    {
+      "name": "critic-order-steps",
+      "annexRow": null,
+      "members": [
+        "configured",
+        "gateway",
+        "discovered",
+        "default-model-tier"
+      ],
+      "closedBy": "owner decision",
+      "unknown": "the record is refused"
+    },
+    {
+      "name": "proposer-sources",
+      "annexRow": null,
+      "members": [
+        "flag",
+        "environment",
+        "configuration",
+        "default"
+      ],
+      "closedBy": "owner decision",
+      "unknown": "the record is refused"
+    },
+    {
+      "name": "candidate-reasons",
+      "annexRow": null,
+      "members": [
+        "role-unsupported",
+        "form-unproven",
+        "unverified-cli",
+        "memory-not-off",
+        "window-unknown",
+        "window-too-small",
+        "not-diverse",
+        "credential-absent",
+        "preflight-failed",
+        "terms-refused",
+        "terms-unknown",
+        "quota-exhausted",
+        "no-budget",
+        "no-spend-cap",
+        "read-denial-unconfirmed",
+        "worker-root-not-empty",
+        "first-call-unproven"
+      ],
+      "closedBy": "design",
+      "unknown": "shown as text; the candidate does not qualify"
+    },
+    {
+      "name": "diversity-results",
+      "annexRow": null,
+      "members": [
+        "diverse",
+        "same-provider",
+        "same-model",
+        "unverified"
+      ],
+      "closedBy": "design",
+      "unknown": "unverified, with the warning"
+    }
+  ],
+  "note": "The sets harness-states, discovery-sources and probe-steps left with the split."
+}

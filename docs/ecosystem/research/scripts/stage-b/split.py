@@ -151,5 +151,5 @@ if j.get('f100'):
 out = subprocess.run(['python3', E+'check-traceability.py'], capture_output=True, text=True).stdout
 print([l for l in out.splitlines() if l.startswith('[') and (('F'+o3) in l or ('F'+n3) in l or old in l or new in l or l[1] in 'abcdefg')] or 'check clean for both parts')
 subprocess.run(['git', 'add', 'specs/'+old, 'specs/'+new, 'docs/ecosystem', '.specify'], check=True)
-subprocess.run(['git', 'commit', '-q', '-m', 'specs(%s, %s): split of %s into %s\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NUVyhCCu92itppZfrMWwgP' % (o3, n3, old, new)], check=True)
+subprocess.run(['git', 'commit', '-q', '-m', 'specs(%s, %s): split of %s into %s\n\nCo-Authored-By: Claude <noreply@anthropic.com>' % (o3, n3, old, new)], check=True)
 print(subprocess.run(['git', 'log', '--oneline', '-1'], capture_output=True, text=True).stdout)

@@ -1,0 +1,83 @@
+{
+  "schema": "specstride.lines/1",
+  "feature": "124",
+  "note": "Product lines of default output, grammar of annex G section G.3. None is printed under the parity profile. At most 3 lines and 600 bytes per launch.",
+  "lines": [
+    {
+      "label": "SPECSTRIDE-CRITIC",
+      "keys": [
+        "harness",
+        "model",
+        "step",
+        "state",
+        "form",
+        "window-source",
+        "cap",
+        "auto"
+      ],
+      "when": "every launch in default output",
+      "requirement": "F124-FR-043"
+    },
+    {
+      "label": "SPECSTRIDE-CRITIC",
+      "keys": [
+        "passed-over",
+        "reason",
+        "next"
+      ],
+      "when": "a candidate is passed over",
+      "requirement": "F124-FR-041"
+    },
+    {
+      "label": "SPECSTRIDE-DIVERSITY",
+      "keys": [
+        "result",
+        "proposer-model",
+        "critic-model"
+      ],
+      "when": "the critic-diversity warning is raised: the diversity result is same-model or unverified and no other; not printed when the line is silenced (row 92 of annex X section X.7)",
+      "warning": "critic-diversity warning",
+      "requirement": "F124-FR-045"
+    },
+    {
+      "label": "SPECSTRIDE-ROLES",
+      "keys": [
+        "refused",
+        "role",
+        "name",
+        "reason",
+        "candidates"
+      ],
+      "when": "role resolution refuses a launch",
+      "requirement": "F124-FR-024"
+    },
+    {
+      "label": "SPECSTRIDE-ROLES",
+      "keys": [
+        "ignored",
+        "reason"
+      ],
+      "when": "a selection of the critic in project configuration is ignored",
+      "requirement": "F124-FR-026"
+    }
+  ],
+  "asIs": [
+    {
+      "text": "<pass-loop>: unknown backend '<name>' (<list>)",
+      "stream": "stderr",
+      "requirement": "F124-FR-029"
+    },
+    {
+      "text": "unknown SPECSTRIDE_CRITIC provider: <name> (<list>)",
+      "requirement": "F124-FR-030"
+    }
+  ],
+  "events": [
+    "critic.selected (EV-28, catalogue of feature 111; fields harness, model, why, diversity, sameModelWarning): the pick at launch, with the critic-diversity warning",
+    "critic.call (catalogue of feature 111; fields diversity, sameModelWarning): the critic-diversity rule applied before each critic-class call"
+  ],
+  "notInCatalogue": {
+    "types": ["roles.resolved", "critic.passed-over", "critic.diversity"],
+    "note": "Proposals of this feature that the catalogue does not hold; feature 111 retired critic.passed_over and critic.diversity (F111-FR-052, retired). The facts ride critic.selected and critic.call. A restoration is additive and waits for the owner (CQ-211)"
+  }
+}

@@ -67,5 +67,5 @@ out = subprocess.run(['python3', E+'check-traceability.py'], capture_output=True
 mine = [l for l in out.splitlines() if l.strip().startswith('[h') and ('F'+num in l or d in l)]
 print('maps', dvmap, cqmap); print('check lines for feature:', mine or 'none')
 subprocess.run(['git', 'add', 'specs/'+d, 'docs/ecosystem', '.specify'], check=True)
-subprocess.run(['git', 'commit', '-q', '-m', 'specs(%s): %s, all five steps\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NUVyhCCu92itppZfrMWwgP' % (num, d.split('-', 1)[1])], check=True)
+subprocess.run(['git', 'commit', '-q', '-m', 'specs(%s): %s, all five steps\n\nCo-Authored-By: Claude <noreply@anthropic.com>' % (num, d.split('-', 1)[1])], check=True)
 print(subprocess.run(['git', 'log', '--oneline', '-1'], capture_output=True, text=True).stdout)

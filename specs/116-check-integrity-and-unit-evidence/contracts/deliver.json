@@ -1,0 +1,18 @@
+{
+ "schema": "specstride.deliver-116/1",
+ "note": "Files of feature 116 that the sync script of feature 100 delivers into packages/contracts/ after its clean copy (proposal P-1 of analyze-report.md, section \"Proposed upstream fixes\"). Keys are the target names in the package; values are paths relative to this directory. A target name that another source already delivered fails the sync.",
+ "owner": "116",
+ "data": {
+  "closed-sets-116.json": "closed-sets.json",
+  "parity-rows-116.json": "parity-rows.json",
+  "integrity-rules-116.json": "integrity-rules.json",
+  "tamperings-116.json": "tamperings.json"
+ },
+ "schemas": {
+  "toolchain.schema.json": "schemas/toolchain-profile.schema.json",
+  "protected-set.schema.json": "schemas/protected-set.schema.json",
+  "check-result.schema.json": "schemas/check-result.schema.json",
+  "integrity-rules-116.schema.json": "schemas/integrity-rules-116.schema.json",
+  "tamperings-116.schema.json": "schemas/tamperings-116.schema.json"
+ }
+}

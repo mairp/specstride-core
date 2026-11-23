@@ -29,7 +29,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { route } from "../../src/router/route.ts";
 import { commitScanOf } from "../../../core/src/commit-scan/scan.ts";
 import { quotedPath } from "../../../core/src/gate/feedback.ts";
@@ -360,7 +360,7 @@ test('CT-153-27 "no other rule set" (T364)', async (t) => {
   }
 });
 
-test('CT-153-26 "it agrees with the engine" (T365)', async (t) => {
+test('CT-153-26 "it agrees with the engine" (T365)', async () => {
   const random = rngOf(0x5eed153);
   const workspaces: Workspace[] = [];
   try {
