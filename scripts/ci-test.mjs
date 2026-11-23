@@ -46,9 +46,33 @@ if (parallel === 1) {
       encoding: "utf8",
       maxBuffer: 1 << 30,
     });
-    const notOk = run.stdout.split("\n").filter((line) => /^not ok/.test(line));
+    const lines = run.stdout.split("\n");
+    const notOk = lines.filter((line) => /^not ok/.test(line));
     console.log(`${workspace}: ${files.length} files, exit ${String(run.status)}`);
     for (const line of notOk) console.log(`  ${line}`);
+    if (run.status !== 0) {
+      // A bare name is not a diagnosis: the TAP detail block under each failing
+      // test carries the assertion's message and stack. Print it on stderr —
+      // stdout is contract: the parity test of ci-test-parallel compares it
+      // byte-for-byte — capped, so a red CI run explains itself.
+      let printed = 0;
+      let capturing = false;
+      for (const line of lines) {
+        if (/^not ok/.test(line)) {
+          capturing = true;
+          continue;
+        }
+        if (!capturing) continue;
+        if (/^(ok |not ok |# |1\.\.|# Subtest)/.test(line)) {
+          capturing = false;
+          continue;
+        }
+        if (printed < 400) {
+          console.error(`  ${line}`);
+          printed += 1;
+        }
+      }
+    }
     if (run.status !== 0) failed += 1;
   }
 } else {
