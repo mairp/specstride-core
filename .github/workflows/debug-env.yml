@@ -1,0 +1,31 @@
+name: Debug env
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Print the environment that `npm test` inherits
+        run: |
+          echo "HOME=$HOME"
+          echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-<unset>}"
+          echo "XDG_STATE_HOME=${XDG_STATE_HOME:-<unset>}"
+          echo "XDG_CACHE_HOME=${XDG_CACHE_HOME:-<unset>}"
+          env | grep -E "^(XDG|SPECSTRIDE|NODE_|CI=|GITHUB_ACTIONS)" | sort || true
+          node -e "const os=require('node:os');console.log('homedir():',os.homedir())"
+      - name: Run the two smallest failing tests verbatim
+        run: |
+          npm ci --ignore-scripts
+          node --test packages/cli/test/contract-derive-task-groups.test.ts 2>&1 | tail -40 || true
+          node --test packages/cli/test/engine/loop-speed-handoff.test.ts 2>&1 | grep -E "^not ok|^# pass|^# fail" || true
