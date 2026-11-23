@@ -158,6 +158,16 @@ const [command, args] = canIsolate
 // runs under limits-off (the owner's ruling) fails its own verification suite
 // on the ceiling-enforcement tests forever (152 phase 1, 2026-11-11: three
 // attempts × `npm test -> failed`, the hung-pass stub never signalled).
+//
+// `XDG_CONFIG_HOME` is of the same class: it names the user configuration
+// directory the engine honours (F110-FR-003), and the fixtures write the user
+// file of their runs at `$HOME/.config/specstride` literally. A host that
+// exports the variable — the GitHub ubuntu-latest image does — makes every
+// such fixture write a config the run never reads: the switch stays at its
+// default and the test fails on CI only (2026-11-23: eleven of the fourteen
+// CI-only test failures reproduced locally from this one variable alone).
+// Tests that exercise the XDG resolution set the variable themselves and are
+// unaffected: the strip removes only the value inherited from the host.
 const env: NodeJS.ProcessEnv = { ...process.env };
 for (const name of [
   "SPECSTRIDE_FEATURE",
@@ -166,6 +176,7 @@ for (const name of [
   "SPECSTRIDE_PROPOSER",
   "SPECSTRIDE_BIN",
   "SPECSTRIDE_LIMITS",
+  "XDG_CONFIG_HOME",
 ]) {
   delete env[name];
 }
