@@ -1,6 +1,6 @@
 /**
  * T274 — table-level tests generated from `data/stop-reasons.json`: one test
- * per stop reason (15), asserting the literal, the engine exit, `transient`
+ * per stop reason (16), asserting the literal, the engine exit, `transient`
  * and `retryable` against T080, and the as-is literal against T270
  * (research.md D-9; F100-FR-148; F100-SC-009).
  *
@@ -100,7 +100,7 @@ for (const raw of RAW) {
       assert.ok(MEMBERS_WITH_AN_AS_IS_LITERAL.includes(raw.literal as never));
       assert.ok(asIsStopLines(raw.literal).length >= 1, "the projection writes a line");
     } else {
-      assert.equal(asIsLiteralOf(raw.literal), null, "member 15 is new");
+      assert.equal(asIsLiteralOf(raw.literal), null, "member 15 and later are new");
       assert.equal(asIsStopLines(raw.literal).length, 0);
     }
     // The rule of two lines, where the engine and the pass loop both write.
@@ -111,8 +111,8 @@ for (const raw of RAW) {
   });
 }
 
-test("F100-SC-009: every one of the 15 stop reasons has a test of its own", () => {
-  assert.equal(RAW.length, 15);
+test("F100-SC-009: every one of the 16 stop reasons has a test of its own", () => {
+  assert.equal(RAW.length, 16);
   assert.equal(STOP_REASON_COUNT, RAW.length);
   assert.equal(STOP_REASONS.length, RAW.length);
   assert.equal(stopReasonRows.length, RAW.length);

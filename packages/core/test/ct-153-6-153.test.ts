@@ -33,7 +33,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 
-import { reportRowsOf } from "@specstride/core/report";
+import { reportRowsOf } from "../src/report/index.ts";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const REPO = join(HERE, "..", "..", "..");

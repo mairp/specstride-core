@@ -2215,9 +2215,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // there stand under the register row that carries the phase derivation
   // (DV-060).
   const explicitSpecPath = specsPathOfTheLaunch(launch.argv);
+  // The as-is layout fallback: a launch that names no `-s` in a workspace that
+  // keeps one spec document and no `tasks.md` reads the phases from that
+  // document — the same `SPECS.md` the reference engine names with `-s` on the
+  // same fixture (DV-060). The engine's own corpus layout (a directory under
+  // `specs/` that holds `tasks.md`) still wins whenever it is there.
+  const documentOfTheLaunch =
+    explicitSpecPath ??
+    (existsSync(join(workdir, "SPECS.md")) ? join(workdir, "SPECS.md") : undefined);
   const tasksPath =
-    explicitSpecPath !== undefined && !existsSync(declaredTasksPath)
-      ? explicitSpecPath
+    documentOfTheLaunch !== undefined && !existsSync(declaredTasksPath)
+      ? documentOfTheLaunch
       : declaredTasksPath;
   const grammar = GRAMMARS["speckit-tasks"];
   const tasksText = readFileSync(tasksPath, "utf8");
@@ -2557,7 +2565,16 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // The shapes of the phases, read once per run for the learning calls: the
   // observation and the evaluation run under the CURRENT shape of the phase
   // (F106-FR-036), and a spec that cannot be read leaves no shape.
-  const learningSpecPath = explicitSpecPath ?? join(workdir, "specs", slug, "spec.md");
+  // DV-060 again, for the shapes: a launch that names no `-s` in a workspace
+  // that keeps only the one spec document hashes its phases out of that
+  // document (the as-is engine did the same, so under `parity` the phase
+  // start carries the shape the golden carries); the corpus layout wins
+  // whenever it is there.
+  const learningSpecPath =
+    explicitSpecPath ??
+    (existsSync(join(workdir, "specs", slug, "spec.md"))
+      ? join(workdir, "specs", slug, "spec.md")
+      : (documentOfTheLaunch ?? join(workdir, "specs", slug, "spec.md")));
   let learningShapes: Record<number, string> = {};
   if (existsSync(learningSpecPath)) {
     try {
@@ -3106,6 +3123,16 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // assignment (`token: hunter2`), so a diff run through the full set reaches
   // the critic with its identifiers and signatures destroyed — the critic then
   // grounds on placeholder marks and broken signatures and rejects work the
+  // gate passed (the "placeholders and invalid function signatures" unmet line
+  // of a real campaign). The source scope keeps the shaped secrets (bearer,
+  // sk-, the vendor prefixes, the key blocks); the scan before a commit keeps
+  // its own full scan of the bytes. Still the one redaction point: the ingress
+  // runs it, the caller only declares the kind of the text.
+  const redactedSource = (text: string): string => {
+    const result = ingress.documentSource(text, CHANGE_CAP_BYTES * 2);
+    return result.dropped ? "[content dropped: the redactor cannot run]" : result.text;
+  };
+
   /* --- the recovery cycle (step 2): markers, hint, diagnosis, note ----- *
    *
    * The state the cycle keeps per phase lives in the control plane under
@@ -6511,7 +6538,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                               taskOrder: taskIdsOfThePhase(phase),
                             })}`
                           : "",
-                        `\n# The change in the working tree\n${redacted(
+                        `\n# The change in the working tree\n${redactedSource(
                           loopConfig.criticEvidenceIsPerTask
                             ? `${
                                 perTaskEvidenceOf({
@@ -7178,7 +7205,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         },
         warn: say,
         commit: {
-          commits: "auto",
+          // B-0050 — the switch the run was launched with decides, not a
+          // constant: `off` (or any other value that is not `auto`) keeps the
+          // approval commit unmade, exactly as the as-is engine kept it, so
+          // no `git_checkpoint` is written and the tree keeps only the
+          // commits it started with (DV-121's neighbourhood).
+          commits: process.env.SPECSTRIDE_GIT_COMMITS ?? "auto",
           insideAWorkTree: git(workdir, ["rev-parse", "--is-inside-work-tree"]).exit === 0,
           // Read lazily, AT step 6: the change set has moved since the gate
           // read it at the top of the branch — the tick of step 4 is itself a
@@ -8089,7 +8121,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             engineStartId,
             rejectLimit: countLimit(loopConfig.maxRejects),
             malformedLimit: countLimit(MALFORMED_LIMIT_DEFAULT),
-            gitCommits: "auto",
+            gitCommits: process.env.SPECSTRIDE_GIT_COMMITS ?? "auto",
             launchReason: "first",
           },
           {
@@ -8471,7 +8503,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         // The plan record and the gate records stand ONLY where the run
         // actually planned verification: the as-is engine planned (and wrote
         // `verification/verification-plan.json`) only where VERIFICATION was
-        // not `off` (orchestrator.sh plans in the same condition), so the
+        // not `off` (the as-is launcher plans in the same condition), so the
         // golden captures of the `off` runs — FX-02, FX-17 and both FX-13
         // runs — hold the EMPTY `verification/` directory.
         if (verificationModeOfTheRun !== "off" && existsSync(runPlanRecordPath)) {
@@ -8581,7 +8613,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         `VERIFICATION=${process.env.SPECSTRIDE_VERIFICATION ?? "off"}`,
         // The resolved defaults of the as-is engine (F153-FR-061): where the
         // verification is ON the as-is engine resolved the human artifacts
-        // under `testautomation/<slug>/` at startup (orchestrator.sh, the
+        // under `testautomation/<slug>/` at startup (the as-is launcher, the
         // `VERIFICATION != off` block) and the record carries the RESOLVED
         // values, not the empty ones; the declared commands path stands as
         // the launch gave it.

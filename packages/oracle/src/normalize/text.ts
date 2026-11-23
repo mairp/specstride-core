@@ -186,7 +186,7 @@ export const N15: Rule = {
     // The engine of the PORT of THIS repository (the parity port of feature 153)
     // is `packages/cli/bin/specstride` under the implementation root. The as-is
     // engine of the same component is the file the table above names for the
-    // logical component `engine` (`orchestrator.sh` of the baseline), which the
+    // logical component `engine` (the as-is launcher of the baseline), which the
     // file form below already folds; the front-door name `specstride` carries no
     // extension and is deliberately never a file form, so the port's own path to
     // its engine entry reached the comparison unfolded — the resume line of

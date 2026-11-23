@@ -10,13 +10,30 @@ import { proposerLimitMsOf } from "../../src/engine/run-feature.ts";
 const MIN45 = 45 * 60 * 1000;
 
 test("a ceiling above 45 minutes is the limit, with the kill grace on top", () => {
-  assert.equal(proposerLimitMsOf(14_400, 5_000), 14_400_000 + 5_000);
+  // The limits switch is AMBIENT: a session that runs with the limits off
+  // (the drive of 153 among them) would otherwise answer `undefined` here.
+  // The switch is this test's own input, so it is pinned, and restored.
+  const before = process.env.SPECSTRIDE_LIMITS;
+  delete process.env.SPECSTRIDE_LIMITS;
+  try {
+    assert.equal(proposerLimitMsOf(14_400, 5_000), 14_400_000 + 5_000);
+  } finally {
+    if (before === undefined) delete process.env.SPECSTRIDE_LIMITS;
+    else process.env.SPECSTRIDE_LIMITS = before;
+  }
 });
 
 test("the default ceiling (30 minutes) and nonsense keep the fixed 45 minutes", () => {
-  assert.equal(proposerLimitMsOf(1_800, 5_000), MIN45);
-  assert.equal(proposerLimitMsOf(Number.NaN, 5_000), MIN45);
-  assert.equal(proposerLimitMsOf(0, 5_000), MIN45);
+  const before = process.env.SPECSTRIDE_LIMITS;
+  delete process.env.SPECSTRIDE_LIMITS;
+  try {
+    assert.equal(proposerLimitMsOf(1_800, 5_000), MIN45);
+    assert.equal(proposerLimitMsOf(Number.NaN, 5_000), MIN45);
+    assert.equal(proposerLimitMsOf(0, 5_000), MIN45);
+  } finally {
+    if (before === undefined) delete process.env.SPECSTRIDE_LIMITS;
+    else process.env.SPECSTRIDE_LIMITS = before;
+  }
 });
 
 test("SPECSTRIDE_LIMITS=off: the pass has no time limit at all", () => {

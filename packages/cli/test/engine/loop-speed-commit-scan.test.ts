@@ -31,7 +31,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import test from "node:test";
 
 import { runFeature } from "../../src/engine/run-feature.ts";
@@ -160,11 +160,15 @@ const workspaceRootOf = (dir: string): string =>
 const eventsTextOf = (dir: string): string => {
   const root = workspaceRootOf(dir);
   // The control roots the run writes: the workspace hash of the engine, and —
-  // under `parity` — the as-is state directory of the layout table.
+  // under `parity` — the as-is state directory of the layout table. The as-is
+  // state also holds the run SNAPSHOT inside the bare run root of row 43, a
+  // directory the bare path shares its prefix with, so a candidate
+  // only counts when a run dir under it actually holds the events file (the
+  // layout table puts the primary stream at row 44, the feature's own run
+  // root, one events file per run id).
   const candidates = [
     join(root, "runs"),
     join(root, "features", "001-one", "runs"),
-    join(root, "..", "..", "..", ".local", "state", "specstride", "workspaces", "001-one", "runs"),
     join(
       root,
       "..",
@@ -179,10 +183,14 @@ const eventsTextOf = (dir: string): string => {
       "001-one",
       "runs",
     ),
+    join(root, "..", "..", "..", ".local", "state", "specstride", "workspaces", "001-one", "runs"),
   ];
   for (const runsDir of candidates) {
     if (!existsSync(runsDir)) continue;
-    return readFileSync(join(runsDir, readdirSync(runsDir)[0], "events.jsonl"), "utf8");
+    for (const entry of readdirSync(runsDir)) {
+      const events = join(runsDir, entry, "events.jsonl");
+      if (existsSync(events)) return readFileSync(events, "utf8");
+    }
   }
   throw new Error(`no run found under ${root}`);
 };

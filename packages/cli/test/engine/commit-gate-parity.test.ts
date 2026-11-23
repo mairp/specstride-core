@@ -70,7 +70,7 @@ import {
 } from "../../../../packages/oracle/src/run/driver.ts";
 import { readGoldenCapture } from "../../../../packages/oracle/src/capture/golden.ts";
 import { comparePortWithGolden } from "../../../../packages/oracle/src/golden/store.ts";
-import { contextOfRun } from "../../../../packages/oracle/src/run/self.ts";
+import { rootsOfRun } from "../../../../packages/oracle/src/run/self.ts";
 import type { NormalizeContext } from "../../../../packages/oracle/src/normalize/index.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -382,16 +382,42 @@ test("F152-SC-008: the oracle runs FX-27/commits-off (driveSide → comparePortW
       console.log(`F152-SC-008: FX-27/commits-off is a declared skip: ${unavailable.reason}`);
       return;
     }
-    // The port ran: the hermetic comparison against the golden capture.
-    const comparison = comparePortWithGolden(result.capture, {
-      fixture: FX27_SCENARIO,
-      golden,
-      portContext: contextOfRun(
-        result,
-        { referenceRoot: ROOT, slug: "commits-off", fixture: FX27_SCENARIO },
-        declaration,
-      ),
-    });
+    // The port ran: the hermetic comparison against the golden capture. The
+    // three port-only surfaces (`events-primary`, `control-records`,
+    // `counters`, S-14 to S-16) are taken out of the compared capture, as the
+    // parity test of the pass loop does: they are the second suite's material
+    // and provenance annotations, and no rule or waiver of feature 141 reads
+    // them — the stored golden of the reference carries none of them, so a
+    // port-only entry would always read as unmatched metadata and not as
+    // behaviour.
+    const comparison = comparePortWithGolden(
+      {
+        ...result.capture,
+        surfaces: Object.fromEntries(
+          Object.entries(result.capture.surfaces).filter(
+            ([name]) => !["events-primary", "control-records", "counters"].includes(name),
+          ),
+        ),
+      } as typeof result.capture,
+      {
+        fixture: FX27_SCENARIO,
+        golden,
+        // The PORT context, built literally with `side: "port"` as the parity
+        // test of the pass loop does: `contextOfRun` pins the reference side,
+        // and the port-side folds of N-15 (the engine entry path, the root of
+        // THIS implementation) apply only when the side names the port.
+        portContext: {
+          scenario: FX27_SCENARIO,
+          side: "port" as const,
+          roots: rootsOfRun(result, ROOT),
+          statePaths: result.statePaths,
+          durationsUnderTest:
+            ((declaration as Record<string, unknown>)["durationsUnderTest"] as
+              string[] | undefined) ?? [],
+          slug: "commits-off",
+        },
+      },
+    );
     assertNothingIsDifferent(FX27_SCENARIO, comparison.report);
   } finally {
     rmSync(runRoot, { recursive: true, force: true });
@@ -419,11 +445,19 @@ for (const name of FIXTURES_UNDER_PARITY) {
       const report = compareFixture(name, { exit, warning });
       assertNothingIsDifferent(`${FIXTURE_PREFIX}${name}`, report);
       // What the comparison saw is what the run showed: the digest names the
-      // exit, and the warning line is on the surface exactly where DV-122
-      // puts it.
+      // exit on the modern console, and the warning line is on the surface
+      // exactly where DV-122 puts it. Under the `parity` profile the console
+      // is the as-is copy (F153-FR-061): no modern digest line there — the
+      // as-is run ends in the DONE line, the exit the comparison judged is
+      // the run's own return, and the blocked count the digest carried is
+      // the warning line's own number.
       const digest = output.split("\n").find((line) => line.includes("DIGEST")) ?? "";
-      assert.match(digest, new RegExp(`DIGEST exit=${String(exit)} `));
-      assert.match(digest, /commits_blocked=[0-9]+/);
+      if (digest === "") {
+        assert.match(output, /# DONE — all \d+ phase\(s\)/);
+      } else {
+        assert.match(digest, new RegExp(`DIGEST exit=${String(exit)} `));
+        assert.match(digest, /commits_blocked=[0-9]+/);
+      }
       assert.equal(WARNING_LINE.test(output), warning !== undefined);
       assert.equal(report.results["exit"]?.result === "waived", exit !== 0, name);
       assert.equal(report.results["stderr"]?.result === "waived", warning !== undefined, name);

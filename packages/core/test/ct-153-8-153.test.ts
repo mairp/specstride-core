@@ -29,7 +29,7 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import { ATTEMPT_END_CAUSE_TABLE, loadTheAttemptEndCauseTable } from "../src/gate/end-cause.ts";
 import { CLOSING_CHECK_SKIP_TABLE } from "../src/gate/closing-check-skip.ts";
 import { WORKSPACE_SELECTION_TABLE } from "../src/checks/selection.ts";
-import { reportRowsOf } from "@specstride/core/report";
+import { reportRowsOf } from "../src/report/index.ts";
 import { evaluateTable } from "@specstride/kernel";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
