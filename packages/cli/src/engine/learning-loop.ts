@@ -113,6 +113,15 @@ export type CompatibilityFeed = {
 export function compatibilityFeedOf(input: CompatibilityFeedInput): CompatibilityFeed {
   const files = loadConfigFiles({
     home: input.home,
+    // The configuration home the ENVIRONMENT names (F110-FR-003): a run whose
+    // environment sets `XDG_CONFIG_HOME` — a parity drive of the oracle among
+    // them — reads its user configuration there, and that is where the
+    // selection of the named profile `parity` stands. Without it the
+    // projection reads no user configuration, sees no profile and stays off
+    // in exactly the runs the `parity` profile turns it on for.
+    ...(input.environment.XDG_CONFIG_HOME === undefined
+      ? {}
+      : { xdgConfigHome: input.environment.XDG_CONFIG_HOME }),
     workspaceRealPath: realpathSync(input.workdir),
     startDir: input.workdir,
   });

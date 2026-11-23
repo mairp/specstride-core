@@ -279,6 +279,41 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The fake commands of feature 153's loop-speed fixtures (the approved
+      // tasks T002 to T006 name them as `.mjs`) are test doubles run by the
+      // engine tests, not source of the product, and no published package
+      // ships them.
+      if (path.startsWith("packages/cli/test/fixtures/loop-speed/bin/") && path.endsWith(".mjs")) {
+        continue;
+      }
+      // The hand-written events fixture of feature 153's report rows (the
+      // approved task T126 names it as `.jsonl`): data read by the report
+      // tests, not source of the product, and no published package ships it.
+      if (path.startsWith("packages/core/test/fixtures/153/") && path.endsWith(".jsonl")) {
+        continue;
+      }
+      // The frozen replay fixture of feature 153's report verb (the approved
+      // tasks T158 and T159 name them as `.jsonl` and `.mjs`): a frozen copy
+      // of a recorded run's events and the ledger-method script kept beside
+      // it — data and a check script, not source of the product, and no
+      // published package ships them.
+      if (
+        path.startsWith("packages/cli/test/fixtures/loop-speed/recorded-152/") &&
+        (path.endsWith(".jsonl") || path.endsWith(".mjs"))
+      ) {
+        continue;
+      }
+      // The test of feature 153's parallel ci-test (the approved task T253
+      // names it as `.mjs`) and its golden file of the serial run (the
+      // approved task T264 names it as `.txt`): a test of the repository's
+      // own suite script and its recorded baseline — test double and data,
+      // not source of the product, and no published package ships them.
+      if (
+        path === "packages/testkit/test/ci-test-parallel.test.mjs" ||
+        path === "packages/testkit/test/fixtures/ci-test-serial.golden.txt"
+      ) {
+        continue;
+      }
       const name = path.slice(path.lastIndexOf("/") + 1);
       if (name === ".gitkeep" || name.endsWith(".md")) continue;
       const dot = name.lastIndexOf(".");

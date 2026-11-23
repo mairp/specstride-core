@@ -1,0 +1,4 @@
+packages/alpha: 1 files, exit 0
+packages/beta: 1 files, exit 1
+  not ok 1 - beta fails
+packages/gamma: 1 files, exit 0

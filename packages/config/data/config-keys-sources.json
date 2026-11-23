@@ -716,6 +716,83 @@
       "note": "row 134 of annex X §X.7; the commit gate of F152-FR-021"
     },
     {
+      "key": "verification.timeLimit.enforce",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 135 of annex X §X.7; the enforced time limit of F153-FR-029 (CQ-153-13 A: on under parity, a ruled defect fix)"
+    },
+    {
+      "key": "loop.micro.closingCheck.skipWhenEqualToGate",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 136 of annex X §X.7; the closing-check skip of F153-FR-012"
+    },
+    {
+      "key": "verification.inner.scoped",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 137 of annex X §X.7; the scoped inner set of F153-FR-045"
+    },
+    {
+      "key": "critic.evidence.perTask",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 138 of annex X §X.7; the per-task critic evidence of F153-FR-051"
+    },
+    {
+      "key": "verification.redGate.ownBudget",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 139 of annex X §X.7; the red gate's own budget of F153-FR-020 (CQ-153-05 answered A on 2026-11-13: budget A, stop A, block A)"
+    },
+    {
+      "key": "verification.redGate.limit",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "the size of the red-gate budget of F153-FR-021 (a finite integer >= 1, default 3; a project file may lower it, not raise it)"
+    },
+    {
+      "key": "commit.gate.beforeCritic",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 140 of annex X §X.7; the commit scan before the critic of F153-FR-024 (CQ-153-06 answered A on 2026-11-13: it runs only where F152's `commit.backpressure` is also on)"
+    },
+    {
+      "key": "commit.scan.inPass",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 141 of annex X §X.7; the in-pass scan command of F153-FR-027 (CQ-153-17 answered A on 2026-11-13: the command `scan`)"
+    },
+    {
+      "key": "loop.taskGroups",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 142 of annex X §X.7; the task groups of F153-FR-054 (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5; off until one trial run with groups on has been read with `specstride report`)"
+    },
+    {
+      "key": "verification.gate.reuse",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 143 of annex X §X.7; the gate reuse of F153-FR-013 — CQ-153-02 answered B (refused) on 2026-11-13: the key exists, the behaviour is not built (F153-FR-015: the gate executes every time)"
+    },
+    {
+      "key": "events.commitGateTiming",
+      "proposed_by": "153",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": "row 144 of annex X §X.7; the timed pair of the commit gate of F153-FR-036 (CQ-153-09 answered A on 2026-11-13: the pair is additive catalogue rows, no new end cause)"
+    },
+    {
       "key": "harnesses.<id>.tiers",
       "proposed_by": "110 (R16)",
       "confirmed_or_corrected": "confirmed",

@@ -122,6 +122,15 @@ export type ProposerPassInput = {
   readonly timeoutMs?: number;
   /** The trace parent, exported as TRACEPARENT only when traces are on. */
   readonly traceparent?: string;
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is environment arm: the prepared
+   * environment carries `DSH_PERMISSION_MODE` as the EMPTY string (the as-is
+   * engine exported the name with no value, so the oracle's stub records no
+   * permission mode in `given`) and adds NO `DSH_TELEMETRY_MODE` (the as-is
+   * children never saw the name). The engine sets this only under the `parity`
+   * profile; the adapter's own defaults stand everywhere else.
+   */
+  readonly asIsEnvironment?: boolean;
 };
 
 /**
@@ -139,6 +148,17 @@ export type PreparedProposerPass =
       readonly env: Record<string, string>;
       readonly mode: string;
       readonly overlay: DshOverlay | null;
+      /**
+       * F153-FR-061 (`parity` profile) — the prompt handed to the child on
+       * standard input, instead of no standard input at all. The as-is
+       * transcript record held the prompt with the profile word prefixed
+       * (`headless…`) while `argv` carried the plain prompt; the stub reads
+       * its prompt from standard input FIRST when one arrives, so the parity
+       * arm writes the as-is record's text on the pipe the launcher owned and
+       * closes it at once — the child never waits, and the transport-neutral
+       * transcript record reproduces the as-is bytes.
+       */
+      readonly stdinPrompt: string | undefined;
     }
   | { readonly ok: false; readonly code: 127; readonly message: string }
   | { readonly ok: false; readonly result: 1; readonly message: string };
@@ -222,11 +242,26 @@ export function prepareDshProposerPass(input: ProposerPassInput): PreparedPropos
       if (value !== undefined) env[name] = value;
     }
     env["DSH_HOME"] = overlay !== null ? overlay.home : settings.home;
-    env["DSH_PERMISSION_MODE"] = mode.mode;
-    if (env[DSH_TELEMETRY_VARIABLE] === undefined) env[DSH_TELEMETRY_VARIABLE] = "";
+    // F153-FR-061 (`parity` profile) — under the as-is environment arm the
+    // name is exported with NO value, exactly as the as-is engine did; the
+    // resolved mode still stands on the run's own record (`prepared.mode`).
+    env["DSH_PERMISSION_MODE"] = input.asIsEnvironment === true ? "" : mode.mode;
+    // F153-FR-061 (`parity` profile) — the as-is children never saw
+    // `DSH_TELEMETRY_MODE`, so the as-is environment arm adds no name.
+    if (input.asIsEnvironment !== true && env[DSH_TELEMETRY_VARIABLE] === undefined) {
+      env[DSH_TELEMETRY_VARIABLE] = "";
+    }
     if (input.traceparent !== undefined) env[TRACEPARENT_ENV_NAME] = input.traceparent;
     if (input.script !== undefined) env["FAKE_DSH_SCRIPT"] = input.script;
-    return { ok: true, argv, env, mode: mode.mode, overlay };
+    return {
+      ok: true,
+      argv,
+      env,
+      mode: mode.mode,
+      overlay,
+      stdinPrompt:
+        input.asIsEnvironment === true ? `${settings.profile}${input.prompt}` : undefined,
+    };
   } catch (error) {
     if (error instanceof OverlayBuildError) {
       return { ok: false, result: error.result, message: error.message };
@@ -250,7 +285,12 @@ export function runDshProposer(input: ProposerPassInput): ProposerRun {
       env: prepared.env,
       // Standard input CLOSED (F130-FR-007, F130-FR-017): never a wait on a
       // human; the reply and the diagnostics come back as text.
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio:
+        prepared.stdinPrompt === undefined ? ["ignore", "pipe", "pipe"] : ["pipe", "pipe", "pipe"],
+      // F153-FR-061 (`parity` profile) — the prompt rides the pipe when the
+      // as-is arm says so; the write and the close are one `input` option, so
+      // the child cannot wait on a human (F130-FR-007, F130-FR-017).
+      input: prepared.stdinPrompt,
       encoding: "utf8",
       timeout: input.timeoutMs,
       shell: false,
@@ -296,10 +336,20 @@ export function runDshProposerAsync(input: ProposerAsyncInput): Promise<Proposer
     cwd: input.cwd,
     env: prepared.env,
     // Standard input CLOSED (F130-FR-007, F130-FR-017): never a wait on a
-    // human; the reply and the diagnostics come back as text.
-    stdio: ["ignore", "pipe", "pipe"],
+    // human; the reply and the diagnostics come back as text. The parity arm
+    // (F153-FR-061) writes the as-is prompt record on the pipe and closes it
+    // at once — still no wait on a human.
+    stdio:
+      prepared.stdinPrompt === undefined ? ["ignore", "pipe", "pipe"] : ["pipe", "pipe", "pipe"],
     shell: false,
   });
+  if (prepared.stdinPrompt !== undefined) {
+    // F153-FR-061 (`parity` profile) — the write itself is silent: the as-is
+    // stderr of the run carries nothing here, so the parity comparison of the
+    // `stderr` surface reads no line the as-is never printed.
+    child.stdin?.write(prepared.stdinPrompt);
+    child.stdin?.end();
+  }
   if (child.pid !== undefined) input.onStart?.(child.pid, (signal) => child.kill(signal));
   return runChildUnderTimeLimit(child, input.timeoutMs, input.killGraceMs).then((outcome) => {
     try {

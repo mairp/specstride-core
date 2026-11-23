@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.gate-command-binding/1",
+  "title": "Gate command binding (F153-FR-010 to -012; data-model.md D1)",
+  "description": "The declared command set the verification gate ran, its runner binding and the tree fingerprint taken at gate run. Written once per gate run beside the phase attempt's verification record; read by the closing-check equality test (F153-FR-012) and, only if the owner adopts amendment CQ-153-02 A, by the reuse table (F153-FR-013). PROPOSAL of spec 153 — not normative until its tasks land.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "phase",
+    "commands",
+    "runner",
+    "treeFingerprint",
+    "resolvedByRule",
+    "outcomes"
+  ],
+  "properties": {
+    "schema": { "const": "specstride.gate-command-binding/1" },
+    "phase": { "type": "string", "pattern": "^[a-z0-9-]{1,64}$" },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "argv"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "$comment": "the plan's own command id inside GATE-phase-<N>" },
+          "argv": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "runner": { "type": "string", "minLength": 1, "$comment": "the check-runner binding (F148-FR-005)" },
+    "treeFingerprint": {
+      "type": "string",
+      "minLength": 8,
+      "$comment": "the F116 working-tree fingerprint as produced by workingTreeFingerprint; the digest width follows F116, not this schema"
+    },
+    "resolvedByRule": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "the rule id of core/src/gate/command-resolution.ts that resolved this set (F153-FR-008, XIII)"
+    },
+    "closingCheckSkip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId"],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "the rule id of the row of contracts/closing-check-skip-table.json that made the gate run the closing check's commands (F153-FR-012, T250); present only where the micro layer made the decision for this phase attempt"
+        }
+      }
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "exitCode", "signal"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "exitCode": { "type": ["integer", "null"], "minimum": 0, "$comment": "null when the command was killed at its time limit (F148-FR-004)" },
+          "signal": { "type": ["string", "null"], "enum": ["TIMEOUT", "SIGTERM", "SIGKILL", null] }
+        }
+      }
+    }
+  }
+}

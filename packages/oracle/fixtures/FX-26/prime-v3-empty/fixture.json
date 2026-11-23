@@ -23,7 +23,7 @@
     "port": [
       "specstride",
       "run",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

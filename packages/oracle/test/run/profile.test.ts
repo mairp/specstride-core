@@ -56,6 +56,7 @@ import {
   engineStubForThePort,
   parityProfileKeys,
   portConfiguration,
+  portConfigurationFileText,
   productCommandLine,
   sideIsAvailable,
   stubExecutablesOfSide,
@@ -79,19 +80,33 @@ test("CT-141-104: the port side selects the profile `parity` by the ordinary key
   // The key is `profile`, the ordinary selection, and the configuration holds
   // nothing else at all when the fixture declares nothing.
   assert.deepEqual(Object.keys(configuration), ["profile"]);
-  // And it is written to the ordinary configuration file of the run's config home.
-  assert.equal(PORT_CONFIGURATION_FILE, join("specstride", "config.json"));
+  // And it is written to the ordinary configuration file of the run's config
+  // home — the ordinary user file `user:config` of annex B §B.5, a YAML file
+  // of `specstride.config/1`, so the product reads it by the ordinary load.
+  assert.equal(PORT_CONFIGURATION_FILE, join("specstride", "config.yaml"));
 });
 
-test("CT-141-104: the configuration the driver writes is the ordinary configuration file", () => {
+test("CT-141-104: the configuration the driver writes is the ordinary configuration file", async () => {
   const configHome = mkdtempSync(join(tmpdir(), "oracle-config-"));
   const file = join(configHome, PORT_CONFIGURATION_FILE);
   mkdirSync(dirname(file), { recursive: true });
-  const configuration = portConfiguration({ declaredKeys: { "run.maxIterations": "3" } });
-  writeFileSync(file, `${JSON.stringify(configuration, null, 1)}\n`, "utf8");
-  const readBack = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
-  assert.equal(readBack["profile"], "parity");
-  assert.equal(readBack["run.maxIterations"], "3");
+  const configuration = portConfiguration({});
+  writeFileSync(file, portConfigurationFileText(configuration), "utf8");
+  // The file the driver writes IS a valid ordinary user configuration file:
+  // the loader of `@specstride/config` reads it, and the selection comes out.
+  const { loadConfigFiles, resolveConfiguration } = await import("@specstride/config");
+  const loaded = loadConfigFiles({
+    xdgConfigHome: configHome,
+    home: configHome,
+    workspaceRealPath: configHome,
+  });
+  assert.ok(loaded.user !== undefined);
+  assert.deepEqual([...loaded.errors], []);
+  const resolved = resolveConfiguration({ user: loaded.user });
+  assert.equal(resolved.profile, "parity");
+  // And the file carries the schema line the file format of annex B §B.5
+  // requires, which is what let the ordinary load accept it at all.
+  assert.match(readFileSync(file, "utf8"), /^schema: specstride\.config\/1\n/);
 });
 
 test("CT-141-104: nothing beyond the profile or the fixture may be set", () => {

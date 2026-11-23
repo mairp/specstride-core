@@ -90,8 +90,13 @@ export function nodeFileReader(): NodeFileReadingPort {
         const buffer = Buffer.alloc(limit);
         const read = readSync(fd, buffer, 0, limit, offset);
         return new Uint8Array(buffer.subarray(0, read));
-      } catch {
-        return undefined;
+      } catch (error) {
+        // An absent file is `undefined`; any other failure (a directory, a
+        // permission) is not an absence and propagates, so a caller such as the
+        // pin step can warn and fail safe (F117-FR-030, F153-FR-048).
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === "ENOENT" || code === "ENOTDIR") return undefined;
+        throw error;
       } finally {
         if (fd >= 0) closeSync(fd);
       }

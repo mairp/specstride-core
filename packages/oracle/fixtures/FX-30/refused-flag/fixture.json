@@ -18,7 +18,7 @@
    "specstride",
    "reverse",
    "<WORK>",
-   "--workspace",
+   "--workdir",
    "<WORK>"
   ]
  },

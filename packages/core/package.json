@@ -19,6 +19,8 @@
     "./parallel/queue": "./src/parallel/queue.ts",
     "./parallel/counters": "./src/parallel/counters.ts",
     "./run-control/counts": "./src/run-control/counts.ts",
+    "./report": "./src/report/index.ts",
+    "./checks": "./src/checks/index.ts",
     "./ep18/critic-strategy": "./src/ep18/critic-strategy.ts"
   },
   "scripts": {

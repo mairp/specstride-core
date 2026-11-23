@@ -18,7 +18,7 @@
     "port": [
       "specstride",
       "run",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },
@@ -173,7 +173,7 @@
         "port": [
           "specstride",
           "run",
-          "--workspace",
+          "--workdir",
           "<WORK>",
           "--verification-commands",
           "<WORK>/verification-commands.json"

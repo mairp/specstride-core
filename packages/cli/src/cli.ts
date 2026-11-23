@@ -2,14 +2,18 @@
  * The command line of the product (CLI protocol 1). Owners: features 119 and 145
  * and the owner of each command.
  *
- * `@specstride/cli` is still the skeleton of the campaign scaffolding: the commands
- * of CLI protocol 1 — `run`, `events`, `launch`, `doctor` and the rest — are the
+ * `@specstride/cli` is still the skeleton of the campaign scaffolding: most commands
+ * of CLI protocol 1 — `events`, `launch`, `doctor` and the rest — are the
  * deliverables of the features that own them and are not here. What IS here is the
  * list of commands this package can actually run, and the dispatch to each. The
  * same list stands in the manifest under `specstride.commands`, so that a caller can
  * read what exists without running anything, and `COMMANDS` below is checked against
  * it by the test of this package.
  */
+import { spawnSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { contractDerive } from "./contract-derive.ts";
 import { contractCommand } from "./commands/contract.ts";
 import { learn } from "./learn.ts";
@@ -31,6 +35,20 @@ export const COMMANDS: readonly Command[] = Object.freeze([
   Object.freeze({ name: "contract derive", owner: "107", run: contractDerive }),
   Object.freeze({ name: "contract", owner: "107", run: contractCommand }),
   Object.freeze({ name: "learn", owner: "106", run: learn }),
+  // The engine call of feature 119 — the verb `run` (and `start`), routed as
+  // F119-FR-002. The skeleton's `Command.run` is synchronous, while the engine
+  // call ends wherever its foreground launch ends, so the dispatch hands the
+  // arguments to the product's own front door — the same router this package
+  // mounts — and returns its exit code (F119-FR-002, F119-FR-011).
+  Object.freeze({
+    name: "run",
+    owner: "119",
+    run: (argv: readonly string[]): number => {
+      const bin = join(dirname(dirname(fileURLToPath(import.meta.url))), "bin", "specstride");
+      const result = spawnSync(process.execPath, [bin, ...argv], { stdio: "inherit" });
+      return result.status ?? 70;
+    },
+  }),
 ]);
 
 /** The command one argument list names, with the arguments that follow it. */

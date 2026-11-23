@@ -1,0 +1,9 @@
+{
+  "specstride": "specstride.package-graph/1",
+  "packages": [
+    { "name": "@x/a" },
+    { "name": "@x/b", "mayImport": ["@x/a"] },
+    { "name": "@x/c", "mayImport": ["@x/b"] },
+    { "name": "@x/d" }
+  ]
+}

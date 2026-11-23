@@ -298,7 +298,11 @@ export function renderBlocks(
   const byId = new Map(blocks.map((b) => [b.id, b] as const));
   const rules = byId.get("rules")!.text;
   const fact = byId.get("fact-block")?.text ?? "";
-  const criteria = byId.get("criteria")!.text;
+  // The criteria block never ends in a blank line: the as-is renderer joins
+  // it onto the EVIDENCE heading with exactly one blank line, so a phase
+  // section that carries its own trailing newline is trimmed here (the as-is
+  // phase section text keeps no blank line before the heading).
+  const criteria = byId.get("criteria")!.text.replace(/\n+$/, "");
   const evidence = byId.get("evidence")!.text;
   const grounding = byId.get("grounding")!.text;
   const pins = byId.get("pins")?.text ?? "";

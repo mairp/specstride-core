@@ -56,8 +56,20 @@ export const ENGINE_FLAGS_WITHOUT_VALUE: readonly string[] = Object.freeze([
   "--verbose",
 ]);
 
-/** The engine flags that take a value. */
-export const ENGINE_FLAGS_WITH_VALUE: readonly string[] = Object.freeze(["-w", "--workdir"]);
+/**
+ * The engine flags that take a value. `--verification-commands` is the declared
+ * document of the verification commands that the engine's plan derivation reads
+ * as a plan source (F105-FR-015, delivered in the engine path by F153-FR-010);
+ * the reference engine takes the same flag on its engine call, so the call knows
+ * it here too. Every other argument stays unknown (F119-FR-005).
+ */
+export const ENGINE_FLAGS_WITH_VALUE: readonly string[] = Object.freeze([
+  "-w",
+  "--workdir",
+  "-s",
+  "--specs",
+  "--verification-commands",
+]);
 
 /** The sentence about the capability modes the usage MUST carry (F119-FR-005). */
 export const CAPABILITY_MODE_SENTENCE =

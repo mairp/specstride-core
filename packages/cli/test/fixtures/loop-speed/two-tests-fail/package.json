@@ -1,0 +1,8 @@
+{
+  "name": "loop-speed-two-tests-fail",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node ../bin/fail-two-tests.mjs"
+  }
+}

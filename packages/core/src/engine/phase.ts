@@ -364,6 +364,14 @@ export type AttemptEndedTheRun = {
   readonly reason?: string | undefined;
   readonly exitCode: number;
   readonly stopReason: string;
+  /**
+   * Feature 153, T108 — how the attempt ended, for the engine's
+   * `attempt.ended` closer: `no-evidence` where the halt is the no-evidence
+   * halt (EC-7), `error` for a configuration error (EC-10). Absent where the
+   * end itself names the cause (`stop_flag` is a stop, a blocked halt is
+   * `blocked`).
+   */
+  readonly attemptEnd?: "no-evidence" | "error" | undefined;
 };
 
 /** F101-FR-010, F101-FR-040 and F101-FR-041 — no such end changes a count. */

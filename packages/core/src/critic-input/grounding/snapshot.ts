@@ -20,7 +20,7 @@ import budgetsData from "../data/budgets.json" with { type: "json" };
 import type { FileReadingPort } from "../ports.ts";
 import { buildPathList, type PathListInputs } from "./path-list.ts";
 import { resolveCitation, resolveContextWithManifests, type ResolveContext } from "./resolve.ts";
-import { ExcerptBudget, anchorTokensOf, type Excerpt } from "./excerpt.ts";
+import { ExcerptBudget, WHOLE_FILE_LABEL, anchorTokensOf, type Excerpt } from "./excerpt.ts";
 import { refusalLine } from "./refuse.ts";
 
 /** The cap of presence lines (F117-FR-008; as-is 80). */
@@ -174,15 +174,21 @@ function filePresenceLine(label: string, size: number, mtimeMs: number): string 
     .replace("<YYYY-MM-DDTHH:MM:SS>", formatMtime(mtimeMs));
 }
 
-/** The fenced block of one excerpt. */
+/**
+ * The fenced block of one excerpt. For a WHOLE-FILE excerpt the as-is fence
+ * closes BEFORE the label — the label `(complete file, line-numbered)` stands
+ * after the closing fence, one indented line of its own; every other excerpt
+ * keeps everything inside the fence.
+ */
 function excerptBlock(excerpt: Excerpt): SnapshotLine {
+  const body = excerpt.text
+    .split("\n")
+    .map((l) => `  ${l}`)
+    .join("\n");
   const fenced =
-    "  ```\n" +
-    excerpt.text
-      .split("\n")
-      .map((l) => `  ${l}`)
-      .join("\n") +
-    "\n  ```";
+    excerpt.kind === "whole"
+      ? `  \`\`\`\n${body}\n  \`\`\`\n  ${WHOLE_FILE_LABEL}`
+      : `  \`\`\`\n${body}\n  \`\`\``;
   return { kind: "excerpt", text: fenced };
 }
 
@@ -406,8 +412,12 @@ export function buildGroundingSnapshot(
   });
 }
 
-/** Tokens loosely cited (F117-FR-014): backticked or slash tokens the strict extractor may have missed. */
-function looselyCited(evidence: string, section: string): string[] {
+/**
+ * Tokens loosely cited (F117-FR-014): backticked or slash tokens the strict
+ * extractor may have missed. Exported for the parity diagnostician, whose
+ * as-is prompt shows the cited/criterion files the SAME rule names.
+ */
+export function looselyCited(evidence: string, section: string): string[] {
   const out = new Set<string>();
   for (const text of [evidence, section]) {
     for (const m of text.matchAll(/`([^`\n]+)`/g)) {

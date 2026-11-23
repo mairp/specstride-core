@@ -48,6 +48,12 @@ import {
   verificationDocumentRecord,
 } from "../inventory/candidates.ts";
 import { discoverDeclaredCommands, countsOf } from "../inventory/verification-source.ts";
+// F153-FR-054 (feature 153, phase 27, T375) — the slicing table and the one
+// task-text path extractor (T204) the composition root uses: the derivation
+// slices with the SAME pure table the runtime reads the frozen result of, so
+// there is no second slicer (plan.md, "Unit design"; rules TG-1 to TG-3).
+import { sliceThePhase } from "../../../../core/src/spec-groups/slicer.ts";
+import { pathsNamedByTheTextOfATask } from "../../../../layer-parallel/src/scope.ts";
 import {
   buildDraft,
   bootstrapFinding,
@@ -104,6 +110,15 @@ export type DeriveArgs = {
     readonly batch: string;
     readonly picks: readonly { readonly item: string; readonly choice: string }[];
   };
+  /**
+   * F153-FR-054 (feature 153, phase 27, T375) — the switch `loop.taskGroups`
+   * as the loop configuration resolved it (`taskGroupsAreSliced`, already
+   * OFF under the `parity` profile). `true` makes THIS derivation slice
+   * every phase through `sliceThePhase` and freeze the groups and their
+   * hash into the draft's `configuration.taskGroups`; `undefined`/`false`
+   * (the default, rule TG-1) writes nothing.
+   */
+  readonly loopTaskGroups?: boolean;
 };
 
 /** The result of a derive call: the exit code and what it printed. */
@@ -577,6 +592,49 @@ export function derive(input: DeriveArgs, learning?: LearningBindingRulesPort): 
     slug: contractId(input.repo, resolution.featureDirs),
   });
 
+  // 7b. F153-FR-054 (feature 153, phase 27, T375) — the slicing frozen AT
+  //     DERIVATION. With the switch `loop.taskGroups` resolved ON (the
+  //     caller hands `taskGroupsAreSliced`, already OFF under the `parity`
+  //     profile), every phase of the model is sliced here through the ONE
+  //     pure table (`sliceThePhase`), over the canonical tasks in order, the
+  //     task→paths map of the composition root's extractor, and the declared
+  //     commands of the phase — and the groups and their hash are FROZEN
+  //     into the draft's `configuration.taskGroups` (CQ-153-07 A: under
+  //     `configuration`, never a new top-level key). Rule TG-1 (switch off
+  //     or parity) writes nothing. The runtime reads this record and
+  //     recomputes the slicing nowhere.
+  const taskGroupsOfTheDraft = (() => {
+    if (input.loopTaskGroups !== true || parity) return undefined;
+    const phaseNumbers = [
+      ...new Set(tasks.map((one) => one.phase).filter((one): one is number => one !== null)),
+    ].sort((left, right) => left - right);
+    const hashes: Record<string, string> = {};
+    const groups: unknown[] = [];
+    for (const phase of phaseNumbers) {
+      const phaseTasks = tasks.filter((one) => one.phase === phase);
+      if (phaseTasks.length === 0) continue;
+      const taskIds = phaseTasks.map((one) => one.task.id);
+      const sliced = sliceThePhase({
+        phase,
+        tasks: phaseTasks.map((one) => ({ id: one.task.id, text: one.task.text })),
+        pathsOfTask: (taskId: string) => {
+          const one = phaseTasks.find((task) => task.task.id === taskId);
+          return one === undefined ? [] : pathsNamedByTheTextOfATask(one.task.text);
+        },
+        declaredCommands: discoveries
+          .filter((command) => command.phase === phase)
+          .map((command) => ({ id: command.id, argv: command.argv, forTaskIds: taskIds })),
+      });
+      hashes[`phase${String(phase)}`] = sliced.hash;
+      groups.push(...sliced.groups);
+    }
+    return {
+      schema: "specstride.task-groups-frozen/1" as const,
+      hashes,
+      groups,
+    };
+  })();
+
   // 8. The draft (F107-FR-005).
   const draft = buildDraft({
     root: input.repo,
@@ -592,6 +650,7 @@ export function derive(input: DeriveArgs, learning?: LearningBindingRulesPort): 
     verificationMode: mode,
     verificationReason: reason,
     ...(derived !== undefined && derived !== null ? { learning: derived } : {}),
+    ...(taskGroupsOfTheDraft !== undefined ? { taskGroups: taskGroupsOfTheDraft } : {}),
     ...(input.comment !== undefined ? { commentHash: hashContent(input.comment) } : {}),
     ...(commentChanged.length > 0 ? { commentChanged } : {}),
   });

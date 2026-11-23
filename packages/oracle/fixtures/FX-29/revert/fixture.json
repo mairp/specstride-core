@@ -22,7 +22,7 @@
       "learn",
       "--revert",
       "learn-00000000000a",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

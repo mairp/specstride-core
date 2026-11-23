@@ -20,7 +20,7 @@
       "feedback",
       "--feature",
       "demo",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

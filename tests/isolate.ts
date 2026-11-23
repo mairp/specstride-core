@@ -6,7 +6,9 @@
  * and the host resets (2026-10-02). Inside the namespace, `kill -1` reaches only the
  * processes of this run. A nested call (a workspace script under the root `npm test`)
  * runs in the namespace already. SPECSTRIDE_TEST_NO_ISOLATE=1 skips the namespace;
- * never set it as root on a shared host.
+ * never set it as root on a shared host. When the kernel refuses the namespace
+ * (a root sandbox without CAP_SYS_ADMIN), the command runs directly with a
+ * warning instead of failing every invocation.
  *
  * Usage: node <path>/tests/isolate.ts <command> [args...]
  */
@@ -45,7 +47,30 @@ const init = reaper === undefined ? [] : [reaper, "-s", "--"];
 const mountPrivateTmp =
   'mount -t tmpfs -o size=4g,mode=1777 tmpfs /tmp 2>/dev/null || true; exec "$0" "$@"';
 
-const [command, args] = wanted
+// Some sandboxes run as root without CAP_SYS_ADMIN, so `unshare --pid` fails
+// with EPERM and every invocation would exit non-zero before a single test
+// ran (153 phase 15, 2026-11-12: the runtime's own check failed [1,1] with
+// no workspace output while the same command was green in a capable shell).
+// Probe the namespace once; when the kernel refuses it, run the command
+// directly — the path a non-root runner already takes — with a warning.
+const namespaceWorks = (): boolean => {
+  const probe = spawnSync(
+    "unshare",
+    ["--fork", "--pid", "--mount-proc", "--kill-child", "--", "/bin/true"],
+    {
+      stdio: "ignore",
+    },
+  );
+  return !probe.error && probe.status === 0;
+};
+
+const canIsolate = wanted && namespaceWorks();
+if (wanted && !canIsolate) {
+  process.stderr.write(
+    "isolate.ts: the PID namespace is unavailable here; the tests run without it\n",
+  );
+}
+const [command, args] = canIsolate
   ? [
       "unshare",
       [
@@ -87,12 +112,11 @@ for (const name of [
 
 const result = spawnSync(command, args, {
   stdio: "inherit",
-  env: wanted ? { ...env, SPECSTRIDE_TEST_ISOLATED: "1" } : env,
+  env: canIsolate ? { ...env, SPECSTRIDE_TEST_ISOLATED: "1" } : env,
 });
 
 if (result.error) {
-  const why = wanted ? "refusing to run the tests as root without unshare(1)" : "cannot start";
-  process.stderr.write(`isolate.ts: ${why}: ${result.error.message}\n`);
+  process.stderr.write(`isolate.ts: cannot start: ${result.error.message}\n`);
   process.exit(2);
 }
 if (result.signal) process.kill(process.pid, result.signal);

@@ -78,11 +78,16 @@ export const BEHAVIOUR_ROWS = Object.freeze([
 ]);
 
 /**
- * B-2024 — the EXPLICIT heading: `## Phase <digits>`, an optional `:`, then
- * free title text. Case-sensitive: a lower-case `## phase 1:` is not a phase
- * heading (DV-119, CQ-045).
+ * B-2024 — the EXPLICIT heading: `## Phase <digits>`, then a run of the
+ * separators (`-`, the em dash, `:`) with surrounding blanks, then free title
+ * text. Case-sensitive: a lower-case `## phase 1:` is not a phase heading
+ * (DV-119, CQ-045). The separator run mirrors the baseline's
+ * `_NATIVE_TITLE_STRIP` (`^[0-9]+[ \t]*[-—:]*[ \t]*`), which strips the
+ * number AND the separator run from the title — `## Phase 1 — Setup` titles
+ * the phase `Setup`, not `— Setup` (F153-FR-061, the parity drive: the
+ * as-is obligation's `- Action:` line names the stripped title).
  */
-export const EXPLICIT_PHASE_HEADING = /^##[ \t]+Phase[ \t]+(\d+)[ \t]*:?[ \t]*(.*)$/;
+export const EXPLICIT_PHASE_HEADING = /^##[ \t]+Phase[ \t]+(\d+)[ \t]*[-—:]*[ \t]*(.*)$/;
 
 /** B-2025 — the PRIORITY heading: `## P<N>` or `## p<N>`, then a separator. */
 export const PRIORITY_PHASE_HEADING = /^##[ \t]*([Pp])(\d+)[ \t]*[-—:]?[ \t]*(.*)$/;
@@ -97,7 +102,7 @@ export function explicitPhaseNumberOf(headingLine: string): number | undefined {
   return Number.parseInt(found[1] as string, 10);
 }
 
-/** B-2024 — the title of an explicit heading: the free text after the colon. */
+/** B-2024 — the title of an explicit heading: the free text after the number and its separator run. */
 export function titleOfAnExplicitHeading(headingLine: string): string {
   const found = EXPLICIT_PHASE_HEADING.exec(headingLine);
   if (found === null) return "";

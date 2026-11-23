@@ -16,7 +16,7 @@
     "port": [
       "specstride",
       "no-such-subcommand",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

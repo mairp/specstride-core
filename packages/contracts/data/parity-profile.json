@@ -2001,6 +2001,150 @@
       "registerRows": [
         "DV-121"
       ]
+    },
+    {
+      "number": 135,
+      "switch": "The time limit of the check is enforced (F153-FR-029)",
+      "key": "verification.timeLimit.enforce",
+      "keys": [
+        "verification.timeLimit.enforce"
+      ],
+      "keyNote": "`verification.timeLimit.enforce`",
+      "default": "on",
+      "parity": "on: a ruled defect fix (CQ-153-13 A)",
+      "owner": "153",
+      "registerRows": [
+        "DV-123 (the defect-fix row requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 136,
+      "switch": "The closing check skips when the gate result equals the check's (F153-FR-012)",
+      "key": "loop.micro.closingCheck.skipWhenEqualToGate",
+      "keys": [
+        "loop.micro.closingCheck.skipWhenEqualToGate"
+      ],
+      "keyNote": "`loop.micro.closingCheck.skipWhenEqualToGate`",
+      "default": "on",
+      "parity": "off: the closing check runs whenever the layer is on",
+      "owner": "153",
+      "registerRows": []
+    },
+    {
+      "number": 137,
+      "switch": "The inner check set is scoped to the touched paths (F153-FR-045)",
+      "key": "verification.inner.scoped",
+      "keys": [
+        "verification.inner.scoped"
+      ],
+      "keyNote": "`verification.inner.scoped`",
+      "default": "on",
+      "parity": "off: every command of the inner set runs (F115-FR-013)",
+      "owner": "153",
+      "registerRows": []
+    },
+    {
+      "number": 138,
+      "switch": "The critic reads the evidence of each task, not the whole diff (F153-FR-051)",
+      "key": "critic.evidence.perTask",
+      "keys": [
+        "critic.evidence.perTask"
+      ],
+      "keyNote": "`critic.evidence.perTask`",
+      "default": "on",
+      "parity": "off: the whole diff capped at 200,000 bytes",
+      "owner": "153",
+      "registerRows": []
+    },
+    {
+      "number": 139,
+      "switch": "A red gate spends a budget of its own, none of the reject limit (F153-FR-020)",
+      "key": "verification.redGate.ownBudget",
+      "keys": [
+        "verification.redGate.ownBudget"
+      ],
+      "keyNote": "`verification.redGate.ownBudget` (its size is `verification.redGate.limit`, default 3)",
+      "default": "on",
+      "parity": "off: a red gate is a rejection with code 10 that counts toward the reject limit",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 140,
+      "switch": "The commit scan runs after a passed gate and before the critic, too (F153-FR-024)",
+      "key": "commit.gate.beforeCritic",
+      "keys": [
+        "commit.gate.beforeCritic"
+      ],
+      "keyNote": "`commit.gate.beforeCritic` (CQ-153-06 answered A on 2026-11-13: it runs only where `commit.backpressure` is also on)",
+      "default": "on",
+      "parity": "off: the scan runs at the approval commit only",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 141,
+      "switch": "The proposer is named the in-pass scan command (F153-FR-027)",
+      "key": "commit.scan.inPass",
+      "keys": [
+        "commit.scan.inPass"
+      ],
+      "keyNote": "`commit.scan.inPass` (CQ-153-17 answered A on 2026-11-13: the command `scan`, codes 0/2/1/3)",
+      "default": "on",
+      "parity": "off: no such command is named to the proposer",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 142,
+      "switch": "A phase is sliced into task groups at derivation (F153-FR-054)",
+      "key": "loop.taskGroups",
+      "keys": [
+        "loop.taskGroups"
+      ],
+      "keyNote": "`loop.taskGroups` (CQ-153-15 answered A on 2026-11-13: a group of at most `loop.taskGroups.size` tasks, default 5 — a starting value with low confidence; a project file may lower it, not raise it; off until one trial run with groups on has been read with `specstride report`)",
+      "default": "off",
+      "parity": "off: a unit is a checkpoint claim",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
+    },
+    {
+      "number": 143,
+      "switch": "The gate stands on a green in-pass result (F153-FR-013) — refused: CQ-153-02 answered B on 2026-11-13, the behaviour is not built (F153-FR-015)",
+      "key": "verification.gate.reuse",
+      "keys": [
+        "verification.gate.reuse"
+      ],
+      "keyNote": "`verification.gate.reuse` (CQ-153-02 answered B on 2026-11-13: refused; the key exists, the behaviour is not built — the gate executes every time, F153-FR-015)",
+      "default": "off",
+      "parity": "off: the gate executes every time",
+      "owner": "153",
+      "registerRows": [
+        "none (CQ-153-02 answered B on 2026-11-13)"
+      ]
+    },
+    {
+      "number": 144,
+      "switch": "The commit gate is timed (F153-FR-036)",
+      "key": "events.commitGateTiming",
+      "keys": [
+        "events.commitGateTiming"
+      ],
+      "keyNote": "`events.commitGateTiming` (CQ-153-09 answered A on 2026-11-13: the timed pair is additive catalogue rows — `commit_gate.started` opens, `commit_gate.ended` closes — and no new end cause is named)",
+      "default": "on",
+      "parity": "off: the projection drops the new types",
+      "owner": "153",
+      "registerRows": [
+        "new (requested in specs/153-loop-feedback-speed/amendments.md, at approval)"
+      ]
     }
   ]
 }

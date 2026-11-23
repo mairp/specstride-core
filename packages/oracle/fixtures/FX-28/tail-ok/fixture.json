@@ -20,7 +20,7 @@
       "tail",
       "--feature",
       "demo",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

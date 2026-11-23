@@ -60,6 +60,7 @@ import {
   type FeedbackRecordOfThePhase,
   type OscillationOutcome,
 } from "./oscillation.ts";
+import { redGateBudgetOf } from "./red-gate-budget.ts";
 import type { TaskIdSource } from "./feedback.ts";
 
 /** F101-FR-014 — the default of the reject limit (B-0039). */
@@ -361,6 +362,17 @@ export type AfterARejectionInputs = {
    */
   readonly blockRuleIds?: readonly string[] | undefined;
   readonly blockFiles?: readonly string[] | undefined;
+  /**
+   * F153-FR-020 (CQ-153-05 A) — the red-gate budget of the phase, where the
+   * kind is `gate-failed` and the switch `verification.redGate.ownBudget` is
+   * on. The count is DERIVED — `redGateCountOf` over the gate result records
+   * of the phase the control plane holds, never a counter held in memory
+   * (F153-FR-021) — and the limit is the finite configuration value. Absent,
+   * or with the switch off, the rejection counts toward the reject limit
+   * exactly as before: the behaviour of the function is unchanged.
+   */
+  readonly redGate?:
+    { readonly switchOn: boolean; readonly count: number; readonly limit: number } | undefined;
 };
 
 /** What the handler calls. */
@@ -428,7 +440,13 @@ export async function afterARejection(
   const rejectLimit = inputs.rejectLimit ?? REJECT_LIMIT_DEFAULT;
   const malformedLimit = inputs.malformedLimit ?? MALFORMED_LIMIT_DEFAULT;
 
-  /* The counts: read from the ledger, raised, written back. */
+  // F153-FR-020 (CQ-153-05 A) — with the switch on, a failed verification
+  // gate spends the red-gate budget, not the reject limit: the reject count
+  // stands, the phase attempt still consumes its ordinal, and the kind stays
+  // `gate-failed` in the ledger. The MALFORMED streak is set to 0 either way
+  // — a gate leaves no verdict (B-0328). With the input absent, or the switch
+  // off (or the profile `parity`), the counts are raised exactly as before.
+  const redGateActive = inputs.kind === "gate-failed" && inputs.redGate?.switchOn === true;
   const before = deps.counts.read();
   // T127 — the counts write is IDEMPOTENT per ordinal for a block
   // (F152-FR-013, F152-FR-015): a write for kind `commit-blocked` and ordinal
@@ -441,12 +459,18 @@ export async function afterARejection(
     inputs.kind === "commit-blocked" && before.phaseAttemptOrdinal >= inputs.ordinal;
   const counts = alreadyCounted
     ? before
-    : countsAfterARejection({
-        before,
-        ordinal: inputs.ordinal,
-        kind: inputs.kind,
-        malformedLimit,
-      });
+    : redGateActive
+      ? Object.freeze({
+          rejectCount: before.rejectCount,
+          phaseAttemptOrdinal: inputs.ordinal,
+          malformedStreak: 0,
+        })
+      : countsAfterARejection({
+          before,
+          ordinal: inputs.ordinal,
+          kind: inputs.kind,
+          malformedLimit,
+        });
   if (!alreadyCounted) deps.counts.write(counts);
 
   /* F101-FR-014 — every rejection emits the as-is event and writes the line. */
@@ -540,6 +564,50 @@ export async function afterARejection(
     });
   }
 
+  /* --- the red-gate budget (F153-FR-020…-022; CQ-153-05 A) ----------- */
+  // With the switch on and the kind `gate-failed`, the budget — not the
+  // reject limit — bounds the red gates. The decision is the table's
+  // (`red-gate-budget`, rows RGB-1 to RGB-3), evaluated over the DERIVED
+  // count the engine handed in; when the budget is spent the run halts with
+  // stop reason `max_rejects` and exit code 2, the cause
+  // `verification-failed`, non-transient (F153-FR-022), and the reject-limit
+  // place below is not consulted: a red gate never spends the reject limit.
+  if (redGateActive) {
+    const decisionOfTheBudget = redGateBudgetOf({
+      switchOn: true,
+      count: inputs.redGate?.count ?? 0,
+      limit: inputs.redGate?.limit ?? 0,
+    });
+    if (decisionOfTheBudget.decision === "halt") {
+      // The row of the table of halts the stop reads: the same stop reason
+      // and exit code the reject limit uses (CQ-153-05 A adds neither), the
+      // banner of F101-FR-014 printed.
+      const halt = haltOf("reject-limit");
+      return Object.freeze({
+        go: "halt" as const,
+        counts,
+        stepsRun: Object.freeze([...stepsRun]),
+        diagnosis,
+        halt,
+        exitCode: halt.exitCode,
+        stopReason: halt.stopReason as string,
+        stopFields: Object.freeze({
+          phase: inputs.phase,
+          attempts: counts.phaseAttemptOrdinal,
+          redGateCount: inputs.redGate?.count,
+          redGateLimit: inputs.redGate?.limit,
+          tableId: decisionOfTheBudget.tableId,
+          tableVersion: decisionOfTheBudget.tableVersion,
+          ruleId: decisionOfTheBudget.ruleId,
+        }),
+        archiveBeforeTheHalt: halt.archivedBefore === true,
+        printTheHaltBanner: true,
+        rejection,
+        oscillation,
+      });
+    }
+  }
+
   /* --- the halt table of the commit gate (F152-FR-006; CQ-152-01 A) --- */
   // A block whose signature is the same as the block just before it will not
   // change by retrying, so the engine halts blocked on a human before the
@@ -594,7 +662,12 @@ export async function afterARejection(
 
   /* --- place 4: the reject limit (F101-FR-014) ----------------------- */
   stepsRun.push(ORDER_AFTER_A_REJECTION[3]);
-  if (theRejectLimitIsReached(inputs.ordinal, rejectLimit)) {
+  // F153-FR-020 — with the red-gate budget active the reject limit is not
+  // consulted: the reject count did not move, and only the budget decides
+  // (F153-FR-022). The attempts stay bounded all the same — the budget halts
+  // by its own limit, and reject limit plus red-gate limit bound the phase
+  // attempts of the phase (F153-FR-021).
+  if (!redGateActive && theRejectLimitIsReached(inputs.ordinal, rejectLimit)) {
     const halt = haltOf("reject-limit");
     return Object.freeze({
       go: "halt" as const,

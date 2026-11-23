@@ -1,0 +1,33 @@
+{"type":"run.started","at":1000,"data":{"runId":"run-153-sm"}}
+{"type":"phase.started","at":1100,"data":{"phase":1,"title":"phase one","total":8,"shape":"flat"}}
+{"type":"phase.started","at":1200,"data":{"phase":2,"title":"phase two","total":13,"shape":"flat"}}
+{"type":"attempt.started","at":2000,"data":{"phase":1,"attempt":1,"kind":"initial","backend":"claude","criteria":"criterion text"}}
+{"type":"attempt.started","at":3000,"data":{"phase":1,"attempt":2,"kind":"repair","backend":"claude","criteria":"criterion text"}}
+{"type":"attempt.started","at":4000,"data":{"phase":2,"attempt":1,"kind":"initial","backend":"claude","criteria":"criterion text"}}
+{"type":"attempt.started","at":5000,"data":{"phase":2,"attempt":2,"kind":"repair","backend":"claude","criteria":"criterion text"}}
+{"type":"attempt.started","at":6000,"data":{"phase":2,"attempt":3,"kind":"repair","backend":"claude","criteria":"criterion text"}}
+{"type":"attempt.ended","at":62000,"data":{"phase":1,"attempt":1,"endCause":"approved","workProducts":"attempt:1:1:1","synthesized":false}}
+{"type":"attempt.ended","at":124000,"data":{"phase":2,"attempt":1,"endCause":"rejected","workProducts":"attempt:2:1:1","synthesized":false}}
+{"type":"attempt.ended","at":95000,"data":{"phase":2,"attempt":2,"endCause":"verification-failed","workProducts":"attempt:2:2:1","synthesized":false}}
+{"type":"check.started","at":7000,"data":{"checkId":"c1","commandRef":"npm test","runner":"check-runner","unitId":"u1","batch":"b1","slot":0}}
+{"type":"check.ended","at":17000,"data":{"checkId":"c1","result":"passed","durationMs":10000,"unitId":"u1","condition":"clean","batch":"b1","slot":0,"concurrent":true,"synthesized":false}}
+{"type":"check.started","at":18000,"data":{"checkId":"c2","commandRef":"npm test","runner":"check-runner","unitId":"u1","batch":"b1","slot":0}}
+{"type":"check.ended","at":38000,"data":{"checkId":"c2","result":"failed","durationMs":20000,"unitId":"u1","condition":"clean","batch":"b1","slot":0,"concurrent":false,"synthesized":false}}
+{"type":"check.started","at":39000,"data":{"checkId":"c3","commandRef":"npm run lint","runner":"check-runner","unitId":"u1","batch":"b2","slot":1}}
+{"type":"check.ended","at":69000,"data":{"checkId":"c3","result":"passed","durationMs":30000,"unitId":"u1","condition":"clean","batch":"b2","slot":1,"concurrent":true,"synthesized":false}}
+{"type":"check.started","at":70000,"data":{"checkId":"c4","commandRef":"npm run lint","runner":"check-runner","unitId":"u1","batch":"b2","slot":1}}
+{"type":"check.ended","at":110000,"data":{"checkId":"c4","result":"failed","durationMs":40000,"unitId":"u1","condition":"clean","batch":"b2","slot":1,"concurrent":false,"synthesized":false}}
+{"type":"commit_gate.blocked","at":111000,"data":{"phase":2,"attempt":1,"rules":"cg-sk-prefix","fileCount":1,"signature":"sig-1"}}
+{"type":"verification.started","at":112000,"data":{"phase":2,"attempt":2,"planRef":"run:run-153-sm:verification:plan"}}
+{"type":"verification.ended","at":142000,"data":{"phase":2,"attempt":2,"result":"failed","rc":10,"evidenceRef":"attempt:2:2:1:verification","synthesized":false}}
+{"type":"critic.started","at":143000,"data":{"phase":1,"attempt":1,"provider":"claude"}}
+{"type":"critic.call","at":185000,"data":{"promptRef":"critic:1:1","form":"verdict","outcome":"approved","latencyMs":42000,"synthesized":false}}
+{"type":"recovery.diagnosis_started","at":200000,"data":{"phase":2,"attempt":3,"provider":"claude"}}
+{"type":"recovery.diagnosis_done","at":254000,"data":{"phase":2,"attempt":3,"bytes":512,"case":"repetition","synthesized":false}}
+{"type":"recovery.diagnosis_started","at":300000,"data":{"phase":2,"attempt":3,"provider":"claude"}}
+{"type":"recovery.diagnosis_done","at":330000,"data":{"phase":2,"attempt":3,"bytes":512,"case":"repetition","synthesized":false}}
+{"type":"commit_gate.started","at":340000,"data":{"phase":2,"attempt":1,"step":"pre-critic"}}
+{"type":"commit_gate.ended","at":345000,"data":{"phase":2,"attempt":1,"step":"pre-critic","durationMs":5000,"outcome":"clear","hits":0,"synthesized":false}}
+{"type":"pass.started","at":400000,"data":{"iter":1,"maxIter":3,"sessionId":"s-1","continued":false}}
+{"type":"pass.ended","at":3100000,"data":{"iter":1,"endCause":"hard_cap","elapsed":2700000,"synthesized":false}}
+{"type":"event.dropped","at":3200000,"data":{"count":3,"reason":"ingress"}}

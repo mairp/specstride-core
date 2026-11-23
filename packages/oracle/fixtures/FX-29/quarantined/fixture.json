@@ -28,7 +28,7 @@
       "1",
       "--run-id",
       "learn-00000000000b",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

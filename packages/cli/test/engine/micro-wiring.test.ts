@@ -250,12 +250,14 @@ test("classic by the project file: the earlier behaviour exactly, and the classi
     const { lines, exit } = await capture(dir);
     assert.equal(exit, 0);
     const types = eventsOf(dir).map((event) => event.type);
+    // Phase 17 of feature 153 (T232, F153-FR-011): the VERIFICATION GATE
+    // emits one `check.started`/`check.ended` pair per declared command on
+    // every strategy, classic included — the gate is not the micro layer.
+    // Only the micro layer's own events stay forbidden under classic.
     for (const forbidden of [
       "checkpoint.accepted",
       "checkpoint.refused",
       "checkpoint.removed",
-      "check.started",
-      "check.ended",
       "microloop.unit",
     ]) {
       assert.ok(!types.includes(forbidden), `no ${forbidden} under classic`);

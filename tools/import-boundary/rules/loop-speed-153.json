@@ -1,0 +1,14 @@
+{
+  "rule": "RF-153-01",
+  "owner": "153",
+  "requirement": "F153-FR-008",
+  "from": [
+    "packages/core/src/gate/closing-check-skip.ts",
+    "packages/core/src/gate/end-cause.ts",
+    "packages/core/src/checks/selection.ts",
+    "packages/core/src/critic-input/evidence/per-task.ts",
+    "packages/core/src/report/rows.ts"
+  ],
+  "forbid": ["node:child_process", "node:fs", "@specstride/cli", "@specstride/cli/**"],
+  "reason": "the decisions of feature 153 are pure tables in core; the composition root wires them"
+}

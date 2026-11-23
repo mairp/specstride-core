@@ -63,13 +63,18 @@ export function scaledBudgetBytes(windowTokens: number): number {
   return Math.max(MIN_SCALED_BUDGET_BYTES, scaled);
 }
 
-/** A whole file excerpt: every line, line-numbered, with the as-is label. */
+/**
+ * A whole file excerpt: every line, line-numbered, cat -n style — the number
+ * right-justified in six columns and closed by a tab — with the trailing
+ * blank line of a newline-terminated file dropped (the as-is snapshot never
+ * numbers it). The label does NOT ride inside the excerpt: the fence of the
+ * snapshot block closes before it (`excerptBlock` of the snapshot places the
+ * label after the fence, as the as-is prompt does).
+ */
 export function wholeFileExcerpt(text: string): string {
-  const numbered = text
-    .split("\n")
-    .map((line, i) => `${i + 1}\t${line}`)
-    .join("\n");
-  return `${numbered}\n${WHOLE_FILE_LABEL}`;
+  const lines = text.split("\n");
+  if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+  return lines.map((line, i) => `${String(i + 1).padStart(6)}\t${line}`).join("\n");
 }
 
 /**

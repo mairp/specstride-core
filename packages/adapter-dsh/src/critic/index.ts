@@ -161,6 +161,15 @@ export type CriticCallInput = {
   readonly contextWindows?: Readonly<Record<string, number>>;
   /** The effective window of a gateway in front of the model, where known. */
   readonly effectiveWindow?: number | null;
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is environment arm: the prepared
+   * environment carries `DSH_PERMISSION_MODE` as the EMPTY string (the as-is
+   * engine exported the name with no value, so the oracle's stub records no
+   * permission mode in `given`) and adds NO `DSH_TELEMETRY_MODE` (the as-is
+   * children never saw the name). The engine sets this only under the `parity`
+   * profile; the adapter's own defaults stand everywhere else.
+   */
+  readonly asIsEnvironment?: boolean;
 };
 
 /**
@@ -345,8 +354,12 @@ function prepareDshCriticCall(input: CriticCallInput): PreparedCriticCall {
       if (value !== undefined) env[name] = value;
     }
     env["DSH_HOME"] = overlay !== null ? overlay.home : settings.home;
-    env[CRITIC_PERMISSION_ENV] = mode;
-    env["DSH_TELEMETRY_MODE"] = env["DSH_TELEMETRY_MODE"] ?? "";
+    // F153-FR-061 (`parity` profile) — under the as-is environment arm the
+    // name is exported with NO value, exactly as the as-is engine did.
+    env[CRITIC_PERMISSION_ENV] = input.asIsEnvironment === true ? "" : mode;
+    // F153-FR-061 (`parity` profile) — the as-is children never saw
+    // `DSH_TELEMETRY_MODE`, so the as-is environment arm adds no name.
+    if (input.asIsEnvironment !== true) env["DSH_TELEMETRY_MODE"] = env["DSH_TELEMETRY_MODE"] ?? "";
     if (input.script !== undefined) env["FAKE_DSH_SCRIPT"] = input.script;
 
     const argv = criticArgv({

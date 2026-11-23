@@ -20,7 +20,7 @@
       "specstride",
       "learn",
       "--show",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

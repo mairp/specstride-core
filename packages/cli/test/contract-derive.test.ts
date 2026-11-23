@@ -99,9 +99,13 @@ test("the command list of the package and its manifest are the same list", () =>
 });
 
 test("a command the build does not have is refused with the list of the ones it has", () => {
-  assert.equal(commandOf(["run"]), undefined);
-  assert.match(unknownCommand(["run"]), /not a command of this build/);
-  assert.match(unknownCommand(["run"]), /contract derive/);
+  // `run` was the command this assertion used while the skeleton carried no engine
+  // call; feature 119 owns it and this build declares it now (COMMANDS above, and
+  // the manifest's `specstride.commands`). A command still outside the build stands in.
+  assert.equal(commandOf(["launch"]), undefined);
+  assert.match(unknownCommand(["launch"]), /not a command of this build/);
+  assert.match(unknownCommand(["launch"]), /contract derive/);
+  assert.equal(commandOf(["run"])?.command.name, "run");
   const found = commandOf(["contract", "derive", "--repo", "/x"]);
   assert.equal(found?.command.name, "contract derive");
   assert.deepEqual([...(found?.rest ?? [])], ["--repo", "/x"]);
