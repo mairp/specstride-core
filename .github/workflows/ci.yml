@@ -42,5 +42,16 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm test
+      - name: Debug the failing tests on the runner
+        if: failure()
+        run: |
+          echo "HOME=$HOME"
+          echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-<unset>}"
+          echo "XDG_STATE_HOME=${XDG_STATE_HOME:-<unset>}"
+          echo "XDG_CACHE_HOME=${XDG_CACHE_HOME:-<unset>}"
+          env | grep -E "^(XDG|SPECSTRIDE|NODE_OPTIONS)" | sort || true
+          node -e "console.log('homedir():', require('node:os').homedir())"
+          node --test packages/cli/test/contract-derive-task-groups.test.ts 2>&1 | tail -30 || true
+          node --test packages/cli/test/engine/loop-speed-handoff.test.ts 2>&1 | grep -E "^not ok|^# pass|^# fail" || true
       - run: npm run test:e2e
       - run: npm run pack:release
