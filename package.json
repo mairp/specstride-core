@@ -13,7 +13,8 @@
     "tools/*"
   ],
   "scripts": {
-    "test": "node scripts/ci-test.mjs",
+    "test": "node tests/isolate.ts node scripts/ci-test.mjs",
+    "test:parallel": "node scripts/ci-test.mjs --parallel 4",
     "typecheck:src": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",

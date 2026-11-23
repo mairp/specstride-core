@@ -111,6 +111,13 @@ copyAsset(join(repositoryRoot, "packages", "adapter-dsh", "data"), join(staging,
 // feature 100 (§R.2 — the [DIGEST] among them) and reads the supervision and
 // stage-kind tables by path: the launch path of the bundle needs them.
 copyAsset(join(repositoryRoot, "packages", "pipeline", "data"), join(staging, "data"));
+// The engine's check path reaches the check-runner's command environment,
+// whose allowlist is read by path from the package root when the module
+// loads (`command/environment.ts` → `../../data/env-allowlist.json`): the
+// bundle dies on its first command without the file in the pack
+// (2026-11-23: `plugin e2e` on CI — the packed CLI answered nothing to
+// `--protocol` and the shim refused with `protocol-mismatch found=none`).
+copyAsset(join(repositoryRoot, "packages", "check-runner", "data"), join(staging, "data"));
 
 writeFileSync(
   join(staging, "bin", "specstride"),

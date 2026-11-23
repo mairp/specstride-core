@@ -82,8 +82,39 @@ import { applyOwnerDecisions } from "./decisions.ts";
 /** The named profile of feature 100 the port runs under (F141-FR-004). */
 export const PARITY_PROFILE = "parity" as const;
 
-/** Where the configuration that selects the profile is written, inside the run's own config home. */
-export const PORT_CONFIGURATION_FILE = join("specstride", "config.json");
+/**
+ * Where the configuration that selects the profile is written, inside the run's
+ * own config home. It IS the ordinary user file of the product (`user:config`,
+ * annex B §B.5): `<user-config>/config.yaml`, carrying `specstride.config/1`,
+ * so the port selects the profile by the ordinary configuration of F110-FR-004
+ * and by nothing of the oracle alone.
+ */
+export const PORT_CONFIGURATION_FILE = join("specstride", "config.yaml");
+
+/** The schema id the ordinary user configuration file carries (annex B §B.5). */
+export const PORT_CONFIGURATION_SCHEMA = "specstride.config/1" as const;
+
+/**
+ * The text of the ordinary user configuration file for a configuration record:
+ * the schema line the file format of annex B §B.5 requires, then one flat
+ * dotted key per line. A value the catalogue reads by its TYPE — a switch or a
+ * count — is written as the bare YAML scalar (`true`, `3`), because the file
+ * layer reads a value by its declared type and not as text (the environment is
+ * the layer that reads text); anything else is written as a JSON string
+ * literal, which YAML 1.2 reads back as the same string.
+ */
+export function portConfigurationFileText(
+  configuration: Readonly<Record<string, unknown>>,
+): string {
+  const lines = [`schema: ${PORT_CONFIGURATION_SCHEMA}`];
+  for (const [key, value] of Object.entries(configuration)) {
+    const text = String(value);
+    const scalar =
+      /^(true|false)$/.test(text) || /^-?\d+$/.test(text) ? text : JSON.stringify(text);
+    lines.push(`${key}: ${scalar}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
 
 /** The switch of the profile through which the engine stub is named, and its row. */
 export { ENGINE_SWITCH_KEY, ENGINE_SWITCH_ROW };
@@ -1134,17 +1165,27 @@ export function driveSide(options: DriveOptions): DriveResult {
   const scriptDir = env["ORACLE_STUB_SCRIPT_DIR"] as string;
   const servers: ServerStub[] = [];
   if (declaredStubs["critic-http"] !== undefined) {
+    const httpScript = join(scriptDir, "critic-http.json");
+    const diagnosticianScript = join(scriptDir, "diagnostician.json");
     const stub = startServerStub({
       kind: "critic-http",
       runRoot,
       env,
       extraEnv: {
-        ORACLE_CRITIC_HTTP_SCRIPT: join(scriptDir, "critic-http.json"),
-        ORACLE_CRITIC_DIAGNOSTICIAN_SCRIPT: join(scriptDir, "diagnostician.json"),
+        ORACLE_CRITIC_HTTP_SCRIPT: httpScript,
+        ORACLE_CRITIC_DIAGNOSTICIAN_SCRIPT: diagnosticianScript,
       },
     });
     servers.push(stub);
     for (const name of CRITIC_STUB_ADDRESS_VARIABLES) env[name] = stub.address;
+    // The script variables stay on the SERVER stub's environment only (they
+    // came in through `extraEnv` above): the golden's harness records name
+    // them for the records the server itself writes (the critic and the
+    // diagnostician of a parity run), never for the proposer or verification
+    // children, whose golden `envNames` carry none of them — putting them in
+    // the shared run environment made every proposer record read as a
+    // different run (F141-FR-003 — the empty environment is the whole
+    // environment).
   }
   if (declaredStubs["telemetry-sink"] !== undefined) {
     const sinkSteps = declaredStubs["telemetry-sink"] as { verbs: readonly string[] }[];
@@ -1192,7 +1233,7 @@ export function driveSide(options: DriveOptions): DriveResult {
     }
     const file = join(env["XDG_CONFIG_HOME"] as string, PORT_CONFIGURATION_FILE);
     mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, `${JSON.stringify(configuration, null, 1)}\n`, "utf8");
+    writeFileSync(file, portConfigurationFileText(configuration), "utf8");
   }
 
   // Everything the layout planted is backdated together, so the reference's own

@@ -1,0 +1,69 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-15",
+  "ids": [
+    "specstride.prompt-block/1"
+  ],
+  "annex": "annex D, §D.5",
+  "operations": [
+    "blocks"
+  ],
+  "requirements": [
+    "F100-FR-131",
+    "F100-FR-132"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.prompt-block/1`."
+    ],
+    "Purpose": [
+      "To let any component contribute a block to the proposer's prompt, while one assembler keeps the",
+      "budget of the whole prompt."
+    ],
+    "Caller and time": [
+      "The prompt assembler of the pass loop, before every pass."
+    ],
+    "Inputs": [
+      "`blocks`: the context of the pass (phase, phase attempt, pass ordinal, strategy, what changed",
+      "since the pass before)."
+    ],
+    "Outputs": [
+      "Blocks, each with: id, bytes, hash, its writer, `protected` or not, `stable` or `volatile`."
+    ],
+    "Errors": [
+      "None of its own. A block over the size its provider declared is cut and recorded."
+    ],
+    "Guarantees of the core": [
+      "One assembler budgets the whole prompt, places stable blocks first and keeps the start of the",
+      "prompt byte-stable inside a phase attempt. Every pass emits `prompt.built` with the blocks and",
+      "what was dropped. A protected block is never dropped. The critic has an assembler and a block set",
+      "of its own; no block of the proposer reaches the critic through this point. With the as-is block",
+      "set selected, the prompt equals the baseline's byte for byte."
+    ],
+    "Guarantees of an implementation": [
+      "A provider is a pure function of the context of the pass and of files it names. It frames text",
+      "from outside the runtime as data. It reveals nothing to the proposer about groups, workers or",
+      "routing beyond what its content owner specifies."
+    ],
+    "Failure of an implementation": [
+      "The block is left out, the omission is recorded in `prompt.built`, and the pass runs. A provider",
+      "of a protected block that fails is an error of the pass, by the existing breakers."
+    ],
+    "Unknown-value rule": [
+      "An unknown block id is accepted, since block ids are an open set. An unknown value of `protected`",
+      "or of `stable` is read as not protected and volatile."
+    ],
+    "Wave 1 implementations": [
+      "Spec context; the obligations index; the handoff; feedback; hint; acceleration note; the yield",
+      "interface block; the protocol block of the layer `micro`; the reserved-tasks block and the worker",
+      "block of the layer `parallel`; the section of the plugin protocol of one harness."
+    ],
+    "Content owner": [
+      "103. The critic's own assembler: 117."
+    ],
+    "Proving test": [
+      "Golden prompts on the fixtures of the oracle. A sample provider adds a block that shows up in",
+      "`prompt.built`."
+    ]
+  }
+}

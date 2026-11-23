@@ -1,0 +1,76 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-07",
+  "ids": [
+    "specstride.verification-source/1"
+  ],
+  "annex": "annex C, §C.9",
+  "operations": [
+    "discover",
+    "obligations",
+    "conflicts"
+  ],
+  "requirements": [
+    "F100-FR-101",
+    "F100-FR-102",
+    "F100-FR-103"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.verification-source/1`."
+    ],
+    "Purpose": [
+      "To find the verification commands that a project declares, with where each was declared, and",
+      "never to invent one."
+    ],
+    "Caller and time": [
+      "The engine at launch, and the derivation of the launch contract."
+    ],
+    "Inputs": [
+      "`discover`: the workspace and the canonical spec model. `obligations`: the canonical spec model.",
+      "`conflicts`: the results of every source."
+    ],
+    "Outputs": [
+      "`discover`: declared commands, each with provenance (file and line), phase, time limit, an",
+      "optional list of tasks, optional steps, optional declared reads and writes, optional exclusive",
+      "resource. `obligations`: one verification obligation per task line. `conflicts`: blockers. Under",
+      "the recommended answer of CQ-190 a source that reads repository text reports no declared reads",
+      "and no declared writes: a declaration that lacks the provenance of user configuration, the",
+      "environment or a flag counts as undeclared, and by ruling P11 the commands it concerns run",
+      "serial."
+    ],
+    "Errors": [
+      "A command that cannot be written as a fixed argument list, and two declarations that disagree,",
+      "are blockers and never a guess."
+    ],
+    "Guarantees of the core": [
+      "The verification plan is bound to the hashes of its sources, frozen at launch and stored in the",
+      "control plane. The check manifest of a phase is derived from it and from nothing else. A phase",
+      "without commands stays explicitly empty. A relaunch that derives a different manifest makes the",
+      "difference a fact for the critic and uses the stored manifest."
+    ],
+    "Guarantees of an implementation": [
+      "A source reads and never writes. It reports only what is declared in a file it names."
+    ],
+    "Failure of an implementation": [
+      "A source that fails contributes nothing and is reported as a finding; under the verification mode",
+      "`required` a phase left without commands by a failed source refuses the launch."
+    ],
+    "Unknown-value rule": [
+      "An unknown field of a declaration is ignored with a finding. An unknown verification mode is a",
+      "configuration error (exit 3)."
+    ],
+    "Wave 1 implementations": [
+      "The verification-commands document; commands declared literally in the plan or the task list;",
+      "discovery of the entry points of a toolchain for build, type check, lint and test; the inventory",
+      "of the launch contract."
+    ],
+    "Content owner": [
+      "105. The inventory of the launch contract as a source: 107."
+    ],
+    "Proving test": [
+      "Conformance on fixtures with declared commands, with conflicts and with none. A sample source in",
+      "the test tree contributes a command that appears in the check manifest with its provenance."
+    ]
+  }
+}

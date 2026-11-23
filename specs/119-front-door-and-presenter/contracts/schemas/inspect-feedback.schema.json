@@ -1,0 +1,99 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:specstride.inspect.feedback/1",
+ "title": "The `--json` record of `feedback` (F119-FR-033; annex B §B.20)",
+ "type": "object",
+ "required": [
+  "schema",
+  "cmd",
+  "ok"
+ ],
+ "properties": {
+  "schema": {
+   "const": "specstride.inspect.feedback/1"
+  },
+  "cmd": {
+   "const": "feedback"
+  },
+  "ok": {
+   "type": "boolean"
+  },
+  "feature": {
+   "type": "string",
+   "description": "The feature slug."
+  },
+  "reason": {
+   "type": "string",
+   "description": "A member of the closed set of F119-FR-030; required when ok is false."
+  },
+  "fix": {
+   "type": "string",
+   "description": "The fixed fix text of the reason; required when ok is false."
+  },
+  "phase": {
+   "type": "integer",
+   "description": "The phase number; required when ok is true."
+  },
+  "name": {
+   "type": "string",
+   "description": "The logical name of the feedback record; required when ok is true."
+  },
+  "bytes": {
+   "type": "integer",
+   "description": "Required when ok is true."
+  },
+  "lines": {
+   "type": "integer",
+   "description": "Required when ok is true."
+  },
+  "hash": {
+   "type": "string",
+   "description": "The first eight characters of the hash; required when ok is true."
+  },
+  "text": {
+   "type": "string",
+   "description": "Only with `--verbose`, after the redactor; optional."
+  }
+ },
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": false
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "reason",
+     "fix"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": true
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "phase",
+     "name",
+     "bytes",
+     "lines",
+     "hash"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "specstride.closed-sets-part/1",
+  "owner": "127",
+  "sets": [
+    {"row": 46, "name": "Quota classes", "members": ["quota_window", "quota_credit", "rate_limit_transient", "overload", "auth", "context_window", "agent_failure", "provider_other", "budget_cap"], "unknown": "provider_other"},
+    {"row": 47, "name": "Quota confidence", "members": ["structured", "status", "text", "stall", "host"], "unknown": "text"},
+    {"row": 48, "name": "Alert levels", "members": ["info", "warn", "loud"], "unknown": "warn"},
+    {"row": 205, "name": "Alert kinds", "members": ["budget-threshold", "provider-warning", "billing-mode-change", "spend-unmeasurable", "ledger-unreadable"], "unknown": "shown as text at level warn"},
+    {"row": 206, "name": "Budget dimensions", "members": ["tokens", "costUsd", "wallClock", "phaseAttempts", "calls"], "unknown": "configuration error"},
+    {"row": 207, "name": "Sources of a reset time", "members": ["structured", "header", "parsed_text"], "unknown": "parsed_text"},
+    {"row": 208, "name": "Reasons that skip a fallback entry", "members": ["terms-refused", "no-cap", "not-in-plan", "limited"], "unknown": "shown as text; the entry is skipped"}
+  ]
+}

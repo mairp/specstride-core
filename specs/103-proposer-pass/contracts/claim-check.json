@@ -1,0 +1,1209 @@
+{
+ "schema": "specstride.claim-check-103/1",
+ "note": "The claims of feature 103 that the claim check of the exercise map (F141-FR-032) must pass: the 106 behaviour items and the one as-is requirement that the traceability files assign to this feature with a kept disposition. `file` and `line` are the evidence line of the row of docs/ecosystem/research/R18-behaviour-inventory.tsv, at the Specstride baseline 9cab15d. A claim passes when a fixture of a test of feature 103 executed that line on the reference. The exercise map is written by the capture job of feature 141 (F141-FR-031) and does not exist yet, so the authoritative run of the check is deferred; `exerciseMap` says where the check looks for it and what it does while it is absent. tests/characterization/103/setup-103.test.ts holds the check and proves it against exercise maps of its own making.",
+ "owner": "103",
+ "baseline": {
+  "repository": "Specstride",
+  "commit": "9cab15d"
+ },
+ "requirement": "F141-FR-032",
+ "exerciseMap": {
+  "writtenBy": "the capture job of feature 141 (F141-FR-031)",
+  "paths": [
+   "packages/oracle/data/exercise-map.json"
+  ],
+  "override": "SPECSTRIDE_EXERCISE_MAP",
+  "whileAbsent": "The check reports every claim as not executed and names the reason: the oracle holds no family of FX-17 to FX-20 and FX-24 yet (packages/oracle/src/index.ts is the skeleton), so no fixture has run on the reference and no map exists. The correction of specs/103-proposer-pass/orchestrator-report.md stands in its place until the map is written.",
+  "form": "One record per fixture: { fixture: \"FX-nn/scenario\", feature: \"103\", executed: [ { file, line } ] }. The check reads the union of the executed lines of every fixture whose `feature` is 103."
+ },
+ "families": [
+  {
+   "family": "FX-17",
+   "name": "Iteration limit",
+   "scenarios": [
+    "iteration-limit",
+    "iteration-returned-by-yield"
+   ]
+  },
+  {
+   "family": "FX-18",
+   "name": "Consecutive errors",
+   "scenarios": [
+    "consecutive-errors-legacy",
+    "consecutive-errors-structured",
+    "harness-missing-dsh",
+    "harness-missing-prime",
+    "harness-missing-prime-launcher",
+    "dsh-model-and-qualifier",
+    "dsh-no-provider",
+    "prime-variant-with-model",
+    "prime-empty-variant",
+    "dsh-overlay-cannot-build",
+    "unknown-harness-name"
+   ]
+  },
+  {
+   "family": "FX-19",
+   "name": "No progress",
+   "scenarios": [
+    "no-progress-legacy",
+    "no-progress-structured-not-evaluated"
+   ]
+  },
+  {
+   "family": "FX-20",
+   "name": "Hard cap kills",
+   "scenarios": [
+    "cap-exhausted-legacy",
+    "cap-exhausted-structured",
+    "kill-note-carried"
+   ]
+  },
+  {
+   "family": "FX-24",
+   "name": "Short-pass nudge",
+   "scenarios": [
+    "short-pass-nudge",
+    "yield-leaves-counter"
+   ]
+  }
+ ],
+ "clusters": {
+  "C-006": [
+   "B-0016",
+   "B-0031"
+  ],
+  "C-007": [
+   "B-0040",
+   "B-0075",
+   "B-0076"
+  ],
+  "C-008": [
+   "B-0091",
+   "B-0092",
+   "B-0095"
+  ],
+  "C-009": [
+   "B-0129",
+   "B-0130",
+   "B-0131",
+   "B-0134"
+  ],
+  "C-010": [
+   "B-0145",
+   "B-0146",
+   "B-0147",
+   "B-0150"
+  ],
+  "C-011": [
+   "B-0178"
+  ],
+  "C-012": [
+   "B-0207",
+   "B-0212",
+   "B-0216",
+   "B-0217",
+   "B-0218",
+   "B-0221"
+  ],
+  "C-013": [
+   "B-0295",
+   "B-0296",
+   "B-0297",
+   "B-0298",
+   "B-0299",
+   "B-0300",
+   "B-0301",
+   "B-0314",
+   "B-0315",
+   "B-0318"
+  ],
+  "C-041": [
+   "B-0444"
+  ],
+  "C-042": [
+   "B-0445"
+  ],
+  "C-043": [
+   "B-0446",
+   "B-0447",
+   "B-0448",
+   "B-0449",
+   "B-0450"
+  ],
+  "C-050": [
+   "B-0462"
+  ],
+  "C-051": [
+   "B-0463",
+   "B-0464",
+   "B-0465",
+   "B-0468",
+   "B-0469",
+   "B-0477",
+   "B-0479",
+   "B-0480",
+   "B-0485"
+  ],
+  "C-052": [
+   "B-0487",
+   "B-0501",
+   "B-0503",
+   "B-0504",
+   "B-0537",
+   "B-0539"
+  ],
+  "C-053": [
+   "B-0549",
+   "B-0550",
+   "B-0557",
+   "B-0561",
+   "B-0562"
+  ],
+  "C-054": [
+   "B-0564",
+   "B-0565",
+   "B-0566",
+   "B-0567",
+   "B-0577",
+   "B-0578",
+   "B-0592",
+   "B-0594",
+   "B-0595",
+   "B-0597"
+  ],
+  "C-055": [
+   "B-0612",
+   "B-0614",
+   "B-0615",
+   "B-0616",
+   "B-2785"
+  ],
+  "C-056": [
+   "B-0617",
+   "B-0637"
+  ],
+  "C-057": [
+   "B-0639",
+   "B-0649",
+   "B-0652",
+   "B-0659",
+   "B-0663",
+   "B-0664",
+   "B-0665",
+   "B-0666",
+   "B-0667"
+  ],
+  "C-058": [
+   "B-0668",
+   "B-0670",
+   "B-0671",
+   "B-0699",
+   "B-0743",
+   "B-0755",
+   "B-0756",
+   "B-0760",
+   "B-0761",
+   "B-0762",
+   "B-0778",
+   "B-0784",
+   "B-0785",
+   "B-0786",
+   "B-0787",
+   "B-0789",
+   "B-0790",
+   "B-0791",
+   "B-0792"
+  ]
+ },
+ "sharedEvidenceLines": [
+  {
+   "evidence": "proposer.sh:1784",
+   "claims": [
+    "B-0755",
+    "B-0756"
+   ]
+  },
+  {
+   "evidence": "proposer.sh:207",
+   "claims": [
+    "B-0463",
+    "B-0670"
+   ]
+  },
+  {
+   "evidence": "proposer.sh:2365",
+   "claims": [
+    "B-0597",
+    "028 FR-018"
+   ]
+  }
+ ],
+ "sharedEvidenceNote": "Three evidence lines carry two claims each. The claim check of F141-FR-032 is line-based, so a fixture that executes such a line confirms BOTH claims on it, and no fixture can confirm one without the other. 028 FR-018 shares proposer.sh:2365 with B-0597, which is why the as-is requirement and that item are always confirmed or always open together.",
+ "claims": [
+  {
+   "claim": "B-0016",
+   "kind": "behaviour-item",
+   "cluster": "C-006",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:242",
+   "file": "orchestrator.sh",
+   "line": 242
+  },
+  {
+   "claim": "B-0031",
+   "kind": "behaviour-item",
+   "cluster": "C-006",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:257",
+   "file": "orchestrator.sh",
+   "line": 257
+  },
+  {
+   "claim": "B-0040",
+   "kind": "behaviour-item",
+   "cluster": "C-007",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:205",
+   "file": "orchestrator.sh",
+   "line": 205
+  },
+  {
+   "claim": "B-0075",
+   "kind": "behaviour-item",
+   "cluster": "C-007",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1430",
+   "file": "orchestrator.sh",
+   "line": 1430
+  },
+  {
+   "claim": "B-0076",
+   "kind": "behaviour-item",
+   "cluster": "C-007",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1431",
+   "file": "orchestrator.sh",
+   "line": 1431
+  },
+  {
+   "claim": "B-0091",
+   "kind": "behaviour-item",
+   "cluster": "C-008",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1442",
+   "file": "orchestrator.sh",
+   "line": 1442
+  },
+  {
+   "claim": "B-0092",
+   "kind": "behaviour-item",
+   "cluster": "C-008",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1446",
+   "file": "orchestrator.sh",
+   "line": 1446
+  },
+  {
+   "claim": "B-0095",
+   "kind": "behaviour-item",
+   "cluster": "C-008",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1810",
+   "file": "orchestrator.sh",
+   "line": 1810
+  },
+  {
+   "claim": "B-0129",
+   "kind": "behaviour-item",
+   "cluster": "C-009",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1891",
+   "file": "orchestrator.sh",
+   "line": 1891
+  },
+  {
+   "claim": "B-0130",
+   "kind": "behaviour-item",
+   "cluster": "C-009",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1906",
+   "file": "orchestrator.sh",
+   "line": 1906
+  },
+  {
+   "claim": "B-0131",
+   "kind": "behaviour-item",
+   "cluster": "C-009",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1921",
+   "file": "orchestrator.sh",
+   "line": 1921
+  },
+  {
+   "claim": "B-0134",
+   "kind": "behaviour-item",
+   "cluster": "C-009",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1970",
+   "file": "orchestrator.sh",
+   "line": 1970
+  },
+  {
+   "claim": "B-0145",
+   "kind": "behaviour-item",
+   "cluster": "C-010",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1890",
+   "file": "orchestrator.sh",
+   "line": 1890
+  },
+  {
+   "claim": "B-0146",
+   "kind": "behaviour-item",
+   "cluster": "C-010",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1905",
+   "file": "orchestrator.sh",
+   "line": 1905
+  },
+  {
+   "claim": "B-0147",
+   "kind": "behaviour-item",
+   "cluster": "C-010",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1920",
+   "file": "orchestrator.sh",
+   "line": 1920
+  },
+  {
+   "claim": "B-0150",
+   "kind": "behaviour-item",
+   "cluster": "C-010",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1969",
+   "file": "orchestrator.sh",
+   "line": 1969
+  },
+  {
+   "claim": "B-0178",
+   "kind": "behaviour-item",
+   "cluster": "C-011",
+   "disposition": "translated",
+   "evidence": "orchestrator.sh:1793",
+   "file": "orchestrator.sh",
+   "line": 1793
+  },
+  {
+   "claim": "B-0207",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1441",
+   "file": "orchestrator.sh",
+   "line": 1441
+  },
+  {
+   "claim": "B-0212",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1809",
+   "file": "orchestrator.sh",
+   "line": 1809
+  },
+  {
+   "claim": "B-0216",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1889",
+   "file": "orchestrator.sh",
+   "line": 1889
+  },
+  {
+   "claim": "B-0217",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1894",
+   "file": "orchestrator.sh",
+   "line": 1894
+  },
+  {
+   "claim": "B-0218",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1909",
+   "file": "orchestrator.sh",
+   "line": 1909
+  },
+  {
+   "claim": "B-0221",
+   "kind": "behaviour-item",
+   "cluster": "C-012",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1968",
+   "file": "orchestrator.sh",
+   "line": 1968
+  },
+  {
+   "claim": "B-0295",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1388",
+   "file": "orchestrator.sh",
+   "line": 1388
+  },
+  {
+   "claim": "B-0296",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1439",
+   "file": "orchestrator.sh",
+   "line": 1439
+  },
+  {
+   "claim": "B-0297",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1471",
+   "file": "orchestrator.sh",
+   "line": 1471
+  },
+  {
+   "claim": "B-0298",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1516",
+   "file": "orchestrator.sh",
+   "line": 1516
+  },
+  {
+   "claim": "B-0299",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1539",
+   "file": "orchestrator.sh",
+   "line": 1539
+  },
+  {
+   "claim": "B-0300",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1550",
+   "file": "orchestrator.sh",
+   "line": 1550
+  },
+  {
+   "claim": "B-0301",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1566",
+   "file": "orchestrator.sh",
+   "line": 1566
+  },
+  {
+   "claim": "B-0314",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1829",
+   "file": "orchestrator.sh",
+   "line": 1829
+  },
+  {
+   "claim": "B-0315",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1839",
+   "file": "orchestrator.sh",
+   "line": 1839
+  },
+  {
+   "claim": "B-0318",
+   "kind": "behaviour-item",
+   "cluster": "C-013",
+   "disposition": "ported",
+   "evidence": "orchestrator.sh:1887",
+   "file": "orchestrator.sh",
+   "line": 1887
+  },
+  {
+   "claim": "B-0444",
+   "kind": "behaviour-item",
+   "cluster": "C-041",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:40",
+   "file": "lib/error_breaker.py",
+   "line": 40
+  },
+  {
+   "claim": "B-0445",
+   "kind": "behaviour-item",
+   "cluster": "C-042",
+   "disposition": "translated",
+   "evidence": "lib/error_breaker.py:70",
+   "file": "lib/error_breaker.py",
+   "line": 70
+  },
+  {
+   "claim": "B-0446",
+   "kind": "behaviour-item",
+   "cluster": "C-043",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:91",
+   "file": "lib/error_breaker.py",
+   "line": 91
+  },
+  {
+   "claim": "B-0447",
+   "kind": "behaviour-item",
+   "cluster": "C-043",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:124",
+   "file": "lib/error_breaker.py",
+   "line": 124
+  },
+  {
+   "claim": "B-0448",
+   "kind": "behaviour-item",
+   "cluster": "C-043",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:139",
+   "file": "lib/error_breaker.py",
+   "line": 139
+  },
+  {
+   "claim": "B-0449",
+   "kind": "behaviour-item",
+   "cluster": "C-043",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:146",
+   "file": "lib/error_breaker.py",
+   "line": 146
+  },
+  {
+   "claim": "B-0450",
+   "kind": "behaviour-item",
+   "cluster": "C-043",
+   "disposition": "ported",
+   "evidence": "lib/error_breaker.py:166",
+   "file": "lib/error_breaker.py",
+   "line": 166
+  },
+  {
+   "claim": "B-0462",
+   "kind": "behaviour-item",
+   "cluster": "C-050",
+   "disposition": "translated",
+   "evidence": "proposer.sh:29",
+   "file": "proposer.sh",
+   "line": 29
+  },
+  {
+   "claim": "B-0463",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:207",
+   "file": "proposer.sh",
+   "line": 207
+  },
+  {
+   "claim": "B-0464",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:208",
+   "file": "proposer.sh",
+   "line": 208
+  },
+  {
+   "claim": "B-0465",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:209",
+   "file": "proposer.sh",
+   "line": 209
+  },
+  {
+   "claim": "B-0468",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:212",
+   "file": "proposer.sh",
+   "line": 212
+  },
+  {
+   "claim": "B-0469",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:213",
+   "file": "proposer.sh",
+   "line": 213
+  },
+  {
+   "claim": "B-0477",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:221",
+   "file": "proposer.sh",
+   "line": 221
+  },
+  {
+   "claim": "B-0479",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:223",
+   "file": "proposer.sh",
+   "line": 223
+  },
+  {
+   "claim": "B-0480",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:224",
+   "file": "proposer.sh",
+   "line": 224
+  },
+  {
+   "claim": "B-0485",
+   "kind": "behaviour-item",
+   "cluster": "C-051",
+   "disposition": "translated",
+   "evidence": "proposer.sh:229",
+   "file": "proposer.sh",
+   "line": 229
+  },
+  {
+   "claim": "B-0487",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:142",
+   "file": "proposer.sh",
+   "line": 142
+  },
+  {
+   "claim": "B-0501",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:287",
+   "file": "proposer.sh",
+   "line": 287
+  },
+  {
+   "claim": "B-0503",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:289",
+   "file": "proposer.sh",
+   "line": 289
+  },
+  {
+   "claim": "B-0504",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:290",
+   "file": "proposer.sh",
+   "line": 290
+  },
+  {
+   "claim": "B-0537",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1897",
+   "file": "proposer.sh",
+   "line": 1897
+  },
+  {
+   "claim": "B-0539",
+   "kind": "behaviour-item",
+   "cluster": "C-052",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1934",
+   "file": "proposer.sh",
+   "line": 1934
+  },
+  {
+   "claim": "B-0549",
+   "kind": "behaviour-item",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1779",
+   "file": "proposer.sh",
+   "line": 1779
+  },
+  {
+   "claim": "B-0550",
+   "kind": "behaviour-item",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1984",
+   "file": "proposer.sh",
+   "line": 1984
+  },
+  {
+   "claim": "B-0557",
+   "kind": "behaviour-item",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2177",
+   "file": "proposer.sh",
+   "line": 2177
+  },
+  {
+   "claim": "B-0561",
+   "kind": "behaviour-item",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2329",
+   "file": "proposer.sh",
+   "line": 2329
+  },
+  {
+   "claim": "B-0562",
+   "kind": "behaviour-item",
+   "cluster": "C-053",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2346",
+   "file": "proposer.sh",
+   "line": 2346
+  },
+  {
+   "claim": "B-0564",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:240",
+   "file": "proposer.sh",
+   "line": 240
+  },
+  {
+   "claim": "B-0565",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:241",
+   "file": "proposer.sh",
+   "line": 241
+  },
+  {
+   "claim": "B-0566",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:242",
+   "file": "proposer.sh",
+   "line": 242
+  },
+  {
+   "claim": "B-0567",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:244",
+   "file": "proposer.sh",
+   "line": 244
+  },
+  {
+   "claim": "B-0577",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1778",
+   "file": "proposer.sh",
+   "line": 1778
+  },
+  {
+   "claim": "B-0578",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1785",
+   "file": "proposer.sh",
+   "line": 1785
+  },
+  {
+   "claim": "B-0592",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2179",
+   "file": "proposer.sh",
+   "line": 2179
+  },
+  {
+   "claim": "B-0594",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2335",
+   "file": "proposer.sh",
+   "line": 2335
+  },
+  {
+   "claim": "B-0595",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2350",
+   "file": "proposer.sh",
+   "line": 2350
+  },
+  {
+   "claim": "B-0597",
+   "kind": "behaviour-item",
+   "cluster": "C-054",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2365",
+   "file": "proposer.sh",
+   "line": 2365
+  },
+  {
+   "claim": "B-0612",
+   "kind": "behaviour-item",
+   "cluster": "C-055",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2251",
+   "file": "proposer.sh",
+   "line": 2251
+  },
+  {
+   "claim": "B-0614",
+   "kind": "behaviour-item",
+   "cluster": "C-055",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2330",
+   "file": "proposer.sh",
+   "line": 2330
+  },
+  {
+   "claim": "B-0615",
+   "kind": "behaviour-item",
+   "cluster": "C-055",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2333",
+   "file": "proposer.sh",
+   "line": 2333
+  },
+  {
+   "claim": "B-0616",
+   "kind": "behaviour-item",
+   "cluster": "C-055",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2349",
+   "file": "proposer.sh",
+   "line": 2349
+  },
+  {
+   "claim": "B-0617",
+   "kind": "behaviour-item",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "evidence": "proposer.sh:253",
+   "file": "proposer.sh",
+   "line": 253
+  },
+  {
+   "claim": "B-0637",
+   "kind": "behaviour-item",
+   "cluster": "C-056",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1973",
+   "file": "proposer.sh",
+   "line": 1973
+  },
+  {
+   "claim": "B-0639",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "ported",
+   "evidence": "proposer.sh:117",
+   "file": "proposer.sh",
+   "line": 117
+  },
+  {
+   "claim": "B-0649",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:1780",
+   "file": "proposer.sh",
+   "line": 1780
+  },
+  {
+   "claim": "B-0652",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1985",
+   "file": "proposer.sh",
+   "line": 1985
+  },
+  {
+   "claim": "B-0659",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2178",
+   "file": "proposer.sh",
+   "line": 2178
+  },
+  {
+   "claim": "B-0663",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2325",
+   "file": "proposer.sh",
+   "line": 2325
+  },
+  {
+   "claim": "B-0664",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2332",
+   "file": "proposer.sh",
+   "line": 2332
+  },
+  {
+   "claim": "B-0665",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2345",
+   "file": "proposer.sh",
+   "line": 2345
+  },
+  {
+   "claim": "B-0666",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2348",
+   "file": "proposer.sh",
+   "line": 2348
+  },
+  {
+   "claim": "B-0667",
+   "kind": "behaviour-item",
+   "cluster": "C-057",
+   "disposition": "translated",
+   "evidence": "proposer.sh:2364",
+   "file": "proposer.sh",
+   "line": 2364
+  },
+  {
+   "claim": "B-0668",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:16",
+   "file": "proposer.sh",
+   "line": 16
+  },
+  {
+   "claim": "B-0670",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:207",
+   "file": "proposer.sh",
+   "line": 207
+  },
+  {
+   "claim": "B-0671",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:230",
+   "file": "proposer.sh",
+   "line": 230
+  },
+  {
+   "claim": "B-0699",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "translated",
+   "evidence": "proposer.sh:803",
+   "file": "proposer.sh",
+   "line": 803
+  },
+  {
+   "claim": "B-0743",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1650",
+   "file": "proposer.sh",
+   "line": 1650
+  },
+  {
+   "claim": "B-0755",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1784",
+   "file": "proposer.sh",
+   "line": 1784
+  },
+  {
+   "claim": "B-0756",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1784",
+   "file": "proposer.sh",
+   "line": 1784
+  },
+  {
+   "claim": "B-0760",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1933",
+   "file": "proposer.sh",
+   "line": 1933
+  },
+  {
+   "claim": "B-0761",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1976",
+   "file": "proposer.sh",
+   "line": 1976
+  },
+  {
+   "claim": "B-0762",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:1989",
+   "file": "proposer.sh",
+   "line": 1989
+  },
+  {
+   "claim": "B-0778",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2176",
+   "file": "proposer.sh",
+   "line": 2176
+  },
+  {
+   "claim": "B-0784",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2270",
+   "file": "proposer.sh",
+   "line": 2270
+  },
+  {
+   "claim": "B-0785",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2276",
+   "file": "proposer.sh",
+   "line": 2276
+  },
+  {
+   "claim": "B-0786",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2287",
+   "file": "proposer.sh",
+   "line": 2287
+  },
+  {
+   "claim": "B-0787",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2303",
+   "file": "proposer.sh",
+   "line": 2303
+  },
+  {
+   "claim": "B-0789",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2338",
+   "file": "proposer.sh",
+   "line": 2338
+  },
+  {
+   "claim": "B-0790",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2343",
+   "file": "proposer.sh",
+   "line": 2343
+  },
+  {
+   "claim": "B-0791",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2353",
+   "file": "proposer.sh",
+   "line": 2353
+  },
+  {
+   "claim": "B-0792",
+   "kind": "behaviour-item",
+   "cluster": "C-058",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2361",
+   "file": "proposer.sh",
+   "line": 2361
+  },
+  {
+   "claim": "B-2785",
+   "kind": "behaviour-item",
+   "cluster": "C-055",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2259",
+   "file": "proposer.sh",
+   "line": 2259
+  },
+  {
+   "claim": "028 FR-018",
+   "kind": "as-is-requirement",
+   "cluster": "",
+   "disposition": "ported",
+   "evidence": "proposer.sh:2365",
+   "file": "proposer.sh",
+   "line": 2365,
+   "note": "The as-is requirement of the breakers and the exit map. Its evidence is the pass-limit site of the pass-loop script; the requirement spans the four breakers, so the claim check of F141-FR-032 reads the evidence lines of the cluster items C-010, C-012, C-043, C-055 and C-058 with it. The row of the traceability files names the fixtures FX-17, FX-18, FX-19 and FX-20."
+  }
+ ]
+}

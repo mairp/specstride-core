@@ -1,0 +1,152 @@
+{
+  "schema": "specstride.table/1",
+  "id": "attempt-end-cause",
+  "version": "1.0.0",
+  "points": {
+    "attempt-end-cause": {
+      "signals": {
+        "outcome": "string",
+        "redGateHalt": "boolean"
+      },
+      "choices": [
+        "approved",
+        "rejected",
+        "malformed",
+        "verification-failed",
+        "no-evidence",
+        "budget",
+        "blocked",
+        "stopped",
+        "error",
+        "crash"
+      ]
+    }
+  },
+  "rows": {
+    "attempt-end-cause": [
+      {
+        "ruleId": "EC-1-approved",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "approved"
+        },
+        "choice": "approved"
+      },
+      {
+        "ruleId": "EC-2-gate-failed",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "outcome",
+              "value": "gate-failed"
+            },
+            {
+              "op": "equal",
+              "signal": "redGateHalt",
+              "value": false
+            }
+          ]
+        },
+        "choice": "verification-failed"
+      },
+      {
+        "ruleId": "EC-3-red-gate-budget",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "outcome",
+              "value": "gate-failed"
+            },
+            {
+              "op": "equal",
+              "signal": "redGateHalt",
+              "value": true
+            }
+          ]
+        },
+        "choice": "verification-failed"
+      },
+      {
+        "ruleId": "EC-4-commit-blocked",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "commit-blocked"
+        },
+        "choice": "rejected"
+      },
+      {
+        "ruleId": "EC-5-malformed",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "malformed"
+        },
+        "choice": "malformed"
+      },
+      {
+        "ruleId": "EC-6-rejected",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "rejected"
+        },
+        "choice": "rejected"
+      },
+      {
+        "ruleId": "EC-7-no-evidence",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "no-evidence"
+        },
+        "choice": "no-evidence"
+      },
+      {
+        "ruleId": "EC-8-stopped",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "stopped"
+        },
+        "choice": "stopped"
+      },
+      {
+        "ruleId": "EC-9-blocked",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "blocked"
+        },
+        "choice": "blocked"
+      },
+      {
+        "ruleId": "EC-10-error",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "error"
+        },
+        "choice": "error"
+      },
+      {
+        "ruleId": "EC-11-died",
+        "when": {
+          "op": "equal",
+          "signal": "outcome",
+          "value": "died"
+        },
+        "choice": "crash"
+      },
+      {
+        "ruleId": "EC-12-none",
+        "choice": "error"
+      }
+    ]
+  }
+}

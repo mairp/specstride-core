@@ -1,0 +1,123 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-03",
+  "ids": [
+    "specstride.spec-format/1"
+  ],
+  "annex": "annex C, §C.7",
+  "operations": [
+    "detect",
+    "parse",
+    "validate",
+    "tick",
+    "inputs"
+  ],
+  "requirements": [
+    "F100-FR-095",
+    "F100-FR-096"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.spec-format/1`."
+    ],
+    "Purpose": [
+      "To read a specification in any supported format into one canonical model, so that one grammar",
+      "owner serves the engine, the critic, derivation of the launch contract, the CLI, the doctor and",
+      "the UI."
+    ],
+    "Caller and time": [
+      "The CLI and the engine call `detect`, `parse` and `validate` at launch and at resume. The engine",
+      "calls `tick` after an approval and, with parallel units on, after a group was applied. Every",
+      "reader of source hashes calls `inputs`."
+    ],
+    "Inputs": [
+      "`detect`: a path and the head of its content. `parse`: the files of one feature. `validate`: a",
+      "canonical model. `tick`: task ids, or a phase number, which ticks every task of the phase as the",
+      "as-is command does. `inputs`: nothing."
+    ],
+    "Outputs": [
+      "`detect`: whether the spec-format adapter claims the path, and its `priority`. `parse`: the",
+      "canonical spec model. `validate`: findings. `tick`: the edited checkboxes, in place. `inputs`: the",
+      "sources of a declared kind with their hashes from the canonical hasher of annex X §X.5: the content",
+      "hash, and for a task list the hash that ignores checkboxes."
+    ],
+    "Errors": [
+      "`invalid-spec` and `ambiguous-candidates` (engine exit 3, with the as-is listing); `unknown-format`",
+      "(exit 3 of the spec command)."
+    ],
+    "Guarantees of the core": [
+      "One grammar owner. The detection order is the order of the registry and is the as-is order:",
+      "explicit override, file name, content. Built-in formats win; a new format is detected only where",
+      "they decline or where it is named explicitly. The position at which a run resumes is derived by",
+      "the engine from approval records, never by a spec-format adapter."
+    ],
+    "Guarantees of an implementation": [
+      "`parse` is a pure function of the files. `tick` changes checkboxes only and keeps every other",
+      "byte. Hashes are stable across runs and platforms."
+    ],
+    "Failure of an implementation": [
+      "A spec-format adapter that fails in `detect` is passed over. One that fails in `parse` or",
+      "`validate` gives `invalid-spec`. A failed `tick` leaves the file unchanged and is reported; it",
+      "never undoes an approval."
+    ],
+    "Unknown-value rule": [
+      "An unknown format name is `unknown-format`. `openspec` is accepted as an alias of",
+      "`openspec-change`. An unknown task marker is kept as text in the task."
+    ],
+    "Wave 1 implementations": [
+      "`native`, `speckit-tasks`, `openspec-change` with the alias `openspec`."
+    ],
+    "Content owner": [
+      "104."
+    ],
+    "Proving test": [
+      "Conformance on the format fixtures of the oracle: golden models, round trip of `tick`, stability",
+      "of hashes. A sample format registered from the test tree is detected, parsed and run.",
+      "Canonical spec model:",
+      {
+        "table": {
+          "header": [
+            "Field",
+            "Meaning",
+            "Type in words",
+            "Required"
+          ],
+          "rows": [
+            [
+              "`format`",
+              "Id of the format",
+              "Text",
+              "Yes"
+            ],
+            [
+              "`feature`",
+              "Feature slug",
+              "Text",
+              "Yes"
+            ],
+            [
+              "`sources`",
+              "The source files with kind (`spec`, `plan`, `tasks`, other) and hashes",
+              "List of records",
+              "Yes"
+            ],
+            [
+              "`phases`",
+              "Per phase: number, title, section, acceptance criteria",
+              "List of records",
+              "Yes"
+            ],
+            [
+              "`phases[].tasks`",
+              "Per task: id, markers (for example `[P]` and story tags), text, whether ticked, line",
+              "List of records",
+              "Yes (may be empty)"
+            ]
+          ]
+        }
+      },
+      "The four-field view of a phase that the oracle pins (number, title, section, criteria) is a",
+      "projection of the model."
+    ]
+  }
+}

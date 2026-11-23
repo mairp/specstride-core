@@ -1,0 +1,42 @@
+{
+  "schema": "specstride.table/1",
+  "id": "closing-check.skip",
+  "version": "1.0.0",
+  "points": {
+    "closing-check-skip": {
+      "signals": {
+        "switchOn": "boolean",
+        "commandDiffers": "boolean",
+        "runnerDiffers": "boolean",
+        "treeFingerprintDiffers": "boolean"
+      },
+      "choices": ["run", "skip"]
+    }
+  },
+  "rows": {
+    "closing-check-skip": [
+      {
+        "ruleId": "CS-1",
+        "when": { "op": "equal", "signal": "switchOn", "value": false },
+        "choice": "run"
+      },
+      {
+        "ruleId": "CS-2",
+        "when": {
+          "op": "or",
+          "of": [
+            { "op": "equal", "signal": "commandDiffers", "value": true },
+            { "op": "equal", "signal": "runnerDiffers", "value": true }
+          ]
+        },
+        "choice": "run"
+      },
+      {
+        "ruleId": "CS-3",
+        "when": { "op": "equal", "signal": "treeFingerprintDiffers", "value": true },
+        "choice": "run"
+      },
+      { "ruleId": "CS-4", "choice": "skip" }
+    ]
+  }
+}

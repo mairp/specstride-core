@@ -1,0 +1,77 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-09",
+  "ids": [
+    "specstride.view/1"
+  ],
+  "annex": "annex G, §G.6",
+  "operations": [
+    "project",
+    "reduce"
+  ],
+  "requirements": [
+    "F100-FR-161",
+    "F100-FR-188"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.view/1`."
+    ],
+    "Purpose": [
+      "To give every renderer one read model of a run, so that no renderer opens the event file or",
+      "derives a lane by itself."
+    ],
+    "Caller and time": [
+      "`status`, `wait`, the writer of the precomputed status line, and later renderers, whenever they",
+      "show a run."
+    ],
+    "Inputs": [
+      "`project`: the event stream; the named state files (the run record, the terminal record, the",
+      "pause record); and values that the caller supplies to the pure function: the result of a probe",
+      "of the lease, the newest launch record, the supervision record, the result of a search of the",
+      "process table for the run token, the limit of the handshake, and the time now. `reduce`: a view and one event.",
+      "A cursor, held by the caller: file, offset, last `seq`, and 8 hexadecimal characters of a hash of",
+      "the change signature, so that a change of a state file or of the clock moves the cursor too."
+    ],
+    "Outputs": [
+      "A `RunView`: the state of the run, with the derived conditions `dead`, `stale` and",
+      "`launch-abandoned`; lanes; attention items; budget levels; the current phase, phase attempt and",
+      "pass; the strategy; the owner text of the lock that `status` prints for a running run; and the",
+      "cursor to continue from. The schema of the view is delivered by feature 129 to the `contracts`",
+      "package under the id `specstride.view/1`."
+    ],
+    "Errors": [
+      "A torn last line of the event file is tolerated. An event major outside the accepted range gives",
+      "a view marked `stale` with the reason, and a doctor warning."
+    ],
+    "Guarantees of the core": [
+      "Lanes, attention items and budget levels are derived in the read model, never in a renderer.",
+      "Projecting a batch equals folding event by event. A cached view is disposable. Fields are additive",
+      "inside a major. The cursor is held by the caller; `wait` prints it and takes it back as an",
+      "argument, so that two hosts never consume each other's changes."
+    ],
+    "Guarantees of an implementation": [
+      "A renderer takes a `RunView` and is given no file handle. It renders every text that comes from a",
+      "run as text."
+    ],
+    "Failure of an implementation": [
+      "A renderer that fails prints one line that names the command `status --json`. It changes no state."
+    ],
+    "Unknown-value rule": [
+      "An unknown event type and an unknown field are ignored. An unknown state of the run is shown as",
+      "`unknown` with an attention item."
+    ],
+    "Wave 1 implementations": [
+      "`status` as text and with `--line` and `--json`; `wait --until-change`; the host hook shim that",
+      "prints the precomputed status line."
+    ],
+    "Content owner": [
+      "129."
+    ],
+    "Proving test": [
+      "Golden views from event logs of fixtures, the oracle's included, and one with a torn line. The",
+      "property that a batch projection equals folding. A sample renderer in the test tree takes the",
+      "`RunView` record and no file handle."
+    ]
+  }
+}

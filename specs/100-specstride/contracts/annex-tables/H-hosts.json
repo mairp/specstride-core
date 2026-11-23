@@ -1,0 +1,110 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "annex": "H",
+  "tables": [
+    {
+      "section": "§H.1",
+      "heading": "EP-01 Host port",
+      "subheading": "Inputs",
+      "header": [
+        "Operation",
+        "Inputs"
+      ],
+      "rows": [
+        [
+          "`describe`",
+          "Nothing"
+        ],
+        [
+          "`renderSkill`",
+          "One skill source: logical id, body, references with the condition under which each is read, budget"
+        ],
+        [
+          "`renderEntry`",
+          "The logical id of a command, such as `doctor`"
+        ],
+        [
+          "`renderStatusHooks` (optional)",
+          "The logical name of the precomputed status line"
+        ],
+        [
+          "`evalDriver.run`",
+          "A suite of trigger cases"
+        ]
+      ]
+    },
+    {
+      "section": "§H.1",
+      "heading": "EP-01 Host port",
+      "subheading": "Outputs",
+      "header": [
+        "Operation",
+        "Outputs"
+      ],
+      "rows": [
+        [
+          "`describe`",
+          "The capabilities of the host: the naming rule of skills and the cap of a description; host hook events, or none; a background primitive, or none; a status surface; an eval driver; the packaging form; `stateRootWritable`; whether the host has a model"
+        ],
+        [
+          "`renderSkill`",
+          "The host's artifact for the skill"
+        ],
+        [
+          "`renderEntry`",
+          "The host's spelling of the command"
+        ],
+        [
+          "`renderStatusHooks`",
+          "Shims that print the precomputed status line without starting the product"
+        ],
+        [
+          "`evalDriver.run`",
+          "One result per case"
+        ]
+      ]
+    },
+    {
+      "section": "§H.1",
+      "heading": "EP-01 Host port",
+      "subheading": "Proving test",
+      "header": [
+        "Capability",
+        "Values",
+        "Fallback when absent"
+      ],
+      "rows": [
+        [
+          "`hooks`",
+          "The host hook events the host offers",
+          "Alerts through `status` and the digest"
+        ],
+        [
+          "`statusSurface`",
+          "Where a status line can be shown",
+          "`status --line` on request"
+        ],
+        [
+          "`background`",
+          "A primitive that re-invokes the host when a command exits",
+          "The budget of one supervision cycle per cycle"
+        ],
+        [
+          "`evals`",
+          "A native driver for skill-trigger evals",
+          "The session-log driver"
+        ],
+        [
+          "`model`",
+          "Whether the host has a model",
+          "Judgment delegated to a harness named in user configuration"
+        ],
+        [
+          "`stateRootWritable`",
+          "Whether the host's shell and the detached runtime can write the control root",
+          "A control root the host permits, set in user configuration"
+        ]
+      ]
+    }
+  ]
+}

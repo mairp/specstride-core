@@ -1,0 +1,240 @@
+{
+  "schema": "specstride.adapter-traceability/1",
+  "requirements": [
+    {
+      "requirement": "F138-FR-001",
+      "origin": "C-035; B-0430",
+      "test": "PT-138-C-035-*"
+    },
+    {
+      "requirement": "F138-FR-002",
+      "origin": null,
+      "test": "CT-138-2"
+    },
+    {
+      "requirement": "F138-FR-003",
+      "origin": "C-052; B-0517; B-0518; C-061; B-0827; B-0828; B-0829",
+      "test": "PT-138-C-052-*; PT-138-C-061-*"
+    },
+    {
+      "requirement": "F138-FR-004",
+      "origin": null,
+      "test": "CT-138-4"
+    },
+    {
+      "requirement": "F138-FR-005",
+      "origin": null,
+      "test": "CT-138-5"
+    },
+    {
+      "requirement": "F138-FR-006",
+      "origin": null,
+      "test": "CT-138-6"
+    },
+    {
+      "requirement": "F138-FR-007",
+      "origin": null,
+      "test": "CT-138-7"
+    },
+    {
+      "requirement": "F138-FR-008",
+      "origin": "C-058; B-0693",
+      "test": "PT-138-C-058-*"
+    },
+    {
+      "requirement": "F138-FR-009",
+      "origin": "C-058; B-0692",
+      "test": "PT-138-C-058-*"
+    },
+    {
+      "requirement": "F138-FR-010",
+      "origin": "C-058; B-0694; B-0695; B-0696",
+      "test": "PT-138-C-058-*"
+    },
+    {
+      "requirement": "F138-FR-011",
+      "origin": "C-054; B-0572; B-0573",
+      "test": "PT-138-C-054-*"
+    },
+    {
+      "requirement": "F138-FR-012",
+      "origin": "C-053; B-0547",
+      "test": "PT-138-C-053-*"
+    },
+    {
+      "requirement": "F138-FR-013",
+      "origin": "C-058; B-0747; C-154; B-2120",
+      "test": "PT-138-C-058-*; PT-138-C-154-*"
+    },
+    {
+      "requirement": "F138-FR-014",
+      "origin": null,
+      "test": "CT-138-14"
+    },
+    {
+      "requirement": "F138-FR-015",
+      "origin": null,
+      "test": "CT-138-15"
+    },
+    {
+      "requirement": "F138-FR-016",
+      "origin": null,
+      "test": "CT-138-16"
+    },
+    {
+      "requirement": "F138-FR-017",
+      "origin": "C-066; B-0991; B-0995; C-061",
+      "test": "PT-138-C-066-*; PT-138-C-061-*"
+    },
+    {
+      "requirement": "F138-FR-018",
+      "origin": "C-066; B-0994",
+      "test": "PT-138-C-066-*"
+    },
+    {
+      "requirement": "F138-FR-019",
+      "origin": "C-061; B-0839; C-062; B-0856",
+      "test": "PT-138-C-061-*; PT-138-C-062-*"
+    },
+    {
+      "requirement": "F138-FR-020",
+      "origin": null,
+      "test": "CT-138-20"
+    },
+    {
+      "requirement": "F138-FR-021",
+      "origin": null,
+      "test": "CT-138-21"
+    },
+    {
+      "requirement": "F138-FR-022",
+      "origin": null,
+      "test": "CT-138-22"
+    },
+    {
+      "requirement": "F138-FR-023",
+      "origin": null,
+      "test": "CT-138-23"
+    },
+    {
+      "requirement": "F138-FR-024",
+      "origin": null,
+      "test": "CT-138-24"
+    },
+    {
+      "requirement": "F138-FR-025",
+      "origin": "C-168; B-2225; B-2229; B-2230; C-169; B-2241",
+      "test": "PT-138-C-168-*; PT-138-C-169-*"
+    },
+    {
+      "requirement": "F138-FR-026",
+      "origin": "C-168; B-2224; B-2227; B-2228; C-171; B-2250",
+      "test": "PT-138-C-168-*; PT-138-C-171-*"
+    },
+    {
+      "requirement": "F138-FR-027",
+      "origin": "C-168; B-2231; B-2232; C-171; B-2252; C-170; B-2244",
+      "test": "PT-138-C-168-*; PT-138-C-171-*; PT-138-C-170-*"
+    },
+    {
+      "requirement": "F138-FR-028",
+      "origin": "C-168; B-2233; C-171; B-2253; B-2254; C-170; B-2245",
+      "test": "PT-138-C-168-*; PT-138-C-171-*; PT-138-C-170-*"
+    },
+    {
+      "requirement": "F138-FR-029",
+      "origin": "C-168; B-2234; B-2236; B-2237; C-171; B-2256; B-2257; C-170; B-2246; B-2247",
+      "test": "PT-138-C-168-*; PT-138-C-171-*; PT-138-C-170-*"
+    },
+    {
+      "requirement": "F138-FR-030",
+      "origin": "C-168; B-2235; C-171; B-2258; B-2249",
+      "test": "PT-138-C-168-*; PT-138-C-171-*"
+    },
+    {
+      "requirement": "F138-FR-031",
+      "origin": "C-168; B-2239",
+      "test": "PT-138-C-168-*"
+    },
+    {
+      "requirement": "F138-FR-032",
+      "origin": "C-168; B-2238; C-169; B-2242; B-2243; C-171; B-2255",
+      "test": "PT-138-C-168-*; PT-138-C-169-*; PT-138-C-171-*"
+    },
+    {
+      "requirement": "F138-FR-033",
+      "origin": "C-171; B-2251; B-2259; B-2260",
+      "test": "PT-138-C-171-*"
+    },
+    {
+      "requirement": "F138-FR-034",
+      "origin": "C-168; B-2226",
+      "test": "PT-138-C-168-*"
+    },
+    {
+      "requirement": "F138-FR-035",
+      "origin": "C-171; B-2261; B-2262; B-2263; B-2264",
+      "test": "PT-138-C-171-*"
+    },
+    {
+      "requirement": "F138-FR-036",
+      "origin": "C-168; B-2240; C-170; B-2248",
+      "test": "PT-138-C-168-*; PT-138-C-170-*"
+    },
+    {
+      "requirement": "F138-FR-037",
+      "origin": null,
+      "test": "CT-138-37"
+    },
+    {
+      "requirement": "F138-FR-038",
+      "origin": null,
+      "test": "CT-138-38"
+    },
+    {
+      "requirement": "F138-FR-039",
+      "origin": null,
+      "test": "CT-138-39"
+    },
+    {
+      "requirement": "F138-FR-040",
+      "origin": null,
+      "test": "CT-138-40"
+    },
+    {
+      "requirement": "F138-FR-041",
+      "origin": null,
+      "test": "CT-138-41"
+    },
+    {
+      "requirement": "F138-FR-042",
+      "origin": null,
+      "test": "CT-138-42"
+    },
+    {
+      "requirement": "F138-FR-043",
+      "origin": null,
+      "test": "CT-138-43"
+    },
+    {
+      "requirement": "F138-FR-044",
+      "origin": null,
+      "test": "CT-138-44"
+    },
+    {
+      "requirement": "F138-FR-045",
+      "origin": null,
+      "test": "CT-138-45"
+    },
+    {
+      "requirement": "F138-FR-046",
+      "origin": null,
+      "test": "CT-138-46"
+    },
+    {
+      "requirement": "F138-FR-047",
+      "origin": null,
+      "test": "CT-138-47"
+    }
+  ]
+}

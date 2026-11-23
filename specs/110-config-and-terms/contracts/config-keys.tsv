@@ -1,0 +1,272 @@
+key	type_and_range	default	value_under_parity	trust_class	owner_feature	proposed_by	confirmed_or_corrected	layers	profile_row
+schema	whole number, 1	1	as default	- (snap -)	110	101, 106, 107	confirmed	P U	
+profile	name of a shipped profile, or unset	unset	as default	W (snap p)	100	130	confirmed	F E U	
+distribution.audience	personal, distributed	distributed	personal	W (snap p)	147	113, 130, 131	confirmed; layers narrowed to U on 2026-09-30 (ruling 2; F100-FR-028; CQ-205)	U	34
+distribution.termsOverride	list of {provider, tier, ack}	empty	as default	W (snap p)	147	110 (R16)	confirmed	U	
+state.dir	path of the control root	the user's state directory, keyed by the workspace (outside the working tree)	(fixture)	W (snap p)	122	122	corrected (old: state.controlRoot)	F E U	116
+engine.executable	path	the product's own entry	(fixture)	W (snap p)	122, 123	122	confirmed	F E U	41
+roles.proposer.harness	harness id of the registry	the shipped default, Claude in Wave 1	(fixture)	- (snap p)	110, 124	124	confirmed	F E P U	36
+roles.proposer.model	text	the harness default	as default	- (snap p)	109	130, 131	confirmed	F E P U	
+roles.proposer.effort	text	the harness default	as default	- (snap p)	109	130	corrected (old: harnesses.dsh.reasoningEffort)	F E P U	
+roles.proposer.tier	1 or 2	by the terms row for the audience (annex C §C.12)	as default	W (snap p)	147	110 (R16)	confirmed	F E U	
+roles.proposer.credential	secret ref	none	as default	W (snap p)	110	110 (R16)	confirmed	F E U	
+roles.proposer.timeoutSec	whole number of seconds	1800	as default	N lo (snap t)	103	106, 118	confirmed	F E P U	
+roles.proposer.idleTimeoutSec	seconds	900	as default	N lo (snap t)	118	118	confirmed	F E P U	
+roles.proposer.progressTimeoutSec	seconds	1800	as default	N lo (snap t)	118	110 (R16)	confirmed	F E P U	
+roles.proposer.repeatLimit	whole number	12	as default	N lo (snap t)	118	110 (R16)	confirmed	F E P U	
+roles.proposer.repeatIgnore	list of expressions	the built-in list of the baseline	as default	N sub (snap t)	118	118	confirmed	F E P U	
+roles.proposer.progressPaths	list of paths	the working directory	as default	N sub (snap t)	118	118	confirmed	F E P U	
+roles.proposer.maxErrors	whole number	2	as default	N lo (snap t)	103	103	confirmed	F E P U	
+roles.proposer.maxCaps	whole number	3	as default	N lo (snap t)	103	110 (R16)	confirmed	F E P U	
+roles.proposer.maxNoProgress	whole number, 0 disables	3	as default	N lo0 (snap t)	103	103	confirmed	F E P U	
+roles.<role>.fallback	list of {harness, model?, auth?}	empty (off)	off	W (snap p)	127	127	confirmed	F E U	40
+roles.critic.harness	harness id	by the critic order (annex C §C.6)	(fixture)	W (snap p)	110, 124	124	confirmed	F E U	36
+roles.critic.model	text	the harness default, on a model tier other than the proposer's	as default	W (snap p)	124	130, 131	confirmed	F E U	
+roles.critic.effort	text	the harness default	as default	W (snap p)	109	130	corrected (old: roles.critic.reasoningEffort)	F E U	
+roles.critic.tier	1 or 2	as for the proposer	as default	W (snap p)	147	110 (R16)	confirmed	F E U	
+roles.critic.credential	secret ref	none	as default	W (snap p)	110	110 (R16)	confirmed	F E U	
+roles.critic.transport	auto, as-is	auto	as-is	W (snap p)	109, 124, 131, 138	109	confirmed	F E U	28
+roles.critic.timeoutSec	seconds	300	as default	N lo (snap t)	117	101, 109, 131	confirmed	F E P U	
+roles.critic.malformedLimit	whole number, 0 disables	3	as default	N lo0 (snap t)	101	101	confirmed	F E P U	
+roles.critic.grounding	true, false	true	true, unless the fixture sets it	N on (snap t)	117	117	confirmed	F E P U	52
+roles.critic.groundingMaxFiles	whole number	80	80	N lo (snap t)	117	117	confirmed	F E P U	53
+roles.critic.anchorMaxBytes	whole number	49152	49152	N lo (snap t)	117	117	confirmed	F E P U	54
+roles.critic.contextTokens	whole number	the window of the model	not set, unless the fixture sets it	W (snap t)	117	117	confirmed	F E U	55
+roles.critic.debug	true, false	false	false, unless the fixture sets it	- (snap t)	117	117	confirmed	F E U	56
+critic.autoPick	true, false	true	not reached	W (snap p)	124	124	confirmed	F E U	35
+critic.autoPickMaxUsd	number	none; required when the pick is on a metered endpoint	not used	W (snap t)	124	124	confirmed	F E U	91
+critic.warnSameModel	true, false	true	not printed	- (snap t)	124	124	confirmed	F E U	92
+roles.diagnostician.enabled	true, false	true	as default	N off (snap t)	101	101	confirmed	F E P U	
+roles.accelerator.enabled	true, false	true	as default	N off (snap t)	101	101	confirmed	F E P U	
+roles.diagnostician.harness	harness id of the registry	the baseline's: the role runs as critic-class or proposer-class	as default	W (snap p)	101	110 (R16)	confirmed	F E U	
+roles.diagnostician.model	text	the baseline's: the role runs as critic-class or proposer-class	as default	W (snap p)	101	110 (R16)	confirmed	F E U	
+roles.accelerator.harness	harness id of the registry	the baseline's: the role runs as critic-class or proposer-class	as default	W (snap p)	101	101	confirmed	F E U	
+roles.accelerator.model	text	the baseline's: the role runs as critic-class or proposer-class	as default	W (snap p)	101	110 (R16)	confirmed	F E U	
+phases.<N>.proposer.harness	harness id of the registry	inherits the role key	as default	- (snap p)	101	110 (R16)	confirmed	F E P U	
+phases.<N>.proposer.model	text	inherits the role key	as default	- (snap p)	101	110 (R16)	confirmed	F E P U	
+phases.<N>.proposer.effort	text	inherits the role key	as default	- (snap p)	101	110 (R16)	confirmed	F E P U	
+phases.<N>.proposer.timeoutSec	seconds	the value that the verification-commands document declares for the phase, else inherits the role key	as default	N lo (snap t)	103	118	confirmed	F E P U	
+phases.<N>.proposer.idleTimeoutSec	seconds	the value that the verification-commands document declares for the phase, else inherits the role key	as default	N lo (snap t)	103	110 (R16)	confirmed	F E P U	
+phases.<N>.critic.harness	harness id	inherits the role key	as default	W (snap p)	124	110 (R16)	confirmed	F E U	
+phases.<N>.critic.model	text	inherits the role key	as default	W (snap p)	124	110 (R16)	confirmed	F E U	
+phases.<N>.critic.timeoutSec	seconds	inherits the role key	as default	N lo (snap t)	117	110 (R16)	confirmed	F E P U	
+phases.<N>.budget.*	as the key of the same last segment under budget.run and budget.role.<role>	inherits the key without the phase	as default	N lo (snap t)	127	110 (R16)	confirmed	F E P U	
+loop.strategy	micro, classic	micro	classic	N (classic is stricter) (snap p)	115	115	confirmed	F E P U	1
+loop.micro.closing_check	on, off	on	off	N off (snap p)	115	115	confirmed	F E P U	2
+loop.micro.caps.repairs	whole number	2	not used	N lo (snap t)	115	115	confirmed	F E P U	65
+loop.micro.caps.escalationsPerTask	whole number	1	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.escalations_per_task)	F E P U	65
+loop.micro.caps.escalationsPerAttempt	whole number	2	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.escalations_per_attempt)	F E P U	65
+loop.micro.caps.proposalMin	whole number of minutes	20	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.proposalMinutes; loop.micro.caps.proposal_minutes)	F E P U	65
+loop.micro.caps.unitMin	whole number of minutes	30	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.unitMinutes; loop.micro.caps.unit_minutes)	F E P U	65
+loop.micro.caps.checkMin	whole number of minutes	5	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.checkMinutes; loop.micro.caps.check_minutes)	F E P U	65
+loop.micro.caps.checkSharePercent	whole number percent	15	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.check_share_percent)	F E P U	65
+loop.micro.caps.cyclesExtra	whole number	6	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.cycles_extra)	F E P U	65
+loop.micro.caps.cyclesMin	whole number	12	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.cycles_min)	F E P U	65
+loop.micro.caps.unresolvedUnits	whole number	2	not used	N lo (snap t)	115	115	corrected (old: loop.micro.caps.unresolved_units)	F E P U	65
+loop.routing	on, off	on	not used	N off (snap p)	115	115	confirmed	F E P U	64
+loop.escalation	on, off	on	off	N off (snap p)	115	115	confirmed	F E P U	3
+loop.maxRejects	whole number	3	as default	N lo (snap t)	101	101	confirmed	F E P U	
+loop.maxIter	whole number	30	as default	N lo (snap t)	103	103	confirmed	F E P U	
+loop.maxWallMin	minutes, 0 unlimited	0	0, unless the fixture sets it	N lo0 (snap t)	127	127	confirmed	F E P U	107
+loop.oscMax	whole number	2	as default	N lo (snap t)	101	101	confirmed	F E P U	
+loop.yield.pollSec	seconds	30	as default	N lo (snap t)	118	118	corrected (old: loop.yield.poll)	F E P U	
+loop.yield.maxPerAttempt	whole number	4	as default	N lo (snap t)	118	110 (R16)	confirmed	F E P U	
+loop.yield.countsAsIter	true, false	false	as default	- (snap t)	118	110 (R16)	confirmed	F E P U	
+loop.yield.allowCommand	true, false	false	as default	W (snap p)	118	110 (R16)	confirmed	F E U	
+loop.yield.waitEvery	whole number of ticks, 0 disables	10	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.yield.logHead	whole number of lines	40	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.yield.logTail	whole number of lines	80	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.yield.failureLedger	true, false	true	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.yield.failureLedgerMax	whole number	150	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.yield.failurePattern	expression	the built-in pattern of the baseline	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.promptMaxBytes	whole number, 0 disables	180000	as default	N lo0 (snap t)	103	103	confirmed	F E P U	
+loop.promptProtectedBlocks	list of block names	yield_contract	as default	N sub (snap t)	103	103	confirmed	F E P U	
+loop.passPauseSec	seconds	2	as default	- (snap t)	103	103	confirmed	F E P U	
+loop.watchdogTickSec	seconds	15	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.shortPass.sec	seconds	180	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.shortPass.nudgeAfter	whole number	2	as default	- (snap t)	118	118	confirmed	F E P U	
+loop.noProgressStructured	on, off	on	off	N on (snap p)	103	103	confirmed	F E P U	59
+loop.gitCommits	auto, on, off	auto	as default	- (snap p)	101	101	confirmed	F E P U	
+loop.tickTasks	true, false	true	as default	- (snap t)	104	101	confirmed	F E P U	
+loop.parallel.units	on, off	off	off	N off (snap p)	142	142	confirmed	F E P U	20
+loop.parallel.workers	whole number, 1 to the value of loop.parallel.workersMax	2	not used	N lo (snap t)	142	142	confirmed	F E P U	21
+loop.parallel.workersMax	whole number, at least 1	4	not used	W; P may lower (snap p)	142	100 (ruling P5)	confirmed	F E U; P lowers	130
+loop.parallel.quota_headroom	percent, 1 to 100	70	not used	N lo (snap t)	142	142	confirmed	F E P U	22
+loop.parallel.allow_detect	on, off	off	off	W (snap p)	142	142	confirmed	U	23
+loop.parallel.exclude	list of task ids	empty	not used	N (a superset is stricter) (snap t)	142	142	corrected (old: loop.parallel.tasks.<taskId>.eligible)	F E P U	94
+loop.parallel.scopes.<taskId>	list of path prefixes	none	not used	W; see F110-FR-019 (snap p)	142	142	corrected (old: loop.parallel.tasks.<taskId>.writes)	F E U; P narrows	93
+loop.parallel.seedPaths	list of paths	empty	not used	W (snap p)	143	142	corrected (old: loop.parallel.seed_paths)	F E U	95
+loop.parallel.resources.<name>.capacity	whole number	1	not used	W (snap p)	142	142	confirmed	F E U	96
+attempt.tier_bump	on, off	off	off	N off (snap p)	149	149	confirmed	F E P U	24
+attempt.tier_bump_after	whole number, at least 1	2	not used	- (snap t)	149	149	confirmed	F E P U	128
+commit.backpressure	on, off	on	off	N off (snap p)	152	152	confirmed	F E P U	134
+verification.timeLimit.enforce	on, off	on	on	N on (snap p)	153	153	confirmed	F E P U	135
+loop.micro.closingCheck.skipWhenEqualToGate	on, off	on	off	N on (snap p)	153	153	confirmed	F E P U	136
+verification.inner.scoped	on, off	on	off	N on (snap p)	153	153	confirmed	F E P U	137
+critic.evidence.perTask	on, off	on	off	N on (snap p)	153	153	confirmed	F E P U	138
+verification.redGate.ownBudget	on, off	on	off	N off (snap p)	153	153	confirmed	F E P U	139
+verification.redGate.limit	whole number, at least 1	3	as default	N lo (snap t)	153	153	confirmed	F E P U	
+commit.gate.beforeCritic	on, off	on	off	N off (snap p)	153	153	confirmed	F E P U	140
+commit.scan.inPass	on, off	on	off	N off (snap p)	153	153	confirmed	F E P U	141
+loop.taskGroups	on, off	off	off	N off (snap p)	153	153	confirmed	F E P U	142
+verification.gate.reuse	on, off	off	off	N off (snap p)	153	153	confirmed	F E P U	143
+events.commitGateTiming	on, off	on	off	N off (snap p)	153	153	confirmed	F E P U	144
+harnesses.<id>.tiers	list of model ids, lowest first	the tiers of the descriptor	as default	W (snap p)	109	110 (R16)	confirmed	F E U	
+verification.mode	required, plan, off	required	(fixture)	N (required is stricter than plan, plan than off) (snap p)	105	105	confirmed	F E P U	123
+verification.testPlan	path under the working directory	testautomation/<slug>/TEST_PLAN.md, unless the mode is off	(fixture)	- (snap p)	105	105	confirmed	F E P	124
+verification.generateTests	path under the working directory	testautomation/<slug>/generated, unless the mode is off	(fixture)	- (snap p)	105	105	confirmed	F E P	124
+verification.commands	path	none	(fixture)	W (snap p)	105	105	confirmed	F E U	124
+verification.longJob.phase	whole number (phase number)	none	as default	W (snap p)	118	118	confirmed	F E	
+verification.longJob.cmd	command text	none	as default	W (snap p)	118	118	confirmed	F E	
+verification.parallelism	1 to 4	1	1	N lo (snap t)	148	105	confirmed	F E P U	7
+verification.step_runner	on, off	off	off	N off (snap p)	148	148	confirmed	F E P U	6
+verification.failfast	on, off	on	off	- (snap p)	118	118	confirmed	F E P U	4
+verification.failfast_action	stop, continue-and-notify	stop	not used	- (snap t)	118	118	confirmed	F E P U	5
+verification.failfastGraceSec	seconds	10	not used	N lo (snap t)	118	118	corrected (old: verification.failfast_grace_sec)	F E P U	51
+carry.ledger_handoff	on, off	on	off	- (snap p)	103	103	confirmed	F E P U	8
+carry.index	on, off	on	off	- (snap p)	103	103	confirmed	F E P U	9
+carry.polite_stop	on, off	on	off	- (snap p)	118	118	confirmed	F E P U	11
+carry.continuation	on, off	on, where the harness supports it	off	- (snap p)	125, 103	103	confirmed	F E P U	10
+carry.politeStopGraceSec	seconds	10	not used	N lo (snap t)	118	118	corrected (old: carry.polite_stop_grace_sec)	F E P U	50
+carry.handoffMaxBytes	whole number of bytes	6144	not used	- (snap t)	103	103	confirmed	F E P U	60
+carry.indexTitleChars	whole number of characters	set by the plan	not used	- (snap t)	103	103	confirmed	F E P U	60
+carry.maxContinuedPasses	whole number	3	not used	- (snap t)	103	103	confirmed	F E P U	60
+carry.contextFillTokens	whole number of tokens	150000	not used	- (snap t)	103	103	confirmed	F E P U	60
+carry.contextFillShare	whole number percent	50	not used	- (snap t)	103	103	confirmed	F E P U	60
+carry.ageFallbackSec	seconds	300	not used	- (snap t)	103	103	confirmed	F E P U	60
+prompt.block_set	current, as-is	current	as-is	- (snap p)	103	103	confirmed	F E P U	12
+prompt.critic.block_set	current, as-is	current	as-is	- (snap p)	117	117	confirmed	F E P U	58
+prompt.critic.overWindow	refuse, send	refuse	send	W (snap t)	117	117	confirmed	F E U	57
+staleness.check_points	list from launch, resume, pass-start, critic-start	launch, resume, pass-start	critic-start	N (a superset of the check points is stricter) (snap p)	102, 103, 105	102	confirmed	F E P U	15
+integrity.gate_fingerprint	on, off	on	off	N on (snap p)	148, 117	148	confirmed	F E P U	31
+integrity.phase_entry	on, off	on	off	N on (snap p)	116	115	confirmed	F E P U	32
+integrity.manifest_relaunch	on, off	on	off	N on (snap p)	105	105	confirmed	F E P U	33
+toolchains.<id>	profile of specstride.toolchain/1	none	not used	W (snap p)	116	116	confirmed	U	
+relaunch.owner	root, supervise	root	supervise	N (supervise is stricter) (snap t)	123	123	confirmed	F E P U	14
+harnesses.<id>	descriptor of feature 109's schema	none	as default	W (snap p)	109	110 (R16)	confirmed	F U	
+harnesses.<id>.bin	path	found by the descriptor	as default	W (snap p)	109	109	confirmed	F E U	
+harnesses.<id>.profile	text	none	as default	W (snap p)	130	138	confirmed	F E U	
+harnesses.<id>.overlay	none, pass, attempt	unset: follows the auth tier	none	W (snap p)	109	109	confirmed	F E U	30
+harnesses.<id>.proposerCustomisations	off, on	off	as-is	W (snap p)	131, 134	100 (row 131)	confirmed (further users 130, 138)	F E U	131
+harnesses.<id>.transport	subprocess, sdk-in-process, direct-call	subprocess	subprocess	W (snap p)	109, 125	109	confirmed	F E U	27
+harnesses.<id>.pluginAllowlist	list of exact package@version	empty	(fixture)	W (snap p)	130	110 (R16)	confirmed	F E U	118
+harnesses.<id>.pluginTimeoutSec	seconds	600	as default	N lo (snap t)	130	110 (R16)	confirmed	F E U	
+harnesses.<id>.auth.credential	secret ref	none	as default	W (snap p)	110	131	corrected (old: harnesses.<id>.credential; harnesses.codex.auth.credential)	F E U	
+sandbox.level	C0 to C3, auto	auto	C0 (as at the baseline: none)	W (snap p)	109	109	confirmed	F E U; the value C0 from U only	25
+sandbox.permissionMode	mode of the harness, or baseline	contained (acceptEdits for Claude)	baseline	W (snap p)	125, 130, 131, 134, 138	125	confirmed	F E U	26
+memory.native.proposer	off, on, as-is	off	as-is	W (snap p)	109	109	confirmed	F E U	29
+discovery.enabled	true, false	true	off	- (snap t)	146	124	confirmed	F E U	87
+discovery.online	true, false	true when a credential reference exists	off	- (snap t)	146	124	confirmed	F E U	88
+budget.run.costUsd	number	none	none	N lo0 (snap t)	127	110 (R16)	confirmed	F E U; P lowers	108
+budget.role.<role>.costUsd	number	none	none	N lo0 (snap t)	127	110 (R16)	confirmed	F E U; P lowers	108
+budget.role.<role>.tokens	whole number	none	none	N lo0 (snap t)	127	127	confirmed	F E U; P lowers	108
+budget.role.<role>.softTokens	whole number per window	none	none	N lo (snap t)	127	110 (R16)	confirmed	F E P U	108
+budget.alerts.thresholds	list of percent	50, 75, 90	not used	- (snap t)	127	127	corrected (old: budget.alertThresholds)	F E U	109
+pause.maxTotalMs	milliseconds	86400000 (24 h)	not reached	N lo (snap t)	127	127	confirmed	F E U; P lowers	39
+telemetry.enabled	true, false	false	false, unless the fixture sets it	W (snap t)	128	128	confirmed	F E U	97
+telemetry.otel.enabled	true, false	false	false, unless the fixture sets it	W (snap t)	128	128	confirmed	F E U	98
+telemetry.loki.url	URL	http://localhost:3100	http://localhost:3100	W (snap t)	128	128	corrected (old: telemetry.lokiUrl)	F E U	97
+telemetry.otel.url	URL	http://localhost:4318	http://localhost:4318	W (snap t)	128	128	confirmed	F E U	98
+telemetry.content	auto, off	auto (captured whenever traces are on)	off	W (snap p)	128	128	confirmed	F E U	16
+telemetry.sinkTimeoutMs	milliseconds	2000	not used	N lo (snap t)	111	111	confirmed	F E U	46
+telemetry.otel.legacyMetricNames	on, off	off	off	- (snap t)	128	128	corrected (old: otel.legacyMetricNames)	F E U	42
+observability.limits.text	whole number	4096	4096	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.toolArguments	whole number	2048	2048	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.toolResult	whole number	4096	4096	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.diagnostic	whole number	1024	1024	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.target	whole number	512	512	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.maxTargets	whole number	8	8	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.limits.freeText	whole number	1024	1024	N lo (snap t)	111	111	confirmed	F E P U	44
+observability.retention.rawCapture	on, off	off	off	W (snap t)	111, 126	111	confirmed	F E U	45
+observability.retention.rawDays	whole number of days	7	7	W (snap t)	111, 126	111	confirmed	F E U	45
+observability.retention.metadataDays	whole number of days	30	30	W (snap t)	111, 126	111	confirmed	F E U	45
+compat.legacyEvents	on, off	off	on	- (snap p)	144	111	confirmed	F E P U	17
+output.compat	on, off	off	on (compatibility output)	- (snap p)	119, 123	119	confirmed	F E P U	18
+output.live	auto, true, false	auto	auto	- (snap t)	145	145	confirmed	F E P U, C	70
+output.verbose	true, false	false	not used	- (snap t)	119	119	confirmed	F E	72
+output.liveDetail	milestones, tools, full	tools	tools	- (snap t)	145	145	confirmed	F E P U	71
+learning.mode	off, suggest, apply	off	(fixture)	W (snap p)	106	106	confirmed	F E U, C	43
+learning.through	run id	none	as default	- (snap p)	106	106	confirmed	C only	
+spec.format	id of the spec-format registry	detected	(fixture)	- (snap p)	104	104	confirmed	F E P U	49
+spec.feature	feature slug	the last active	(fixture)	- (snap p)	104	104	confirmed	F E P	49
+spec.contextBudget	characters	24000	24000	N lo (snap t)	104	104	confirmed	F E P U	49
+reverse.contextBudget	characters	24000	24000	N lo (snap t)	140	140	confirmed	F E P U	69
+reverse.maxFileBytes	whole number of bytes	1048576	1048576	N lo (snap t)	140	140	confirmed	F E P U	69
+reverse.maxTotalBytes	whole number of bytes	20971520	20971520	N lo (snap t)	140	140	confirmed	F E P U	69
+reverse.tasks	done, and the members feature 108 lists	done	done	- (snap t)	108	108	confirmed	F E P U	68
+derive.judgment.harness	harness id	unset	unset	W (snap p)	107	107	confirmed	F E U	47
+supervise.maxRelaunches	0 to 5	2	unset	N lo (snap t)	107	107	confirmed	F E U; P lowers	48
+supervise.wallClockSec	seconds	derived	unset	N lo (snap t)	107	107	corrected (old: supervise.wallClockSeconds)	F E U; P lowers	48
+doctor.staleAfterDays	whole number of days	90	not used	- (snap t)	112	112	confirmed	F E U	61
+doctor.online	true, false	true	not used	- (snap t)	112	112	confirmed	F E U	61
+verification.envAllowlist	on, off	on	off	N on (snap p)	148	148	corrected (old: verification.env_allowlist)	F E P U	125
+verification.summary.tailLines	whole number of lines	80	80	- (snap t)	105	105	confirmed	F E P U	126
+verification.summary.tailErrLines	whole number of lines	40	40	- (snap t)	105	105	confirmed	F E P U	126
+doctor.probeTimeoutSec	seconds	5	not used	- (snap t)	112	112	confirmed	F E U	61
+doctor.probeOutputBytes	whole number of bytes	65536	not used	- (snap t)	112	112	confirmed	F E U	61
+output.color	text	unset	unset	- (snap t)	145	145	confirmed	F E P U	73
+output.banner	on, off	on	on	- (snap t)	145	145	confirmed	F E P U	74
+output.liveRail	on, off	on	on	- (snap t)	145	145	confirmed	F E P U	76
+output.motion	on, off	on where a terminal allows it	as at the baseline	- (snap t)	145	145	confirmed	F E P U	75
+output.bannerBg	text	unset	unset	- (snap t)	145	145	confirmed	F E P U	77
+output.ascii	on, off	off	off	- (snap t)	145	145	confirmed	F E P U	78
+runtime.detach.strategy	id of the detach registry	spawn-detached	spawn-detached	W (snap p)	122	122	confirmed	F E U	113
+runtime.handshake.timeoutSec	seconds	30	30	- (snap t)	122	122	confirmed	F E U	114
+runtime.lease.heartbeatSec	seconds	10	10	- (snap t)	122	122	confirmed	F E U	114
+runtime.lease.graceSec	seconds	30	30	- (snap t)	122	122	confirmed	F E U	114
+runtime.lock.provider	id	the shipped provider	the shipped provider	W (snap p)	122	122	confirmed	F E U	115
+roles.refuseUnknown	on, off	on	off	N on (snap p)	124	124	confirmed	F E P U	90
+critic.catalogueWindowMargin	whole number percent	20	not used	- (snap t)	146	124	confirmed	F E U	89
+roles.critic.provider	text	none	as default	W (snap p)	130	130	confirmed	F E U	
+harnesses.<id>.endpoint.base	URL	the descriptor's	as default	W (snap p)	131	131	corrected (old: harnesses.codex.endpoint.base)	F E U	
+harnesses.<id>.authTier	1 or 2	by the terms row for the audience	as default	W (snap p)	131	131	corrected (old: harnesses.codex.authTier)	F E U	
+harnesses.<id>.contextWindows	map from model id to tokens	none	as default	W (snap t)	130	130	corrected (old: harnesses.pi.contextWindow; harnesses.dsh.contextWindows)	F E U	
+harnesses.<id>.envAllow	list of variable names	none	as default	W (snap p)	138	110 (R16)	confirmed	F E U	
+harnesses.claude.proposerSkills	on, off	off	off	W (snap p)	125	125	confirmed	F E U	119
+harnesses.claude.subprocessEnvScrub	on, off	on	off	N on (snap p)	125	125	confirmed	F E U	120
+harnesses.claude.gitInstructions	text	unset	unset	- (snap p)	125	125	confirmed	F E U	121
+harnesses.claude.disableSubagents	on, off	off	not used	N on (snap p)	125	125	confirmed	F E U	122
+harnesses.claude.label	text	unset	as default	- (snap t)	125	125	confirmed	F E U	
+harnesses.dsh.home	path	the consumer's home of the harness	as default	W (snap p)	130	130	confirmed	F E U	
+harnesses.dsh.provider	text	none	as default	W (snap p)	130	130	confirmed	F E U	
+harnesses.dsh.modelProviders	table of model to provider	none	as default	W (snap p)	130	130	confirmed	F E U	
+harnesses.dsh.critic.proof	strict, none	strict	none	N strict (snap p)	130	130	confirmed	F E U	117
+harnesses.prime.launcher	path	the as-is default name	as default	W (snap p)	138	138	confirmed	F E U	
+harnesses.prime.tools	list	none	not used	N sub (snap p)	138	138	confirmed	F E U	
+stream.tap	on, off	on	on	- (snap p)	126	126	corrected (old: stream.capture)	F E U	79, 86
+stream.tapExecutable	path	unset	unset	W (snap p)	126	126	confirmed	F E U	80
+stream.limits.lineBytes	whole number of bytes	1048576	off	N lo (snap t)	126	126	confirmed	F E U	81
+stream.limits.linesPerSecond	whole number	5000	off	N lo (snap t)	126	126	confirmed	F E U	81
+stream.noActivityFlag	on, off	on	off	- (snap p)	126	126	confirmed	F E U	82
+invocation.recordAllPasses	on, off	on	off	- (snap p)	126	126	confirmed	F E U	83
+invocation.idBase	text	unset	unset	- (snap t)	126	126	confirmed	F E U	84
+invocation.debug	on, off	off	off	W (snap t)	126	126	confirmed	F E U	85
+budget.role.<role>.calls	whole number	none	none	N lo0 (snap t)	127	110 (R16)	confirmed	F E U; P lowers	108
+budget.run.tokens	whole number	none	none	N lo0 (snap t)	127	127	confirmed	F E U; P lowers	108
+budget.run.phaseAttempts	whole number	none	none	N lo0 (snap t)	127	110 (R16)	confirmed	F E U; P lowers	108
+budget.run.calls	whole number	none	none	N lo0 (snap t)	127	110 (R16)	confirmed	F E U; P lowers	108
+budget.rates	table of model rates	unset	unset	- (snap t)	127	127	confirmed	F E U	110
+pause.marginMs	milliseconds	60000	not reached	- (snap t)	127	127	confirmed	F E U	111
+pause.jitterMs	milliseconds	30000	not reached	- (snap t)	127	127	confirmed	F E U	111
+pause.probeScheduleMs	list of milliseconds	300000, 900000, 1800000, 3600000	not reached	- (snap t)	127	127	confirmed	F E U	111
+quota.transientMaxWaitMs	milliseconds	60000	not reached	- (snap t)	127	127	confirmed	F E U	111
+quota.overloadRetries	whole number	3	not reached	- (snap t)	127	127	confirmed	F E U	111
+roles.<role>.fallbackAfterMs	milliseconds	0	not used	W (snap t)	127	127	corrected (old: fallback.after)	F E U	112
+roles.<role>.fallbackReturn	restore, and the members 127 lists	restore	not used	W (snap t)	127	127	confirmed	F E U	112
+status.precompute	on, off	on	off	- (snap p)	129	129	confirmed	F E U	127
+status.staleEventSec	seconds	1800	as default	- (snap t)	129	129	corrected (old: status.stale_event_sec)	F E U	
+status.timelineRows	whole number	20	as default	- (snap t)	129	129	corrected (old: status.timeline_rows)	F E U	
+wait.pollSec	seconds	5	as default	- (snap t)	129	129	corrected (old: wait.poll_sec)	F E U	
+wait.timeoutSec	seconds	600	as default	- (snap t)	129	129	corrected (old: wait.timeout_sec)	F E U	
+telemetry.contentMaxPromptBytes	whole number of bytes	262144	not used	N lo (snap t)	128	128	corrected (old: telemetry.content.maxPromptBytes)	F E U	101
+telemetry.contentMaxReplyBytes	whole number of bytes	16384	not used	N lo (snap t)	128	128	corrected (old: telemetry.content.maxReplyBytes)	F E U	101
+telemetry.otel.traces	on, off	on	on	- (snap t)	128	128	confirmed	F E U	99
+telemetry.otel.dialects	list	empty	empty	- (snap t)	128	128	corrected (old: otel.dialects)	F E U	100
+telemetry.loki.timeoutMs	milliseconds	2500	2500	N lo (snap t)	128	128	confirmed	F E U	102
+telemetry.otel.timeoutMs	milliseconds	2500	2500	N lo (snap t)	128	128	confirmed	F E U	102
+telemetry.loki.maxBatchBytes	whole number of bytes	3145728	3145728	N lo (snap t)	128	128	confirmed	F E U	103
+telemetry.otel.maxBatchBytes	whole number of bytes	3145728	3145728	N lo (snap t)	128	128	confirmed	F E U	103
+telemetry.flush.intervalMs	milliseconds, 0 flushes at every event	2000	0	N lo (snap t)	128	128	confirmed	F E U	104
+telemetry.queueMaxEvents	whole number of events	10000	not used	N lo (snap t)	128	128	confirmed	F E U	105
+telemetry.loki.auth	secret ref	unset	unset	W (snap p)	128	128	confirmed	F E U	106
+telemetry.otel.auth	secret ref	unset	unset	W (snap p)	128	128	confirmed	F E U	106

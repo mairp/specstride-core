@@ -124,6 +124,15 @@ export type PhaseGateDependencies = {
    */
   readonly replyOfTheCriticCall?: (() => string) | undefined;
   /**
+   * The red-gate notice of a failed verification gate, built by the engine
+   * (feature 153, T063): feature 105's F105-FR-006 frame with feature 105's
+   * F105-FR-037 failure summary of the command that failed, after the ONE
+   * ingress. Optional — where the engine does not hand it in, the gate keeps
+   * today's text from `feedbackOfTheVerificationGate`, byte for byte, so the
+   * port is a choice of the composition root and nothing else breaks.
+   */
+  readonly feedbackOfAFailedGate?: ((verification: VerificationGateResult) => string) | undefined;
+  /**
    * The AS-IS TEXT of the detail of the parse, for a MALFORMED verdict.
    *
    * F101-FR-012 and B-0880 ask that the quoted notice of a MALFORMED feedback
@@ -134,6 +143,19 @@ export type PhaseGateDependencies = {
    * the only detail then known.
    */
   readonly detailTextOfTheParse?: (() => string) | undefined;
+  /**
+   * Feature 153, T355 — the commit scan BEFORE the critic (F153-FR-024,
+   * F153-FR-026; CQ-153-06 answered A). The ENGINE owns the scan and every
+   * side effect of a block — the block record, the corrective feedback, the
+   * `commit_gate.blocked` event (step `pre-critic`) and the counters — so
+   * the port is a question only: asked AFTER a passed verification gate and
+   * BEFORE the critic call, it answers whether the candidate change is
+   * blocked. A block returns `commit-blocked`, the kind feature 152 already
+   * gave a blocked approval commit, with `criticWasCalled: false` — the
+   * candidate never reaches the critic (F153-SC-003). Absent, or clear, the
+   * gate runs as today.
+   */
+  readonly scanBeforeTheCritic?: (() => Promise<{ readonly blocked: boolean }>) | undefined;
 };
 
 /**
@@ -146,6 +168,7 @@ export const PHASE_GATE_OUTCOMES = [
   "approved",
   "rejected",
   "gate-failed",
+  "commit-blocked",
   "config-error",
   "no-evidence",
   "blocked",
@@ -230,13 +253,19 @@ export async function runPhaseGate(
     verification = await deps.runVerificationGate();
     if (!verificationGatePassed(verification)) {
       // The critic is NOT called; the result is forced to a rejection; the
-      // engine writes the feedback itself, from the result record.
-      const feedback = feedbackOfTheVerificationGate({
-        phase: inputs.phase,
-        mode: verification.mode,
-        roster: verification.roster,
-        ...(verification.criteria === undefined ? {} : { criteria: verification.criteria }),
-      });
+      // engine writes the feedback itself, from the result record. Where the
+      // engine hands in `feedbackOfAFailedGate` the notice is ITS text (the
+      // red-gate notice, feature 153); where it does not, the gate builds
+      // today's text, byte for byte, as before.
+      const feedback =
+        deps.feedbackOfAFailedGate !== undefined
+          ? deps.feedbackOfAFailedGate(verification)
+          : feedbackOfTheVerificationGate({
+              phase: inputs.phase,
+              mode: verification.mode,
+              roster: verification.roster,
+              ...(verification.criteria === undefined ? {} : { criteria: verification.criteria }),
+            });
       deps.writeFeedback(feedback);
       return Object.freeze({
         outcome: "gate-failed" as const,
@@ -246,6 +275,28 @@ export async function runPhaseGate(
         criticWasCalled: false,
         verification,
         feedbackWrittenByTheEngine: feedback,
+      });
+    }
+  }
+
+  // Feature 153, T355 — the commit scan BEFORE the critic (F153-FR-024). It
+  // is NOT a step of the fixed order (the order of F101-FR-005 is unchanged);
+  // it runs where the port is given, after a passed verification gate and
+  // before the critic call. A block ends the phase attempt here — the critic
+  // is NOT called (F153-SC-003) — as `commit-blocked`, the kind feature 152
+  // gave a blocked approval commit; the ENGINE has already written the block
+  // record, the corrective feedback and the `commit_gate.blocked` event
+  // (step `pre-critic`) by the time the port answered.
+  if (deps.scanBeforeTheCritic !== undefined) {
+    const scan = await deps.scanBeforeTheCritic();
+    if (scan.blocked) {
+      return Object.freeze({
+        outcome: "commit-blocked" as const,
+        verdictExists: false,
+        stepsRun: Object.freeze([...stepsRun]),
+        resultCode: RESULT_CODE_OF_A_FAILED_VERIFICATION_GATE,
+        criticWasCalled: false,
+        ...(verification === undefined ? {} : { verification }),
       });
     }
   }

@@ -1,5 +1,5 @@
 /**
- * The guard of the engine's state in the workspace (`<workdir>/.specstride/`).
+ * The guard of the engine's state in the workspace (the workdir's `.specstride/`).
  *
  * A proposer pass runs with full access to the working tree, and the engine's
  * own records live inside it: the workspace identity, the lock and the active

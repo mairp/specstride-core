@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:specstride:schema:internal:123:relaunch-table/1",
+  "title": "A relaunch classifier table (specstride.table/1, decision point relaunch)",
+  "type": "object",
+  "required": ["schema", "id", "version", "points", "rows"],
+  "properties": {
+    "schema": {"const": "specstride.table/1"},
+    "id": {"enum": ["relaunch-observe", "relaunch-root"]},
+    "version": {"type": "string"},
+    "points": {
+      "type": "object",
+      "required": ["relaunch"],
+      "properties": {
+        "relaunch": {
+          "type": "object",
+          "required": ["signals", "choices"],
+          "properties": {
+            "signals": {"type": "object", "additionalProperties": {"type": "string"}},
+            "choices": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        }
+      }
+    },
+    "rows": {
+      "type": "object",
+      "required": ["relaunch"],
+      "properties": {
+        "relaunch": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["ruleId", "choice", "decision"],
+            "properties": {
+              "ruleId": {"type": "string", "pattern": "^[OR]-[0-9]{2}$"},
+              "choice": {"type": "string"},
+              "decision": {"enum": ["relaunch", "refuse", "hold"]},
+              "when": {"type": "object"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

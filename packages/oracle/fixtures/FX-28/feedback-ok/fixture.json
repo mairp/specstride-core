@@ -22,7 +22,7 @@
       "1",
       "--feature",
       "demo",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

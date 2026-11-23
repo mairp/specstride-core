@@ -21,13 +21,13 @@
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import {
-  chmodSync,
   existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
+  lchmodSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -141,7 +141,12 @@ async function stubbornWorker(): Promise<{
   const dir = mkdtempSync(join(tmpdir(), "worker-stubborn-"));
   const bin = join(dir, "dsh");
   symlinkSync(process.execPath, bin);
-  chmodSync(bin, 0o755);
+  // On Linux a symlink carries no mode of its own: the permission that governs
+  // exec is the target's, and the target is this very interpreter. chmodSync
+  // would follow the link and chmod the installed node — permitted to root
+  // only, so a non-root runner (CI) meets EPERM here. Where the platform
+  // records a mode on the link itself, chmod the LINK.
+  if (lchmodSync !== undefined) lchmodSync(bin, 0o755);
   // The worker writes its ready file AFTER the SIGTERM handler is
   // registered, so a ready file is proof the handler is in place — no
   // timing settle, and the default disposition can never win the race.
@@ -332,17 +337,36 @@ test("the worker sender ends a proven worker through its own group, its tree wit
     const sender = workerSignalSender(() => entry);
     const proven = targetOf(worker.pid);
     assert.equal(sender.signal(proven, "terminate"), undefined, "a proven worker is signalled");
-    const leaderGone = await gone(worker.pid);
-    const childGone = await gone(inner);
+    // The bounds here are deliberately wide: under a loaded host the group
+    // signal and the kernel's reaping can lag far behind the signal itself,
+    // and a 5 s wall-clock bound flaked there. Nothing on this path exposes
+    // a runner-measured duration (the sender is not the check runner), so
+    // generous slack is the fallback — it only ever lengthens the wait, and
+    // no assertion passes merely because the bound is wider.
+    const leaderGone = await gone(worker.pid, 10_000);
+    const childGone = await gone(inner, 10_000);
     assert.ok(leaderGone, "the leader of the group was ended");
     assert.ok(childGone, "the child of the worker's tree was ended by the group signal");
     // `gone` reads a zombie as gone, but an UNREAPED corpse still answers
     // `kill(pid, 0)` — the sender's liveness probe — so its precise refusal
-    // is asserted only once the runner has collected the pid.
+    // is asserted only once the runner has collected the pid. The wait is
+    // for the REAPED pid, not merely the dead one: waiting on `alive` ends
+    // at the zombie stage, where the sender would still answer the corpse
+    // instead of refusing it (153 phase 15: this flaked [1,1] on the
+    // runtime's check).
     const beganCollect = Date.now();
-    while (alive(worker.pid) && Date.now() - beganCollect < 15_000) {
+    const reaped = (): boolean => {
+      try {
+        process.kill(worker.pid, 0);
+        return false;
+      } catch {
+        return true;
+      }
+    };
+    while (!reaped() && Date.now() - beganCollect < 10_000) {
       await new Promise((done) => setTimeout(done, 25));
     }
+    assert.ok(reaped(), "the runner collected the worker's pid");
     // A gone worker keeps its precise refusal.
     assert.equal(sender.signal(proven, "kill"), "no-such-process");
   } finally {

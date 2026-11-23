@@ -11,7 +11,9 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { runArgv } from "../../../spec-formats/src/verb.ts";
 import { runVerify } from "../../../verification/src/cli/verify.ts";
@@ -21,6 +23,7 @@ import {
   launcherPathUnderState,
 } from "../../../pipeline/src/contract/commands/render.ts";
 import { derive } from "../../../pipeline/src/contract/commands/derive.ts";
+import { loopConfigurationOf } from "./loop-config.ts";
 import {
   physicalPathOfLogicalName,
   contractStateName,
@@ -28,6 +31,7 @@ import {
 import { contractId, resolveFeatures } from "../../../pipeline/src/contract/inventory/features.ts";
 import { launchCommand } from "../commands/launch.ts";
 import { runStop } from "../commands/stop.ts";
+import { nothingToResumeNoConfLine } from "../run-control/refusals.ts";
 import { controlRootOfWorkspace } from "./workspace-control-root.ts";
 import {
   entriesOfTheSupervisionRegistry,
@@ -159,6 +163,69 @@ export function stopHandler(call: RoutedCall): number {
     (line.stream === "stdout" ? call.io.out : call.io.err)(`${line.text}\n`);
   }
   return result.exitCode;
+}
+
+/**
+ * `specstride resume` (F102-FR-011 to F102-FR-014): the state check ran in the
+ * router (`resumeStateCheckFirst`); this handler replays the resolved values
+ * the last run wrote to `last-run.conf` and starts the engine again in the
+ * FOREGROUND — the resumed run is the resumed run of the as-is engine: its
+ * output is this command's output and its exit is this command's exit. Before
+ * the engine starts, the as-is compatibility line of F102-FR-031 is printed
+ * (`resuming: ` + the engine executable and the replayed settings), the one
+ * line the command itself writes in default output. The engine resumes on its
+ * own: a fresh engine start finds the run that stood unapproved and continues
+ * at the first phase without a valid approval record. With no `last-run.conf`
+ * there is nothing to resume (F102-FR-012, exit 3).
+ */
+export function resumeHandler(call: RoutedCall): number {
+  const base = join(call.workdir, ".specstride");
+  const confPath = join(base, "last-run.conf");
+  if (!existsSync(confPath)) {
+    call.io.err(`${nothingToResumeNoConfLine("last-run.conf")}\n`);
+    return 3;
+  }
+  // The conf is `KEY=VALUE` lines; the comment lines name the run that wrote it.
+  const conf: Record<string, string> = {};
+  for (const line of readFileSync(confPath, "utf8").split("\n")) {
+    if (line.startsWith("#")) continue;
+    const at = line.indexOf("=");
+    if (at <= 0) continue;
+    conf[line.slice(0, at)!] = line.slice(at + 1);
+  }
+  const workdir = conf["WORKDIR"] ?? call.workdir;
+  const specs = conf["SPECS"] ?? join(workdir, "SPECS.md");
+  const proposer = conf["PROPOSER_BACKEND"] ?? "dsh";
+  const critic = conf["CRITIC_BACKEND"] ?? "dsh";
+  const maxRejects = conf["MAX_REJECTS"] ?? "";
+  const maxIter = conf["MAX_ITER"] ?? "";
+  const proposerTimeout = (conf["PROPOSER_TIMEOUT"] ?? "").replaceAll("'", "");
+  const verification = process.env["SPECSTRIDE_VERIFICATION"] ?? "off";
+  // The engine executable is the product's own entry (F102-FR-030, the product
+  // case — the port pins no recorded executable of the as-is engine).
+  const cli = join(dirname(dirname(dirname(fileURLToPath(import.meta.url)))), "bin", "specstride");
+  // F102-FR-031 — the as-is compatibility line, before the engine starts.
+  call.io.out(
+    `resuming: ${cli} -w ${workdir} -s ${specs} --proposer ${proposer} --critic ${critic}` +
+      ` --max-rejects ${maxRejects} --max-iter ${maxIter} --feature ${conf["FEATURE"] ?? ""}` +
+      ` --spec-format native --verification ${verification} --proposer-timeout ${proposerTimeout}\n`,
+  );
+  const child = spawnSync(process.execPath, [cli, "run", "--workdir", workdir, "--specs", specs], {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      SPECSTRIDE_PROPOSER: proposer,
+      SPECSTRIDE_CRITIC: critic,
+      ...(maxRejects !== "" ? { SPECSTRIDE_MAX_REJECTS: maxRejects } : {}),
+      ...(maxIter !== "" ? { SPECSTRIDE_MAX_ITER: maxIter } : {}),
+      // B-1473 — GIT_COMMITS is the one setting `resume` exports env-only.
+      ...(conf["GIT_COMMITS"] ? { SPECSTRIDE_GIT_COMMITS: conf["GIT_COMMITS"] } : {}),
+      ...(conf["TELEMETRY"] ? { SPECSTRIDE_TELEMETRY: conf["TELEMETRY"] } : {}),
+      ...(conf["LOKI_URL"] ? { SPECSTRIDE_LOKI_URL: conf["LOKI_URL"] } : {}),
+      ...(conf["OTEL"] ? { SPECSTRIDE_OTEL_ENABLED: conf["OTEL"] } : {}),
+    },
+  });
+  return child.status ?? 70;
 }
 
 /**
@@ -483,6 +550,15 @@ export function contractDeriveHandler(argv: readonly string[], io: RouteIo): num
     repo: root,
     feature: features,
     output: draftFile ?? physicalPathOfLogicalName(root, contractStateName(pipelineId)),
+    // F153-FR-054 (feature 153, phase 27, T375) — the derivation slices and
+    // freezes the task groups only with the switch `loop.taskGroups` ON, as
+    // the loop configuration resolves it (already OFF under the `parity`
+    // profile, rule TG-1); OFF by default, so a plain derive writes nothing.
+    loopTaskGroups: loopConfigurationOf({
+      home: homedir(),
+      workdir: root,
+      environment: process.env,
+    }).taskGroupsAreSliced,
     ...(comment === undefined ? {} : { comment }),
     ...(nextBatch ? { nextBatch } : {}),
     ...(answer === undefined ? {} : { answer: { batch: answer.batch, picks } }),

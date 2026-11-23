@@ -1,0 +1,15 @@
+{
+  "schema": "specstride.deliver-153/1",
+  "note": "Files of feature 153 that the sync script of feature 100 delivers into packages/contracts/ after its clean copies. The sources were seeded from the byte-identical package copies at HEAD (the schemas validated by the approved tests of this campaign: CT-153-36 for the timing pair, CT-153-8 for the command binding and the report rows, the red-gate rules for the budget and the notice): without sources the sync's clean rebuild drops them (found when the post-campaign reconciliation reran the sync after regenerating the annexes). The scan and task-group corpus schemas stay corpus files only: the code pins them as inline constants asserted equal to the corpus files, so the package needs no copy.",
+  "owner": "153",
+  "data": {},
+  "schemas": {
+    "commit-gate-timing.schema.json": "schemas/commit-gate-timing.schema.json",
+    "gate-command-binding.schema.json": "schemas/gate-command-binding.schema.json",
+    "red-gate-budget.schema.json": "schemas/red-gate-budget.schema.json",
+    "red-gate-notice.schema.json": "schemas/red-gate-notice.schema.json",
+    "report-rows.schema.json": "schemas/report-rows.schema.json",
+    "task-group.schema.json": "schemas/task-group.schema.json",
+    "workspace-selection.schema.json": "schemas/workspace-selection.schema.json"
+  }
+}

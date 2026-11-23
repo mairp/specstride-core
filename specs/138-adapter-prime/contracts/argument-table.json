@@ -1,0 +1,60 @@
+{
+  "schema": "specstride.adapter-argument-table/1",
+  "harness": "prime",
+  "pin": ">=0.7.3 <0.8",
+  "verifiedOn": "2026-09-29",
+  "note": "Flags marked unverified exist in the help of the installed version or of pi and wait for the captures of F138-FR-042. The column default is the call outside the parity profile.",
+  "roles": {
+    "proposer": {
+      "bare": {
+        "parity": ["-p", "--mode", "{mode}", "--no-session", "--cwd", "{workdir}", "[--model {model}]"],
+        "default": ["-p", "--mode", "{mode}", "{sessionFlags}", "{customisationsOff}", "--cwd", "{workdir}", "[--model {model}]", "[--tools {allowList}]"],
+        "prompt": "stdin"
+      },
+      "variant": {
+        "parity": ["{launcher}", "{variant}", "-p", "--mode", "{mode}", "--no-session", "--cwd", "{workdir}"],
+        "default": ["{launcher}", "{variant}", "-p", "--mode", "{mode}", "{sessionFlags}", "{customisationsOff}", "--cwd", "{workdir}", "[--tools {allowList}]"],
+        "prompt": "stdin",
+        "modelWithVariant": "refused"
+      },
+      "modes": ["text", "json"],
+      "customisationsOff": {
+        "flags": ["--no-skills", "--no-extensions", "--no-context-files", "--no-prompt-templates"],
+        "kinds": ["skills", "extensions", "context files", "prompt templates"],
+        "omittedWhen": "harnesses.prime.proposerCustomisations is on, in user configuration only",
+        "parity": "no flag is passed (row 131)",
+        "requirement": "F138-FR-044",
+        "status": "the four flags are in the help of prime-agent 0.7.3, read on 2026-09-30; their effect is unverified until capture (5)"
+      },
+      "sessionFlags": {
+        "fresh": ["--no-session"],
+        "continue": ["--session-dir", "{attemptSessionDir}", "-r", "{sessionId}"],
+        "status": "unverified"
+      }
+    },
+    "critic": {
+      "parity": ["-p", "--mode", "text", "--no-session", "--no-tools", "--no-skills", "--no-context-files", "[--cwd {workdir}]"],
+      "default": ["-p", "--mode", "json", "--no-session", "--no-tools", "--no-skills", "--no-context-files", "--no-extensions", "--no-prompt-templates", "[--cwd {workdir}]"],
+      "variantPrefix": ["{launcher}", "{variant}"],
+      "barePrefix": ["{agent}"],
+      "prompt": "stdin",
+      "extraFlagsStatus": "the flags are in the help of prime-agent 0.7.3, read on 2026-09-30; their effect is unverified",
+      "customisationsOptIn": "none: no key removes a switch of a critic-class call"
+    }
+  },
+  "version": ["{agent}", "-v"],
+  "environment": {
+    "telemetryOff": { "PRIME_AGENT_TELEMETRY": "0", "DO_NOT_TRACK": "1" },
+    "sessionDirectory": "PRIME_AGENT_SESSION_DIR",
+    "credential": "by environment, from a secret reference chosen by the consumer"
+  },
+  "home": {
+    "parity": "the home of the hermetic environment; overlay scope none (row 30)",
+    "tier1": "the real home, never written by the run",
+    "tier2": { "overlayVars": ["HOME", "PRIME_AGENT_SESSION_DIR"], "seeds": [], "removed": "after the call, a killed pass and a call past its time limit included" },
+    "configurationDirectoryVariable": null,
+    "requirement": "F138-FR-045",
+    "status": "unverified until capture (5)"
+  },
+  "neverPassed": ["a flag that allows all tools", "--goal"]
+}

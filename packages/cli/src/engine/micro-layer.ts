@@ -25,6 +25,9 @@ import {
   execute,
   DEFAULT_MAX_OUTPUT_BYTES,
 } from "../../../check-runner/src/command/lisa-executor.ts";
+import { runEngineCheck, timeLimitMsOf } from "./check-run.ts";
+import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
+import { closingCheckSkipOf } from "../../../core/src/gate/closing-check-skip.ts";
 import type { LoopLayer } from "@specstride/contracts/ep/loop-layer";
 import { checkpointContractBlock } from "../../../layer-micro/src/callpoints/contribute-prompt.ts";
 import { afterPass as afterPassPoint } from "../../../layer-micro/src/callpoints/after-pass.ts";
@@ -70,6 +73,18 @@ export type InnerCheckCommand = {
 };
 
 /** The check manifest of a phase, as the launch wrote it to the control plane. */
+/**
+ * The fields of a check's execution the rest of `runCheckCommand` reads —
+ * the shape `execute` gives and the shape `runEngineCheck` is read into
+ * (F153-FR-029, the local evidence object).
+ */
+type Evidence = {
+  readonly exitCode: number | null;
+  readonly durationMs: number;
+  readonly stdout: string;
+  readonly stderr: string;
+};
+
 export type CheckManifest = {
   readonly schema: "specstride.check-manifest/1";
   readonly phase: number;
@@ -93,6 +108,16 @@ export type MachineAfterPass = {
   readonly givenBack: boolean;
   /** F115-FR-027 — a valid checkpoint leaves the short-pass counter alone. */
   readonly exemptShortPass: boolean;
+  /**
+   * F153-FR-056 (feature 153, phase 27, T379) — the checkpoint of the pass
+   * COMPLETED this frozen task group, and the group's acceptance check ran
+   * and PASSED through the check runner (T038). The composition root runs
+   * the group review for it (`run-feature.ts`, T380); its only durable
+   * effect is pins. `undefined` — no group completed, or the check did not
+   * pass. It moves no counter of the layer and adds no exit code or stop
+   * reason.
+   */
+  readonly completedGroup?: { readonly groupId: string; readonly checkPassed: boolean } | undefined;
   /** The outcome of the unit, when a check ran (`unchecked` included). */
   readonly outcome: "kept" | "repair" | "unresolved" | "unchecked" | "none";
   /** The failure block of the next pass prompt, when the outcome is a repair. */
@@ -114,6 +139,13 @@ type AttemptState = {
   readonly units: readonly UnitRecord[];
   lastCheckpointFingerprint: string | null;
   lastPassedTreeFingerprint: string | null;
+  /**
+   * F153-FR-012 — the closing check that stood down because the gate runs
+   * the same commands through the same runner on the same tree, with the
+   * rule id of the row of `closing-check.skip` that decided (CS-4). Held so
+   * the gate binding record names the decision where one was made (T250).
+   */
+  closingCheckSkip?: { readonly ruleId: string } | undefined;
   off: boolean;
   offCause: LayerOffCause | undefined;
 };
@@ -226,11 +258,67 @@ export function createMicroAttempt(input: {
   readonly statePath: string;
   readonly manifestPath: string;
   readonly phaseTaskIds: readonly string[];
+  /**
+   * F153-FR-054 (feature 153, phase 27, T379) — the frozen task groups of
+   * the phase, read from the launch contract (`configuration.taskGroups`),
+   * present only with `loop.taskGroups` on (off by default and off under
+   * `parity`, where a unit is the checkpoint claim, F115-FR-009). When a
+   * claimed pass falls inside a group, the UNIT of the pass is the frozen
+   * group's ordered task ids, not the checkpoint claim's task set; the
+   * checkpoint that completes the group runs the group's acceptance check
+   * through the check runner (T038, `runEngineCheck`).
+   */
+  readonly taskGroups?: readonly TaskGroup[];
   readonly caps: MachineCaps;
   readonly closingCheckOn: boolean;
+  /**
+   * F153-FR-012 — `loop.micro.closingCheck.skipWhenEqualToGate`: when true,
+   * a closing check whose command set and runner are the gate's own, on the
+   * tree the gate is about to run on, stands down (CS-4); the gate runs the
+   * commands moments later, so the check runs once, at the gate. The
+   * `parity` profile reads this switch off, so parity reproduces the
+   * pre-feature behaviour exactly.
+   */
+  readonly closingCheckSkipsWhenEqualToGate: boolean;
+  /**
+   * F153-FR-012 — the binding of the verification gate of this phase
+   * attempt, as the plan declares it, with the runner that runs it; the
+   * gate runs NEXT, on the tree as it stands, so the caller passes the
+   * binding without a tree and the closing check supplies its own. The
+   * composition root gives `undefined` where the phase's gate selects no
+   * command — nothing to be equal to, so the choice is `run`.
+   */
+  readonly gateBinding: () =>
+    | {
+        readonly commands: readonly { readonly id: string; readonly argv: readonly string[] }[];
+        readonly runner: string;
+      }
+    | undefined;
+  /**
+   * `verification.timeLimit.enforce` (feature 153, F153-FR-029): when true,
+   * every inner and closing check runs through the check runner
+   * (`runEngineCheck`), whose process group, timer and SIGTERM → SIGKILL
+   * escalation end a hung command at its declared limit; when false, the
+   * baseline `execute` runs exactly as it did before the feature.
+   */
+  readonly timeLimitEnforced: boolean;
   readonly emit: (type: string, fields: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;
   readonly fingerprint: () => string;
+  /**
+   * F153-FR-045 (feature 153, phase 21) — the workspace selection of the
+   * IN-PASS check. Given every declared command of the inner set, by id and
+   * working directory, it answers the ids of the commands this in-pass check
+   * runs. Uncertainty always widens to the full set (F153-FR-046); the
+   * composition root computes the decision through the
+   * `workspace-selection` table and records it (D15). `undefined` — no
+   * selection wired: the pre-feature behaviour, the whole inner set. The
+   * CLOSING check consults nothing here and always runs the whole inner set
+   * (F153-FR-047, CQ-153-08 A; tracked limitation L-4).
+   */
+  readonly selectInnerCommands?:
+    | ((all: readonly { readonly id: string; readonly cwd: string }[]) => readonly string[])
+    | undefined;
 }): MicroAttempt {
   const emitEvent = (event: { readonly type: string; readonly fields: unknown }): void => {
     input.emit(event.type, event.fields as Record<string, unknown>);
@@ -317,18 +405,44 @@ export function createMicroAttempt(input: {
     const full = manifest?.commands.find((held) => held.id === command.id);
     emitEvent(checkStarted({ checkId: command.id, unitId, runner: "runtime" }));
     const before = input.fingerprint();
-    const evidence = execute(
-      {
-        id: command.id,
-        kind: "test",
-        label: command.id,
-        executable: full?.argv[0] ?? "false",
-        args: (full?.argv ?? command.argv).slice(1),
-        cwd: full?.cwd ?? process.cwd(),
-        timeoutSec: full?.timeoutSec ?? 5 * 60,
-      },
-      DEFAULT_MAX_OUTPUT_BYTES,
-    );
+    // F153-FR-029 — with the enforced time limit on, the command goes through
+    // the one check runner (`runEngineCheck`), which runs it as the leader of
+    // its own process group, ends the whole group at the declared limit and
+    // settles with a result that has no exit code and the signal `TIMEOUT`.
+    // With the switch off, the baseline `execute` runs exactly as before.
+    // Both are read through one local `evidence` object so the lines below
+    // do not branch on the switch.
+    const evidence = input.timeLimitEnforced
+      ? await (async (): Promise<Evidence> => {
+          const result = await runEngineCheck(
+            {
+              id: command.id,
+              argv: full?.argv ?? command.argv,
+              cwd: full?.cwd ?? process.cwd(),
+              timeLimitMs: timeLimitMsOf(full?.timeoutSec, 300),
+              phase: input.phase,
+            },
+            "default",
+          );
+          return {
+            exitCode: result.exitCode,
+            durationMs: result.durationMs,
+            stdout: result.stdout,
+            stderr: result.stderr,
+          };
+        })()
+      : execute(
+          {
+            id: command.id,
+            kind: "test",
+            label: command.id,
+            executable: full?.argv[0] ?? "false",
+            args: (full?.argv ?? command.argv).slice(1),
+            cwd: full?.cwd ?? process.cwd(),
+            timeoutSec: full?.timeoutSec ?? 5 * 60,
+          },
+          DEFAULT_MAX_OUTPUT_BYTES,
+        );
     const after = input.fingerprint();
     // The taint: a command during whose run the tree changed. Never a pass,
     // never a reason the layer goes off.
@@ -353,6 +467,26 @@ export function createMicroAttempt(input: {
 
   const innerSet = (): readonly InnerCommand[] =>
     (manifest?.commands ?? []).map((command) => ({ id: command.id, argv: [...command.argv] }));
+
+  /**
+   * F153-FR-045 — the inner set AS THE IN-PASS CHECK RECEIVES IT: where a
+   * selection is wired, only the commands whose id it returned. This is the
+   * hand-on of the in-pass check alone; the closing check consults
+   * `innerSet` and never this (F153-FR-047). A selection that names no
+   * command of the inner set runs nothing new — every id it returns that no
+   * manifest command holds is dropped here, and none is ever synthesised.
+   */
+  const innerSetForThePass = (): readonly InnerCommand[] => {
+    const all = innerSet();
+    if (input.selectInnerCommands === undefined) return all;
+    const cwdOf = new Map((manifest?.commands ?? []).map((command) => [command.id, command.cwd]));
+    const selected = new Set(
+      input.selectInnerCommands(
+        all.map((command) => ({ id: command.id, cwd: cwdOf.get(command.id) ?? process.cwd() })),
+      ),
+    );
+    return all.filter((command) => selected.has(command.id));
+  };
 
   const machine: MicroAttempt = {
     contractBlockText: () => checkpointContractBlock().text,
@@ -407,10 +541,53 @@ export function createMicroAttempt(input: {
         return classic;
       }
       const taskIds = [...(claim.tasks ?? [])];
+      // F153-FR-054/-055 (feature 153, phase 27, T379) — with
+      // `loop.taskGroups` on, the unit of the pass comes from the FROZEN
+      // groups: the group the claimed tasks fall inside is the unit, in the
+      // group's own task order. When the checkpoint completes the group, the
+      // group's acceptance check runs through the check runner (T038,
+      // `runEngineCheck`); a group whose check resolves to `unchecked` is
+      // never rejected and never passed (F153-FR-055). The completion moves
+      // no counter of the layer and adds no exit code or stop reason.
+      const theGroup = input.taskGroups?.find((group) =>
+        group.taskIds.some((taskId) => taskIds.includes(taskId)),
+      );
+      let unitTaskIds = taskIds;
+      let completedGroup: { readonly groupId: string; readonly checkPassed: boolean } | undefined;
+      if (theGroup !== undefined) {
+        unitTaskIds = [...theGroup.taskIds];
+        if (theGroup.taskIds.every((taskId) => taskIds.includes(taskId))) {
+          if (theGroup.acceptanceCheck.kind === "declared") {
+            const result = await runEngineCheck(
+              {
+                id: theGroup.acceptanceCheck.id,
+                argv: theGroup.acceptanceCheck.argv,
+                cwd: process.cwd(),
+                timeLimitMs: 300_000,
+                phase: input.phase,
+              },
+              "default",
+            );
+            input.emit("group.checked", {
+              groupId: theGroup.groupId,
+              ruleId: theGroup.acceptanceCheck.id,
+              outcome: result.passed ? "passed" : "failed",
+              exitCode: result.exitCode,
+            });
+            completedGroup = { groupId: theGroup.groupId, checkPassed: result.passed };
+          } else {
+            input.emit("group.checked", {
+              groupId: theGroup.groupId,
+              ruleId: "unchecked",
+              outcome: "unchecked",
+            });
+          }
+        }
+      }
       emitEvent(
         checkpointAccepted({
           unitId: pass.unitId,
-          taskIds,
+          taskIds: unitTaskIds,
           checkpointRef: `unit:${pass.unitId}:checkpoint`,
         }),
       );
@@ -423,12 +600,12 @@ export function createMicroAttempt(input: {
           verifyManifest,
           endPassProcesses: async () => ({ guaranteed: true }),
           runCheckCommand: (command: InnerCommand) => runCheckCommand(command, pass.unitId),
-          innerSet: innerSet(),
+          innerSet: innerSetForThePass(),
           stopRequested: () => false,
           budgetAvailable: () => true,
           enterQuotaPause: async () => {},
         },
-        taskIds,
+        taskIds: unitTaskIds,
         // F115-FR-022 — the budget hands the repairs LEFT per task id: the
         // cap less the repairs already spent. A task spent to the cap is
         // present with 0 (it can no longer take a repair); a task never
@@ -456,7 +633,7 @@ export function createMicroAttempt(input: {
       state = { ...state, cyclesSpent: state.cyclesSpent + 1 };
       if (decision.outcome === "repair") {
         const repairs = { ...state.repairsByTask };
-        for (const taskId of taskIds) repairs[taskId] = (repairs[taskId] ?? 0) + 1;
+        for (const taskId of unitTaskIds) repairs[taskId] = (repairs[taskId] ?? 0) + 1;
         state = { ...state, repairsByTask: repairs };
       }
       if (decision.outcome === "unresolved") {
@@ -469,7 +646,7 @@ export function createMicroAttempt(input: {
           ...state.units,
           {
             unitId: pass.unitId,
-            tasks: taskIds,
+            tasks: unitTaskIds,
             outcome: decision.outcome,
             results: results.map((result) => ({
               id: result.id,
@@ -492,8 +669,8 @@ export function createMicroAttempt(input: {
         innerCount: innerSet().length,
         uncheckedStreak: state.uncheckedStreak,
         phaseTasks: taskCount,
-        unitTasks: taskIds.length,
-        unitCoversPhaseAtFirstUnit: state.units.length === 1 && taskIds.length === taskCount,
+        unitTasks: unitTaskIds.length,
+        unitCoversPhaseAtFirstUnit: state.units.length === 1 && unitTaskIds.length === taskCount,
         ...(check.integrityEvent !== undefined ? { integrityKind: check.integrityEvent.kind } : {}),
       });
       if (route.decided && route.ruleId !== undefined && route.choice !== undefined) {
@@ -537,7 +714,7 @@ export function createMicroAttempt(input: {
 
       const repairBlockText =
         decision.outcome === "repair" && state.off === false
-          ? repairBlockFor(input.runId, results, tree, state.repairsByTask, taskIds)
+          ? repairBlockFor(input.runId, results, tree, state.repairsByTask, unitTaskIds)
           : "";
       return {
         result: "accept",
@@ -546,11 +723,35 @@ export function createMicroAttempt(input: {
         exemptShortPass: true,
         outcome: decision.outcome,
         repairBlockText,
+        // F153-FR-056 (T379) — the completed group and its check outcome,
+        // for the composition root to review (T380). No counter of the
+        // layer moved, no exit code and no stop reason added.
+        ...(completedGroup !== undefined ? { completedGroup } : {}),
       };
     },
     async closingCheck(): Promise<{ readonly ran: boolean; readonly passed: boolean }> {
       if (!input.closingCheckOn || state.off || state.units.length === 0) {
         return { ran: false, passed: true };
+      }
+      // F153-FR-012 — the equality test against the gate (T248): the gate
+      // runs NEXT, on the tree as it stands, so the closing check supplies
+      // its own tree to both sides. Where the binding is `undefined` — the
+      // phase's gate selects no command — nothing is equal to, and the
+      // choice is `run` before the table is even asked. A skip records the
+      // rule that decided and returns exactly what the fingerprint skip
+      // below returns: the check never ran, nothing failed.
+      const binding = input.gateBinding();
+      if (input.closingCheckSkipsWhenEqualToGate && binding !== undefined) {
+        const decision = closingCheckSkipOf({
+          switchOn: input.closingCheckSkipsWhenEqualToGate,
+          closing: { commands: innerSet(), runner: "runtime", tree: input.fingerprint() },
+          gate: { commands: binding.commands, runner: binding.runner, tree: input.fingerprint() },
+        });
+        if (decision.choice === "skip") {
+          state = { ...state, closingCheckSkip: { ruleId: decision.ruleId } };
+          persist();
+          return { ran: false, passed: true };
+        }
       }
       const tree = input.fingerprint();
       if (state.lastPassedTreeFingerprint === tree) return { ran: false, passed: true };

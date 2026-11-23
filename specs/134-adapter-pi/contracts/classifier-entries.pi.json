@@ -1,0 +1,66 @@
+{
+  "schema": "specstride.quota-classifier/1 entries",
+  "harness": "pi",
+  "input": "assistant message with stop reason error, its message text, after auto_retry records",
+  "confidence": "text",
+  "entries": [
+    {
+      "id": "pi.quota.window",
+      "match": "quota|limit reached|usage limit",
+      "class": "quota_window",
+      "resetsAt": "parse a duration after 'reset after' or 'resets in'; else null",
+      "retryable": true
+    },
+    {
+      "id": "pi.quota.credit",
+      "match": "insufficient (credit|balance|funds)|billing|payment required",
+      "class": "quota_credit",
+      "resetsAt": null,
+      "retryable": false
+    },
+    {
+      "id": "pi.rate.transient",
+      "match": "rate limit|429|too many requests",
+      "class": "rate_limit_transient",
+      "resetsAt": "as above, if present",
+      "retryable": true
+    },
+    {
+      "id": "pi.overload",
+      "match": "overloaded|529|capacity",
+      "class": "overload",
+      "resetsAt": null,
+      "retryable": true
+    },
+    {
+      "id": "pi.auth",
+      "match": "invalid api key|unauthori[sz]ed|401|403|no api key",
+      "class": "auth",
+      "resetsAt": null,
+      "retryable": false
+    },
+    {
+      "id": "pi.context",
+      "match": "context (length|window)|maximum context|too many tokens",
+      "class": "context_window",
+      "resetsAt": null,
+      "retryable": false
+    }
+  ],
+  "default": {
+    "class": "provider_other",
+    "confidence": "text",
+    "retryable": true
+  },
+  "durationGrammar": [
+    "<n>d",
+    "<n>h",
+    "<n>m",
+    "<n>s",
+    "combinations such as 1h30m"
+  ],
+  "status": "unverified: patterns are starting values from documentation; capture 1 and real messages replace them",
+  "verifiedOn": "2026-09-29",
+  "pin": ">=0.80.6 <0.81",
+  "note": "retryable of the default row follows section Q.1 of feature 127: provider_other is retryable true (alignment of 2026-09-30, items W-127-02 and the 127 alignment in the repair report)"
+}

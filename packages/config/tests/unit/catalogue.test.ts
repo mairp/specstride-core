@@ -78,10 +78,10 @@ const SOUND_ROW: CatalogueDataRow = Object.freeze({
 });
 
 describe("CT-110-108 — every key has a class, a snapshot class, an owner and a default of its own type (F110-FR-010)", () => {
-  it("reads the whole catalogue: 260 keys, every one with all seven columns of §K.1", () => {
-    assert.equal(CATALOGUE.length, 260);
-    assert.equal(CATALOGUE_SIZE, 260);
-    assert.equal(new Set(CATALOGUE_KEYS).size, 260, "every spelling is unique");
+  it("reads the whole catalogue: 271 keys, every one with all seven columns of §K.1", () => {
+    assert.equal(CATALOGUE.length, 271);
+    assert.equal(CATALOGUE_SIZE, 271);
+    assert.equal(new Set(CATALOGUE_KEYS).size, 271, "every spelling is unique");
   });
 
   it("the shipped catalogue data equals the contract of T004", () => {
@@ -170,7 +170,7 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
       kinds.set(entry.type.kind, (kinds.get(entry.type.kind) ?? 0) + 1);
     assert.equal(
       [...kinds.values()].reduce((a, b) => a + b, 0),
-      260,
+      271,
       "every key has a type the reader could read",
     );
   });
@@ -382,6 +382,26 @@ const NOT_A_CONFIGURATION_KEY: Readonly<Record<string, string>> = Object.freeze(
     "a probe-bag key only the launch-subset tests of feature 112 plant, to prove that no such switch exists (F112-FR-030 forbids a key that switches an `lb` check off); not a configuration key",
   "observability.captureContent":
     "a switch label of the sink context of feature 100's EP-08 conformance sample; it is in no table of §K.3 to §K.6b and in no row of annex X §X.7, and this feature neither carries nor edits it (reported to the orchestrator)",
+  "events.subscribe@v1":
+    "the versioned envelope name of the as-is event subscribe, quoted by the proposer prompt as a name that is not a file; not a configuration key",
+  "loop.caps":
+    "a rule of the `loop` point that can disengage the micro-layer (a key of `CAUSE_OF_RULE` in `packages/cli/src/engine/micro-layer.ts`); the disengagement causes are facts, never read from configuration",
+  "loop.integrity":
+    "a rule of the `loop` point that can disengage the micro-layer (a key of `CAUSE_OF_RULE` in `packages/cli/src/engine/micro-layer.ts`); the disengagement causes are facts, never read from configuration",
+  "commit.made":
+    "an event type of the run grammar, emitted by the git checkpoint of the commit gate and folded by the signal table of feature 129, not a configuration key",
+  "events.schema":
+    "the id of a check of the doctor (it warns when a reader or a record of the control plane meets a major outside its range), not a configuration key",
+  "events.gateIntegrity":
+    "the id of a check of the doctor (the integrity of the gate), not a configuration key",
+  "events.sink_major_out_of_range":
+    "the id of a finding of the doctor, the refusal of a sink whose major is out of range (F111-FR-034), not a configuration key",
+  "events.major_out_of_range":
+    "the id of a finding of the doctor, a major outside its range observed on a record the dispatcher does not serve, not a configuration key",
+  "events.seq_broken":
+    "the id of the doctor check that reports a tampered event file (F111-FR-021), not a configuration key",
+  "derive.stageTimeoutSec":
+    "the stage timeout of the derive contract supplied through the environment (`SPECSTRIDE_DERIVE_STAGE_TIMEOUT_SEC`, F107-FR-025) and resolved outside the catalogue read path, not a configuration key",
 });
 
 /** Every source file of every package of the workspace. */

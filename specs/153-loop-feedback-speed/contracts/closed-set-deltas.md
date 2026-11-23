@@ -1,0 +1,28 @@
+# Closed-set deltas proposed by spec 153 — ALL PROPOSALS
+
+Every row below is a **proposal**, decided by the owner (see [rulings.md](../rulings.md) and the
+spec's "Closed sets" and "Clarifications"). Until its ruling is answered, the behaviour behind it
+does not land, or lands only as the spec's stated fallback. This file changes no register of any
+other feature (F100-FR-212); rows are written for the owner to copy into
+`docs/ecosystem/consolidation.md` (which is not in this checkout).
+
+| # | Register (owner) | Proposed delta | Conditions | Ruling |
+|---|---|---|---|---|
+| 1 | Event catalogue (F111-FR-001; `specs/111-event-schema-and-projection/contracts/event-catalogue.tsv`) | Add `commit_gate.started` and `commit_gate.ended` (additive open/close pair, data per `schemas/commit-gate-timing.schema.json`) | Additive inside the major; the pair is emitted only with `events.commitGateTiming` on and stays off under `parity` | CQ-153-09 A |
+| 2 | Catalogue version | The TSV carries no version field in its header; if the owner wants a marker, `tableVersion` (data row :94) increments by one | Owner decision; the plan states this as the bump because no other version string exists | CQ-153-09 |
+| 3 | End causes of a phase attempt (§X.6 row 272) | **None** under the recommended answer — `core/src/gate/end-cause.ts` maps every cause of this spec onto existing members (a commit-gate block is told apart by joining `commit_gate.blocked`) | Under B only: add the member `commit-blocked`, and F153-FR-037/-038 map a block to it | CQ-153-09 A (none) / B (one member) |
+| 4 | Stop reasons (§E.3) and engine exit codes (§E.4) | **None** — the red-gate halt reuses `max_rejects` (stop reason), exit 2, cause `verification-failed` | Under CQ-153-05 stop B only: a new §E.3 member with exit 2 | CQ-153-05 A (none) / B (one member) |
+| 5 | Exit codes per command (§G.4 row 7) | Add `specstride report`: 0 on any readable state; 1 without state or feature (the `status`/`events` precedent) | Owner decision | CQ-153-16 A |
+| 6 | Exit codes per command (§G.4 row 7) | Add the in-pass commit-scan command: 0 no hit; 2 at least one hit; 1 no state; 3 usage. **The name is owned by feature 110** and is not proposed here | Owner decision; the command itself is blocked on CQ-153-06 A | CQ-153-17 A |
+| 7 | FX-27 (unit of approval and commit) | Add a row only if groups become phases (route i): groups are phases of the canonical model, gate and commit per group | Also needs owner rulings on F101-FR-011, -029, -035 (F101-SC-005) | CQ-153-07 B; otherwise no row |
+| 8 | Parity register (feature 110/111 rows) | Rows to turn on, each with its switch: F153-FR-010/-011 as a delivery (CQ-153-11 A) or behind a new row (B); F153-FR-013/-014 behind `verification.gate.reuse` (CQ-153-02 A); F153-FR-029…-032 as a defect-fix row (CQ-153-13 A) or off (B); F153-FR-050's removal under every profile (CQ-153-10 A) or behind a row (B); `events.commitGateTiming` on (off under `parity`) | Each row is written only under the ruling that wants it | CQ-153-02, -05, -10, -11, -13, -09 |
+| 9 | F117-FR-027 (byte-identical critic prompts) | Add the note that the W9 verdict pins are the sanctioned exception (the F117-FR-032 content only: the phase, the hash, the confirmed ids) | The pins themselves are a restoration already required by F117-FR-030 | CQ-153-12 A; B drops the pins |
+| 10 | F152-FR-008 / -009 (act once per phase attempt; its reason) | Amend so the scan may also run before the critic and in the proposer's pass (the cross-spec amendments table of the spec, rows for F152) | The pre-critic step runs only with `commit.backpressure` on; the commit-time scan and the void rule stay | CQ-153-06 A |
+| 11 | F103-FR-041 (pass handoff) | Amend only if the handoff is to carry the last failing **output** instead of a pointer | The pointer variant (A) needs no amendment | CQ-153-14 B; A = no row |
+| 12 | Annex E §E.3 / F100-FR-148 ("15 stop reasons") | **Drift row, not a delta**: the data already holds 16 (`commit_gate`, `stop-reasons.json:158`, `exit-codes.json:22`) while annex and requirement say 15, and spec 152 records `max_rejects`. Listed so the owner can reconcile the annex; spec 153 proposes nothing here | Independent of every ruling above | recorded as drift in the ledger's stage-3 re-check |
+| 13 | Rule ids of reuse eligibility (spec "Closed sets", new set) | Members fixed by the plan: `RE-1` … `RE-10` (plan.md, "Rule-id sets fixed by this plan"; `schemas/reuse-decision.schema.json`) | The set exists only if reuse is built | CQ-153-02 A; otherwise no row |
+| 14 | Rule ids of workspace selection (new set) | Members fixed by the plan: `WS-1` … `WS-7` (`schemas/workspace-selection.schema.json`) | Design; a §X.6 row at approval | none (design) |
+| 15 | Rule ids of the closing-check skip and of the end-cause mapping (new sets) | `CS-1` … `CS-4`; `EC-1` … `EC-12` — the choices of `EC-*` are existing members of row 272 only | Design; §X.6 rows at approval | none (design); a new `endCause` member only under CQ-153-09 B |
+| 16 | Steps of the commit scan (new set) | `pre-critic`, `commit` | Used by the proposed pair of row 1 and by `commit_gate.blocked` (F111-FR-031 names the step) | CQ-153-09 A |
+| 17 | Marking of a report row the events cannot hold (new set) | `not-in-events`, beside `null` for an unknown value | Design | none (design) |
+| 18 | Kinds of phase attempt (§E.1), kill reasons (F118-FR-007), conditions of a check result (F148-FR-003), blocked reasons (§E.2) | **None** — no member is proposed for any of the four: groups and parallel units add no attempt kind; a check ended at its limit is not a pass kill; a limit gives the signal `TIMEOUT`, not a new condition | — | none |

@@ -1,0 +1,200 @@
+{
+  "schema": "specstride.requirements/1",
+  "feature": "124",
+  "generatedFrom": "spec.md",
+  "moved": "F124-FR-001 to F124-FR-019, F124-SC-002, F124-SC-003, F124-SC-007: see spec.md, Requirements moved to 146-harness-discovery",
+  "requirements": [
+    {
+      "id": "F124-FR-020",
+      "test": "CT-124-20",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F124-FR-021",
+      "test": "CT-124-21",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F124-FR-022",
+      "test": "CT-124-22",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "assumption": "CQ-106 (the name of the flag; feature 100 names none)"
+    },
+    {
+      "id": "F124-FR-023",
+      "test": "CT-124-23",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F124-FR-024",
+      "test": "CT-124-24",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "divergence": "DV-004",
+      "parity": "every fixture names the proposer and the critic (row 36 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-025",
+      "test": "CT-124-25",
+      "divergence": "DV-004",
+      "parity": "every fixture names both roles; the one fixture of the defaults, `FX-01/defaults-no-role-named`, is waived (row 36 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-026",
+      "origin": "C-060; B-0799; C-061; B-0845",
+      "disposition": "translated",
+      "test": "PT-124-C-060-*; PT-124-C-061-*",
+      "divergence": "DV-066; DV-027"
+    },
+    {
+      "id": "F124-FR-027",
+      "origin": "C-051; B-0467",
+      "disposition": "translated",
+      "test": "PT-124-C-051-*",
+      "divergence": "DV-066"
+    },
+    {
+      "id": "F124-FR-028",
+      "test": "CT-124-28",
+      "divergence": "DV-104",
+      "parity": "off: a name that the registry does not hold is carried into the run, as at the baseline (row 90 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-029",
+      "origin": "C-054; B-0575",
+      "disposition": "translated",
+      "test": "PT-124-C-054-*",
+      "divergence": "DV-064"
+    },
+    {
+      "id": "F124-FR-030",
+      "origin": "C-066; B-0996",
+      "disposition": "translated",
+      "test": "PT-124-C-066-*",
+      "divergence": "DV-064"
+    },
+    {
+      "id": "F124-FR-031",
+      "origin": "C-012; B-0188; C-057; B-0640",
+      "disposition": "ported",
+      "test": "PT-124-C-012-*; PT-124-C-057-*; CT-124-50",
+      "divergence": "DV-064"
+    },
+    {
+      "id": "F124-FR-032",
+      "test": "CT-124-32",
+      "ep": "EP-11 `specstride.terms/1` (consumes)",
+      "divergence": "DV-048",
+      "parity": "audience `personal` (row 34 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-033",
+      "test": "CT-124-33",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "parity": "off: no fallback is configured (row 40 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-034",
+      "test": "CT-124-34",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F124-FR-035",
+      "test": "CT-124-35",
+      "assumption": "CQ-107 (the exit code of a foreground `run` that role resolution refuses; annex G §G.4 gives 3 for invalid input)"
+    },
+    {
+      "id": "F124-FR-036",
+      "test": "CT-124-36",
+      "ep": "EP-11 `specstride.terms/1` (consumes)",
+      "divergence": "DV-048"
+    },
+    {
+      "id": "F124-FR-037",
+      "test": "CT-124-37",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "divergence": "DV-049",
+      "parity": "not reached: every fixture names the critic (row 35 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-038",
+      "test": "CT-124-38",
+      "divergence": "DV-049"
+    },
+    {
+      "id": "F124-FR-039",
+      "test": "CT-124-39",
+      "divergence": "DV-081",
+      "parity": "not reached: every fixture names the critic (rows 28, 35 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-040",
+      "test": "CT-124-40",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F124-FR-041",
+      "test": "CT-124-41",
+      "ep": "EP-02 `specstride.harness/1` (consumes)",
+      "divergence": "DV-081",
+      "status": "unverified (check: the read-only sandbox of the first harness of this form denies reads of the withheld paths; verified-on: —; pin: version of that harness at the capture)"
+    },
+    {
+      "id": "F124-FR-042",
+      "test": "CT-124-42",
+      "divergence": "DV-049",
+      "parity": "not used (row 91 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-043",
+      "test": "CT-124-43",
+      "divergence": "DV-049; DV-034",
+      "parity": "no new line (row 19 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-044",
+      "test": "CT-124-44",
+      "divergence": "DV-049",
+      "parity": "not reached: every fixture names the critic (row 35 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-045",
+      "test": "CT-124-45",
+      "parity": "not printed (rows 19 and 92 of annex X §X.7)"
+    },
+    {
+      "id": "F124-FR-046",
+      "test": "CT-124-46",
+      "ep": "EP-18 `specstride.critic-strategy/1` (consumes)"
+    },
+    {
+      "id": "F124-FR-047",
+      "test": "CT-124-47"
+    },
+    {
+      "id": "F124-FR-048",
+      "test": "CT-124-48",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F124-FR-049",
+      "test": "CT-124-49",
+      "ep": "EP-14 `specstride.doctor/1` (consumes)",
+      "status": "unverified (check: role resolution gives the same records on a macOS runner as on Linux for the same fixture; verified-on: —; pin: macOS version of the runner)"
+    },
+    {
+      "id": "F124-SC-001"
+    },
+    {
+      "id": "F124-SC-004"
+    },
+    {
+      "id": "F124-SC-005"
+    },
+    {
+      "id": "F124-SC-006"
+    },
+    {
+      "id": "F124-SC-008"
+    }
+  ]
+}

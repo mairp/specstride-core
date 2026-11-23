@@ -26,6 +26,13 @@ import {
   type UnitsConfiguration,
   type WorkerCountConfiguration,
 } from "../../../layer-parallel/src/index.ts";
+import { MAX_BYTES_DEFAULT } from "../../../core/src/carry/handoff.ts";
+import { REJECT_LIMIT_DEFAULT } from "../../../core/src/gate/limits.ts";
+import { NO_PROGRESS_STRUCTURED_KEY } from "../../../core/src/pass-loop/accounting.ts";
+import { REQUEST_DEFAULTS } from "../../../core/src/pass-loop/request.ts";
+
+/** The key of the pass handoff switch (feature 153, row 8 of annex E §E.2). */
+export const LEDGER_HANDOFF_KEY = "carry.ledger_handoff";
 
 /** The strategies of the closed set of row 55 (`classic`, `micro`). */
 export type LoopStrategy = "micro" | "classic";
@@ -51,6 +58,13 @@ export function proposerNameOf(input: {
 }): string | undefined {
   const files = loadConfigFiles({
     home: input.home,
+    // The configuration home the ENVIRONMENT names (F110-FR-003): a run whose
+    // environment sets `XDG_CONFIG_HOME` — a parity drive of the oracle among
+    // them — reads its user configuration there, and that is where the
+    // selection of the named profile `parity` stands.
+    ...(input.environment.XDG_CONFIG_HOME === undefined
+      ? {}
+      : { xdgConfigHome: input.environment.XDG_CONFIG_HOME }),
     workspaceRealPath: realpathSync(input.workdir),
     startDir: input.workdir,
   });
@@ -67,6 +81,14 @@ export function proposerNameOf(input: {
 
 /** The loop configuration of a run, as the composition root reads it. */
 export type LoopConfiguration = {
+  /**
+   * The named profile the merge selected (`undefined` where none did). Under
+   * the `parity` profile the run restores the as-is state layout: the gate
+   * files stand in the feature's `gates/` directory and the control plane
+   * stands in the as-is state directory (row 116 of annex X §X.7), so the
+   * oracle's parity drive of THIS engine reproduces the reference run.
+   */
+  readonly profile: string | undefined;
   /** The strategy in force (`micro` by default, F115-FR-001). */
   readonly strategy: LoopStrategy;
   /** `loop.micro.closing_check` (on by default, F115-FR-028). */
@@ -87,8 +109,115 @@ export type LoopConfiguration = {
    * annotated off switches it off.
    */
   readonly backpressureValue: unknown;
+  /**
+   * `verification.timeLimit.enforce` (feature 153, row 135 of annex X §X.7),
+   * on by default and on under `parity` (CQ-153-13 A: a ruled defect fix). A
+   * project-file value that would turn it off is ignored: the project file may
+   * only narrow, and lifting the limit is not narrowing (F153-FR-005).
+   */
+  readonly timeLimitEnforced: boolean;
+  /**
+   * `loop.micro.closingCheck.skipWhenEqualToGate` (feature 153, row 136), on
+   * by default and off under `parity`.
+   */
+  readonly closingCheckSkipsWhenEqualToGate: boolean;
+  /**
+   * `verification.inner.scoped` (feature 153, row 137), on by default and off
+   * under `parity`.
+   */
+  readonly innerChecksAreScoped: boolean;
+  /**
+   * `critic.evidence.perTask` (feature 153, row 138), on by default and off
+   * under `parity`.
+   */
+  readonly criticEvidenceIsPerTask: boolean;
+  /**
+   * `carry.ledger_handoff` (feature 153, row 8 of annex E §E.2), ON by
+   * default and OFF under `parity` (F153-FR-059 — every pass is fresh under
+   * parity, so the pass handoff of F103-FR-041 is written no more there).
+   */
+  readonly ledgerHandoff: boolean;
+  /**
+   * `carry.handoffMaxBytes` (feature 103), in bytes, default
+   * `MAX_BYTES_DEFAULT` of the handoff writer.
+   */
+  readonly handoffMaxBytes: number;
+  /**
+   * `verification.parallelism` (feature 148, row 7 of annex E §E.2): a whole
+   * number, default 1, ceiling 4. The trust class is `N lo` — a rank may
+   * only narrow (lower) the value a rank above it held — so the effective
+   * value is the LOWEST whole value any source held, clamped into 1 to 4,
+   * and the `parity` profile reads 1, as the profile's own row 7 does.
+   */
+  readonly verificationParallelism: number;
+  /**
+   * `verification.redGate.ownBudget` (feature 153, row 139 of annex X §X.7),
+   * on by default and OFF under `parity` (F153-FR-020: under parity a red
+   * gate is a rejection with code 10 that counts toward the reject limit).
+   */
+  readonly redGateOwnBudget: boolean;
+  /**
+   * `commit.gate.beforeCritic` (feature 153, row 140 of annex X §X.7), on by
+   * default and off under `parity`. CQ-153-06 answered A on 2026-11-13: the
+   * pre-critic scan runs only where `commit.backpressure` is also on, so the
+   * composition root reads both switches.
+   */
+  readonly commitGateBeforeCritic: boolean;
+  /**
+   * `commit.scan.inPass` (feature 153, row 141 of annex X §X.7), on by
+   * default and OFF under `parity`. CQ-153-17 answered A on 2026-11-13: the
+   * switch gates whether the proposer prompt names the read-only command
+   * `scan` (F153-FR-027: the prompt MAY name it only with the switch on).
+   */
+  readonly commitScanInPass: boolean;
+  /**
+   * `loop.taskGroups` (feature 153, row 142 of annex X §X.7), OFF by default
+   * and OFF under `parity`. CQ-153-15 answered A on 2026-11-13: a group of at
+   * most the sibling size key's tasks (default 5, a starting value with low
+   * confidence; a project file may lower it, not raise it), groups in task
+   * order and never splitting a task (F153-FR-054). The switch stays off
+   * until one trial run with groups on has been read with `specstride
+   * report`; under `parity` a unit is a checkpoint claim (F115-FR-009).
+   */
+  readonly taskGroupsAreSliced: boolean;
+  /**
+   * `events.commitGateTiming` (feature 153, row 144 of annex X §X.7), ON by
+   * default and OFF under `parity`. CQ-153-09 answered A on 2026-11-13: the
+   * timed pair of the commit gate (`commit_gate.started`, `commit_gate.ended`)
+   * is additive catalogue rows — no new `endCause` — and under `parity` the
+   * compatibility projection drops the new types, so the engine emits neither.
+   */
+  readonly eventsCommitGateTiming: boolean;
+  /**
+   * `verification.redGate.limit` (F153-FR-021), the size of the red gate's
+   * own budget: a whole number, at least 1, default 3 (CQ-153-05 budget A).
+   * The trust class is `N lo` — a rank may only narrow (lower) the value a
+   * rank above it held — so the effective value is the LOWEST whole value
+   * any source held; a source value that is not a finite whole number ≥ 1 is
+   * refused at launch, never clamped into shape. No setting makes it
+   * unbounded (F153-FR-021): the key reads no `SPECSTRIDE_LIMITS` and no
+   * limits-off state.
+   */
+  readonly redGateLimit: number;
   /** The keys of the loop layer `parallel`, as the ranks the layer reads. */
   readonly parallel: ParallelLoopConfiguration;
+  /**
+   * `loop.maxIter` (F103-FR-003), whole number, default 30. The as-is
+   * variable `SPECSTRIDE_MAX_ITER` is the key's rank-4 alias (§K.8), so it
+   * reaches this value through the alias table of F110-FR-020.
+   */
+  readonly maxIter: number;
+  /**
+   * `loop.maxRejects` (F101-FR-014), whole number, default 3. The as-is
+   * variable `SPECSTRIDE_MAX_REJECTS` is the key's rank-4 alias (§K.8).
+   */
+  readonly maxRejects: number;
+  /**
+   * `loop.noProgressStructured` (F103-FR-018, row 59 of annex X §X.7): on by
+   * default and off under the `parity` profile, where the baseline's defect
+   * D-44 — no structured no-progress measurement — is kept.
+   */
+  readonly noProgressStructured: boolean;
 };
 
 /**
@@ -224,6 +353,111 @@ const NUMBER_KEYS: Readonly<Record<keyof Caps, string>> = Object.freeze({
 });
 
 /**
+ * The reading of an `on, off` switch that `closingCheck` and
+ * `commitBackpressureIsOn` already use: the literal `off`, a string that
+ * starts with `off` (the cell of a row of the parity profile) and the boolean
+ * `false` switch it off; everything else — including no value at all — keeps
+ * it on, so a switch that no source holds stands at its default.
+ */
+function switchIsOn(value: unknown): boolean {
+  if (typeof value === "string") return !value.startsWith("off");
+  return value !== false;
+}
+
+/** The key of the enforced time limit of the check (feature 153, row 135). */
+export const TIME_LIMIT_ENFORCE_KEY = "verification.timeLimit.enforce";
+
+/**
+ * The value of `verification.timeLimit.enforce`, read from the layers above
+ * the project file (F153-FR-005): a project file may only narrow, and the
+ * project file turning the enforcement off would lift the limit, so such an
+ * offer is skipped and the next offer above it — or the default, on — stands.
+ */
+function timeLimitEnforcedOf(resolved: ResolvedConfiguration): boolean {
+  for (const offer of offersOf(resolved, TIME_LIMIT_ENFORCE_KEY)) {
+    if (offer.layer === "project-configuration" && !switchIsOn(offer.value)) continue;
+    return switchIsOn(offer.value);
+  }
+  return true;
+}
+
+/** The key of the verification parallelism of the gate (feature 148, row 7). */
+export const PARALLELISM_CONFIG_KEY = "verification.parallelism";
+
+/** The ceiling of `verification.parallelism` (F148-FR-011). */
+const PARALLELISM_CEILING = 4;
+
+/**
+ * The value of `verification.parallelism` (F148-FR-011): a whole number,
+ * default 1, ceiling 4. The trust class is `N lo` — a rank may only narrow
+ * (lower) the value a rank above it held, so a project file cannot raise a
+ * value the user file set — and the effective value is therefore the LOWEST
+ * whole value any source held, clamped into 1 to 4. Under the `parity`
+ * profile the value is 1, exactly as the profile's own row 7 holds.
+ */
+function verificationParallelismOf(
+  resolved: ResolvedConfiguration,
+  profile: string | undefined,
+): number {
+  if (profile === "parity") return 1;
+  // The lowest SOURCE value stands. The built-in default of the catalogue is
+  // not a competing source — it is what stands when no source holds a value
+  // — so the shadowed default never takes part in the lowest-wins rule.
+  const held = offersOf(resolved, PARALLELISM_CONFIG_KEY)
+    .filter((offer) => offer.layer !== "default")
+    .map((offer) => Number(offer.value))
+    .filter((value) => Number.isInteger(value));
+  const lowest = held.length === 0 ? 1 : Math.min(...held);
+  return Math.min(Math.max(lowest, 1), PARALLELISM_CEILING);
+}
+
+/** The key of the red gate's own budget switch (feature 153, row 139). */
+export const RED_GATE_OWN_BUDGET_KEY = "verification.redGate.ownBudget";
+
+/** The key of the size of the red gate's own budget (F153-FR-021). */
+export const RED_GATE_LIMIT_KEY = "verification.redGate.limit";
+
+/** The key of the pre-critic commit scan switch (feature 153, row 140). */
+export const COMMIT_GATE_BEFORE_CRITIC_KEY = "commit.gate.beforeCritic";
+
+/** The key of the in-pass scan command switch (feature 153, row 141). */
+export const COMMIT_SCAN_IN_PASS_KEY = "commit.scan.inPass";
+
+/** The key of the task-groups switch (feature 153, row 142). */
+export const LOOP_TASK_GROUPS_KEY = "loop.taskGroups";
+
+/** The key of the commit-gate timing switch (feature 153, row 144). */
+export const EVENTS_COMMIT_GATE_TIMING_KEY = "events.commitGateTiming";
+
+/** The default of the red-gate budget (CQ-153-05, budget A). */
+export const RED_GATE_LIMIT_DEFAULT = 3;
+
+/**
+ * The value of `verification.redGate.limit` (F153-FR-021): a whole number,
+ * at least 1, default 3. The trust class is `N lo` — a rank may only narrow
+ * (lower) the value a rank above it held — so the effective value is the
+ * LOWEST whole value any source held (the built-in default of the catalogue
+ * is not a competing source, as with the parallelism above). A source value
+ * that is not a finite whole number ≥ 1 is refused at launch (T341), never
+ * guessed or clamped; and the budget is finite under every profile — this
+ * reading consults neither `SPECSTRIDE_LIMITS` nor the limits-off state, so
+ * no setting makes it unbounded.
+ */
+function redGateLimitOf(resolved: ResolvedConfiguration): number {
+  const held = offersOf(resolved, RED_GATE_LIMIT_KEY).filter((offer) => offer.layer !== "default");
+  for (const offer of held) {
+    const number = Number(offer.value);
+    if (!Number.isFinite(number) || !Number.isInteger(number) || number < 1) {
+      throw new Error(
+        `configuration: ${RED_GATE_LIMIT_KEY} must be a whole number of at least 1 — ` +
+          `refused the value ${String(offer.value)} from ${offer.layer}`,
+      );
+    }
+  }
+  return held.length === 0 ? RED_GATE_LIMIT_DEFAULT : Math.min(...held.map((o) => Number(o.value)));
+}
+
+/**
  * Resolve the loop keys of a run through the real configuration: the files
  * the loader finds (the user file of `user:config`, the project file
  * `specstride.yaml` of the workspace), the environment and the defaults of
@@ -236,6 +470,13 @@ export function loopConfigurationOf(input: {
 }): LoopConfiguration {
   const files = loadConfigFiles({
     home: input.home,
+    // The configuration home the ENVIRONMENT names (F110-FR-003): a run whose
+    // environment sets `XDG_CONFIG_HOME` — a parity drive of the oracle among
+    // them — reads its user configuration there, and that is where the
+    // selection of the named profile `parity` stands.
+    ...(input.environment.XDG_CONFIG_HOME === undefined
+      ? {}
+      : { xdgConfigHome: input.environment.XDG_CONFIG_HOME }),
     workspaceRealPath: realpathSync(input.workdir),
     startDir: input.workdir,
   });
@@ -253,6 +494,24 @@ export function loopConfigurationOf(input: {
 
   const strategy = valueOf(STRATEGY_KEY);
   const configured = strategy.source !== "default" && strategy.value !== undefined;
+  // The two loop limits through the ALIAS TABLE (§K.8, F110-FR-020): the
+  // as-is variables `SPECSTRIDE_MAX_ITER` and `SPECSTRIDE_MAX_REJECTS` are
+  // the rank-4 aliases of `loop.maxIter` (F103-FR-003) and `loop.maxRejects`
+  // (F101-FR-014), so a run driven by the baseline's variable names — a
+  // fixture of the oracle among them — holds the limits the baseline held.
+  // The alias table is a reading of the merge, not a second one: it is why
+  // this merge carries `aliasTable: true` and only these two keys are read
+  // out of it.
+  const withAliases = resolveConfiguration({
+    ...(files.user === undefined ? {} : { user: files.user }),
+    ...(files.project === undefined ? {} : { project: files.project }),
+    environment: input.environment,
+    aliasTable: true,
+  });
+  const limitOf = (key: string, fallback: number): number => {
+    const number = Number(withAliases.values.get(key)?.value);
+    return Number.isSafeInteger(number) && number > 0 ? number : fallback;
+  };
   const caps = capsFor(
     Object.fromEntries(
       (Object.keys(NUMBER_KEYS) as (keyof Caps)[]).map((name) => {
@@ -263,6 +522,7 @@ export function loopConfigurationOf(input: {
     ),
   );
   return Object.freeze({
+    profile: resolved.profile,
     strategy: strategy.value === "classic" ? ("classic" as const) : ("micro" as const),
     // The catalogue types the switch `on, off`, which the merge reads as a
     // boolean; both spellings of "off" switch it off.
@@ -275,6 +535,57 @@ export function loopConfigurationOf(input: {
     source: configured ? ("configured" as const) : ("default" as const),
     configuredValue: configured ? strategy.value : undefined,
     backpressureValue: valueOf("commit.backpressure").value,
+    timeLimitEnforced: timeLimitEnforcedOf(resolved),
+    closingCheckSkipsWhenEqualToGate: switchIsOn(
+      valueOf("loop.micro.closingCheck.skipWhenEqualToGate").value,
+    ),
+    innerChecksAreScoped: switchIsOn(valueOf("verification.inner.scoped").value),
+    criticEvidenceIsPerTask: switchIsOn(valueOf("critic.evidence.perTask").value),
+    // F153-FR-059 — the pass handoff is on by default and always off under
+    // the `parity` profile, whatever a source holds: every pass is fresh.
+    ledgerHandoff:
+      resolved.profile !== "parity" && switchIsOn(valueOf("carry.ledger_handoff").value),
+    handoffMaxBytes: (() => {
+      const number = Number(valueOf("carry.handoffMaxBytes").value);
+      return Number.isSafeInteger(number) && number > 0 ? number : MAX_BYTES_DEFAULT;
+    })(),
+    verificationParallelism: verificationParallelismOf(resolved, resolved.profile),
+    // Row 139 of annex X §X.7 (F153-FR-020): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity a red gate is
+    // a rejection with code 10 that counts toward the reject limit.
+    redGateOwnBudget:
+      resolved.profile !== "parity" && switchIsOn(valueOf(RED_GATE_OWN_BUDGET_KEY).value),
+    // Row 140 of annex X §X.7 (F153-FR-024): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity the scan runs
+    // at the approval commit only.
+    commitGateBeforeCritic:
+      resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_GATE_BEFORE_CRITIC_KEY).value),
+    // Row 141 of annex X §X.7 (F153-FR-027): on by default, OFF under the
+    // `parity` profile whatever a source holds — under parity no such
+    // command is named to the proposer (CQ-153-17 A, answered 2026-11-13).
+    commitScanInPass:
+      resolved.profile !== "parity" && switchIsOn(valueOf(COMMIT_SCAN_IN_PASS_KEY).value),
+    // Row 142 of annex X §X.7 (F153-FR-054): OFF by default — off until one
+    // trial run with groups on has been read with `specstride report` — and
+    // OFF under the `parity` profile whatever a source holds, where a unit
+    // stays a checkpoint claim (CQ-153-15 A, answered 2026-11-13).
+    taskGroupsAreSliced:
+      resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_TASK_GROUPS_KEY).value),
+    // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
+    // `parity` profile whatever a source holds — under parity the
+    // compatibility projection drops the new types (CQ-153-09 A, answered
+    // 2026-11-13: the timed pair is additive catalogue rows, no new end
+    // cause), so the engine emits neither of them.
+    eventsCommitGateTiming:
+      resolved.profile !== "parity" && switchIsOn(valueOf(EVENTS_COMMIT_GATE_TIMING_KEY).value),
+    redGateLimit: redGateLimitOf(resolved),
+    // Row 59 of annex X §X.7 (`loop.noProgressStructured`): on by default and
+    // OFF under the `parity` profile (defect D-44 kept — the baseline has no
+    // structured no-progress measurement, so under parity the breaker is not
+    // evaluated; F103-FR-018).
+    noProgressStructured: switchIsOn(valueOf(NO_PROGRESS_STRUCTURED_KEY).value),
+    maxIter: limitOf("loop.maxIter", REQUEST_DEFAULTS.passLimit),
+    maxRejects: limitOf("loop.maxRejects", REJECT_LIMIT_DEFAULT),
     parallel: parallelConfigurationOf(resolved),
   });
 }

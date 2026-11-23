@@ -68,7 +68,14 @@ writeFileSync(
   join(work, "checks.sh"),
   "#!/usr/bin/env bash\nset -euo pipefail\ntest -f made.txt\n",
 );
-const env = { ...process.env, HOME: scratch, PATH: `${bin}:${process.env.PATH ?? ""}` };
+// The e2e tests the BUILT plugin, so the shim's explicit-variable step must
+// have nothing to name: a `SPECSTRIDE_BIN` of the operator's environment
+// points the shim at the installed CLI and hides whatever the built bundle
+// does (2026-11-23: the pack had lost a data file, the packed CLI answered
+// nothing to `--protocol`, and only CI saw it — the machines that export the
+// variable kept passing through the installed CLI instead).
+const { SPECSTRIDE_BIN: _specstrideBin, ...inherited } = process.env;
+const env = { ...inherited, HOME: scratch, PATH: `${bin}:${process.env.PATH ?? ""}` };
 const inWork = (command: string, argv: readonly string[]) =>
   spawnSync(command, [...argv], { cwd: work, env, encoding: "utf8", timeout: 60_000 });
 for (const argv of [

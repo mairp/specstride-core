@@ -1,0 +1,52 @@
+{
+  "schema": "specstride.profile/1",
+  "feature": "124",
+  "owned": [
+    35,
+    36,
+    90,
+    91,
+    92
+  ],
+  "shared": [
+    28
+  ],
+  "read": [
+    19,
+    34,
+    40
+  ],
+  "note": "Rows 90, 91 and 92 are rows of annex X section X.7 of feature 100. Earlier texts called them P-3, P-4 and P-6; the labels P-1 to P-6 are not reused.",
+  "rows": [
+    {
+      "row": 90,
+      "status": "confirmed",
+      "switch": "Refusal at launch of a role name that the registry does not hold",
+      "key": "roles.refuseUnknown",
+      "default": "on",
+      "parity": "off",
+      "register": "DV-104",
+      "requirement": "F124-FR-028"
+    },
+    {
+      "row": 91,
+      "status": "confirmed",
+      "switch": "Hard spending cap of an automatically picked metered critic",
+      "key": "critic.autoPickMaxUsd",
+      "default": "not set",
+      "parity": "not used",
+      "register": "DV-049",
+      "requirement": "F124-FR-042"
+    },
+    {
+      "row": 92,
+      "status": "confirmed",
+      "switch": "Line of the critic-diversity warning",
+      "key": "critic.warnSameModel",
+      "default": "true",
+      "parity": "not printed",
+      "register": "DV-034",
+      "requirement": "F124-FR-045"
+    }
+  ]
+}

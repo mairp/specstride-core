@@ -1,0 +1,114 @@
+{
+  "schema": "specstride.requirements/1",
+  "feature": "146",
+  "generatedFrom": "spec.md",
+  "requirements": [
+    {
+      "id": "F146-FR-001",
+      "test": "CT-146-1",
+      "divergence": "DV-064",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-002",
+      "test": "CT-146-2",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-003",
+      "test": "CT-146-3",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-004",
+      "test": "CT-146-4",
+      "ep": "EP-10 `specstride.secret-resolver/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-005",
+      "test": "CT-146-5"
+    },
+    {
+      "id": "F146-FR-006",
+      "test": "CT-146-6",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-007",
+      "test": "CT-146-7",
+      "ep": "EP-02 `specstride.harness/1` (consumes)",
+      "status": "unverified (check: the model list of a gateway is served free of charge and lists models of providers other than the host's; verified-on: —; pin: gateway version of the capture)"
+    },
+    {
+      "id": "F146-FR-008",
+      "test": "CT-146-8",
+      "ep": "EP-10 `specstride.secret-resolver/1` (consumes)",
+      "status": "unverified (check: the model-list endpoint of a provider is unbilled and accepts the credential by the declared scheme; verified-on: —; pin: provider documentation date)"
+    },
+    {
+      "id": "F146-FR-009",
+      "test": "CT-146-9"
+    },
+    {
+      "id": "F146-FR-010",
+      "test": "CT-146-10",
+      "divergence": "DV-068",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-011",
+      "test": "CT-146-11"
+    },
+    {
+      "id": "F146-FR-012",
+      "test": "CT-146-12",
+      "divergence": "DV-064",
+      "parity": "both off: no probe runs and no request is made, so that no stub is called outside a pass (rows 87 and 88 of annex X §X.7)"
+    },
+    {
+      "id": "F146-FR-013",
+      "test": "CT-146-13",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-014",
+      "test": "CT-146-14",
+      "ep": "EP-14 `specstride.doctor/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-015",
+      "test": "CT-146-15",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-016",
+      "test": "CT-146-16",
+      "divergence": "DV-106",
+      "ep": "EP-02 `specstride.harness/1` (consumes)",
+      "parity": "not used: every fixture names the critic, and the window comes from the as-is table of its harness adapter (row 89 of annex X §X.7)"
+    },
+    {
+      "id": "F146-FR-017",
+      "test": "CT-146-17",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-018",
+      "test": "CT-146-18",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F146-FR-019",
+      "test": "CT-146-19"
+    },
+    {
+      "id": "F146-SC-001"
+    },
+    {
+      "id": "F146-SC-002"
+    },
+    {
+      "id": "F146-SC-003"
+    }
+  ]
+}

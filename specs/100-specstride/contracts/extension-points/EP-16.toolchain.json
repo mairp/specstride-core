@@ -1,0 +1,63 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-16",
+  "ids": [
+    "specstride.toolchain/1"
+  ],
+  "annex": "annex C, §C.14",
+  "operations": [],
+  "requirements": [
+    "F100-FR-110"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.toolchain/1`. Data."
+    ],
+    "Purpose": [
+      "To tell the runtime, per toolchain, which files define checks and which locations hold caches, so",
+      "that the protected set can be built."
+    ],
+    "Caller and time": [
+      "The engine at launch, when it derives the check manifest and the protected set; the doctor."
+    ],
+    "Inputs": [
+      "A profile per toolchain: patterns for files that define checks, cache locations, user-level",
+      "configuration files, suppression markers, the executables to pin, seed paths for worker trees, and",
+      "per worker the environment that moves a cache which is unsafe for several writers."
+    ],
+    "Outputs": [
+      "The protected set of a phase and the pins of its executables."
+    ],
+    "Errors": [
+      "A profile that does not validate is refused at load with a doctor finding."
+    ],
+    "Guarantees of the core": [
+      "A toolchain without a profile has the basic protection only, and the doctor and the `[LOOP]` line",
+      "say so."
+    ],
+    "Guarantees of an implementation": [
+      "A profile is data. It names no command to run, with one exception: one fixed argument list of",
+      "a pinned executable by which the effective configuration of the toolchain is read."
+    ],
+    "Failure of an implementation": [
+      "A refused profile is treated as absent."
+    ],
+    "Unknown-value rule": [
+      "An unknown field is ignored with a finding. A toolchain the product does not detect has no profile."
+    ],
+    "Wave 1 implementations": [
+      "Shipped profiles for the toolchains the product detects. Profiles of the consumer in user",
+      "configuration."
+    ],
+    "Content owner": [
+      "116. Consumed by 105, 148, 142, 143 and 112. The schema file of `specstride.toolchain/1` is written",
+      "by feature 116, in the contracts of its specification",
+      "(`specs/116-check-integrity-and-unit-evidence/contracts/schemas/toolchain-profile.schema.json`), and",
+      "is delivered by it to the `contracts` package. The same holds for every extension point whose",
+      "content is data: the content owner writes the schema file, and feature 100 fixes the id."
+    ],
+    "Proving test": [
+      "A profile for a fictional toolchain in a test overlay changes the protected set of a fixture."
+    ]
+  }
+}

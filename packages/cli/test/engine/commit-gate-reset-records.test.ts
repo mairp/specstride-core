@@ -162,6 +162,10 @@ test("--reset-counts moves existing block records into reset-<at>/ and does it o
     process.env.STUB_NEW_FILE = "const t = " + JSON.stringify(stubCredentialUrl) + ";\n";
     // Ensure the backpressure switch is ON for the block to take effect.
     process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "on";
+    // The scenario pins the approval-commit block records of feature 152; the
+    // pre-critic scan of feature 153 (on by default since CQ-153-06 A) would
+    // write its own record at the same phase/ordinal, so it is scoped off.
+    process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC = "off";
 
     // Run with the --reset-counts flag.
     const exit = await runFeature({ argv: ["--reset-counts"], workdir: dir });
@@ -181,6 +185,7 @@ test("--reset-counts moves existing block records into reset-<at>/ and does it o
   } finally {
     delete process.env.STUB_NEW_FILE;
     delete process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
+    delete process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC;
     restore();
   }
 });

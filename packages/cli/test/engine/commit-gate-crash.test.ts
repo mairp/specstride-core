@@ -87,6 +87,7 @@ function fixture(name: string): Fixture {
     SECRET: process.env.STUB_SECRET,
     PROPOSER: process.env.SPECSTRIDE_PROPOSER,
     CRITIC: process.env.SPECSTRIDE_CRITIC,
+    BEFORE_CRITIC: process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC,
     PAUSE: process.env.SPECSTRIDE_PROPOSER_PAUSE_SEC,
     LIMITS: process.env.SPECSTRIDE_LIMITS,
     STUB_DIR: process.env.STUB_DIR,
@@ -103,6 +104,11 @@ function fixture(name: string): Fixture {
   // The bounds of the run are the engine's defaults (CT-152-4's lesson): an
   // outer Specstride run may run with `SPECSTRIDE_LIMITS=off`.
   delete process.env.SPECSTRIDE_LIMITS;
+  // These scenarios pin the approval-commit gate of feature 152 and its kill
+  // seams; the pre-critic scan of feature 153 (on by default since
+  // CQ-153-06 A) would block the same secret one step earlier and the seams
+  // would never be reached, so it is scoped off here.
+  process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC = "off";
   process.env.STUB_DIR = scratch;
   const chunks: string[] = [];
   const originalWrite = process.stdout.write.bind(process.stdout);
@@ -144,6 +150,9 @@ function fixture(name: string): Fixture {
       else process.env.SPECSTRIDE_LIMITS = before.LIMITS;
       if (before.STUB_DIR === undefined) delete process.env.STUB_DIR;
       else process.env.STUB_DIR = before.STUB_DIR;
+      if (before.BEFORE_CRITIC === undefined)
+        delete process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC;
+      else process.env.SPECSTRIDE_COMMIT_GATE_BEFORE_CRITIC = before.BEFORE_CRITIC;
       rmSync(dir, { recursive: true, force: true });
     },
   };

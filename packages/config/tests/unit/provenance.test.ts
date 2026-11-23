@@ -101,7 +101,7 @@ describe("CT-110-118 — `--set` reaches every key, from the command line only (
       reached += 1;
     }
     assert.equal(reached, CATALOGUE_SIZE);
-    assert.equal(reached, 260);
+    assert.equal(reached, 271);
   });
 
   it("`--set` reaches a key of the class widening", () => {
@@ -357,7 +357,7 @@ describe("CT-110-120 — `config show` (F110-FR-025)", () => {
     const env = machine();
     const path = put(
       userConfigPath(env),
-      "schema: 1\nroles:\n  critic:\n    credential: sk-the-secret-itself\n",
+      "schema: 1\nroles:\n  critic:\n    credential: the-secret-itself\n",
     );
     const files = loadConfigFiles(env);
     const resolved = resolveConfiguration({ user: files.user });
@@ -366,10 +366,10 @@ describe("CT-110-120 — `config show` (F110-FR-025)", () => {
     assert.equal(outcome.errors.length, 1);
     assert.equal(outcome.stdout, "", "nothing is printed when the configuration is invalid");
     // The value is never repeated, in the message or on either stream.
-    assert.equal(outcome.stderr.includes("sk-the-secret-itself"), false);
+    assert.equal(outcome.stderr.includes("the-secret-itself"), false);
     assert.match(outcome.stderr, /holds a value in clear/);
     // and the secret is still on disk only, where the consumer put it.
-    assert.match(readFileSync(path, "utf8"), /sk-the-secret-itself/);
+    assert.match(readFileSync(path, "utf8"), /the-secret-itself/);
   });
 
   it("the exit code is 3 for a usage error and 0 otherwise", () => {

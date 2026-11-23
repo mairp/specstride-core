@@ -1,0 +1,56 @@
+{
+  "note": "each is an explicitly authorized probe, logged; the feature runs none; the one logged probe per role is the only paid call",
+  "captures": [
+    {
+      "id": "CAP-1",
+      "question": "exit code of pi on a provider error",
+      "how": "scripted capture against a loopback endpoint that returns a provider error, or one small logged call",
+      "paid": false,
+      "requirements": [
+        "F134-FR-025"
+      ],
+      "status": "verified",
+      "result": {
+        "exitCode": 0,
+        "detail": "three auto-retry record pairs, terminal assistant message stopReason error, then agent_settled; pi exits 0 on a provider error, like prime",
+        "piVersion": "0.80.6",
+        "pin": ">=0.80.6 <0.81",
+        "verifiedOn": "2026-10-28",
+        "artifacts": "tests/characterization/134/fixtures/error-exit-code/",
+        "log": "tests/characterization/134/fixtures/capture-log.md"
+      }
+    },
+    {
+      "id": "CAP-2",
+      "question": "do recorded streams of a proposer pass and a critic call pass the shared reader with the dialect pi",
+      "how": "one logged live call per role (the proposer call carries CAP-4); the only paid calls of the feature",
+      "paid": true,
+      "status": "unverified: paid and out of band (owner ruling of 2026-09-30); never run and never faked by the automated pass",
+      "requirements": [
+        "F134-FR-023"
+      ]
+    },
+    {
+      "id": "CAP-3",
+      "question": "does the initial record state the tool list and an identity",
+      "how": "read from CAP-2 critic stream",
+      "paid": false,
+      "status": "unverified: the CAP-2 critic stream does not exist until the owner's paid run (out-of-band dependency, owner ruling of 2026-09-30)",
+      "requirements": [
+        "F134-FR-019"
+      ]
+    },
+    {
+      "id": "CAP-4",
+      "question": "does the exact-session-id option work in print mode with JSON output; does a second pass continue",
+      "how": "the proposer probe of CAP-2 runs with the exact-session-id option; the session left under that id is read. Continuation of a second pass stays unverified and is proven on the fake executable only",
+      "paid": "same call as CAP-2, no further paid call",
+      "requirements": [
+        "F134-FR-013",
+        "F134-FR-014"
+      ],
+      "needs": "the C0 opt-in",
+      "status": "unverified: the option rides the proposer call of CAP-2; no further paid call is allowed, so it waits on the same out-of-band run (owner ruling of 2026-09-30)"
+    }
+  ]
+}

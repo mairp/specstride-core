@@ -1,5 +1,5 @@
 /**
- * The guard of the engine's state under `<workdir>/.specstride/`: a pass that
+ * The guard of the engine's state under the workdir's `.specstride/`: a pass that
  * deletes the engine's records (on 2026-11-09 a proposer ran `rm -rf
  * .specstride` while its run was live) gets them put back, without the guard
  * ever overwriting a record the engine wrote during the pass, and without it

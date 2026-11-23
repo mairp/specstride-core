@@ -1,0 +1,62 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-11",
+  "ids": [
+    "specstride.terms/1"
+  ],
+  "annex": "annex C, §C.12",
+  "operations": [
+    "evaluate"
+  ],
+  "requirements": [
+    "F100-FR-108"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.terms/1`."
+    ],
+    "Purpose": [
+      "To decide from dated data whether a provider may be used at an auth tier for an audience."
+    ],
+    "Caller and time": [
+      "Role resolution at launch; the engine at every switch to a fallback; the doctor."
+    ],
+    "Inputs": [
+      "`evaluate`: provider, auth tier, audience, acknowledgements of the consumer."
+    ],
+    "Outputs": [
+      "The decision and the row it rests on."
+    ],
+    "Errors": [
+      "None of its own. No row means unknown terms."
+    ],
+    "Guarantees of the core": [
+      "The terms gate is evaluated at launch, at role resolution and at every switch to a fallback. No comment,",
+      "flag, mode or project key bypasses it. A front harness is gated by the row of its back end. Auth",
+      "tier 3 without an `allowed` row is refused with the explanation."
+    ],
+    "Guarantees of an implementation": [
+      "A data file holds, per row: provider, auth tier, audience (`personal`, `distributed`), status",
+      "(`allowed`, `conditional`, `personal-only`, `refused`), source, access date, the quoted sentence,",
+      "and `verified-on`."
+    ],
+    "Failure of an implementation": [
+      "A data file that does not validate is ignored with a doctor finding, and the shipped file applies."
+    ],
+    "Unknown-value rule": [
+      "No row: auth tiers 1 and 2 are allowed with a warning, never as a default and never for an",
+      "automatic pick. An unknown status is read as `refused`. Data older than 30 days is a doctor",
+      "warning."
+    ],
+    "Wave 1 implementations": [
+      "The data file shipped in the package. A newer file placed in user-level state replaces it."
+    ],
+    "Content owner": [
+      "147. The harness adapters supply the facts of their rows."
+    ],
+    "Proving test": [
+      "Table tests generated from the verified terms matrix. A row for a fictional provider in a test",
+      "overlay changes the decision with no code change."
+    ]
+  }
+}

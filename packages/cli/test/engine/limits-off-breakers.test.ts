@@ -25,10 +25,14 @@ test("under SPECSTRIDE_LIMITS=off the no-progress breaker stays at its default",
   const arm = source.slice(source.indexOf("limitsAreOff()"));
   const armEnd = arm.indexOf(": DEFAULT_LIMITS");
   const offArm = arm.slice(0, armEnd);
+  // The documented aliases (SPECSTRIDE_PROPOSER_MAX_NOPROGRESS) may raise
+  // the budget; whatever they hold, the arm falls back to the default — the
+  // wiring resolves a positive integer, and ANYTHING ELSE (unset, garbage,
+  // zero, negative) keeps `MAX_NO_PROGRESS_DEFAULT`.
   assert.match(
     offArm,
-    /maxNoProgress:\s*MAX_NO_PROGRESS_DEFAULT/,
-    "the limits-off arm must keep maxNoProgress at MAX_NO_PROGRESS_DEFAULT",
+    /maxNoProgress:\s*positiveIntEnv\(MAX_NO_PROGRESS_ALIAS\)\s*\?\?\s*MAX_NO_PROGRESS_DEFAULT/,
+    "the limits-off arm must keep maxNoProgress at MAX_NO_PROGRESS_DEFAULT (the alias may raise it, never lower it)",
   );
   assert.doesNotMatch(
     offArm,

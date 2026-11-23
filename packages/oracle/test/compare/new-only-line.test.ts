@@ -99,7 +99,7 @@ test("CT-141-124: no rule of feature 100 removes the line", () => {
   const text = (normalized.surfaces["stdout"] as { text: string }).text;
   assert.ok(text.includes(NEW_LINE), `the line survived normalization: ${text}`);
   // Rule by rule, so that the one that removed it would be named.
-  assert.equal(RULES.length, 29);
+  assert.equal(RULES.length, 30);
   for (const rule of RULES) {
     const one = {
       ...capture,

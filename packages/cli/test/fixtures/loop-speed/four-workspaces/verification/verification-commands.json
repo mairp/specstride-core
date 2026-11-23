@@ -1,0 +1,38 @@
+{
+  "schema_version": "specstride.verification-commands/1",
+  "discovery": "none",
+  "commands": [
+    {
+      "id": "verify-a",
+      "phase": 1,
+      "executable": "node",
+      "args": ["../../bin/count-and-pass.ts", "counter-a.txt"],
+      "cwd": "WORKDIR/pkgs/a",
+      "timeoutSec": 30
+    },
+    {
+      "id": "verify-b",
+      "phase": 1,
+      "executable": "node",
+      "args": ["../../bin/count-and-pass.ts", "counter-b.txt"],
+      "cwd": "WORKDIR/pkgs/b",
+      "timeoutSec": 30
+    },
+    {
+      "id": "verify-c",
+      "phase": 1,
+      "executable": "node",
+      "args": ["../../bin/count-and-pass.ts", "counter-c.txt"],
+      "cwd": "WORKDIR/pkgs/c",
+      "timeoutSec": 30
+    },
+    {
+      "id": "verify-d",
+      "phase": 1,
+      "executable": "node",
+      "args": ["../../bin/count-and-pass.ts", "counter-d.txt"],
+      "cwd": "WORKDIR/pkgs/d",
+      "timeoutSec": 30
+    }
+  ]
+}

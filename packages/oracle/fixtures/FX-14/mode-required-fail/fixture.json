@@ -18,8 +18,10 @@
     "port": [
       "specstride",
       "run",
-      "--workspace",
-      "<WORK>"
+      "--workdir",
+      "<WORK>",
+      "-s",
+      "<WORK>/SPECS.md"
     ]
   },
   "environment": {
@@ -167,8 +169,10 @@
         "port": [
           "specstride",
           "run",
-          "--workspace",
+          "--workdir",
           "<WORK>",
+          "-s",
+          "<WORK>/SPECS.md",
           "--verification-commands",
           "<WORK>/verification-commands.json"
         ]

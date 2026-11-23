@@ -20,7 +20,24 @@ const out = process.env.STUB_DIR || ".";
 if (process.env.STUB_LOG) fs.appendFileSync(path.join(out, "stub-argv.log"), JSON.stringify(process.argv) + "\n");
 const write_ = (name, text) => fs.writeFileSync(path.join(out, name), text);
 const session = argv[argv.indexOf("--session-id") + 1];
-const critic = argv.includes("--max-turns");
+const isDiagnose =
+  // The diagnostician call of the port: under `parity` the engine prepends
+  // `--diagnose` to the call's argv; under the default profile the call is
+  // the critic argv with a prompt that OPENS `# Diagnostician — phase N`
+  // (F101-FR-022). The proposer prompt of a later attempt may quote a
+  // `Diagnostician hint` section (the as-is preamble does), so the anchor
+  // at the head of the prompt, not a substring search, tells the calls
+  // apart.
+  argv.includes("--diagnose") ||
+  /^# Diagnostician — phase/.test(prompt);
+const critic =
+  // The critic call: the default profile's tier-1 argv carries `--max-turns`;
+  // the as-is argv of `parity` carries `--dangerously-skip-permissions` and
+  // no `--output-format` (the proposer of either profile streams
+  // `--output-format stream-json`).
+  !isDiagnose &&
+  (argv.includes("--max-turns") ||
+    (argv.includes("--dangerously-skip-permissions") && !argv.includes("--output-format")));
 console.log(
   JSON.stringify({
     type: "system",
@@ -30,7 +47,7 @@ console.log(
   }),
 );
 const attempt = Number(/This is attempt (\d+)/.exec(prompt)?.[1] ?? "1");
-if (prompt.includes("Diagnostician")) {
+if (isDiagnose) {
   console.log(
     JSON.stringify({
       type: "result",
@@ -72,7 +89,8 @@ if (prompt.includes("Diagnostician")) {
   write_(`seen-by-proposer-${String(attempt)}.txt`, prompt);
   // The session id of this proposer pass, for CT-152-3 (a fresh session).
   write_(`session-${String(attempt)}.txt`, session ?? "");
-  const evidence = /write (\.\S*?specstride\S+?):/i.exec(prompt)[1];
+  const evidence =
+    /write (?:your evidence to )?(\.specstride\S*?EVIDENCE\.md)/i.exec(prompt)[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
   fs.writeFileSync(evidence, "T001 done\n");
   const secret = process.env.STUB_SECRET ?? "";

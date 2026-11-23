@@ -1,0 +1,705 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "annex": "D",
+  "tables": [
+    {
+      "section": "§D.1",
+      "heading": "EP-04 Loop-layer interface",
+      "subheading": "Caller and time",
+      "header": [
+        "#",
+        "Call point",
+        "When",
+        "What the layer returns"
+      ],
+      "rows": [
+        [
+          "1",
+          "`contributePrompt`",
+          "Before a pass, when the prompt is assembled",
+          "Prompt blocks (the form of §D.5)"
+        ],
+        [
+          "2",
+          "`afterPass`",
+          "After a pass has exited",
+          "`accept`, `refuse` or `none`, for the checkpoint found in the outbox"
+        ],
+        [
+          "3",
+          "`betweenPasses`",
+          "While no session is open",
+          "An outcome with directives"
+        ],
+        [
+          "4",
+          "`nextPassBlock`",
+          "Before the next pass",
+          "The block for the next pass, or `none`"
+        ],
+        [
+          "5",
+          "`onEvidence`",
+          "When phase evidence appears",
+          "Whether a closing check runs, or `none`"
+        ],
+        [
+          "6",
+          "`contributeCriticInput`",
+          "Before the critic prompt is assembled",
+          "The rows of the fact block (§D.7), or `none`"
+        ],
+        [
+          "7",
+          "`resume`",
+          "At a start of the engine inside a phase attempt",
+          "What to do with open work, from the state of the ledger"
+        ],
+        [
+          "8",
+          "`report`",
+          "At the end of the run",
+          "The fields of the `[LOOP]` line"
+        ]
+      ]
+    },
+    {
+      "section": "§D.1",
+      "heading": "EP-04 Loop-layer interface",
+      "subheading": "Outputs",
+      "header": [
+        "Directive",
+        "Meaning"
+      ],
+      "rows": [
+        [
+          "`keep`",
+          "The unit of work is kept: a ledger record bound to the tree fingerprint"
+        ],
+        [
+          "`repair`",
+          "The proposer gets the output of the check on the current tree"
+        ],
+        [
+          "`unresolved`",
+          "The unit stays as it is; the tree is not touched"
+        ],
+        [
+          "`layerOffForAttempt`",
+          "The layer is off for the rest of the phase attempt"
+        ],
+        [
+          "`layerOffForRun`",
+          "The layer is off for the rest of the run"
+        ],
+        [
+          "`giveIterationBack`",
+          "The pass is given back: it does not count towards the pass limit. The literal keeps the retired word"
+        ],
+        [
+          "`exemptShortPass`",
+          "The pass leaves the short-pass counter as it was"
+        ],
+        [
+          "`exemptRepeatCounter`",
+          "The exact argument lists of the inner check set are exempt from the process-level repeat counter"
+        ],
+        [
+          "`requestPass`",
+          "The engine runs one pass: prompt block, working directory, session directive, time limit, worker id"
+        ],
+        [
+          "`requestPassGroup`",
+          "The engine runs a list of `requestPass` with a concurrency limit and returns when every pass has ended"
+        ],
+        [
+          "`integrateGroup`",
+          "The engine integrates the results of a group through the tree-store service (§D.2). It carries, per worker, `accepted` or the refusal reason, which is how the verdicts of the audits of feature 142 reach the engine before `compose`"
+        ]
+      ]
+    },
+    {
+      "section": "§D.2",
+      "heading": "Tree-store service",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.tree-store/1`"
+        ],
+        [
+          "Logical names",
+          "`tree-store`, `worker-root`"
+        ],
+        [
+          "Offered by",
+          "The engine, as a service to a layer that declared it"
+        ],
+        [
+          "Used by",
+          "The layer `parallel`, through the directives `requestPassGroup` and `integrateGroup`"
+        ],
+        [
+          "Content owner",
+          "143, which builds the part that parallel units need. Nothing is built for `autoresearch`"
+        ]
+      ]
+    },
+    {
+      "section": "§D.2",
+      "heading": "Tree-store service",
+      "subheading": null,
+      "header": [
+        "Operation",
+        "Input",
+        "Output",
+        "Writes"
+      ],
+      "rows": [
+        [
+          "`snapshot`",
+          "A directory",
+          "A tree id",
+          "The store"
+        ],
+        [
+          "`materialize`",
+          "A tree id",
+          "A worker tree",
+          "The worker root"
+        ],
+        [
+          "`changed`",
+          "A base tree id and a tree id",
+          "The paths that differ, each with its kind (added, changed, deleted, mode changed)",
+          "Nothing"
+        ],
+        [
+          "`compose`",
+          "A base tree id and audited deltas in the order of the tasks at launch",
+          "A tree id, or a refusal with the reason `overlap` and the paths",
+          "The store"
+        ],
+        [
+          "`apply`",
+          "The base, the composed tree, the workspace",
+          "The paths written",
+          "The workspace: exactly the paths of the composed delta"
+        ],
+        [
+          "`release`",
+          "A worker tree",
+          "—",
+          "The worker root"
+        ],
+        [
+          "`sweep`",
+          "—",
+          "The trees removed",
+          "The worker root and the store"
+        ]
+      ]
+    },
+    {
+      "section": "§D.3",
+      "heading": "Parallel plan",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.parallel-plan/1`"
+        ],
+        [
+          "Logical name",
+          "`run:<runId>:parallel-plan`"
+        ],
+        [
+          "Writer",
+          "Engine, at launch. Never computed again inside a run"
+        ],
+        [
+          "Readers",
+          "Engine, doctor, the dry-run plan of the pipeline entry (only with the option on)"
+        ],
+        [
+          "Content owner",
+          "142"
+        ]
+      ]
+    },
+    {
+      "section": "§D.3",
+      "heading": "Parallel plan",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`runId`",
+          "Identifier",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`hash`",
+          "Hash of the plan, which is also an event",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`workers`",
+          "Worker count in force (default 2; the ceiling is `loop.parallel.workersMax`, default 4)",
+          "Whole number",
+          "Yes"
+        ],
+        [
+          "`phases`",
+          "Per phase: its groups, its serial tasks, and the ceiling of the speed-up under equal task cost",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`phases[].groups`",
+          "Per group: ordinal, and the task ids in the order of the tasks at launch. A group holds at least 2 and at most `workers` tasks, all consecutive and admitted",
+          "List of records",
+          "Yes (may be empty)"
+        ],
+        [
+          "`phases[].tasks`",
+          "Per candidate task: id, write scope (path prefixes relative to the workspace root), the source of the scope (consumer declaration, or the task's own text at launch), and the verdict of every admission check with its detail",
+          "List of records",
+          "Yes"
+        ],
+        [
+          "`phases[].serial`",
+          "Tasks made serial, each with the reason",
+          "List of records",
+          "Yes (may be empty)"
+        ],
+        [
+          "`fallback`",
+          "When the layer is off for the run: the reason, from the closed set of fallback reasons",
+          "Member of a closed set, or null",
+          "Yes"
+        ]
+      ]
+    },
+    {
+      "section": "§D.4",
+      "heading": "EP-06 Router rule table",
+      "subheading": "Caller and time",
+      "header": [
+        "Decision point",
+        "Chooses",
+        "Never"
+      ],
+      "rows": [
+        [
+          "`tools`",
+          "The order of, and exclusions among, entries of the frozen check manifest of the phase",
+          "Adds a command or builds an argument list"
+        ],
+        [
+          "`loop`",
+          "A registered loop layer, or off for this phase attempt",
+          "Switches a layer on; replaces the gated loop"
+        ],
+        [
+          "`escalation`",
+          "The next rung of the pinned model-tier ladder of the same harness, or `skip` with a reason",
+          "Moves to another harness; targets a rung that equals a critic-class call of the run in model and in effort (signal `targetIsCriticModel`)"
+        ]
+      ]
+    },
+    {
+      "section": "§D.6",
+      "heading": "Yield artifact",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride-pass-yield/v1` (the as-is name is kept)"
+        ],
+        [
+          "Logical name",
+          "Written to `feature:<slug>:outbox`; moved to `job:<jobId>:yield` when read"
+        ],
+        [
+          "Writer",
+          "The proposer, as a claim"
+        ],
+        [
+          "Readers",
+          "Engine"
+        ],
+        [
+          "Content owner",
+          "118. It may add kinds of predicate through a new minor"
+        ]
+      ]
+    },
+    {
+      "section": "§D.6",
+      "heading": "Yield artifact",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`contract`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`reason`",
+          "Why the pass yields",
+          "Text, not empty",
+          "Yes"
+        ],
+        [
+          "`job.mode`",
+          "`launch` or `adopt`",
+          "Member of a closed set",
+          "Yes"
+        ],
+        [
+          "`job.argv`",
+          "The command the runtime launches",
+          "List of text, not empty",
+          "With `launch`"
+        ],
+        [
+          "`job.pid`",
+          "The process the runtime adopts",
+          "Whole number above zero",
+          "With `adopt`"
+        ],
+        [
+          "`job.cwd`, `job.log`",
+          "Working directory and log of the job",
+          "Text",
+          "No"
+        ],
+        [
+          "`resume_when.kind`",
+          "`pid`, `exit_code_file`, `file_exists`, `file_stable`, `grep`, `command`, `first_failure`",
+          "Member of a closed set",
+          "Yes"
+        ],
+        [
+          "`resume_when.path`, `resume_when.pattern`",
+          "What the predicate reads",
+          "Text",
+          "Where the kind needs them"
+        ],
+        [
+          "`resume_when.stable_sec`",
+          "For `file_stable`: how long the file must stay unchanged",
+          "Whole number above zero",
+          "With `file_stable`"
+        ],
+        [
+          "`resume_when.pid`",
+          "For `pid`: the process whose end is awaited",
+          "Whole number above zero",
+          "With `pid`"
+        ],
+        [
+          "`resume_when.argv`",
+          "For `command`: the fixed argument list of the predicate",
+          "List of text, not empty",
+          "With `command`"
+        ],
+        [
+          "`on_first_failure`",
+          "`stop` or `continue-and-notify`",
+          "Member of a closed set",
+          "With `first_failure`"
+        ],
+        [
+          "`deadline_sec`",
+          "Deadline of the wait",
+          "Whole number above zero",
+          "Yes"
+        ],
+        [
+          "`on_resume`",
+          "What the next pass is told",
+          "Text",
+          "No"
+        ]
+      ]
+    },
+    {
+      "section": "§D.7",
+      "heading": "Fact block",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.fact-block/1`"
+        ],
+        [
+          "Logical name",
+          "`attempt:<N>:<k>:<n>:fact-block`"
+        ],
+        [
+          "Writer",
+          "Engine, from the control plane and the ledger, through the call point `contributeCriticInput`"
+        ],
+        [
+          "Readers",
+          "The critic prompt assembler"
+        ],
+        [
+          "Content owner",
+          "116. Its slot and its escaping in the critic prompt: 117"
+        ]
+      ]
+    },
+    {
+      "section": "§D.7",
+      "heading": "Fact block",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`manifestHash`, `commands`",
+          "Hash of the check manifest and the list of its commands by id",
+          "Text, list",
+          "Yes"
+        ],
+        [
+          "`treeFingerprint`",
+          "Fingerprint of the tree at the phase gate, once",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`units`",
+          "Per unit of work: its id; the tasks it named, headed as the proposer's declaration; per command the exit result and, in separate fields, each condition (`tainted`, `flaky` with both observed results, `superseded` or `current`, `cached`)",
+          "List of records",
+          "Yes (may be empty)"
+        ],
+        [
+          "`unnamedTasks`",
+          "Tasks of the phase that no unit named",
+          "List of text",
+          "Yes"
+        ],
+        [
+          "`notice`",
+          "One fixed sentence: a result is evidence about the tree and not about a task",
+          "Fixed text",
+          "Yes"
+        ],
+        [
+          "`protected`",
+          "Paths of the protected set changed since phase entry, and which were authorised from the text of the task at launch; protected paths changed since launch in phases already approved; suppression markers added and removed, per file",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`integrity`",
+          "Integrity events, by kind from the closed set of §X.6, without counts",
+          "List of members of a closed set",
+          "Yes (may be empty)"
+        ],
+        [
+          "`facts`",
+          "Further facts, each from a closed set: a check manifest that a relaunch derived differently; a cited result file that belongs to a stopped job; phase evidence that predates the tree; an intended change of a source that was accepted; a task list that changed since launch",
+          "List of members of a closed set",
+          "Yes (may be empty)"
+        ],
+        [
+          "`excluded`",
+          "Commands excluded from the inner set, each with the reason",
+          "List of records",
+          "Yes (may be empty)"
+        ]
+      ]
+    },
+    {
+      "section": "§D.8",
+      "heading": "Check manifest",
+      "subheading": null,
+      "header": [
+        "Subject",
+        "Content"
+      ],
+      "rows": [
+        [
+          "Schema id",
+          "`specstride.manifest/1`"
+        ],
+        [
+          "Logical name",
+          "`phase:<N>:manifest`"
+        ],
+        [
+          "Writer",
+          "Engine, at launch, from the verification plan"
+        ],
+        [
+          "Readers",
+          "Engine, check runner, router (decision point `tools`), fact block, doctor"
+        ],
+        [
+          "Content owner",
+          "105"
+        ]
+      ]
+    },
+    {
+      "section": "§D.8",
+      "heading": "Check manifest",
+      "subheading": null,
+      "header": [
+        "Field",
+        "Meaning",
+        "Type in words",
+        "Required"
+      ],
+      "rows": [
+        [
+          "`schema`",
+          "Schema id",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`phase`",
+          "Phase number",
+          "Whole number",
+          "Yes"
+        ],
+        [
+          "`hash`",
+          "Hash of the manifest, verified before every check",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`searchPath`",
+          "The search path for executables as it was at launch",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`entries`",
+          "The commands of the phase itself, in the order of the verification plan; the commands of earlier phases are in their own manifests, and the cumulative verification gate takes its commands from the manifests of the phases it covers (F105-FR-020)",
+          "List of records",
+          "Yes (may be empty)"
+        ],
+        [
+          "`entries[].id`",
+          "Id of the command, stable inside the run",
+          "Text",
+          "Yes"
+        ],
+        [
+          "`entries[].kind`",
+          "Kind of the identity: `command`, or a registered kind",
+          "Member of an open set",
+          "Yes"
+        ],
+        [
+          "`entries[].argv`",
+          "The fixed argument list",
+          "List of text",
+          "For `command`"
+        ],
+        [
+          "`entries[].pin`",
+          "The identity record of the check runner: for `command` the absolute path of the executable with size and hash",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`entries[].provenance`",
+          "File and line of the declaration",
+          "Record",
+          "Yes"
+        ],
+        [
+          "`entries[].timeLimit`",
+          "Time limit of the command",
+          "Whole number of seconds",
+          "Yes"
+        ],
+        [
+          "`entries[].tasks`",
+          "Tasks the declaration names",
+          "List of text",
+          "No"
+        ],
+        [
+          "`entries[].steps`",
+          "Steps, for the step runner",
+          "List of records",
+          "No"
+        ],
+        [
+          "`entries[].reads`, `entries[].writes`",
+          "Declared reads and writes, ignored paths included; or `sideEffects: none` together with `reads: tree`",
+          "Lists of path prefixes",
+          "No; undeclared means serial"
+        ],
+        [
+          "`entries[].resource`",
+          "An exclusive resource the command needs",
+          "Text",
+          "No"
+        ],
+        [
+          "`entries[].inner`",
+          "Whether the command belongs to the inner check set. The writer sets it true for every entry: the inner check set is the manifest, and only the runtime takes a command out of it during a phase attempt, with a reason (F105-FR-020; F115-FR-013)",
+          "Truth value",
+          "Yes"
+        ]
+      ]
+    }
+  ]
+}

@@ -67,6 +67,7 @@ const machineOf = (
     phaseTaskIds: ["T001", "T002"],
     caps,
     closingCheckOn: true,
+    timeLimitEnforced: false, // the baseline `execute`, exactly as before feature 153
     emit: (type, fields) => fx.events.push({ type, fields: { ...fields } }),
     say: (line) => fx.lines.push(line),
     fingerprint: () => fx.tree.now,

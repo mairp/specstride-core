@@ -1,0 +1,1245 @@
+{
+  "note": "Hand-written. One entry per `file` item of docs/ecosystem/research/R18-behaviour-inventory.tsv (199 items). `what` says whether the item fixes a location, the content of a file, a write discipline or a reading rule. The generator checks that every item is present, that every logical name is in annex B §B.5, and that every kept item has a logical name or a rule. Spellings proceed on CQ-018.",
+  "placeholders": {
+    "<workdir>": "the working directory",
+    "<state-dir>, <state>": "the as-is state directory of the Specstride baseline inside the working directory",
+    "<feature-dir>, <feature>, <FEATURE_DIR>": "<state>/features/<slug>",
+    "<run-dir>": "<feature-dir>/runs/<run-id>",
+    "<invocation_dir>": "<feature-dir>/debug/invocations/<run-id>/<role>/phase-<P>/attempt-<A>/iter-<i>/<invocation-id>",
+    "<artifact root>, runs/<id>/": "the as-is artifact directory of mixture-of-loops beside the launcher",
+    "<run_state>": "<SRC>/<state>/reverse/<slug>",
+    "<overlay>": "the overlay tree in the temporary directory"
+  },
+  "items": {
+    "B-0156": {
+      "what": "location",
+      "rule": "not carried (DV-023)"
+    },
+    "B-1505": {
+      "what": "location",
+      "rule": "not carried (DV-023)"
+    },
+    "B-0157": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:record",
+        "gate:<N>:approved",
+        "feature:<slug>:notebook"
+      ],
+      "rule": "the state of a feature is reached under the feature slug in the control plane and in the workspace part"
+    },
+    "B-0158": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:verification:test-plan"
+      ]
+    },
+    "B-0159": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:verification:scaffolds"
+      ]
+    },
+    "B-0160": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:verification:plan"
+      ]
+    },
+    "B-0161": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:lock"
+      ],
+      "rule": "the form of the lock is mapped per operating system (N-02; DV-022)"
+    },
+    "B-0162": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:lock"
+      ],
+      "rule": "the form of the lock is mapped per operating system (N-02; DV-022)"
+    },
+    "B-1510": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:lock"
+      ],
+      "rule": "the form of the lock is mapped per operating system (N-02; DV-022)"
+    },
+    "B-2588": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:lock"
+      ],
+      "rule": "the form of the lock is mapped per operating system (N-02; DV-022)"
+    },
+    "B-0163": {
+      "what": "location",
+      "rule": "not carried (DV-022)"
+    },
+    "B-0164": {
+      "what": "location",
+      "rule": "not carried (DV-022)"
+    },
+    "B-1509": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:lock"
+      ],
+      "rule": "the lock is probed through the lock provider (DV-022)"
+    },
+    "B-0165": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:record",
+        "attempt:<N>:<k>:<n>:record",
+        "attempt:<N>:<k>:<n>:verdict",
+        "run:<runId>:verification:plan"
+      ],
+      "rule": "directories are created when their first file is written"
+    },
+    "B-0166": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:engine-log:<k>",
+        "run:<runId>:events-legacy"
+      ]
+    },
+    "B-0167": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:current:engine-log"
+      ]
+    },
+    "B-0168": {
+      "what": "location",
+      "logicalNames": [
+        "workspace:current:events"
+      ]
+    },
+    "B-0169": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:snapshot"
+      ]
+    },
+    "B-0170": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:snapshot"
+      ]
+    },
+    "B-1507": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:snapshot"
+      ]
+    },
+    "B-1511": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:snapshot"
+      ]
+    },
+    "B-1516": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:snapshot"
+      ]
+    },
+    "B-0171": {
+      "what": "location",
+      "logicalNames": [
+        "inbox:stop"
+      ]
+    },
+    "B-1367": {
+      "what": "location",
+      "logicalNames": [
+        "inbox:stop"
+      ]
+    },
+    "B-1514": {
+      "what": "location",
+      "logicalNames": [
+        "inbox:stop"
+      ]
+    },
+    "B-0172": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:verification:release"
+      ]
+    },
+    "B-1142": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:verification:release"
+      ]
+    },
+    "B-0173": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:recovery-markers"
+      ]
+    },
+    "B-0179": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:recovery-markers"
+      ]
+    },
+    "B-0185": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:recovery-markers"
+      ]
+    },
+    "B-0174": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:acceleration"
+      ]
+    },
+    "B-0175": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:accelerator-note"
+      ]
+    },
+    "B-0176": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:evidence",
+        "attempt:<N>:<k>:<n>:record"
+      ]
+    },
+    "B-0177": {
+      "what": "location",
+      "logicalNames": [
+        "job:<jobId>:yield",
+        "feature:<slug>:outbox"
+      ]
+    },
+    "B-0620": {
+      "what": "location",
+      "logicalNames": [
+        "job:<jobId>:yield",
+        "feature:<slug>:outbox"
+      ]
+    },
+    "B-0178": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:prompt"
+      ]
+    },
+    "B-0180": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:accelerator-snapshot"
+      ]
+    },
+    "B-0181": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verification"
+      ]
+    },
+    "B-1143": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verification"
+      ]
+    },
+    "B-1071": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verification"
+      ]
+    },
+    "B-0182": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-1144": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-0183": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:critic-invocation"
+      ]
+    },
+    "B-0184": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:approved-archive"
+      ]
+    },
+    "B-0186": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:learning:observation:<N>"
+      ]
+    },
+    "B-1266": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:learning:observation:<N>"
+      ]
+    },
+    "B-0339": {
+      "what": "location",
+      "rule": "dropped with the digest script (DV-061)"
+    },
+    "B-0340": {
+      "what": "location",
+      "rule": "dropped with the digest script (DV-061)"
+    },
+    "B-0352": {
+      "what": "write discipline",
+      "logicalNames": [
+        "run:<runId>:events-legacy"
+      ]
+    },
+    "B-2098": {
+      "what": "write discipline",
+      "logicalNames": [
+        "run:<runId>:events-legacy"
+      ]
+    },
+    "B-0353": {
+      "what": "location",
+      "logicalNames": [
+        "job:<jobId>:record",
+        "job:<jobId>:log"
+      ]
+    },
+    "B-0631": {
+      "what": "location",
+      "logicalNames": [
+        "job:<jobId>:record",
+        "job:<jobId>:log"
+      ]
+    },
+    "B-0395": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0396": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0397": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0398": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0622": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0623": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ]
+    },
+    "B-0435": {
+      "what": "location",
+      "logicalNames": [
+        "harness:<id>:install-lock"
+      ]
+    },
+    "B-0436": {
+      "what": "location",
+      "logicalNames": [
+        "harness:<id>:plugin-installs"
+      ]
+    },
+    "B-0619": {
+      "what": "location",
+      "logicalNames": [
+        "harness:<id>:plugin-installs"
+      ]
+    },
+    "B-0445": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:result"
+      ]
+    },
+    "B-2157": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:result"
+      ]
+    },
+    "B-2181": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:result"
+      ]
+    },
+    "B-0454": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:failure-ledger"
+      ]
+    },
+    "B-0632": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:failure-ledger"
+      ]
+    },
+    "B-0617": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:outbox",
+        "gate:<N>:evidence"
+      ],
+      "rule": "directories are created at start when missing"
+    },
+    "B-0618": {
+      "what": "location",
+      "logicalNames": [
+        "harness:<id>:plugin-request"
+      ]
+    },
+    "B-0621": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ],
+      "rule": "the throwaway home of one harness is an overlay that its harness adapter builds"
+    },
+    "B-0624": {
+      "what": "location",
+      "logicalNames": [
+        "overlay:<id>:tree"
+      ],
+      "rule": "the throwaway home of one harness is an overlay that its harness adapter builds"
+    },
+    "B-0625": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:prompt-transfer"
+      ]
+    },
+    "B-0626": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:producer-status"
+      ]
+    },
+    "B-2155": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:producer-status"
+      ]
+    },
+    "B-0627": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:invocation"
+      ]
+    },
+    "B-2154": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:invocation"
+      ]
+    },
+    "B-0628": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:kill-note"
+      ]
+    },
+    "B-0629": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:kill-note"
+      ]
+    },
+    "B-0630": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:kill-note"
+      ]
+    },
+    "B-0633": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:invocation",
+        "pass:<passId>:result",
+        "pass:<passId>:prompt",
+        "pass:<passId>:stream",
+        "pass:<passId>:response"
+      ]
+    },
+    "B-2182": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:invocation",
+        "pass:<passId>:result",
+        "pass:<passId>:prompt",
+        "pass:<passId>:stream",
+        "pass:<passId>:response"
+      ]
+    },
+    "B-2183": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:invocation",
+        "pass:<passId>:result",
+        "pass:<passId>:prompt",
+        "pass:<passId>:stream",
+        "pass:<passId>:response"
+      ]
+    },
+    "B-0634": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:current-pass"
+      ]
+    },
+    "B-0635": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:prompt"
+      ]
+    },
+    "B-0636": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:provider-terminal"
+      ]
+    },
+    "B-2099": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:provider-terminal"
+      ]
+    },
+    "B-2156": {
+      "what": "location",
+      "logicalNames": [
+        "pass:<passId>:provider-terminal"
+      ]
+    },
+    "B-0637": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:ledger"
+      ],
+      "rule": "the breaker state is a set of counters of the ledger (DV-011)"
+    },
+    "B-2158": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:ledger"
+      ],
+      "rule": "the breaker state is a set of counters of the ledger (DV-011)"
+    },
+    "B-0638": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:procs"
+      ]
+    },
+    "B-1515": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:procs"
+      ]
+    },
+    "B-0869": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:hint"
+      ]
+    },
+    "B-0870": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:record",
+        "gate:<N>:evidence"
+      ],
+      "rule": "the legacy directory name is not carried (DV-036)"
+    },
+    "B-1506": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:record",
+        "gate:<N>:evidence"
+      ],
+      "rule": "the legacy directory name is not carried (DV-036)"
+    },
+    "B-1508": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:record",
+        "gate:<N>:evidence"
+      ],
+      "rule": "the legacy directory name is not carried (DV-036)"
+    },
+    "B-0871": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict",
+        "gate:<N>:evidence"
+      ],
+      "rule": "directories are created when their first file is written"
+    },
+    "B-0872": {
+      "what": "location",
+      "logicalNames": [
+        "gate:<N>:evidence"
+      ]
+    },
+    "B-0873": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:critic-prompt"
+      ]
+    },
+    "B-0874": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict"
+      ]
+    },
+    "B-0876": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict"
+      ]
+    },
+    "B-0877": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict"
+      ]
+    },
+    "B-1512": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict"
+      ]
+    },
+    "B-1257": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verdict"
+      ]
+    },
+    "B-0875": {
+      "what": "location",
+      "logicalNames": [
+        "gate:<N>:approved"
+      ],
+      "rule": "existence only; content is waived (DV-029)"
+    },
+    "B-0878": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-0879": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-0880": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-0881": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-0882": {
+      "what": "content",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:feedback"
+      ]
+    },
+    "B-1018": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:verdict-pins"
+      ]
+    },
+    "B-1019": {
+      "what": "location",
+      "logicalNames": [
+        "phase:<N>:verdict-pins"
+      ]
+    },
+    "B-1060": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:verification:test-plan"
+      ]
+    },
+    "B-1061": {
+      "what": "write discipline",
+      "logicalNames": [
+        "run:<runId>:verification:plan",
+        "feature:<slug>:verification:test-plan"
+      ]
+    },
+    "B-1064": {
+      "what": "write discipline",
+      "logicalNames": [
+        "run:<runId>:verification:plan",
+        "feature:<slug>:verification:test-plan"
+      ]
+    },
+    "B-1065": {
+      "what": "write discipline",
+      "logicalNames": [
+        "run:<runId>:verification:plan",
+        "feature:<slug>:verification:test-plan"
+      ]
+    },
+    "B-1062": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:verification:commands"
+      ]
+    },
+    "B-1063": {
+      "what": "content",
+      "logicalNames": [
+        "run:<runId>:verification:plan"
+      ]
+    },
+    "B-1066": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:verification:scaffolds"
+      ]
+    },
+    "B-1067": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:verification:scaffolds"
+      ]
+    },
+    "B-1068": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:verification:scaffolds"
+      ]
+    },
+    "B-1069": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:prestage"
+      ]
+    },
+    "B-1070": {
+      "what": "location",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:prestage"
+      ]
+    },
+    "B-1254": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:summary"
+      ]
+    },
+    "B-1255": {
+      "what": "reading",
+      "logicalNames": [
+        "run:<runId>:events-legacy"
+      ]
+    },
+    "B-1256": {
+      "what": "reading",
+      "logicalNames": [
+        "attempt:<N>:<k>:<n>:verification"
+      ]
+    },
+    "B-1258": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1259": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1261": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1262": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1263": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1264": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1265": {
+      "what": "content",
+      "logicalNames": [
+        "feature:<slug>:learning:decisions"
+      ]
+    },
+    "B-1260": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:learning:events",
+        "feature:<slug>:learning:events-legacy"
+      ]
+    },
+    "B-1513": {
+      "what": "location",
+      "rule": "not carried (DV-062)"
+    },
+    "B-1698": {
+      "what": "location",
+      "logicalNames": [
+        "reverse:<slug>:output"
+      ]
+    },
+    "B-1699": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:driver"
+      ]
+    },
+    "B-1700": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:driver"
+      ]
+    },
+    "B-1701": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:driver"
+      ]
+    },
+    "B-1706": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:driver"
+      ]
+    },
+    "B-1702": {
+      "what": "location",
+      "logicalNames": [
+        "reverse:<slug>:analysis"
+      ]
+    },
+    "B-1703": {
+      "what": "location",
+      "logicalNames": [
+        "reverse:<slug>:inventory",
+        "reverse:<slug>:driver"
+      ],
+      "rule": "directories are created when their first file is written"
+    },
+    "B-1704": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1875": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1876": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1877": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1878": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1879": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1880": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1881": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1882": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1883": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1884": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1885": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1886": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory"
+      ]
+    },
+    "B-1705": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1887": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1888": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1889": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1890": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1891": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1892": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1893": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1894": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1895": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1896": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1897": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1898": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1899": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1900": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:inventory-summary"
+      ]
+    },
+    "B-1707": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:verification-commands"
+      ]
+    },
+    "B-1708": {
+      "what": "content",
+      "logicalNames": [
+        "reverse:<slug>:verification-commands"
+      ]
+    },
+    "B-1901": {
+      "what": "write discipline",
+      "logicalNames": [
+        "reverse:<slug>:inventory",
+        "reverse:<slug>:driver"
+      ]
+    },
+    "B-1967": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1968": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1969": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1970": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1971": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1972": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1973": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1974": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1975": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1976": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-1977": {
+      "what": "content",
+      "logicalNames": [
+        "package:templates:<name>"
+      ]
+    },
+    "B-2010": {
+      "what": "write discipline",
+      "rule": "temporary name (N-08); the write is atomic (annex B, §B.2)"
+    },
+    "B-2179": {
+      "what": "write discipline",
+      "logicalNames": [
+        "pass:<passId>:result",
+        "pass:<passId>:invocation"
+      ]
+    },
+    "B-2180": {
+      "what": "write discipline",
+      "logicalNames": [
+        "pass:<passId>:result",
+        "pass:<passId>:invocation"
+      ]
+    },
+    "B-2363": {
+      "what": "location",
+      "logicalNames": [
+        "run:<runId>:span-state"
+      ]
+    },
+    "B-2497": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:bundle:<hash>",
+        "pipeline:<pipelineId>:state"
+      ],
+      "rule": "the artifact directory beside the launcher is replaced by the control plane (DV-006)"
+    },
+    "B-2547": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:bundle:<hash>"
+      ]
+    },
+    "B-2548": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:launcher"
+      ]
+    },
+    "B-2586": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:state"
+      ]
+    },
+    "B-2587": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:launcher-log"
+      ]
+    },
+    "B-2637": {
+      "what": "write discipline",
+      "logicalNames": [
+        "pipeline:<pipelineId>:contract"
+      ]
+    },
+    "B-2654": {
+      "what": "location",
+      "rule": "not carried (DV-056)"
+    },
+    "B-2661": {
+      "what": "location",
+      "rule": "nothing of the product lies in the working tree outside the workspace part, which carries its own ignore rule; compared through the mapping of the host skill (113)"
+    },
+    "B-2662": {
+      "what": "location",
+      "logicalNames": [
+        "feature:<slug>:verification:commands"
+      ]
+    },
+    "B-2732": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:launch-log"
+      ]
+    },
+    "B-2733": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:harness-run"
+      ]
+    },
+    "B-2734": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:report-log"
+      ]
+    },
+    "B-2735": {
+      "what": "location",
+      "logicalNames": [
+        "pipeline:<pipelineId>:retrospective:<hash>"
+      ]
+    }
+  }
+}

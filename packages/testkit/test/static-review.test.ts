@@ -58,7 +58,11 @@ test("CT-100-326: the six vocabularies come from the data files (F100-FR-226)", 
   assert.ok(runStates().has("running"));
   assert.ok(runStates().has("blocked-on-human"));
   assert.ok(stopReasons().has("stop_flag"));
-  assert.equal(stopReasons().size, 15, "the 15 stop reasons of annex E §E.3");
+  assert.equal(
+    stopReasons().size,
+    16,
+    "the 16 stop reasons of annex E §E.3 as amended by feature 152",
+  );
   assert.ok(envelopeFields().has("seq"));
   assert.ok(envelopeFields().has("runId"));
   assert.deepEqual([...ranks()].sort(), ["1", "2", "3", "4", "5", "6", "7", "8"]);

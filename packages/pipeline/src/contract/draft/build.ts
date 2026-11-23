@@ -101,6 +101,28 @@ export type ContractConfiguration = {
     readonly hash: string;
     readonly changed: readonly { readonly option: string; readonly value: unknown }[];
   };
+  /**
+   * F153-FR-054 (feature 153, phase 27, T375) — the task groups of the
+   * phases, sliced at derivation by the pure table
+   * `core/src/spec-groups/slicer.ts`, FROZEN here under `configuration` —
+   * CQ-153-07 answered A on 2026-11-13: no new top-level key (the contract
+   * lets the owner add fields only to `inventory` and `configuration`,
+   * `contracts/src/records/launch-contract.ts`). The record carries the
+   * groups per phase and the hash over them; the hash changes when the
+   * sources change. The runtime RECOMPUTES THE SLICING NOWHERE: it reads
+   * this block back from the launch record
+   * (`launch:<launchId>:record`, through
+   * `frozenTaskGroupsOfTheLaunchRecord` of `run-feature.ts`, T379), and
+   * where the record carries no block the unit stays the checkpoint claim —
+   * never a silent re-slice.
+   */
+  readonly taskGroups?: {
+    readonly schema: "specstride.task-groups-frozen/1";
+    /** The slicing hash per phase (`phase<N>` → the hash of that phase's groups). */
+    readonly hashes: Readonly<Record<string, string>>;
+    /** The frozen groups, in task order, as the slicer produced them. */
+    readonly groups: readonly unknown[];
+  };
 };
 
 /** One stage of the draft, with the members of data-model.md. */
@@ -259,6 +281,17 @@ export type DraftInput = {
    * force — recorded beside the hash under `configuration.comment`.
    */
   readonly commentChanged?: readonly { readonly option: string; readonly value: unknown }[];
+  /**
+   * F153-FR-054 (T375) — the frozen task groups per phase, sliced at
+   * derivation by the caller through `sliceThePhase`; `undefined` where rule
+   * TG-1 holds (the switch off, or the `parity` profile). Placed at the
+   * point of `configuration` CQ-153-07 A names.
+   */
+  readonly taskGroups?: {
+    readonly schema: "specstride.task-groups-frozen/1";
+    readonly hashes: Readonly<Record<string, string>>;
+    readonly groups: readonly unknown[];
+  };
 };
 
 /**
@@ -292,6 +325,11 @@ export function buildDraft(input: DraftInput): LaunchContractDraft {
       ...(input.commentHash !== undefined
         ? { comment: { hash: input.commentHash, changed: input.commentChanged ?? [] } }
         : {}),
+      // F153-FR-054 (feature 153, phase 27, T375) — the slicing frozen at
+      // derivation, at the place CQ-153-07 A names: under `configuration`,
+      // never a new top-level key (OWNER_MAY_ADD_FIELDS_TO names only
+      // `inventory` and `configuration`). Absent under rule TG-1.
+      ...(input.taskGroups !== undefined ? { taskGroups: input.taskGroups } : {}),
     },
     coverage,
     findings: [bootstrapFinding(coverage)],

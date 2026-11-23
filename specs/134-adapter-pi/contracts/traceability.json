@@ -1,0 +1,152 @@
+[
+  {
+    "requirement": "F134-FR-001",
+    "test": "CT-134-1",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-002",
+    "test": "CT-134-2",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-003",
+    "test": "CT-134-3",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-004",
+    "test": "CT-134-4",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-005",
+    "test": "CT-134-5",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-006",
+    "test": "CT-134-6",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-007",
+    "test": "CT-134-7",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-008",
+    "test": "CT-134-8",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-009",
+    "test": "CT-134-9",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-010",
+    "test": "CT-134-10",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-011",
+    "test": "CT-134-11",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-012",
+    "test": "CT-134-12",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-013",
+    "test": "CT-134-13",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-014",
+    "test": "CT-134-14",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-015",
+    "test": "CT-134-15",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-016",
+    "test": "CT-134-16",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-029",
+    "test": "CT-134-29",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-017",
+    "test": "CT-134-17",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-018",
+    "test": "CT-134-18",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-019",
+    "test": "CT-134-19",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-020",
+    "test": "CT-134-20",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-021",
+    "test": "CT-134-21",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-022",
+    "test": "CT-134-22",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-030",
+    "test": "CT-134-30",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-023",
+    "test": "CT-134-23",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-024",
+    "test": "CT-134-24",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-025",
+    "test": "CT-134-25",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-026",
+    "test": "CT-134-26",
+    "status": "n/a"
+  },
+  {
+    "requirement": "F134-FR-027",
+    "test": "CT-134-27",
+    "status": "unverified"
+  },
+  {
+    "requirement": "F134-FR-028",
+    "test": "CT-134-28",
+    "status": "n/a"
+  }
+]

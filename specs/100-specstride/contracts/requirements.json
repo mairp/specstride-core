@@ -1,0 +1,1968 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "count": 237,
+  "requirements": [
+    {
+      "id": "F100-FR-001",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "A layer MUST import only from layers below it and from the `contracts` package. The engine (L4) and the pass loop (L3) MUST import interfaces of L2 and never an implementation of L1. The build MUST fail when an import-boundary check over the package graph finds a violation. (LR-1)",
+      "test": "CT-100-101"
+    },
+    {
+      "id": "F100-FR-002",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "A host MUST reach the product only through the CLI protocol of annex G. A host MUST NOT read a state file, an event file, a launch contract or a log. Diagnosis by a host MUST go through a CLI command whose output has a byte cap. (LR-2)",
+      "test": "CT-100-102",
+      "ep": "EP-01 `specstride.host/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-003",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Between the CLI (L6) and the runtime root (L5) there MUST be only files, one start of the runtime root at launch, and signals for `stop --now`. The CLI MUST write only the files that the table of annex B §B.5 gives it as writer: requests to the inbox, launch records, the supervision record, and the records of a launch and of a reverse plan that are written before a runtime exists. It MUST NOT write run state. (LR-3)",
+      "test": "CT-100-103"
+    },
+    {
+      "id": "F100-FR-004",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Only the runtime tree (the runtime root and the engine) MUST write the control plane, with the exceptions of F100-FR-003. A reader MUST derive the conditions `dead`, `stale` and `launch-abandoned`; no process writes them as a state. (LR-4)",
+      "test": "CT-100-104"
+    },
+    {
+      "id": "F100-FR-005",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "At any moment exactly one process MUST be the writer of a run's event file: the runtime root while no engine is alive, the engine while it is alive. Learning MUST have its own writer domain, its own lock and its own event file. The rule MUST be tested under contention in Wave 1. (LR-5)",
+      "test": "CT-100-105"
+    },
+    {
+      "id": "F100-FR-006",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Every process boundary that the parity oracle observes at the baselines MUST stay a process boundary. Every other boundary MUST be a call that returns a result record whose `exit_code` field carries the same code number as the as-is process. The tables of annex E §E.4 and annex G §G.4 are the authority on which is which. (LR-6)",
+      "test": "CT-100-106"
+    },
+    {
+      "id": "F100-FR-007",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "The router, the quota classifier, the relaunch classifier, lane derivation and the terms gate MUST each be a pure table: versioned data, evaluated by the one table evaluator of annex X §X.3, with the rule id and the table version recorded with every decision. (LR-7)",
+      "test": "CT-100-107"
+    },
+    {
+      "id": "F100-FR-008",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Role resolution MUST belong to the harness layer. It MUST run at launch and produce a plan per phase and per role, with the fallbacks the consumer opted into, each entry checked by the terms gate again at the moment it is used. A loop layer or a router MUST NOT call role resolution. (LR-8)",
+      "test": "CT-100-108",
+      "ep": "EP-02 `specstride.harness/1` (consumes)",
+      "parity": "off: no fallback is configured (row 40 of annex X §X.7)"
+    },
+    {
+      "id": "F100-FR-009",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Text from outside the runtime (a harness stream, the output of a check, a critic reply, the consumer's comment) MUST enter through one ingress, where it is redacted by the redactor of annex X §X.4 and cut to a size cap. Sinks and prompts MUST receive only the result. Under the `parity` profile the cap MUST NOT be below the as-is sizes that reach the critic prompt (phase evidence up to 60000 characters; a grounding budget of 327680 bytes at a window of 200000 tokens), or FX-25 differs. (LR-9)",
+      "test": "CT-100-109"
+    },
+    {
+      "id": "F100-FR-010",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Every switch of the product MUST be ordinary product configuration. The parity configuration MUST be the named profile `parity` of annex X §X.7, which sets every switch the oracle needs. The product MUST have no oracle mode and no code path that exists only for the oracle, other than the compatibility projection, which consumers may also switch on. (LR-10)",
+      "test": "CT-100-110"
+    },
+    {
+      "id": "F100-FR-011",
+      "annex": "A",
+      "section": "§A.2",
+      "text": "Every closed set MUST be listed in annex X §X.6 with its owner and its rule for an unknown value. Every file of the control plane MUST carry a `schema` field, and a reader MUST refuse a file whose major differs from the one it supports. (LR-11)",
+      "test": "CT-100-111"
+    },
+    {
+      "id": "F100-FR-012",
+      "annex": "A",
+      "section": "§A.3",
+      "text": "The core packages (the engine with the pass loop, and every loop-layer package) MUST import the `contracts` package and the kernel package of shared pure helpers and nothing else from the product. They MUST NOT import a harness adapter, a sink adapter, a config loader, a host package, a UI package or a provider SDK, and they MUST NOT start a process or open a network connection directly. They MUST NOT import the file-system module of the platform: a core package reads and writes files through the kernel and through the ports of the edge packages (F100-FR-234). The import-boundary check MUST enforce this, and MUST fail when a core file names a sample implementation or a Wave 1 implementation of any extension point.",
+      "test": "CT-100-112",
+      "assumption": "CQ-185 (whether a core package may import the file-system module; read as no)"
+    },
+    {
+      "id": "F100-FR-234",
+      "annex": "A",
+      "section": "§A.3",
+      "text": "The kernel package MUST offer to the core what the core may not import: a process primitive with the operations start a process in a group and a session of its own, with standard input closed and, where the caller names them, two files as its standard output and standard error; start such a process detached with a status record, in which the kernel starts a waiter of its own in the new session, with no shell, and the waiter starts the command, waits for its end and writes its exit code or signal, its duration and its times of start and end atomically to a file the caller names, so that the record exists when the process that started it has ended (the baseline does the same with a wrapper, B-1127, B-1070); signal a group (polite, terminate, kill), read the start time of a process, search the process table for a run token, and wait for an end; a clock; the registration call of the doctor's checks; and the atomic write. The core and every loop layer MUST receive these as arguments from the composition root. An edge package MAY touch the file system or start a process on behalf of a core package, behind an interface of the `contracts` package: in Wave 1 one for the integrity of checks (owner 116), one for the tree store (owner 143) and one for the check runner (owner 148).",
+      "test": "CT-100-334"
+    },
+    {
+      "id": "F100-FR-013",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "Each extension point MUST have an id of the form `specstride.<name>/<major>`. A change inside a major MUST be additive. An implementation MUST declare the majors it supports; the registry MUST refuse an implementation outside the supported range and the doctor MUST report it. The core MUST support the current major and the one before it.",
+      "test": "CT-100-113"
+    },
+    {
+      "id": "F100-FR-014",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "An implementation MUST be of one of three classes: data (a file validated against a schema), first-party code (a package of the product that registers through the registration call), or third-party code (a package named in user configuration). Wave 1 MUST accept data from consumers and first-party code from the product. Third-party code MUST be refused at registration in Wave 1, with a message that names the class; its interface is designed and not enabled.",
+      "test": "CT-100-114"
+    },
+    {
+      "id": "F100-FR-015",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "An implementation that widens capability MUST be accepted from user configuration, the environment or flags only, and never from project configuration. A widening entry in project configuration MUST be ignored with a launch message and a doctor warning.",
+      "test": "CT-100-115"
+    },
+    {
+      "id": "F100-FR-016",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "Each extension point MUST have one registry, filled at process start and read-only after launch. What a run resolved from a registry MUST be written to the run's records and replayed on resume; a resume MUST NOT resolve again unless the consumer asks for it by flag.",
+      "test": "CT-100-116"
+    },
+    {
+      "id": "F100-FR-017",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "Each extension point MUST have a conformance suite in the published test kit. Every Wave 1 implementation MUST pass its suite in the build. A data implementation MUST be validated when it is loaded, and the consumer MUST be able to run the conformance suite on it on request.",
+      "test": "CT-100-117"
+    },
+    {
+      "id": "F100-FR-018",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "For each extension point EP-01 to EP-19 the test tree MUST hold a sample implementation outside the core. The build MUST run the conformance suite on the sample and MUST fail if any core file names the sample. Adding or removing the sample MUST change no core file.",
+      "test": "CT-100-118"
+    },
+    {
+      "id": "F100-FR-019",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "An implementation that throws, exceeds its time limit or returns a value outside the closed result set of its point MUST be degraded to the plainer path that the section of that point documents. A failing implementation MUST NOT produce a verdict, an exit code or a stop reason of its own. The degradation MUST be recorded as an event.",
+      "test": "CT-100-119"
+    },
+    {
+      "id": "F100-FR-020",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "EP-01 to EP-17 and EP-19 MUST be public interface contracts with a compatibility promise per major. EP-18 MUST be an internal seam: versioned and tested in the same way, with a conformance suite and a sample, and with no promise to implementers outside the product's repository in Wave 1.",
+      "test": "CT-100-120"
+    },
+    {
+      "id": "F100-FR-021",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "Every extension point MUST state what the core does with a value it does not know. Where the section of a point states nothing more specific, the rule MUST be: an unknown field is ignored by a reader and kept by a writer that copies the record; an unknown member of a closed set refuses the record with a message that names the set and the value; an unknown member of an open set is resolved through the registry and refused only if no entry matches.",
+      "test": "CT-100-121"
+    },
+    {
+      "id": "F100-FR-235",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "The calls of the engine into learning MUST be a plain function interface of the `contracts` package at layer L2, which the composition root hands to the engine. The interface MUST have five operations: `resolve` a value and its arm for a knob and a phase at the start of a pass; `observe` an approved phase; `evaluate` the applied decisions of an approved phase; `report` the last recorded evaluation of every active decision, read-only, for the lines printed at exit; and the tamper bracket as two operations, `bracketTake` before a proposer pass and `bracketCheck` after it (F100-FR-228). It is no extension point in Wave 1. A failure of a call MUST leave the run on the value it would have had without learning, and MUST never undo an approval.",
+      "test": "CT-100-335"
+    },
+    {
+      "id": "F100-FR-237",
+      "annex": "A",
+      "section": "§A.4",
+      "text": "The calls of the engine into the invocation code of feature 126 (`reconcile` the observations of one invocation into a result, `finalize` one invocation into the result, its event and a decision of the closed set of row 175 of annex X §X.6, `sweepRetention` of the invocations of a run) MUST be a plain function interface of the `contracts` package at layer L2, which the composition root hands to the engine. It is no extension point in Wave 1. `finalize` takes the invocation identity, the breaker state, the limit, an optional kill reason and an optional cap limit, and returns the decision, the reason code, `is_error`, the count of consecutive errors, the kill class and the cap count (F126-FR-034). The implementation is in `@specstride/harness` (feature 126); the caller is the pass loop (feature 103, F103-FR-013).",
+      "test": "CT-100-337"
+    },
+    {
+      "id": "F100-FR-022",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "Every specification of the product MUST use the terms of the glossary with one meaning each. A term that the glossary marks \"never bare\" MUST be written in its qualified form: phase gate, launch check, verification gate, phase attempt, stage attempt, launch contract, launch bundle, spec bundle, engine hook, host hook, harness adapter, auth tier, model tier. The old use of \"micro-loop\" for diagnosis and acceleration MUST be written \"recovery cycle\".",
+      "test": "CT-100-122"
+    },
+    {
+      "id": "F100-FR-023",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "A requirement of any feature MUST NOT assume a closed list of harnesses. Anything that enumerates harnesses MUST read the resolved registry, which includes discovered harnesses and harnesses the consumer declared. The core MUST NOT test a harness name in control flow.",
+      "divergence": "DV-064",
+      "test": "CT-100-123",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-024",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The critic MUST never approve its own session. Every critic call MUST run in a fresh session. Where the critic and the proposer resolve to the same model, the critic-diversity warning MUST be raised and recorded, and it MUST NOT block a run. The warning MUST also be raised where the diversity test gives `unverified`.",
+      "test": "CT-100-124"
+    },
+    {
+      "id": "F100-FR-025",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The product MUST behave the same on Linux and on macOS for every requirement of this specification. Windows and WSL MUST be reported by the doctor as unvalidated. Every statement about macOS in every feature is `unverified` until a macOS runner has passed the parity oracle, which is a release condition.",
+      "divergence": "DV-071",
+      "test": "CT-100-125",
+      "status": "unverified (check: the parity oracle and every conformance suite pass on a macOS runner; verified-on: —; pin: macOS version of the runner, to be recorded)"
+    },
+    {
+      "id": "F100-FR-026",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The product MUST NOT read state written by the three as-is systems. An old state tree found in a workspace MUST be reported by the doctor and left untouched. Legacy command names, legacy variable names and migrations of a pre-v2 layout MUST NOT be carried.",
+      "divergence": "DV-035; DV-036; DV-037",
+      "test": "CT-100-126"
+    },
+    {
+      "id": "F100-FR-027",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The product MUST be delivered as one published package that holds the CLI, the entry of the runtime and the host package for Claude Code. The `contracts` package and the test kit MUST be published as well. Installing any of them MUST run no install script and MUST compile nothing. Every dependency of a published package MUST be declared at an exact version, never a range (the control of threat T-44).",
+      "test": "CT-100-127",
+      "assumption": "CQ-206 (the \"exact versions\" part of the control of T-44 is anchored in this requirement; no requirement id is spent on it)"
+    },
+    {
+      "id": "F100-FR-028",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The package as shipped MUST have the audience `distributed`. The audience MUST change only through user configuration, and never through the environment, a flag, project configuration or the consumer's comment (ruling 2).",
+      "divergence": "DV-048",
+      "assumption": "CQ-205 (ruling 2 is read to name user configuration as the one source of the audience)",
+      "parity": "`personal` (the fixtures declare the audience) (row 34 of annex X §X.7)",
+      "test": "CT-100-128"
+    },
+    {
+      "id": "F100-FR-029",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The licence of the product MUST be MIT, with the copyright line \"Copyright (c) 2026 mairp\". A published file MUST NOT hold a path, an account or a name that is specific to the owner's machines. Every dependency MUST be compatible with MIT; a proprietary dependency MUST be optional and never bundled.",
+      "test": "CT-100-129"
+    },
+    {
+      "id": "F100-FR-030",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "Every component of the product MUST be written in the one language the owner ruled. A component in another language MUST enter only through an entry in the Language Ledger, which is empty at the start of Wave 1.",
+      "divergence": "DV-054; DV-065",
+      "test": "CT-100-130"
+    },
+    {
+      "id": "F100-FR-031",
+      "annex": "A",
+      "section": "§A.5",
+      "text": "The micro-loop layer, the layer of parallel units and concurrent verification commands MUST add no run state, no exit code and no stop reason. Every failure inside them MUST end in one of: the work returns to the serial path; the layer is off for the phase attempt; the layer is off for the run.",
+      "test": "CT-100-131",
+      "ep": "EP-04 `specstride.loop-layer/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-032",
+      "annex": "B",
+      "section": "§B.1",
+      "text": "The product MUST keep state in exactly three roots (user-level state, the control plane of the workspace, the workspace part) and, with parallel units on, in the worker root, as in the table of §B.1. The control plane MUST lie outside the working tree. A mutable file MUST NOT be shared between two workspaces.",
+      "origin": "C-011",
+      "disposition": "translated",
+      "test": "PT-100-C-011-*",
+      "divergence": "DV-006"
+    },
+    {
+      "id": "F100-FR-033",
+      "annex": "B",
+      "section": "§B.1",
+      "text": "The worker root MUST lie outside the workspace and outside the control plane. The tree store MUST lie in the control plane of the run. The worker root and the tree store MUST NOT exist when parallel units are off. Both MUST be removed when the run ends.",
+      "divergence": "DV-084",
+      "parity": "off (neither location exists) (row 20 of annex X §X.7)",
+      "test": "CT-100-133",
+      "status": "unverified (check: location and permissions of the worker root on macOS; verified-on: —; pin: —)"
+    },
+    {
+      "id": "F100-FR-034",
+      "annex": "B",
+      "section": "§B.1",
+      "text": "Where the host's shell or the detached runtime cannot write the control root, the consumer MUST be able to set another control root in user configuration, the environment or a flag. A control root inside the working tree MUST be accepted only together with a deny rule for the proposer's harness, and the run MUST then record `protection=detect` unless the harness adapter confirms the denial.",
+      "test": "CT-100-134",
+      "status": "unverified (check: the spike of the detached runtime writes the control root from the host's shell tool and from the detached root, with the shell sandbox off and on; verified-on: —; pin: host versions of the spike)"
+    },
+    {
+      "id": "F100-FR-035",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "A file in the workspace part MUST NOT decide anything. The runtime MUST read the outbox and the phase evidence as claims, after the pass has exited, as regular files and without following links. (SL-1)",
+      "test": "CT-100-135"
+    },
+    {
+      "id": "F100-FR-036",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "Every file the runtime writes MUST be written to a temporary name in the same directory and renamed into place, so that no reader sees a partial file. A state file MUST hold current state only; history is the event stream. (SL-2)",
+      "divergence": "DV-072",
+      "test": "CT-100-136"
+    },
+    {
+      "id": "F100-FR-037",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "Grounding MUST refuse, by real path, every path of the control plane, of the event stream, of the outbox, of the carry-over files (the handoff and the proposer's notebook), of the worker root and of the tree store, and every path under the project's repository directory, whatever the phase evidence cites and whether a loop layer is on or off. (SL-3)",
+      "divergence": "DV-032; DV-089",
+      "test": "CT-100-137"
+    },
+    {
+      "id": "F100-FR-038",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "Feature 100 MUST own one table from logical names to locations, with a layout version. Specifications, the parity oracle, the doctor and messages to the consumer MUST name state by logical name. A change of layout MUST change that table and the layout version and nothing else in any specification. (SL-4)",
+      "test": "CT-100-138"
+    },
+    {
+      "id": "F100-FR-039",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "After launch, the inbox MUST be the only place where a process outside the runtime tree writes, apart from the supervision record of §B.16. A stop request MUST be honoured as at the baseline, including when it was written while no run was active. (SL-5)",
+      "test": "CT-100-139"
+    },
+    {
+      "id": "F100-FR-040",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "At containment levels C0 and C1 the control plane is protected by its location and by detection, not by the operating system. The run record and the `[LOOP]` line MUST then say `protection=detect`. At C2 and above they MUST say `protection=prevent` only when the harness adapter confirmed that the sandbox denies writes to the control plane. (SL-6)",
+      "test": "CT-100-140"
+    },
+    {
+      "id": "F100-FR-041",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "State trees of the three as-is systems MUST NOT be read. The workspace part MUST carry a layout version file, so that it can be told apart from an old tree of the same name. (SL-7)",
+      "divergence": "DV-035",
+      "test": "CT-100-141"
+    },
+    {
+      "id": "F100-FR-042",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "While a run is alive the runtime root MUST keep an advisory marker in the workspace part that holds the owner record of §B.9. A launch that finds a marker whose owner it cannot probe MUST be refused with `foreign-owner`. The marker is a safety measure and decides nothing else; its removal by a pass MUST be reported as an integrity event.",
+      "test": "CT-100-142"
+    },
+    {
+      "id": "F100-FR-043",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "Directories of the control plane, of the user-level state and of the worker root MUST be readable and writable by their owner only, and files likewise. The runtime MUST resolve real paths and require them to stay inside their root, MUST refuse a symbolic link inside the control plane, and MUST open files it reads as claims without following links.",
+      "test": "CT-100-143"
+    },
+    {
+      "id": "F100-FR-228",
+      "annex": "B",
+      "section": "§B.2",
+      "text": "When the learning mode is not `off`, the engine MUST, before each proposer pass, record the size and the hash of the leading bytes of three files that the proposer could reach: the event stream of the run, the decision log of learning and the observation of the current phase; and MUST check after the pass that those leading bytes are unchanged. Appends are allowed. A file that shrank, or whose leading bytes changed, MUST give one event `integrity.events_changed` with the phase, the phase attempt and the file, and MUST mark the run as left out of every baseline and every evaluation of learning. The engine executes the bracket through the calls of F100-FR-235; the rule and its thresholds belong to feature 106 (F106-FR-037).",
+      "test": "CT-100-328",
+      "assumption": "CQ-115"
+    },
+    {
+      "id": "F100-FR-044",
+      "annex": "B",
+      "section": "§B.3",
+      "text": "The identifiers of §B.3 MUST be minted by the process named there, with the scope and the rule named there. Every record and every event that concerns an identified thing MUST carry its identifiers.",
+      "test": "CT-100-144"
+    },
+    {
+      "id": "F100-FR-045",
+      "annex": "B",
+      "section": "§B.3",
+      "text": "A `launch` MUST continue the unfinished run of the same feature, with its `runId` and its counts, and MUST say so in one line. A new run MUST start only when no unfinished run of the feature exists or when the consumer passes `--new-run`. Counts inside a run MUST be reset only by `--reset-counts`, which is accepted from the command line only and is never stored in the run snapshot.",
+      "divergence": "DV-011",
+      "parity": "resume fixtures pass `--reset-counts` (row 13 of annex X §X.7)",
+      "test": "CT-100-145"
+    },
+    {
+      "id": "F100-FR-046",
+      "annex": "B",
+      "section": "§B.3",
+      "text": "Where the compatibility projection or compatibility output shows the as-is run id, it MUST show a value of the as-is form: date and time of the engine start to the second, a hyphen, and the process id of the engine.",
+      "origin": "C-013; B-0248",
+      "disposition": "ported",
+      "test": "PT-100-C-013-*"
+    },
+    {
+      "id": "F100-FR-047",
+      "annex": "B",
+      "section": "§B.3",
+      "text": "The logical name of anything that belongs to a phase attempt MUST carry the phase number, the ordinal of the engine start and the ordinal of the phase attempt, so that the name stays unique when counts were reset. Where a directory of that name already exists, the as-is suffix rule MUST apply: the run id is appended.",
+      "divergence": "DV-011",
+      "test": "CT-100-147"
+    },
+    {
+      "id": "F100-FR-048",
+      "annex": "B",
+      "section": "§B.4",
+      "text": "Every file of the control plane and every record of §B.7 to §B.18 MUST carry a field `schema` whose value is the schema id with its major, for example `specstride.lease/1`. A file of several records MUST carry it in every record.",
+      "test": "CT-100-148"
+    },
+    {
+      "id": "F100-FR-049",
+      "annex": "B",
+      "section": "§B.4",
+      "text": "A reader MUST refuse a record whose schema id it does not know or whose major differs from the one it supports, with a message that names the logical name, the major found and the major supported, and with a doctor finding. `resume` on a run whose records have a different major MUST refuse with exit 3. A reader MUST ignore a field it does not know. A writer MUST add fields inside a major only in an additive way.",
+      "divergence": "DV-039",
+      "test": "CT-100-149"
+    },
+    {
+      "id": "F100-FR-050",
+      "annex": "B",
+      "section": "§B.4",
+      "text": "The run record MUST hold the version of the product that started the run and the version of every later engine start. A difference MUST be recorded as an event and shown by the doctor.",
+      "test": "CT-100-150"
+    },
+    {
+      "id": "F100-FR-051",
+      "annex": "B",
+      "section": "§B.4",
+      "text": "Every state file MUST have exactly one writing process, named in the table of §B.5. Two processes MUST never write the same state file. Where two processes need to record state about one thing, each MUST have its own file.",
+      "test": "CT-100-151"
+    },
+    {
+      "id": "F100-FR-052",
+      "annex": "B",
+      "section": "§B.4",
+      "text": "A record of this annex MUST NOT hold a secret value, a nonce before its call has returned, or prompt or reply content. A secret is stored as its reference; a nonce as its hash; content as a logical name with hash and size.",
+      "test": "CT-100-152"
+    },
+    {
+      "id": "F100-FR-053",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "The table of §B.5 MUST be the complete list of logical names of Wave 1, each with its root, its one writer and its readers. A feature that needs a name the table does not hold MUST NOT invent one: it reports the need, and the name is added here with a new minor of the layout version.",
+      "test": "CT-100-153",
+      "assumption": "CQ-018 (the spelling of every logical name other than `gate:<N>:approved`, `attempt:…:evidence`, `run:<id>:events`, `worker-root` and `tree-store`, which the sources give)"
+    },
+    {
+      "id": "F100-FR-054",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "The five compared logs and records of the as-is pipeline runtime and supervisor, and the engine log, MUST have the logical names `pipeline:<pipelineId>:launcher-log`, `pipeline:<pipelineId>:report-log`, `pipeline:<pipelineId>:launch-log`, `pipeline:<pipelineId>:harness-run` and `run:<runId>:engine-log`. The compatibility projection MUST write them as files, so that the oracle compares them by logical name. The engine log MUST be written once per engine start, under `run:<runId>:engine-log:<k>`, and the bare name `run:<runId>:engine-log` MUST resolve to the newest engine start, as for `run:<runId>:events-legacy:<k>` (F100-FR-229).",
+      "test": "CT-100-154",
+      "parity": "written (the compatibility projection is on) (row 17 of annex X §X.7)"
+    },
+    {
+      "id": "F100-FR-055",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "The names `workspace:current:events` and `workspace:current:engine-log` MUST resolve to the event file and the engine log of the newest engine start of the workspace, and the state of a feature MUST be reachable under the feature slug. They take the place of the as-is links at the top of the state directory and of the as-is directories per feature and per run.",
+      "origin": "C-011; B-0157; B-0165; B-0167; B-0168",
+      "disposition": "translated",
+      "test": "PT-100-C-011-*",
+      "divergence": "DV-006"
+    },
+    {
+      "id": "F100-FR-056",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "The old side of the layout table (as-is path to logical name, for each of the two baselines) MUST be part of the normalization contract of annex X §X.8, fixed by the `file` rows of the behaviour inventory. It MUST map the as-is approval marker to `gate:<N>:approved`.",
+      "divergence": "DV-006; DV-029",
+      "test": "CT-100-156"
+    },
+    {
+      "id": "F100-FR-057",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "At the start of every phase the engine MUST look for a stray notebook of the proposer at the two as-is stray places (the directory of the phase evidence and the root of the working tree) and move it to `feature:<slug>:notebook`. The newer file wins: the stray file is deleted when the canonical file is newer, and replaces it otherwise. The engine MUST write the as-is log line of the sweep with both paths.",
+      "origin": "C-013; B-0256; C-012; B-0194",
+      "disposition": "ported",
+      "test": "PT-100-C-013-*; PT-100-C-012-*"
+    },
+    {
+      "id": "F100-FR-058",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "For every sweep of F100-FR-057 the engine MUST emit the event `progress.swept`, and the compatibility projection MUST render it as the as-is event of the sweep with the fields `from` (the stray path) and `to` (the canonical path).",
+      "origin": "C-008; B-0085",
+      "disposition": "translated",
+      "test": "PT-100-C-008-*",
+      "divergence": "DV-007"
+    },
+    {
+      "id": "F100-FR-229",
+      "annex": "B",
+      "section": "§B.5",
+      "text": "The as-is event file MUST be written once per engine start, under `run:<runId>:events-legacy:<k>`. The consumer's comment MUST be kept verbatim, after redaction, under `launch:<launchId>:comment`, and the launch record MUST hold only its hash. A shell shim of a host MUST find the precomputed status line through `workspace:current:status-line`, whose place depends on the real path of the workspace only.",
+      "test": "CT-100-329",
+      "divergence": "DV-007",
+      "assumption": "CQ-033; CQ-038"
+    },
+    {
+      "id": "F100-FR-059",
+      "annex": "B",
+      "section": "§B.6",
+      "text": "The workspace record MUST hold the fields above. A launch whose lock provider differs from the recorded one MUST be refused with a doctor finding. A launch in a workspace whose spec shows ticked phases that have no approval record MUST be refused and MUST name the commands `state export`, `state import` and `state adopt`.",
+      "test": "CT-100-159"
+    },
+    {
+      "id": "F100-FR-060",
+      "annex": "B",
+      "section": "§B.7",
+      "text": "The launch record MUST hold the fields above and MUST be written before the detach strategy is called. A launch record older than the handshake limit that has no `outcome` and no lease with its nonce MUST be derived by readers as `launch-abandoned`, shown as an attention item, and closed by the next launch.",
+      "test": "CT-100-160",
+      "assumption": "CQ-019 (fields beyond mode, comment hash, detach strategy and launch nonce, which the sources name)"
+    },
+    {
+      "id": "F100-FR-061",
+      "annex": "B",
+      "section": "§B.8",
+      "text": "The lease MUST hold the fields above. Liveness MUST be read from the lease through the lock provider and MUST never be an event. A reader MUST derive `dead` when the run record shows a live state and the lease has no live owner, and `stale` when the owner lives and both the heartbeat and the newest event are old.",
+      "test": "CT-100-161",
+      "ep": "EP-13 `specstride.lock/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-062",
+      "annex": "B",
+      "section": "§B.9",
+      "text": "The owner record MUST hold the fields above. It is part of the lease, of the lock and of the advisory marker. A lock MUST never exist without an owner record.",
+      "test": "CT-100-162",
+      "status": "unverified (check: resolution of the process start time and the boot identity on macOS; verified-on: —; pin: —)"
+    },
+    {
+      "id": "F100-FR-063",
+      "annex": "B",
+      "section": "§B.10",
+      "text": "The process registry MUST hold one entry per child process, with the fields above. Processes of a pass, of a critic-class call, of a check, of a stage and of a worker MUST be of class `owned`. The detached job of an accepted yield and a long verification job MUST be of class `adoptable`, with the kind `detached-job`; no process of a worker is ever `adoptable`.",
+      "test": "CT-100-163"
+    },
+    {
+      "id": "F100-FR-064",
+      "annex": "B",
+      "section": "§B.10",
+      "text": "A stop and `stop --now` MUST end `owned` processes only, and only after pid, start time and run token all match. An `adoptable` process MUST survive a stop, MUST NOT make the lock provider report `owner-dead-group-alive`, and MUST be adopted by the next engine start; ending one MUST be a separate, explicit request. When the engine exits for any cause, the runtime root MUST end every `owned` process before it relaunches or rests.",
+      "test": "CT-100-164"
+    },
+    {
+      "id": "F100-FR-065",
+      "annex": "B",
+      "section": "§B.11",
+      "text": "The inbox MUST accept exactly the three request types above. An empty stop request MUST mean a clean stop with every default. The engine MUST read the stop request at the boundaries of the baseline and during a pass, and MUST remove it when it honours it. A host event MUST inform only: it never pauses, stops or relaunches a run by itself.",
+      "test": "CT-100-165",
+      "assumption": "CQ-019 (field names of the three request types)"
+    },
+    {
+      "id": "F100-FR-066",
+      "annex": "B",
+      "section": "§B.12",
+      "text": "The run snapshot MUST hold every resolved key with its source and its class, and the source hashes of the run as pinned values. A failed write of the snapshot MUST be a launch error. Secret references MUST be stored as references. On `resume`, a pinned key MUST rank below flags and above the environment, and a tunable key MUST rank below the environment.",
+      "divergence": "DV-024",
+      "test": "CT-100-166"
+    },
+    {
+      "id": "F100-FR-067",
+      "annex": "B",
+      "section": "§B.12",
+      "text": "The source hashes MUST be compared with the snapshot at launch of a continued run, at `resume` and at the start of every pass. For the task list the hash that ignores checkboxes MUST be the one compared. A change MUST stop the run with the blocked-on-human signal, name the file, and leave phase evidence that was delivered in place. Under the `parity` profile the three check points MUST NOT be active, and the plan MUST be checked when the critic starts, as at the baseline.",
+      "divergence": "DV-082",
+      "parity": "check at critic start only (row 15 of annex X §X.7)",
+      "test": "CT-100-167"
+    },
+    {
+      "id": "F100-FR-068",
+      "annex": "B",
+      "section": "§B.13",
+      "text": "A run MUST have one ledger: append-only, every record chained to the one before and signed with a key that is not the approval key. With every loop layer off it MUST hold at least one record per phase attempt. A truncated, reordered or edited ledger MUST be detected; the effect is that every loop layer is off for the phase attempt, and never a stop.",
+      "test": "CT-100-168",
+      "assumption": "CQ-019 (field names of the envelope; the sources name the properties and the fields `pass_id`, `attempt_id`, `tree_hash`, check durations and `session_id`)"
+    },
+    {
+      "id": "F100-FR-069",
+      "annex": "B",
+      "section": "§B.13",
+      "text": "The counts that limit a run MUST live in the ledger and MUST continue across a resume and a relaunch: reject counts, ordinals of phase attempts, the MALFORMED streak, pass index, yield index, the consecutive breakers, and the counters of every loop layer. The oscillation window MUST be keyed by the sequence of phase attempts. `--reset-counts` MUST reset them all and MUST be recorded.",
+      "divergence": "DV-011; DV-044",
+      "parity": "resume fixtures pass `--reset-counts` (row 13 of annex X §X.7)",
+      "test": "CT-100-169"
+    },
+    {
+      "id": "F100-FR-070",
+      "annex": "B",
+      "section": "§B.14",
+      "text": "The runtime MUST accept an approval only from a record it wrote itself, signed with the approval key of the feature and bound to the verdict, the hash of the phase evidence, the result of the verification gate and the tree fingerprint. `resume` MUST verify the signature and every binding; a record that fails, and a bare marker without a record, MUST count as not approved and MUST raise an integrity event. Approval records MUST survive runs.",
+      "divergence": "DV-029",
+      "test": "CT-100-170"
+    },
+    {
+      "id": "F100-FR-071",
+      "annex": "B",
+      "section": "§B.15",
+      "text": "The engine MUST write the terminal record before it exits, on every exit path. The runtime root, the pipeline stage executor and both relaunch classifier tables MUST read the record and MUST NOT match a stop reason by string in the event file. When the record is missing they MUST classify the end as a crash from the exit code and write a synthesized record.",
+      "divergence": "DV-028",
+      "test": "CT-100-171"
+    },
+    {
+      "id": "F100-FR-072",
+      "annex": "B",
+      "section": "§B.16",
+      "text": "The cadence state of supervision and, with `relaunch.owner: supervise`, the relaunch budget and the list of relaunches MUST be kept in the supervision record, written by the CLI. It is the only file of run-related state that the CLI writes after launch, apart from inbox requests.",
+      "test": "CT-100-172"
+    },
+    {
+      "id": "F100-FR-073",
+      "annex": "B",
+      "section": "§B.17",
+      "text": "The pause record MUST exist exactly while the run is in the state `paused-quota`, and there MUST be one per run whatever the number of workers. A start of the engine that finds a pause record MUST enter the pause again and compute the remaining wait from `resumeAt` and `ceilingAt`, never from a timer.",
+      "divergence": "DV-005",
+      "test": "CT-100-173"
+    },
+    {
+      "id": "F100-FR-074",
+      "annex": "B",
+      "section": "§B.18",
+      "text": "On a breach of the integrity of the phase gate the runtime MUST write the tripwire record. While it exists, every run on the machine MUST run with every loop layer off, announced, until the operator clears the tripwire by a command. Clearing MUST remove the record and MUST be recorded as an event in the next run.",
+      "test": "CT-100-174",
+      "assumption": "CQ-019 (field names)"
+    },
+    {
+      "id": "F100-FR-075",
+      "annex": "B",
+      "section": "§B.19",
+      "text": "The control plane of a feature MUST be movable: `state export` writes a signed archive (schema id `specstride.state-archive/1`) of the approval records, the ledger and the learning log of one feature; `state import` verifies and installs it; `state adopt` takes over the control plane of the same working tree at an old path. The three commands MUST NOT run while a run of the feature is alive.",
+      "test": "CT-100-175"
+    },
+    {
+      "id": "F100-FR-227",
+      "annex": "B",
+      "section": "§B.20",
+      "text": "Every record of the table of §B.20 MUST carry its schema id and follow the common rules of §B.4. The feature named as owner MUST list the fields in its specification and deliver the schema file to the `contracts` package. A feature that reads such a record MUST read it by its logical name and through its schema, and MUST NOT depend on a field that the owner's specification does not list. In compatibility output and in the compatibility projection the as-is name of a record MUST be written where the baseline writes it.",
+      "test": "CT-100-327",
+      "assumption": "CQ-105; CQ-114 (the schema ids; the queue recommends that feature 100 gives them)"
+    },
+    {
+      "id": "F100-FR-076",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "The harness port MUST offer the eight operations `detect`, `capabilities`, `preflight`, `startPass`, `complete`, `stop`, `betweenPasses` and `classify`, with the inputs, outputs and errors of §C.1. It MUST have two capability levels: `proposer` (the harness ends by itself; takes the prompt by standard input, file or bounded argument; works in a given directory without asking; has a declared way to suppress prompts; gives an exit code; lets its credential be checked without a paid call) and `completion` (one prompt in, one reply out; no tools, by construction or by a declared and verified mechanism, or the second form of §C.3; a known context window with its source; a fresh session per call; typed failures; identity of provider and model).",
+      "test": "CT-100-176",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-077",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "Every capability value MUST carry its provenance, one of `declared`, `probed`, `adapter`, `catalogue`, or MUST be null. A capability that no run has shown MUST be reported as `unverified`. Where a declared and an effective context window differ, the smaller MUST be used.",
+      "test": "CT-100-177",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-078",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "The proposer MUST come from a flag, the environment, configuration or the shipped default only. When the proposer is absent the launch MUST be refused and the refusal MUST name the discovered candidates. Discovery MUST never change the proposer.",
+      "test": "CT-100-178",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "divergence": "DV-004",
+      "parity": "every fixture names the proposer and the critic (row 36 of annex X §X.7)"
+    },
+    {
+      "id": "F100-FR-079",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "The environment of every harness call MUST be an allow-list: the search path, the locale, the home or its overlay, the harness's own auth variables and what the descriptor names. A harness MUST NOT inherit the consumer's other provider keys. The credentials of the critic MUST never be in the environment of the proposer, and the reverse.",
+      "test": "CT-100-179",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-080",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "A harness executable MUST be resolved to an absolute path at launch and recorded with its version. An executable inside the workspace or in a directory that everyone may write MUST be refused. A path that changed since the last run MUST give a warning.",
+      "test": "CT-100-180",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-081",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "A transport MUST be a property of a harness adapter. One harness adapter MAY offer several, from the closed set `subprocess`, `sdk-in-process`, `direct-call`, each with its own auth tier and its own row of terms-gate data. A transport whose optional dependency is absent MUST be unavailable, with a doctor line, and MUST leave the other transports untouched. A transport other than the default MUST be chosen by the consumer in user configuration, the environment or a flag, and never automatically.",
+      "parity": "`subprocess` for every harness; the critic of each harness in its as-is transport and mode (rows 27, 28 of annex X §X.7)",
+      "divergence": "DV-001",
+      "test": "CT-100-181",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-082",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "Harness-native memory MUST be off for every critic-class call and off by default for the proposer, with an opt-in in user configuration. The setting MUST be recorded per run. A harness that cannot switch its memory off MUST NOT qualify as a critic.",
+      "divergence": "DV-047",
+      "parity": "no flag about memory is passed, as at the baseline (row 29 of annex X §X.7)",
+      "test": "CT-100-182",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-083",
+      "annex": "C",
+      "section": "§C.1",
+      "text": "A new phase attempt, a critic-class call, a relaunch, a kill by a watchdog, the second repair of a unit, an escalation, a change of configuration and the first pass of the main line after a parallel group was applied MUST each start a fresh session. Inside a phase attempt a session MAY be continued where the harness adapter declares continuation, under the drop rules of the content owner. A harness that cannot continue a session carries context through files.",
+      "divergence": "DV-010",
+      "parity": "off (no invocation carries a continuation argument) (row 10 of annex X §X.7)",
+      "test": "CT-100-183",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-084",
+      "annex": "C",
+      "section": "§C.2",
+      "text": "The harness descriptor MUST hold the fields of §C.2. It MUST be data only: argument lists are lists and never shell text. An unknown top-level key MUST refuse the descriptor; keys under `x-` MUST be ignored. A descriptor whose `descriptorVersion` is outside the accepted range MUST be refused with a doctor finding.",
+      "test": "CT-100-184",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-085",
+      "annex": "C",
+      "section": "§C.2",
+      "text": "A harness MUST be in one of the four states `tested`, `locally-verified`, `declared`, `detected`. A harness that is not `tested` is unverified: it has no version pin, its capabilities are declared or probed, it runs at auth tier 1 or 2 only, and the doctor shows it as unverified. A descriptor MUST be accepted from user configuration, the environment, flags and the product's bundled data only.",
+      "test": "CT-100-185",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-086",
+      "annex": "C",
+      "section": "§C.2",
+      "text": "A secret MUST be sent only to the host it was declared for. A plain, unencrypted endpoint MUST be refused unless it is the loopback address. Redirects MUST be refused. A free read-only request to a model list MAY carry the credential; the value MUST never be stored or logged.",
+      "test": "CT-100-186",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-087",
+      "annex": "C",
+      "section": "§C.3",
+      "text": "The `completion` level MUST have exactly the two forms of §C.3. A critic-class call whose proof is missing or fails MUST be refused with `critic_not_toolless`. A critic path MUST NOT ever receive a flag that allows all tools. The result of the proof MUST be recorded for every critic-class call.",
+      "divergence": "DV-081",
+      "parity": "the critic of each harness in its as-is transport and mode (row 28 of annex X §X.7)",
+      "test": "CT-100-187",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-088",
+      "annex": "C",
+      "section": "§C.3",
+      "text": "A critic of either form MUST receive the grounding snapshot and, where one exists, the fact block in its prompt, and its verdict MUST be bound to the nonce of the call. Before a critic of the second form starts, the runtime MUST move the proposer's notebook, handoff and outbox out of the working tree, and MUST move them back after the call. The move holds for every critic-class call, the diagnostician included. The second form is a stated exception to the rules that the critic judges from the grounding snapshot only and holds no tools, and it is limited to reading project files.",
+      "test": "CT-100-188",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-230",
+      "annex": "C",
+      "section": "§C.3",
+      "text": "The proof of a critic-class call MUST show that the call ran in a session of its own, in one of three ways, and MUST record which: (1) the harness takes a session id from the caller, and the initial record shows the id that the runtime minted; (2) the harness gives the id itself, and the id of the initial record equals no session id of any pass of the run; (3) the initial record carries no session, and the weaker proof applies, for a tested harness adapter only: the exact version pin, the preflight of that harness adapter and the flag set of the call, recorded for every call that rests on it as the weaker proof (§C.3, first form). A proof that fails MUST refuse a configured critic with `critic_not_toolless`, which halts the run, and MUST pass over an automatically picked one. Under the `parity` profile no proof is made, as at the baseline.",
+      "test": "CT-100-330",
+      "divergence": "DV-081; DV-110",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "parity": "no proof is made for any harness: the as-is transport and mode of each harness, which made no proof (row 28 of annex X §X.7), and `harnesses.dsh.critic.proof` = `none` (row 117 of annex X §X.7)",
+      "assumption": "CQ-110; CQ-117 (two harness adapters proceed on different proofs of the session; both are admitted as cases 2 and 3); CQ-182 (answered by the owner on 2026-09-30: the weaker proof of case 3 is allowed for a tested harness adapter only; Principle IX of constitution v3.0.1 names it, so case 3 passes the principle; the absence of a proof under the `parity` profile for every harness, rows 28 and 117 of annex X §X.7, is a stated deviation from Principle IX under that profile, plan Complexity Tracking; both rows of the plan stay until the first implementation slice removes them)"
+    },
+    {
+      "id": "F100-FR-231",
+      "annex": "C",
+      "section": "§C.3",
+      "text": "A critic MUST run only on a model whose context window is known. A window that the consumer declares (`roles.critic.contextTokens`, or the window of a model in `harnesses.<id>.contextWindows`) MUST always win, and where a declared and an effective window differ the smaller MUST be used. A model whose window is not known MUST NOT qualify for an automatic pick. Outside the `parity` profile, a critic that the consumer configured on a model that is not listed and for which the consumer declares no window MUST be refused by the harness adapter; a fallback window MUST NOT be used. Under the `parity` profile the as-is fallback window of each harness MUST apply to such a critic (128,000, 200,000 or 98,304 tokens, as the baseline of that harness has it; DV-106, DV-111).",
+      "test": "CT-100-331",
+      "divergence": "DV-106; DV-111; DV-099 (the over-window prompt under `parity`, owned by feature 117)",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "parity": "the as-is fallback window of each harness (row 28 of annex X §X.7), the window limit of row 55, and a critic prompt still over the window sent as at the baseline (row 57, `prompt.critic.overWindow` = `send`, DV-099, stated by feature 117); a stated deviation from Principle IX under the `parity` profile, plan Complexity Tracking (assumption: CQ-145)",
+      "assumption": "CQ-145; CQ-202 (answered by the owner on 2026-09-30: a configured critic on an unlisted model with no declared window is refused outside the `parity` profile, and the as-is fallback holds under `parity` only; features 125 and 131 carry the same); CQ-118"
+    },
+    {
+      "id": "F100-FR-089",
+      "annex": "C",
+      "section": "§C.4",
+      "text": "The list of withheld paths MUST hold the five locations of §C.4. The harness adapter MUST confirm the denial before the call. Without the confirmation the second form MUST NOT be used: a configured critic is refused with `critic_not_toolless`, and an automatically picked one is passed over for the next candidate of the critic order, announced and recorded.",
+      "test": "CT-100-189",
+      "status": "unverified (check: the read-only sandbox of the first harness of this form denies reads of paths outside and inside the working tree that are on the list; verified-on: —; pin: version of that harness at the capture)"
+    },
+    {
+      "id": "F100-FR-090",
+      "annex": "C",
+      "section": "§C.5",
+      "text": "There MUST be one registry from `stream.format` to a stream reader. A reader MUST produce only the six normalized records. A reader MUST parse only the harness's own framing, MUST never read the output of a tool as a stream record, MUST enforce a cap on line size and rate, and MUST report a stream that ends without a terminal record. A new stream format MUST be addable as data through `stream.mapping`, with no code.",
+      "test": "CT-100-190",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-091",
+      "annex": "C",
+      "section": "§C.5",
+      "text": "The harness adapters of pi and prime MUST share one JSONL reader, and what differs between them MUST be data in the dialect table of §C.5. A stream whose session header names a version outside `schemaVersions` MUST be refused. Where `terminalDecides` is true, the outcome of a call MUST be taken from the terminal record.",
+      "divergence": "DV-090",
+      "parity": "the prime critic runs in text mode, as at the baseline (row 28 of annex X §X.7)",
+      "test": "CT-100-191",
+      "ep": "EP-02 `specstride.harness/1` (implements)",
+      "status": "unverified (check: the stream of pi in JSON mode passes the reader, and its exit code on a provider error is captured; verified-on: —; pin: pi version of the fixture capture)"
+    },
+    {
+      "id": "F100-FR-092",
+      "annex": "C",
+      "section": "§C.6",
+      "text": "Role resolution MUST write the resolved registry and role plan with the fields of §C.6 at launch. The engine MUST walk the plan; a resolution MUST NOT take place after launch. A resume or relaunch MUST read the record and MUST NOT rank again unless the consumer asks by flag or the stored pick no longer exists.",
+      "test": "CT-100-192",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-093",
+      "annex": "C",
+      "section": "§C.6",
+      "text": "An automatically picked critic MUST follow the four steps of §C.6. An unverified harness of kind `cli` MUST never be picked automatically. A harness whose terms are unknown and that the consumer did not name MUST never be a default and MUST never be picked automatically; it is usable when the consumer names it, with the unknown-terms warning. An automatically picked critic on a metered endpoint MUST have a hard spending cap, announced at launch. The pick MUST be announced, recorded and shown in the digest.",
+      "divergence": "DV-049",
+      "parity": "every fixture names the critic (row 35 of annex X §X.7)",
+      "test": "CT-100-193",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-094",
+      "annex": "C",
+      "section": "§C.6",
+      "text": "Roles MUST be an open registry: a role has an id, the capability level it needs, its independence constraints against other roles, and its budget key. Role resolution MUST resolve every registered role.",
+      "test": "CT-100-194",
+      "ep": "EP-02 `specstride.harness/1` (implements)"
+    },
+    {
+      "id": "F100-FR-095",
+      "annex": "C",
+      "section": "§C.7",
+      "text": "The spec-format port MUST offer the operations `detect`, `parse`, `validate`, `tick` and `inputs` of §C.7 and MUST produce the canonical spec model with structured tasks. Every component that reads a specification MUST read the canonical model; a second parser MUST NOT exist.",
+      "divergence": "DV-060",
+      "test": "CT-100-195",
+      "ep": "EP-03 `specstride.spec-format/1` (implements)"
+    },
+    {
+      "id": "F100-FR-096",
+      "annex": "C",
+      "section": "§C.7",
+      "text": "The format names and the detection order MUST be those of the Specstride baseline. An explicit format `openspec` MUST be accepted as `openspec-change`.",
+      "divergence": "DV-073",
+      "test": "CT-100-196",
+      "ep": "EP-03 `specstride.spec-format/1` (implements)"
+    },
+    {
+      "id": "F100-FR-097",
+      "annex": "C",
+      "section": "§C.8",
+      "text": "The check runner MUST be handle-based with the operations `pin`, `start`, `poll`, `result`, `cancel` and `environment` of §C.8, and MUST return the result with each condition in a field of its own. The verification gate, inner checks, the closing check and the merge check MUST use the same runner.",
+      "test": "CT-100-197",
+      "ep": "EP-05 `specstride.check-runner/1` (implements)"
+    },
+    {
+      "id": "F100-FR-098",
+      "annex": "C",
+      "section": "§C.8",
+      "text": "Around every command of the verification gate and around the grounding pass the protected set MUST be fingerprinted before and after. A difference MUST become a fact for the critic and MUST NOT halt the run. A result obtained against a changed set MUST carry the condition `tainted`.",
+      "divergence": "DV-076",
+      "parity": "off (row 31 of annex X §X.7)",
+      "test": "CT-100-198",
+      "ep": "EP-05 `specstride.check-runner/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-099",
+      "annex": "C",
+      "section": "§C.8",
+      "text": "Concurrency of verification commands MUST be a parameter, `verification.parallelism`, with the default 1 and the ceiling 4. A command MUST run beside another only when the check manifest declares the reads and the writes of both and neither reads what the other writes. An undeclared command MUST run alone. A command that fails in a batch of more than one MUST be run once more alone, and both results MUST be stated.",
+      "divergence": "DV-080",
+      "parity": "1 (row 7 of annex X §X.7)",
+      "test": "CT-100-199",
+      "ep": "EP-05 `specstride.check-runner/1` (implements)"
+    },
+    {
+      "id": "F100-FR-100",
+      "annex": "C",
+      "section": "§C.8",
+      "text": "The step runner MUST be an option, `verification.step_runner`, that is off by default. Steps are fixed argument lists run by the runtime, which stops at the first failed required step and can resume from it. A resumed run of steps is partial and MUST never count as evidence of a pass.",
+      "parity": "off (row 6 of annex X §X.7)",
+      "test": "CT-100-200",
+      "ep": "EP-05 `specstride.check-runner/1` (implements)"
+    },
+    {
+      "id": "F100-FR-232",
+      "annex": "C",
+      "section": "§C.8",
+      "text": "A command that is staged before the verification gate MAY be reused by the verification gate only under the reuse policy that its declaration names (`per-attempt`, `per-phase`, `per-run`) and only while the tree is provably the tree of the staged run: the same revision, and a clean working tree in the record of the staged run and at the verification gate, as at the baseline (B-1128). The result of a staged command MUST be kept under `attempt:<N>:<k>:<n>:prestage`. With a loop layer engaged in the phase attempt, that is, with a unit of work declared in it (annex D, F100-FR-118), the verification gate MUST reuse nothing. The engine MUST hand this fact to the verification gate as an input of its call; the verification gate reads no record of a loop layer. The rules are stated by the owner of the verification gate (F105-FR-033).",
+      "test": "CT-100-332",
+      "ep": "EP-05 `specstride.check-runner/1` (implements)"
+    },
+    {
+      "id": "F100-FR-101",
+      "annex": "C",
+      "section": "§C.9",
+      "text": "A verification-plan source MUST offer `discover`, `obligations` and `conflicts` as in §C.9. The verification plan MUST be frozen at launch, bound to the hashes of its sources and stored in the control plane.",
+      "test": "CT-100-201",
+      "ep": "EP-07 `specstride.verification-source/1` (implements)"
+    },
+    {
+      "id": "F100-FR-102",
+      "annex": "C",
+      "section": "§C.9",
+      "text": "The verification modes MUST be the closed set `required`, `plan`, `off`, with the default `required`. The verification gate MUST run before the critic; when it fails the engine writes the feedback itself and does not call the critic. Derivation of a launch contract MUST state the mode it sets and MUST prefer `required` where commands are declared.",
+      "divergence": "DV-040; DV-043",
+      "test": "CT-100-202",
+      "ep": "EP-07 `specstride.verification-source/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-103",
+      "annex": "C",
+      "section": "§C.9",
+      "text": "The check manifest derived on a relaunch MUST be compared with the stored one. A difference MUST become a fact for the critic, and the stored manifest MUST apply.",
+      "divergence": "DV-078",
+      "parity": "off (row 33 of annex X §X.7)",
+      "test": "CT-100-203",
+      "ep": "EP-07 `specstride.verification-source/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-104",
+      "annex": "C",
+      "section": "§C.10",
+      "text": "An event sink MUST offer `open`, `write`, `flush`, `close` and `status` as in §C.10, and the context of `open` MUST hold what §C.10 lists. A sink MUST receive an event only after the primary writer has written it, already redacted. A failure of a sink MUST NOT change the outcome of a run or the primary event file.",
+      "test": "CT-100-204",
+      "ep": "EP-08 `specstride.event-sink/1` (implements)",
+      "assumption": "CQ-032; CQ-119 (what the context of `open` holds; three features proposed parts of it, and the context holds all of them)"
+    },
+    {
+      "id": "F100-FR-105",
+      "annex": "C",
+      "section": "§C.10",
+      "text": "The compatibility projection MUST be a sink that renders events in the as-is vocabularies through a table with one row per event type, a row that projects to nothing included. It MUST write to files of their own and never to the primary stream. It MUST be on under the `parity` profile and under `compat.legacyEvents`, and off otherwise. It MUST be byte-identical to the baseline on the fixtures of the oracle after normalization; there is no such promise elsewhere.",
+      "divergence": "DV-007",
+      "parity": "on (row 17 of annex X §X.7)",
+      "test": "CT-100-205",
+      "ep": "EP-08 `specstride.event-sink/1` (implements)"
+    },
+    {
+      "id": "F100-FR-106",
+      "annex": "C",
+      "section": "§C.10",
+      "text": "Prompt and reply content MUST be captured for export whenever traces are on, and the consumer MUST be able to switch capture off. Captured content MUST always pass the single redaction point and MUST be dropped, with a mark that says so, when the redactor cannot run.",
+      "divergence": "DV-083",
+      "parity": "off (row 16 of annex X §X.7)",
+      "test": "CT-100-206",
+      "ep": "EP-08 `specstride.event-sink/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-107",
+      "annex": "C",
+      "section": "§C.11",
+      "text": "A secret resolver MUST offer `handles`, `exists`, `resolve` and `boundHost` with the errors of §C.11. A secret in configuration MUST be a reference; an inline value MUST be a configuration error that refuses the launch. A `file:` target MUST lie outside the workspace and MUST be readable by its owner only.",
+      "divergence": "DV-023",
+      "test": "CT-100-207",
+      "ep": "EP-10 `specstride.secret-resolver/1` (implements)",
+      "status": "unverified (check: an existence query of the keychain on Linux and on macOS that prints no value; verified-on: —; pin: —)"
+    },
+    {
+      "id": "F100-FR-108",
+      "annex": "C",
+      "section": "§C.12",
+      "text": "The terms gate MUST be a pure table with the one function `evaluate` of §C.12, evaluated by the table evaluator. Auth tier 3 MUST ship refused for every provider. For the audience `distributed`, auth tier 2 MUST be the default for the providers whose auth tier 1 is confirmed for personal use only, and auth tier 1 for them MUST be an opt-in marked \"personal use only\".",
+      "divergence": "DV-048; DV-003",
+      "parity": "audience `personal` (row 34 of annex X §X.7)",
+      "test": "CT-100-208",
+      "ep": "EP-11 `specstride.terms/1` (implements)"
+    },
+    {
+      "id": "F100-FR-109",
+      "annex": "C",
+      "section": "§C.13",
+      "text": "The quota classifier MUST offer `classify` and `observe` with the closed sets of §C.13. A quota pause MUST spend no budget of any kind. `proposer_consecutive_errors` MUST count only failures whose class is `agent_failure` or `provider_other`, or `overload` after its cap.",
+      "divergence": "DV-005",
+      "parity": "not observable (the stub agents emit no quota signal) (row 39 of annex X §X.7)",
+      "test": "CT-100-209",
+      "ep": "EP-12 `specstride.quota-classifier/1` (implements)",
+      "status": "unverified (check: the quota signal of every Wave 1 harness is captured in a fixture; verified-on: —; pin: harness versions of the captures)"
+    },
+    {
+      "id": "F100-FR-110",
+      "annex": "C",
+      "section": "§C.14",
+      "text": "A toolchain profile MUST be data with the content of §C.14, accepted from the product and from user configuration. The protected set of a phase MUST be derived at launch from the profiles and stored in the control plane.",
+      "divergence": "DV-052",
+      "parity": "no file of a loop layer exists (row 1 of annex X §X.7)",
+      "test": "CT-100-210",
+      "ep": "EP-16 `specstride.toolchain/1` (implements)"
+    },
+    {
+      "id": "F100-FR-111",
+      "annex": "C",
+      "section": "§C.15",
+      "text": "Containment MUST be a capability of a harness adapter with the four levels of §C.15. Each harness adapter MUST declare its ceiling with provenance. The runtime MUST use the strongest level available and MUST announce and record it for every run. C0 MUST need an opt-in in user configuration, which the environment, a flag and project configuration MUST NOT give; a proposer whose ceiling is C0 MUST be refused at launch without it. The runtime MUST never assert a sandbox by itself; only under the `parity` profile the harness adapter sets the as-is assertion variable where the baseline sets it.",
+      "divergence": "DV-030; DV-031",
+      "parity": "the permission and containment settings of each harness as at the baseline (rows 25, 26 of annex X §X.7)",
+      "test": "CT-100-211",
+      "assumption": "CQ-183 (\"user config\" in ruling 34 is read as the user configuration only)",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-112",
+      "annex": "C",
+      "section": "§C.15",
+      "text": "Parallel units MUST run only at containment C2 or above. On a harness whose level is lower the option MUST stay off for the run, with the reason stated, unless the consumer set `loop.parallel.allow_detect` in user configuration; the environment, a flag and project configuration MUST NOT set it. The run MUST then say `protection=detect`.",
+      "divergence": "DV-080",
+      "parity": "off (rows 20, 23 of annex X §X.7)",
+      "test": "CT-100-212",
+      "assumption": "CQ-183 (\"user config\" in ruling P2 is read as the user configuration only)",
+      "status": "unverified (check: the sandbox of a harness confines its own file tools to a write root other than the workspace; verified-on: —; pin: harness versions of the capture)"
+    },
+    {
+      "id": "F100-FR-113",
+      "annex": "C",
+      "section": "§C.16",
+      "text": "At auth tier 1 a call MUST use the consumer's real configuration home, never written by the run, with plugins, host hooks, skills and tool servers of the harness off. At auth tier 2 a call MUST use a throwaway home built from an overlay of §C.16. Session state MUST live per phase attempt and MUST be removed when the phase attempt ends.",
+      "divergence": "DV-002",
+      "parity": "overlay scope `none` (row 30 of annex X §X.7)",
+      "test": "CT-100-213",
+      "ep": "EP-02 `specstride.harness/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-114",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "The loop-layer interface MUST have the eight call points of §D.1, called by the engine in the fixed order, and the closed set of directives of §D.1. The engine, and never a layer, MUST execute and account for every directive.",
+      "test": "CT-100-214",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-115",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "Layers MUST stack in a fixed order, to a depth of at most 2 in Wave 1. At every call point the outer layer MUST be called first and the inner layer only when the outer one returns `none`. Each layer MUST have a ledger namespace of its own.",
+      "test": "CT-100-215",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-116",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "A layer MUST declare the directives and the services it uses. The engine MUST refuse at registration a layer that declares one the engine does not offer. The harness port MUST declare `concurrentSessions`; a group MUST run only on a tested harness adapter that declares it.",
+      "test": "CT-100-216",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-117",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "A layer MUST NOT be able to write an approval, a verdict, feedback, a hint or a recovery marker; to change a counter of the outer loop; to hold a harness; to write an event or a ledger record except through the engine; or to write the project's repository. The build MUST prove it on the package graph of every layer.",
+      "test": "CT-100-217",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-118",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "With no unit of work declared in a phase attempt, a layer MUST execute nothing and MUST add nothing to any prompt but its protocol block; until the layer is engaged, a time limit of a pass and a command of the runtime MUST NOT differ from the classic loop. In a run whose verification gate does not execute (mode `plan` or `off`) the layer MUST be off, announced with the reason `gate-not-executing`.",
+      "divergence": "DV-012; DV-020; DV-053",
+      "parity": "`loop.strategy` is `classic` (row 1 of annex X §X.7)",
+      "test": "CT-100-218",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-119",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "A pass that ends at a valid checkpoint MUST leave the short-pass counter as it was; a pass with a valid checkpoint and a changed tree MUST be given back, so that it does not raise the pass count, and MUST spend one cycle of the layer's own cap; the exact argument lists of the inner check set MUST be exempt from the process-level repeat counter. A worker pass MUST be outside the pass loop, MUST spend no pass of the pass limit and MUST change no counter of the outer loop.",
+      "divergence": "DV-013; DV-014; DV-015",
+      "parity": "not observable (the layer is off) (row 1 of annex X §X.7)",
+      "test": "CT-100-219",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-120",
+      "annex": "D",
+      "section": "§D.1",
+      "text": "The closing check MUST be its own switch, `loop.micro.closing_check`, on by default. It MUST run only in a phase attempt in which a unit of work was declared, inside the cycle cap, and MUST return the proposer to work at most twice. From the moment phase evidence exists, a limit or a breaker of the pass loop MUST NOT stop the run.",
+      "divergence": "DV-046",
+      "parity": "off (row 2 of annex X §X.7)",
+      "test": "CT-100-220",
+      "ep": "EP-04 `specstride.loop-layer/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-121",
+      "annex": "D",
+      "section": "§D.2",
+      "text": "The tree-store service MUST offer exactly the seven operations `snapshot`, `materialize`, `changed`, `compose`, `apply`, `release` and `sweep`. It MUST offer no restore, no reset and no checkout of the workspace, and an operation other than `apply` MUST NOT be able to write a path of the workspace. The interface is reserved in EP-04 major 1; Wave 1 builds only what parallel units need.",
+      "divergence": "DV-080",
+      "parity": "off (no operation is called) (row 20 of annex X §X.7)",
+      "test": "CT-100-221",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-122",
+      "annex": "D",
+      "section": "§D.2",
+      "text": "Integration MUST be composition and never a merge of content: the composed tree is the base in which each path of an accepted delta holds the content of that worker's final snapshot. The path sets of accepted deltas MUST be pairwise disjoint; a delta that shares a path with an earlier one in the order of the tasks at launch MUST be refused with the reason `overlap`. A model MUST NOT take part in integration.",
+      "test": "CT-100-222",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-123",
+      "annex": "D",
+      "section": "§D.2",
+      "text": "Snapshot commits MUST exist only in the store, which lies outside the project's repository. They MUST have a fixed author, date and message, MUST never be a parent of a commit of the project, MUST never be pushed, and MUST be removed with the run. An operation of the store or of a layer MUST NOT write a file under the project's repository directory, create a reference there or change the project's index. The store MUST be unwritable by any worker; each worker tree MUST hold a repository of its own that borrows the objects of the store read-only.",
+      "divergence": "DV-084",
+      "parity": "off (row 20 of annex X §X.7)",
+      "test": "CT-100-223",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-124",
+      "annex": "D",
+      "section": "§D.2",
+      "text": "Inside a phase attempt the runtime MUST never commit to, revert, reset, clean or check out the workspace, and MUST write nothing under the project's repository directory except the approval commit that exists at the baseline. With parallel units on, and only then, the runtime MAY make exactly two writes to the workspace: (1) the application of the composed delta of a group — forward only, only paths of audited deltas, only onto a workspace equal to the base, recorded before it is made, never undone, nothing under the repository directory; (2) the ticks of the integrated tasks, through the spec-format adapter. (Rule IR-60 as amended.)",
+      "divergence": "DV-085; DV-086",
+      "parity": "off (row 20 of annex X §X.7)",
+      "test": "CT-100-224",
+      "ep": "EP-04 `specstride.loop-layer/1` (implements)"
+    },
+    {
+      "id": "F100-FR-125",
+      "annex": "D",
+      "section": "§D.2",
+      "text": "After the application the engine MUST run the inner check set of the phase on the workspace, once per group, through the check runner. A failure MUST go to serial repair by the proposer in the ordinary loop; the applied changes MUST NOT be reverted. A result obtained in a worker tree or a merge check MUST NOT replace an execution at the verification gate, which runs in full on the workspace before the critic. The partial work of a killed worker MUST be discarded and its task returns to the serial loop.",
+      "test": "CT-100-225",
+      "ep": "EP-04 `specstride.loop-layer/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-126",
+      "annex": "D",
+      "section": "§D.3",
+      "text": "The parallel plan MUST hold the fields of §D.3, MUST be computed at launch as a pure function of the task list as read at launch and of configuration, and MUST be stored in the control plane with its hash. A relaunch that derives a different plan MUST announce the difference and use the stored plan. A stored plan whose hash does not match MUST switch the layer off for the run with an integrity event. The plan MUST be printed only with the option on.",
+      "divergence": "DV-080; DV-088",
+      "parity": "off (no plan file exists) (row 20 of annex X §X.7)",
+      "test": "CT-100-226"
+    },
+    {
+      "id": "F100-FR-127",
+      "annex": "D",
+      "section": "§D.3",
+      "text": "`loop.parallel.units` MUST default to `off`. `loop.parallel.workers` MUST default to 2. Its ceiling MUST be the key `loop.parallel.workersMax`, a whole number of 1 or more that MUST default to 4 and MUST be a widening key: project configuration may lower it and never raise it, and a higher value in project configuration is ignored with a launch message and a doctor warning, as F100-FR-202 says for a widening key. A value of `loop.parallel.workers` above the ceiling in force MUST be a configuration error at launch. `loop.parallel.quota_headroom` MUST default to 70 per cent. `loop.parallel.allow_detect` MUST default to off and MUST be a widening key.",
+      "parity": "`loop.parallel.units` off (rows 20, 21, 22, 23 and 130 of annex X §X.7)",
+      "test": "CT-100-227",
+      "assumption": "CQ-198 (the ceiling has no upper bound in the product)"
+    },
+    {
+      "id": "F100-FR-128",
+      "annex": "D",
+      "section": "§D.3",
+      "text": "Information about groups or workers MUST NOT reach a critic-class call: no worker id, no group id, no count, no outcome of a worker, no order of integration, and no word that tells a group from a serial unit of work that named the same tasks. An integrated group MUST appear in the fact block as one unit. The two integrity kinds that parallel units add MUST be neutral: `tree-changed-outside-pass` and `protected-change-not-applied`, reported by kind and without a count. A worker tree MUST NOT exist when a critic-class call starts.",
+      "test": "CT-100-228"
+    },
+    {
+      "id": "F100-FR-129",
+      "annex": "D",
+      "section": "§D.4",
+      "text": "The router MUST be one pure function over a versioned rule table with the three decision points of §D.4. It MUST run nothing, read no critic prompt, no nonce and no verdict, change no role and no counter of the outer loop, and MUST NOT be able to switch a layer on. The router prototype's modes that run a phase without a critic MUST NOT exist.",
+      "test": "CT-100-229",
+      "ep": "EP-06 `specstride.router-rules/1` (implements)"
+    },
+    {
+      "id": "F100-FR-130",
+      "annex": "D",
+      "section": "§D.4",
+      "text": "Escalation MUST be its own switch, `loop.escalation`, on by default. The second repair of a unit of work MAY run on the next model tier of the same harness, in a fresh session, never on a rung that equals a critic-class call of the run in model and in effort (the signal `targetIsCriticModel`), capped at 1 per task and 2 per phase attempt, inside the cap of repairs. A rung that shares the model of a critic-class call and differs in effort is not a collision: it MAY be used, and the critic-diversity warning MUST be raised and recorded. When the quota of the target is exhausted the escalation MUST be skipped, the repair MUST run on the base model, and the skip MUST be recorded.",
+      "divergence": "DV-050",
+      "assumption": "CQ-191 (ruling 49 is read to allow a rung on the critic's model at another effort, with the warning)",
+      "parity": "off (row 3 of annex X §X.7)",
+      "test": "CT-100-230",
+      "ep": "EP-06 `specstride.router-rules/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-131",
+      "annex": "D",
+      "section": "§D.5",
+      "text": "A prompt block provider MUST offer the one operation `blocks` of §D.5. One assembler MUST budget the whole prompt. With the as-is block set, which the `parity` profile selects, the prompt MUST equal the baseline's byte for byte.",
+      "parity": "the as-is block set (row 12 of annex X §X.7)",
+      "test": "CT-100-231",
+      "ep": "EP-15 `specstride.prompt-block/1` (implements)"
+    },
+    {
+      "id": "F100-FR-132",
+      "annex": "D",
+      "section": "§D.5",
+      "text": "Carry-over MUST consist of the ledger, a handoff that the runtime writes at the start of every pass and never reads back, and the obligations index, which replaces the block of inherited verification obligations in the proposer's prompt only. Each MUST have its own switch (`carry.ledger_handoff`, `carry.index`), on by default, and the cache-stable start of the prompt likewise.",
+      "divergence": "DV-045; DV-092; DV-094",
+      "parity": "off (rows 8, 9, 12 of annex X §X.7)",
+      "test": "CT-100-232",
+      "ep": "EP-15 `specstride.prompt-block/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-133",
+      "annex": "D",
+      "section": "§D.6",
+      "text": "The yield artifact MUST hold the fields of §D.6 and MUST be read as a claim under the rules of annex B §B.2. The predicate `command` MUST be refused unless the consumer allowed it. A worker of a parallel group MUST NOT yield; its yield artifact is refused.",
+      "test": "CT-100-233"
+    },
+    {
+      "id": "F100-FR-134",
+      "annex": "D",
+      "section": "§D.6",
+      "text": "The first-failure predicate MUST be its own switch, `verification.failfast`, on by default; it MUST NOT ride on the switch of a loop layer. The runtime MUST stop a job only if it launched the job and the yield declared `stop`; otherwise the wait ends and the job runs on. The default of `on_first_failure` MUST be `stop`; `continue-and-notify` as the default is an option that is off. The polite stop (an interrupt before a termination, with a grace period) MUST be its own switch, `carry.polite_stop`, on by default.",
+      "divergence": "DV-051; DV-093",
+      "parity": "off (rows 4, 5, 11 of annex X §X.7)",
+      "test": "CT-100-234"
+    },
+    {
+      "id": "F100-FR-135",
+      "annex": "D",
+      "section": "§D.7",
+      "text": "The fact block MUST hold the fields of §D.7 and nothing from the list of what is never in the block. Every text in it that comes from the workspace MUST be escaped, cut, stripped of control characters and printed inside a data boundary with a token of the call. Test counts MUST NOT be shown in Wave 1, only counts of suppression markers. File modification times stay in the grounding snapshot.",
+      "test": "CT-100-235"
+    },
+    {
+      "id": "F100-FR-136",
+      "annex": "D",
+      "section": "§D.7",
+      "text": "When files of the protected set were changed without authority, the verification gate MUST still run, its result MUST carry the condition, and the critic MUST be told. Approval stays possible and the run MUST NOT halt. At phase entry the tree MUST be compared with the approved tree of the phase before; a difference is a fact for the critic and never blocks.",
+      "divergence": "DV-077",
+      "parity": "off (row 32 of annex X §X.7)",
+      "test": "CT-100-236"
+    },
+    {
+      "id": "F100-FR-137",
+      "annex": "D",
+      "section": "§D.8",
+      "text": "There MUST be one check manifest per phase, written when the loop strategy is not `classic` or when one of the switches of rows 6, 7, 31 and 33 of annex X §X.7 is on, and never under the `parity` profile. It MUST be derived at launch from the sources the verification gate uses and from nothing else, stored in the control plane with its hash, and verified before every check. It MUST hold deterministic commands only. The router MAY order and exclude among its entries; nothing MAY add an entry after launch.",
+      "divergence": "DV-052",
+      "parity": "no manifest file exists (rows 1, 6, 7, 31, 33 of annex X §X.7)",
+      "test": "CT-100-237",
+      "assumption": "CQ-153"
+    },
+    {
+      "id": "F100-FR-138",
+      "annex": "E",
+      "section": "§E.1",
+      "text": "The engine MUST judge every phase gate through the critic strategy seam and plan every phase attempt through the attempt planner seam, with the operations `judge` and `next` of §E.1. Wave 1 MUST ship one critic; a critic ensemble and human approvals are not part of Wave 1.",
+      "test": "CT-100-238",
+      "ep": "EP-18 `specstride.critic-strategy/1` (implements)"
+    },
+    {
+      "id": "F100-FR-139",
+      "annex": "E",
+      "section": "§E.1",
+      "text": "Every critic call MUST carry a nonce of 64 bits of its own. The nonce MUST never be written to disk, to an event or to a span before the call has returned; afterwards only its hash MUST be recorded in events, spans, the ledger and the approval record. The verdict record and the feedback of the phase attempt MAY hold the nonce in clear after the call has returned, as at the baseline, because the oracle compares them.",
+      "test": "CT-100-239",
+      "ep": "EP-18 `specstride.critic-strategy/1` (implements)",
+      "assumption": "CQ-173"
+    },
+    {
+      "id": "F100-FR-140",
+      "annex": "E",
+      "section": "§E.1",
+      "text": "The model-tier bump MUST be an option, off by default: after K rejections of one phase by the critic, the next phase attempt runs on the next model tier of the same harness. K and the model-tier ladder MUST come from configuration. A failed verification gate and a MALFORMED reply MUST NOT count towards K. A target that equals a critic-class call of the run in model and in effort, and a target whose quota is exhausted, MUST be skipped. A target that shares the model of a critic-class call and differs from it in effort is not a collision (ruling 49): it MAY be used, and the critic-diversity warning MUST be raised and recorded, as for escalation (F100-FR-130). The bump and the escalation of annex D §D.4 MUST be separate rules with separate counts.",
+      "divergence": "DV-079",
+      "assumption": "CQ-204; CQ-191 (ruling 49 is read to allow a target on the critic's model at another effort, with the warning, for the bump as for escalation)",
+      "parity": "off (row 24 of annex X §X.7)",
+      "test": "CT-100-240",
+      "ep": "EP-18 `specstride.attempt-planner/1` (implements)"
+    },
+    {
+      "id": "F100-FR-141",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "A run MUST be in exactly one of the ten written states of §E.2. `dead`, `stale` and `launch-abandoned` MUST be derived by readers and never written. A quota pause MUST be a state and never a stop. `blocked-on-human` MUST be a resting state: no process, the lock released, left only by `resume`.",
+      "test": "CT-100-241"
+    },
+    {
+      "id": "F100-FR-142",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "The only transitions of a run MUST be T1 to T18 of §E.2, each written by the process the table names. A host MUST write no transition. The CLI MUST write only transitions into and out of `created` (T1, T2, T3, T17).",
+      "test": "CT-100-242"
+    },
+    {
+      "id": "F100-FR-143",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "The run record MUST hold the fields of §E.2, among them the containment level, the result of the proof that the critic holds no tools or only read-only tools, and the version of the redaction pattern set. It MUST have one writer.",
+      "test": "CT-100-243",
+      "assumption": "CQ-019 (field names; the sources name the content)"
+    },
+    {
+      "id": "F100-FR-144",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "A run that cannot go on without the consumer MUST emit the event `blocked` with a reason from the closed set of §E.2 and what it needs, write the terminal record with the stop reason and the exit code of the table of blocked reasons, release the lock and end. It MUST NOT be relaunched by either relaunch classifier table.",
+      "divergence": "DV-067",
+      "test": "CT-100-244",
+      "assumption": "CQ-020 (which existing stop reason each blocked reason ends with; the sources say \"an existing stop reason\" and name none except for the wait ceiling)"
+    },
+    {
+      "id": "F100-FR-145",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "When `resume`, or a `launch` that continues a run, finds a changed source hash, the CLI MUST refuse with exit 3, name the file, and record the refusal in the launch record (T3). Readers MUST show the run as `blocked-on-human` with the attention item `source-changed`. The event `blocked` for it MUST be written by the next process that becomes the writer of the event file, marked as synthesized.",
+      "divergence": "DV-021; DV-082",
+      "parity": "no check at `resume` (the check is at critic start) (row 15 of annex X §X.7)",
+      "test": "CT-100-245",
+      "assumption": "CQ-021 (who writes the state and the event at a refused `resume`, since the CLI is not a writer of run state or of the event file)"
+    },
+    {
+      "id": "F100-FR-146",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "A quota pause MUST spend no reject, no pass, no MALFORMED count, no error count, no wall-clock budget and no relaunch budget. It MUST hold while the runtime lives. It MUST have a ceiling, `pause.maxTotalMs`, that the consumer can set, with the default of 24 hours; at the ceiling the run MUST rest in `blocked-on-human` with the stop reason `paused_quota_ceiling`. After a reboot nothing relaunches by itself; `resume` enters the pause again.",
+      "divergence": "DV-005",
+      "parity": "not observable (row 39 of annex X §X.7)",
+      "test": "CT-100-246"
+    },
+    {
+      "id": "F100-FR-147",
+      "annex": "E",
+      "section": "§E.2",
+      "text": "The engine MUST verify the lease at every boundary at which it reads the stop request. When the owner of the lease is lost, the engine MUST finish the current pass, run no phase gate, write its terminal record with the cause `owner-lost`, the stop reason `stop_flag` and `causedBy: crash`, and exit 6.",
+      "test": "CT-100-247",
+      "ep": "EP-13 `specstride.lock/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-148",
+      "annex": "E",
+      "section": "§E.3",
+      "text": "The stop reasons of the product MUST be exactly the 16 members of §E.3, each with its engine exit code and its attribute `transient`. The terminal record MUST carry one of them on every exit that has a member in the column \"Stop reasons\" of the engine table of §E.4. On an exit that has none (0, 5, 70, and the causes of 1 and 3 without a member) the field MUST be null, `retryable` MUST be false, and an as-is stop line MUST NOT be written. A reader that finds another value MUST treat the stop as not retryable and report it.",
+      "test": "CT-100-248",
+      "assumption": "CQ-174"
+    },
+    {
+      "id": "F100-FR-149",
+      "annex": "E",
+      "section": "§E.3",
+      "text": "The compatibility projection MUST keep writing the as-is stop line with the as-is literal for every member 1 to 14. Where the engine and the pass loop both write a reason for one stop, the projection MUST hold two lines with different fields, the engine's line being the newer one, and the line of the pass loop MUST carry the as-is iteration field. The only outcome literal of the as-is end line MUST be `all_approved`. The four literals that learning reads as arbitration signals (`max_rejects`, `gate_oscillation`, `critic_config`, `proposer_no_progress`) MUST keep their meaning.",
+      "divergence": "DV-007",
+      "parity": "on (the projection is compared) (row 17 of annex X §X.7)",
+      "test": "CT-100-249"
+    },
+    {
+      "id": "F100-FR-150",
+      "annex": "E",
+      "section": "§E.3",
+      "text": "The closed families that are not stop reasons MUST be kept with their as-is literals, each listed in annex X §X.6: the kill reasons of the watchdogs with their class (`idle_timeout`: hang; `repeat_stall`, `progress_stall`: futility; `hard_cap`: budget); the stage reasons, transient (`exit`, `timeout`, `recovery-deadline`, `recovery-exhausted`) and deliberate (`postcondition`, `stage-precondition`, `setup-required`, `interrupted`, `existing-prerequisite`, `completed`, and `exec-error:` with a detail); the pipeline exit reasons (`preflight`, `all-stages-complete`, or a stage reason); the refusals of the launch checks; the relaunch refusals and the approval `classified-transient`.",
+      "test": "CT-100-250"
+    },
+    {
+      "id": "F100-FR-151",
+      "annex": "E",
+      "section": "§E.4",
+      "text": "The engine MUST exit with exactly the codes of the table \"Engine\" of §E.4, and every cause of a halt MUST map to exactly one code. The mapping from the result of the pass loop MUST apply only when phase evidence is absent.",
+      "origin": "028 SC-003",
+      "disposition": "merged-with 002 SC-004",
+      "test": "PT-100-028SC003-*"
+    },
+    {
+      "id": "F100-FR-152",
+      "annex": "E",
+      "section": "§E.4",
+      "text": "Every termination of a run MUST map to exactly one of the seven codes 0 to 6 of the engine, with the meanings done 0, internal 1, rejects 2, spec 3, budget 4, lock 5, stop 6, which is the vocabulary that the Specstride baseline and Lisa share. Code 70 is for an uncaught error of a command and is not a termination of a run.",
+      "origin": "002 FR-015; 002 SC-004",
+      "disposition": "merged-with 028 SC-003",
+      "test": "CT-100-1; CT-100-2"
+    },
+    {
+      "id": "F100-FR-153",
+      "annex": "E",
+      "section": "§E.4",
+      "text": "The pass loop, the critic call, the verification gate inside the engine and the internal helpers MUST return result records whose `exit_code` carries the numbers of §E.4. Where the baseline prints such a number, compatibility output MUST print the same number.",
+      "test": "CT-100-253"
+    },
+    {
+      "id": "F100-FR-154",
+      "annex": "E",
+      "section": "§E.4",
+      "text": "The engine MUST have two start modes. In `standalone` it takes the workspace lock, writes the lease and the run record, and owns the transitions of the root. In `child` it verifies the lease handed down by the root and never takes a lock. The executable of the engine MUST be resolved at launch and pinned by path and hash in the launch record, from a configuration key whose default is the product's own entry.",
+      "test": "CT-100-254",
+      "parity": "the oracle sets the key to its engine stub where a fixture needs one (row 41 of annex X §X.7)"
+    },
+    {
+      "id": "F100-FR-155",
+      "annex": "F",
+      "section": "§F.1",
+      "text": "A run MUST be a detached tree of processes as in §F.1: one runtime root per launch, and the engine as its child. The root MUST NOT be connected to the host after the handshake: no pipe, no socket the host must keep, no parent that waits. A run MUST NOT depend on a host hook, a monitor or a host process.",
+      "divergence": "DV-074",
+      "test": "CT-100-255",
+      "status": "unverified (check: the spike starts the root from the host's shell tool in an interactive session and in headless mode, with the shell sandbox off and on, on Linux and macOS, ends the session, and confirms that the root lives; verified-on: —; pin: host versions of the spike)"
+    },
+    {
+      "id": "F100-FR-156",
+      "annex": "F",
+      "section": "§F.1",
+      "text": "There MUST be one lock per workspace, taken by the runtime root and handed down to the engine as a lease; a child MUST never take a second lock. A second pipeline on a held workspace MUST end with the pipeline code 24 at launch. A foreground `specstride run` on a held workspace MUST end with the engine code 5.",
+      "divergence": "DV-075; DV-022",
+      "test": "CT-100-256",
+      "ep": "EP-13 `specstride.lock/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-157",
+      "annex": "F",
+      "section": "§F.1",
+      "text": "The launcher MUST be a file the operator can see and run, whose only job is to call the pipeline entry with the hash of the launch bundle. The runtime root MUST verify the hash of the launch bundle and the launcher's own hash at launch and at every relaunch, and MUST refuse an edited launcher.",
+      "divergence": "DV-054; DV-008",
+      "test": "CT-100-257"
+    },
+    {
+      "id": "F100-FR-158",
+      "annex": "F",
+      "section": "§F.1",
+      "text": "When the engine ends with a code outside 0 to 6, or by a signal, the runtime root MUST write a synthesized terminal record with the cause `crash`, end every `owned` process, and consult its relaunch classifier. When the runtime root itself dies, or the machine reboots, a relaunch MUST NOT happen by itself in Wave 1: the run reads as `dead`, and `resume` reclaims the lock, closes the dead launch with a synthesized end event, and continues at the first phase without a valid approval record. When the owner is dead and an `owned` process group is alive, `resume` MUST refuse and name the survivors.",
+      "test": "CT-100-258"
+    },
+    {
+      "id": "F100-FR-159",
+      "annex": "F",
+      "section": "§F.2",
+      "text": "The runtime root MUST accept exactly the two kinds of run request of §F.2. A request of kind `engine` MUST have the same lock, lease, relaunch classifier and digest as one of kind `pipeline`, and no launch contract to validate.",
+      "test": "CT-100-259"
+    },
+    {
+      "id": "F100-FR-160",
+      "annex": "F",
+      "section": "§F.3",
+      "text": "A launch MUST follow the four steps of §F.3 and MUST end in exactly one of the outcomes `started`, `attached`, `refused`. Readiness MUST be confirmed by the lease that carries the launch nonce, whatever the detach strategy. An unanswered launch MUST be closed as `launch-abandoned` by the next launch.",
+      "test": "CT-100-260",
+      "ep": "EP-17 `specstride.detach/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-161",
+      "annex": "F",
+      "section": "§F.3",
+      "text": "Re-attachment MUST be reading only. A new host session MUST learn of a run through `status` or through a host hook shim that prints a precomputed status line. The line MUST carry `validUntil`, which is `none`, without expiry, for a run that rests and has no lease; when a time is given and has passed the shim MUST print that the state is unknown and name the command `status`.",
+      "test": "CT-100-261",
+      "ep": "EP-09 `specstride.view/1` (consumes)",
+      "assumption": "CQ-163"
+    },
+    {
+      "id": "F100-FR-162",
+      "annex": "F",
+      "section": "§F.4",
+      "text": "`relaunch.owner` MUST be ordinary configuration with the values `root` and `supervise` and the default `root`. Both relaunch classifier tables MUST be pure tables evaluated by the table evaluator. A relaunch MUST always start a fresh session and MUST carry counts and ids from the ledger.",
+      "divergence": "DV-074",
+      "parity": "`supervise` (row 14 of annex X §X.7)",
+      "test": "CT-100-262"
+    },
+    {
+      "id": "F100-FR-163",
+      "annex": "F",
+      "section": "§F.4",
+      "text": "Each relaunch classifier table MUST NOT relaunch a run whose terminal record says `retryable: false`, a run in `blocked-on-human`, a run that was stopped on request, or a run while `hold-relaunch` is in force. A quota pause MUST give the classifier nothing to classify. A run in `blocked-on-human` MUST NOT be relaunched under any profile, the `parity` profile included: the row of table 1 (`relaunch-observe`, feature 123) that refuses it, O-33, is active under every profile. Under the `parity` profile only the row of table 1 that refuses a stop with `retryable: false`, O-34, is inactive (row 132 of annex X §X.7; DV-114): there table 1 classifies a stopped launcher that is not blocked as the baseline does, from the listed exit codes and the allowed stop reasons only.",
+      "divergence": "DV-114",
+      "parity": "table 1 reads the blocked reason (row O-33) and does not read `retryable` (row O-34 inactive; row 132 of annex X §X.7)",
+      "test": "CT-100-263",
+      "assumption": "CQ-238 (answered by the owner on 2026-09-30: the row of table 1 that refuses a blocked run is active under every profile; register row DV-114 covers the row that refuses a stop that is not retryable only)"
+    },
+    {
+      "id": "F100-FR-164",
+      "annex": "F",
+      "section": "§F.5",
+      "text": "The lock and liveness provider MUST offer `acquire`, `heartbeat`, `release`, `probe`, `reclaim`, `handDown` and `verify` with the results and errors of §F.5. A foreign owner MUST never be reclaimed automatically. The as-is lock fallback that was never released MUST NOT be carried.",
+      "divergence": "DV-022",
+      "test": "CT-100-264",
+      "ep": "EP-13 `specstride.lock/1` (implements)",
+      "status": "unverified (check: the provider's conformance suite on macOS; verified-on: —; pin: —)"
+    },
+    {
+      "id": "F100-FR-165",
+      "annex": "F",
+      "section": "§F.6",
+      "text": "A detach strategy MUST offer `available`, `start` and `describe` as in §F.6. The product MUST work with the strategy `foreground` wherever `spawn-detached` does not survive the end of a host session.",
+      "test": "CT-100-265",
+      "ep": "EP-17 `specstride.detach/1` (implements)",
+      "status": "unverified (check: the spike of the detached runtime, as in F100-FR-155; verified-on: —; pin: —)"
+    },
+    {
+      "id": "F100-FR-166",
+      "annex": "F",
+      "section": "§F.7",
+      "text": "Stage kinds and precondition checks MUST be registries with the five and the six built-in entries of §F.7. The schema of the launch contract MUST name a kind by id and MUST NOT hold a closed list of kinds.",
+      "divergence": "DV-038",
+      "test": "CT-100-266",
+      "ep": "EP-19 `specstride.stage-kind/1` (implements)",
+      "assumption": "CQ-022 (the names of the operations `validate`, `run` and `evaluate`; the sources give the two registries and their built-in entries only)"
+    },
+    {
+      "id": "F100-FR-167",
+      "annex": "F",
+      "section": "§F.7",
+      "text": "A key that the launch contract pins MUST take the value of the launch contract in every child of the runtime root, and the value from the shell MUST be stripped. This MUST apply to the learning mode, to the bound of learning decisions, and to live output in a run without a terminal, and to no other key.",
+      "divergence": "DV-026",
+      "parity": "as at the baseline (the two as-is keys only) (rows 38, 43 of annex X §X.7)",
+      "test": "CT-100-267",
+      "ep": "EP-19 `specstride.stage-kind/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-168",
+      "annex": "F",
+      "section": "§F.8",
+      "text": "The runtime root and the pipeline entry MUST exit with exactly the codes of §F.8. Each class of failure of the launcher MUST map to one distinct code: 20 invalid, 21 preflight, 22 stage, 23 stale, 24 lock.",
+      "origin": "011 SC-004",
+      "disposition": "ported",
+      "test": "PT-100-011SC004-*"
+    },
+    {
+      "id": "F100-FR-169",
+      "annex": "F",
+      "section": "§F.8",
+      "text": "With `relaunch.owner: root` the runtime root stays alive after a failed stage, so the code 22 MUST be the code with which the root finally exits when it does not relaunch, and the pipeline state and the digest MUST show the same values as with `supervise`.",
+      "divergence": "DV-074",
+      "parity": "`supervise` (the root exits at the failed stage) (row 14 of annex X §X.7)",
+      "test": "CT-100-269"
+    },
+    {
+      "id": "F100-FR-170",
+      "annex": "G",
+      "section": "§G.1",
+      "text": "The CLI MUST implement protocol 1 of §G.1 and MUST print the integer 1, and nothing else, for `specstride --protocol`. A host package MUST compare the integer with the range it supports and MUST refuse a mismatch with one line that names the doctor. A change that removes or renames a command, a flag, a line or a field of `--json` output MUST raise the integer.",
+      "test": "CT-100-270",
+      "ep": "EP-01 `specstride.host/1` (implements)"
+    },
+    {
+      "id": "F100-FR-171",
+      "annex": "G",
+      "section": "§G.1",
+      "text": "Of the module entry points of the Specstride baseline, exactly three MUST be public commands, with the exit codes of the baseline: `spec`, `verify` and `learn`. The pass loop and the critic MUST NOT be commands; their codes are fields of result records (annex E §E.4).",
+      "divergence": "DV-066",
+      "test": "CT-100-271"
+    },
+    {
+      "id": "F100-FR-172",
+      "annex": "G",
+      "section": "§G.1",
+      "text": "Every command that prints facts MUST offer `--json`. Its output MUST be one record with a `schema` field (in compatibility output `events --json` prints one record per line, as the baseline does), in a stable order of keys, without escape sequences for colour, and without a secret value, an account identifier or a token. `--json` and `--verbose` MUST be opt-in.",
+      "test": "CT-100-272"
+    },
+    {
+      "id": "F100-FR-173",
+      "annex": "G",
+      "section": "§G.1",
+      "text": "`resume` MUST accept a flag by which the consumer accepts an intended change of spec, plan or task list. With the flag, `resume` MUST derive the verification plan and the check manifest again, record the new hashes in the run snapshot, keep the counts and the phase evidence of phases already delivered, and emit an event that every critic of the run receives as a fact. Without the flag, `resume` MUST refuse with exit 3 and name the changed file. The flag MUST be spelled `--accept-source-change`.",
+      "divergence": "DV-091",
+      "parity": "not used (row 15 of annex X §X.7)",
+      "test": "CT-100-273",
+      "assumption": "CQ-017 (the name of the flag; ruling P12 leaves it to be settled)"
+    },
+    {
+      "id": "F100-FR-174",
+      "annex": "G",
+      "section": "§G.1",
+      "text": "A command MUST NOT have a flag that switches off a launch check, the terms gate or a budget cap. The consumer's comment MUST only select among options that validation of the launch contract accepts. Anything that widens scope or spend MUST need a flag or a configuration key set by the consumer, and MUST never be inferred from text.",
+      "test": "CT-100-274"
+    },
+    {
+      "id": "F100-FR-175",
+      "annex": "G",
+      "section": "§G.2",
+      "text": "The CLI MUST have exactly the two output modes of §G.2. Compatibility output MUST reproduce every as-is line byte for byte, including the literal for an absent child exit code, the quoting of the old language in the relaunch line, and the hold line on every unchanged poll.",
+      "divergence": "DV-033; DV-070",
+      "parity": "compatibility output (row 18 of annex X §X.7)",
+      "test": "CT-100-275"
+    },
+    {
+      "id": "F100-FR-176",
+      "annex": "G",
+      "section": "§G.2",
+      "text": "A line that has no as-is equivalent MUST never be written to a stream that the oracle compares with the reference. Under the `parity` profile the product MUST print no such line on any stream. Outside it, a new line MUST be printed only when the feature it belongs to is on.",
+      "divergence": "DV-034",
+      "parity": "no new line (row 19 of annex X §X.7)",
+      "test": "CT-100-276"
+    },
+    {
+      "id": "F100-FR-177",
+      "annex": "G",
+      "section": "§G.2",
+      "text": "Text from outside the runtime (feedback of the critic, names of tests, messages of a harness) MUST never be echoed into default output. Default output MUST refer to it by logical name. Every message that names state MUST name it by logical name; a message that at the baseline carried a physical path of state is compared through the layout table.",
+      "test": "CT-100-277"
+    },
+    {
+      "id": "F100-FR-178",
+      "annex": "G",
+      "section": "§G.3",
+      "text": "Every labelled line of the product MUST follow the grammar of §G.3. Feature 100 owns the grammar; each line belongs to the feature that prints it, which specifies its keys and values inside the grammar. A label of one family MUST never be used by another family.",
+      "divergence": "DV-033",
+      "test": "CT-100-278"
+    },
+    {
+      "id": "F100-FR-179",
+      "annex": "G",
+      "section": "§G.3",
+      "text": "The `[LOOP]` line MUST be printed before the digest, in default output only, and only when a loop layer is on or was switched off by rule with an announced reason. Its `parallel=` fields MUST be printed only with parallel units on. It MUST never be printed under the `parity` profile.",
+      "divergence": "DV-018; DV-088",
+      "parity": "not printed (rows 19, 20 of annex X §X.7)",
+      "test": "CT-100-279"
+    },
+    {
+      "id": "F100-FR-180",
+      "annex": "G",
+      "section": "§G.3",
+      "text": "The digest MUST be the final line of every run of the pipeline entry, with the grammar of §G.3. The runtime MUST produce it from events; a host skill MUST print it verbatim.",
+      "test": "CT-100-280"
+    },
+    {
+      "id": "F100-FR-181",
+      "annex": "G",
+      "section": "§G.3",
+      "text": "Messages and records that at the baseline name an implementation file MUST name a logical component instead, through the component-name table of annex X §X.8. The text after the name MUST be equal to the baseline's.",
+      "divergence": "DV-066",
+      "test": "CT-100-281"
+    },
+    {
+      "id": "F100-FR-182",
+      "annex": "G",
+      "section": "§G.4",
+      "text": "Every command MUST exit with exactly the codes of its row in §G.4. A usage error MUST keep the as-is code of its command. An uncaught error of any command MUST exit 70. An unknown first argument (verb) MUST exit 1; an unknown sub-verb of a command exits with the code of the row of that command.",
+      "test": "CT-100-282",
+      "assumption": "CQ-201 (\"unknown subcommand\" is read as an unknown first argument only)"
+    },
+    {
+      "id": "F100-FR-183",
+      "annex": "G",
+      "section": "§G.4",
+      "text": "`resume` MUST refuse with exit 5 when the lock is held, with exit 3 when there is nothing to resume, and with exit 3 when the hash of the spec, of the plan or of the task list changed since launch. For the task list the hash that ignores checkboxes MUST be compared, so that a tick never refuses a resume.",
+      "divergence": "DV-021",
+      "parity": "the oracle maps the as-is code 1 to 5 and to 3; the refusal for a changed source has no reference (row 15 of annex X §X.7)",
+      "test": "CT-100-283"
+    },
+    {
+      "id": "F100-FR-184",
+      "annex": "G",
+      "section": "§G.4",
+      "text": "Supervision MUST end with one of seven outcomes, each mapped to one exit code: completed 0, stopped 2, unknown-terminal 3, refused 4, supervision-expired 5, failed 22, lock-conflict 24. The double uses of the baseline MUST be kept: 2 also for a usage error, 4 also for the launch decision `attach`.",
+      "origin": "011 SC-007",
+      "disposition": "ported",
+      "test": "PT-100-011SC007-*"
+    },
+    {
+      "id": "F100-FR-185",
+      "annex": "G",
+      "section": "§G.4",
+      "text": "The doctor MUST exit 0 when no finding has the severity `fail`, 1 when it could not run, 2 when at least one finding has the severity `fail`, and 3 on a usage error. With `--strict` a warning MUST exit 2. A probe that times out inside a check MUST never raise the code above that of a warning.",
+      "divergence": "DV-041",
+      "test": "CT-100-285"
+    },
+    {
+      "id": "F100-FR-186",
+      "annex": "G",
+      "section": "§G.4",
+      "text": "The commands that have no as-is equivalent (`launch`, `wait`, `state export`, `state import`, `state adopt`, `harness verify`, `config show`, `config schema`, `tripwire clear`) MUST exit with the codes of their rows in §G.4.",
+      "test": "CT-100-286",
+      "assumption": "CQ-023 (the codes of commands that have no as-is equivalent, other than those of `launch` after the handshake; the sources give none)"
+    },
+    {
+      "id": "F100-FR-187",
+      "annex": "G",
+      "section": "§G.5",
+      "text": "The output of every command that a host skill calls MUST stay inside the byte limit that its owner derives from the budgets of §G.5. The build MUST measure bytes and MUST fail on a breach. The budget for a whole run holds with `relaunch.owner: root`; with `supervise` the host watches for the whole run and the budget is not promised.",
+      "test": "CT-100-287"
+    },
+    {
+      "id": "F100-FR-188",
+      "annex": "G",
+      "section": "§G.6",
+      "text": "The read model MUST offer the pure operations `project` and `reduce` of §G.6, and a cursor held by the caller. The event stream and the named state files MUST be its only inputs. An attention item for a run that is blocked on a human MUST name what the run needs, and for a changed source the file.",
+      "test": "CT-100-288",
+      "ep": "EP-09 `specstride.view/1` (implements)"
+    },
+    {
+      "id": "F100-FR-189",
+      "annex": "G",
+      "section": "§G.7",
+      "text": "The doctor MUST be a registry of checks with the form of §G.7, and its `--json` output MUST follow the schema of §G.7. The launch checks MUST be exactly the checks whose flag `lb` is set.",
+      "test": "CT-100-289",
+      "ep": "EP-14 `specstride.doctor/1` (implements)"
+    },
+    {
+      "id": "F100-FR-190",
+      "annex": "G",
+      "section": "§G.8",
+      "text": "The launch contract MUST follow the schema of §G.8, and that one schema MUST also be the validator. A launch contract MUST be promoted only by validation. A validated launch contract without a matching proof of promotion, and one whose sources changed, MUST be refused with the pipeline codes 20 and 23. A top-level key the schema does not hold MUST refuse the launch contract.",
+      "divergence": "DV-059; DV-055; DV-061",
+      "test": "CT-100-290",
+      "ep": "EP-19 `specstride.stage-kind/1` (consumes)"
+    },
+    {
+      "id": "F100-FR-191",
+      "annex": "G",
+      "section": "§G.8",
+      "text": "The host skill `specstride-run` MUST launch by default. Its modes MUST be `run` and `dry-run`. `dry-run` MUST withhold the launch and print the plan. The as-is mode names MUST map: `generate` to `dry-run`; `run` and `auto` to `run`.",
+      "divergence": "DV-009",
+      "parity": "mapped through the mode map (row 37 of annex X §X.7)",
+      "test": "CT-100-291"
+    },
+    {
+      "id": "F100-FR-192",
+      "annex": "G",
+      "section": "§G.9",
+      "text": "Derivation MUST expose judgment as the exchange of §G.9, which feature 107 implements as the derivation half of EP-01: the CLI inventories, and the host judges batches of at most 3,000 tokens. A host without a model MAY delegate the judgment to a harness named in user configuration, through the `completion` level; the delegation MUST be recorded in the digest. The host MUST never need to open the launch contract or the sources.",
+      "test": "CT-100-292",
+      "ep": "EP-01 `specstride.host/1` (implements)",
+      "assumption": "CQ-024 (the schema id `specstride.judgment/1` and the three steps come from the red team of the architecture; the architecture file names the delegation only)"
+    },
+    {
+      "id": "F100-FR-233",
+      "annex": "G",
+      "section": "§G.10",
+      "text": "The front door MUST reach the presenter only through the interface of §G.10, and the presenter MUST read nothing but the stream of events and the settings it is handed. The presenter MUST never change the exit code of a command, MUST never write state, and MUST be best-effort: a failure of the presenter MUST NOT stall or fail a run.",
+      "test": "CT-100-333",
+      "assumption": "CQ-101; CQ-121 (the interface is new: the split of feature 119 needs it, and no source states it)"
+    },
+    {
+      "id": "F100-FR-193",
+      "annex": "H",
+      "section": "§H.1",
+      "text": "A host package MUST offer `describe`, `renderSkill`, `renderEntry` and `evalDriver.run`, and MAY offer `renderStatusHooks`, as in §H.1. It MUST declare every capability of the table of capabilities, and the product MUST use the declared fallback for each absent one.",
+      "test": "CT-100-293",
+      "ep": "EP-01 `specstride.host/1` (implements)"
+    },
+    {
+      "id": "F100-FR-194",
+      "annex": "H",
+      "section": "§H.1",
+      "text": "The product MUST have two host skills with the logical ids `specstride-run` and `specstride-reverse`, and a doctor skill. A host skill MUST be a thin layer over the CLI: it MUST be operable without reading the product's source, its state or a launch contract, and its happy path MUST need no reference file.",
+      "divergence": "DV-056",
+      "test": "CT-100-294",
+      "ep": "EP-01 `specstride.host/1` (implements)"
+    },
+    {
+      "id": "F100-FR-195",
+      "annex": "H",
+      "section": "§H.1",
+      "text": "Each host skill MUST stay inside its token budget of annex G §G.5, and the build MUST enforce it by measuring bytes.",
+      "test": "CT-100-295",
+      "ep": "EP-01 `specstride.host/1` (implements)"
+    },
+    {
+      "id": "F100-FR-196",
+      "annex": "H",
+      "section": "§H.1",
+      "text": "Invoking the host skill `specstride-run` MUST be the consumer's consent to launch. The consumer's optional comment MUST steer the run and MUST NOT be able to bypass a launch check, the terms gate or a budget. The host skill MUST say what it changed because of the comment.",
+      "divergence": "DV-009",
+      "test": "CT-100-296",
+      "ep": "EP-01 `specstride.host/1` (implements)"
+    },
+    {
+      "id": "F100-FR-197",
+      "annex": "H",
+      "section": "§H.1",
+      "text": "A host package MUST never install or update the CLI without the consumer noticing. On a missing or mismatched CLI it MUST report through the doctor and print the command to run.",
+      "test": "CT-100-297",
+      "ep": "EP-01 `specstride.host/1` (implements)",
+      "status": "unverified (check: every fact about host behaviour that comes from documentation only, among them the lifetime of a background host hook, is captured on a live host; verified-on: —; pin: host version of the capture)"
+    },
+    {
+      "id": "F100-FR-198",
+      "annex": "X",
+      "section": "§X.1",
+      "text": "Every event MUST carry the envelope of §X.1, with typed values, null for an unknown value and absence for a value that does not apply. `seq` MUST be given by the one writer at the append. `workerId` and `wseq` MUST be absent on the main line. A run with parallel units on MUST still record `strategy` as `micro`.",
+      "divergence": "DV-007; DV-088",
+      "test": "CT-100-298"
+    },
+    {
+      "id": "F100-FR-199",
+      "annex": "X",
+      "section": "§X.1",
+      "text": "A change inside a major of the event schema MUST be additive. A reader MUST ignore a field and an event type it does not know, MUST tolerate a torn last line, and MUST declare the range of majors it accepts; an event outside the range MUST give a doctor warning and never a failure of a run. Event types that start with `x.` MUST be free for third parties. Every event type MUST have a row in the table of the compatibility projection, a row that projects to nothing included.",
+      "test": "CT-100-299"
+    },
+    {
+      "id": "F100-FR-200",
+      "annex": "X",
+      "section": "§X.1",
+      "text": "An event MUST NOT hold content. Content MUST be referred to by logical name, hash and size. Every free-text field of an event MUST pass the redactor and MUST be cut to a size cap. Liveness MUST never be an event. Every event that opens something MUST have a matching event that closes it; where a process died before it could write the closing event, the next writer MUST write it, marked as synthesized.",
+      "test": "CT-100-300"
+    },
+    {
+      "id": "F100-FR-201",
+      "annex": "X",
+      "section": "§X.2",
+      "text": "Configuration MUST be resolved per key through the eight ranks of §X.2. The as-is file at the install root MUST NOT be read. The resolved value of every key MUST be recorded with the rank it came from.",
+      "divergence": "DV-023; DV-024; DV-025; DV-026",
+      "test": "CT-100-301"
+    },
+    {
+      "id": "F100-FR-202",
+      "annex": "X",
+      "section": "§X.2",
+      "text": "Every key MUST have one of the trust classes of §X.2. Project configuration MUST be able to narrow a run and never to widen it. A widening key in project configuration MUST be ignored with a launch message and a doctor warning.",
+      "divergence": "DV-068",
+      "test": "CT-100-302"
+    },
+    {
+      "id": "F100-FR-203",
+      "annex": "X",
+      "section": "§X.2",
+      "text": "A configuration file MUST carry `schema`. An unknown key MUST be an error that refuses the launch; a key under `x-` MUST be ignored. An inline secret MUST be an error. The as-is names of environment variables MUST stay as aliases of keys, through the alias table of §X.8. A value that arrives through an alias of an as-is variable and that the baseline reads late MUST, under the `parity` profile, fail where the baseline fails and not at launch; the owner of the key states the place.",
+      "divergence": "DV-027",
+      "test": "CT-100-303"
+    },
+    {
+      "id": "F100-FR-204",
+      "annex": "X",
+      "section": "§X.3",
+      "text": "There MUST be one table evaluator, used by the router, the quota classifier, both relaunch classifier tables, lane derivation, the terms gate and the attempt planner. It MUST be a pure function: no I/O, no clock, no randomness, no model. For every vector of signals exactly one row MUST fire: rows are tried in order and the first whose predicate holds fires; a table without a default row for a decision point MUST fail validation at load. Every decision MUST be recorded with its rule id and the version of the table. The bump table of the attempt planner MUST have the same form, with the one decision point `attempt-tier`, which belongs to the attempt planner and not to the router.",
+      "test": "CT-100-304",
+      "assumption": "CQ-025 (the set of operators of a predicate, and first-match order; the sources give \"an ordered table\", \"a predicate over named signals\" and \"exactly one row fires\")"
+    },
+    {
+      "id": "F100-FR-205",
+      "annex": "X",
+      "section": "§X.4",
+      "text": "There MUST be one redactor and one point of redaction, at the ingress of annex A F100-FR-009. Every sink (event file, exporters, digest, status, read model) MUST receive the redacted form. The redactor MUST replace every exact occurrence of a registered secret value and every match of the versioned pattern set, which is data. It MUST fail closed: when it cannot run, the content is dropped and the record says so. The consumer's comment MUST pass the redactor before it is recorded.",
+      "test": "CT-100-305"
+    },
+    {
+      "id": "F100-FR-206",
+      "annex": "X",
+      "section": "§X.4",
+      "text": "Before the runtime makes a commit, the files of the commit that the runtime wrote MUST be scanned for registered secrets and for the patterns. A hit MUST block the commit and raise an event.",
+      "test": "CT-100-306"
+    },
+    {
+      "id": "F100-FR-207",
+      "annex": "X",
+      "section": "§X.5",
+      "text": "There MUST be one hashing scheme, offered by one hasher with the operations of §X.5, and every feature that hashes a source, a launch contract, a plan or a manifest MUST use it. Hashes over fixture content MUST equal the baseline's. A feature that ports a hash that a baseline takes over a record MUST state which form the baseline hashes: the canonical record text as it is (the content hash of the canonical record text; for example the verification plan, its source projection, its ids and the project fingerprint of the Specstride baseline, F105-FR-011, F105-FR-012), or the text with a final line end (the canonical record hash; for example the launch contract, F107-FR-019). No feature MUST build a record text of its own. The word \"hash\" MUST be used for every such value; the as-is word survives only in literals of the compatibility projection. The classification of the staleness verdict MUST be the one operation of the hasher that §X.5 names: a pure function of the recorded hashes and the hashes now, which every feature that decides staleness (102, 103, 104) MUST call and MUST NOT reimplement; the reading of the files and of the task lines stays with `@specstride/spec-formats`, and EP-03 gains no operation.",
+      "test": "CT-100-307",
+      "assumption": "CQ-214 (the classification moves into the hasher module of the kernel, owner of its rules 104)"
+    },
+    {
+      "id": "F100-FR-208",
+      "annex": "X",
+      "section": "§X.6",
+      "text": "Every closed set of the product MUST have a row in the table of §X.6, with its owner, whether an owner decision or the design closes it, and what a reader does with an unknown value. Where the table points to the specification of the owner for the members, that specification MUST list them all. A feature that introduces a closed set MUST state these facts in its own specification under the heading \"Closed sets\", so that the row can be added here.",
+      "test": "CT-100-308"
+    },
+    {
+      "id": "F100-FR-209",
+      "annex": "X",
+      "section": "§X.6",
+      "text": "A static test MUST fail when a closed set of the `contracts` package has no row in §X.6, when a row names a member the package does not hold, or when a reader has no branch for an unknown value.",
+      "test": "CT-100-309"
+    },
+    {
+      "id": "F100-FR-210",
+      "annex": "X",
+      "section": "§X.7",
+      "text": "The product MUST ship the named profile `parity` as versioned data with one row per switch, as in §X.7. Selecting the profile MUST set every switch to its value of the column \"Under `parity`\" and MUST do nothing else. The profile MUST be selected by ordinary configuration.",
+      "parity": "the profile itself (annex X §X.7)",
+      "test": "CT-100-310"
+    },
+    {
+      "id": "F100-FR-211",
+      "annex": "X",
+      "section": "§X.7",
+      "text": "For every switch of the product the profile MUST hold a value. A test MUST fail when a switch exists that the profile does not hold. The second suite of the oracle MUST be the profile `parity` with row 1 set to `micro` and nothing else changed: it compares compatibility output, as the first suite does, so the `[LOOP]` line and the status line are not reachable in it and are proven by the tests of their own features.",
+      "divergence": "DV-034; DV-018",
+      "test": "CT-100-311",
+      "assumption": "CQ-028 (whether the second suite compares compatibility output or default output; F100-FR-211 and register row DV-034 read differently)"
+    },
+    {
+      "id": "F100-FR-212",
+      "annex": "X",
+      "section": "§X.7",
+      "text": "A feature that introduces a switch MUST state in its specification, in the field `parity:` of the requirement and in a table \"Rows of the `parity` profile\", the switch, its default, its value under `parity`, and the register row. The value under `parity` MUST be the one that reproduces the as-is behaviour; where no as-is behaviour exists, it MUST be \"off\" or \"not used\". The row is added to §X.7 under the next free number. A feature MUST NOT change a row of another feature.",
+      "test": "CT-100-312"
+    },
+    {
+      "id": "F100-FR-213",
+      "annex": "X",
+      "section": "§X.8",
+      "text": "The normalization rules MUST be exactly N-01 to N-30 of §X.8. A rule MUST be added only with a row of the divergence register, or with a statement that the value is not deterministic in the reference itself. A rule that replaces nothing in any fixture MUST fail the suite. N-02 MUST apply to the text of messages as well as to captured trees.",
+      "divergence": "DV-006; DV-007; DV-008; DV-065; DV-066; DV-116",
+      "test": "CT-100-313"
+    },
+    {
+      "id": "F100-FR-214",
+      "annex": "X",
+      "section": "§X.8",
+      "text": "The layout tables (old side and new side), the environment alias table, the component-name table, the mode map, the exit-code map of `resume` and the key-name map of the launch contract MUST be versioned data of the normalization contract. The new side of the layout table MUST be the table of annex B §B.5. The old side MUST cover every `file` row of the behaviour inventory that has a kept disposition. A registry entry of the baseline that the port does not carry MUST be treated by rule N-15 as §X.8 states under the component-name table: found at run time, taken out before storage and comparison, and named in no stored capture.",
+      "divergence": "DV-006; DV-027; DV-055; DV-021; DV-120",
+      "test": "CT-100-314",
+      "assumption": "CQ-026 (the logical component names; and the old side of the layout table is given here for the paths that two or more features compare, the complete list being delivered as data with the plan); CQ-029 (how a reference output is compared that lists registry entries, one of which the port does not carry)"
+    },
+    {
+      "id": "F100-FR-215",
+      "annex": "X",
+      "section": "§X.8",
+      "text": "The port MUST read the variables of the hermetic environment of the oracle, or a documented mapping of them that is part of the normalization contract. Stub transcripts MUST be a compared surface, in a form that is neutral to the transport of the critic.",
+      "divergence": "DV-001",
+      "test": "CT-100-315"
+    },
+    {
+      "id": "F100-FR-216",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "The threat model of the product MUST be the 49 threats of §X.9 with the five structural controls. The feature named as owner MUST specify the control of each threat and its test. A feature that weakens a control MUST report it as a contradiction with feature 100.",
+      "test": "CT-100-316"
+    },
+    {
+      "id": "F100-FR-236",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "A version of a published package MUST be published only by the build, from a protected branch of the repository of the product, and MUST carry an attestation that binds the package to the commit and to the build that made it. A version MUST NOT be published from a working copy or by hand. The release check MUST fail for a version that lacks the attestation or whose attestation names another repository, branch or commit. This is the control of threat T-43; the host package cites it (owner 113 for the host package).",
+      "test": "CT-100-336",
+      "status": "unverified (check: the attestation of a published version is read back from the package registry and names the repository, the branch and the commit of the build; verified-on: —; pin: the first published version)"
+    },
+    {
+      "id": "F100-FR-217",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "A component outside the runtime tree MUST NOT be able to create, change or remove control state, apart from what the CLI writes: inbox requests, launch records with the comment beside them, the supervision record, the run snapshot and the resolved registry at launch, the launch contract and its launch bundle, and the source inventory and the verification commands of a reverse run. Every one of these inputs MUST be validated by the runtime before it acts on it.",
+      "test": "CT-100-317"
+    },
+    {
+      "id": "F100-FR-218",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "Every run MUST record the three per-run fields that F100-FR-143 names for the run record, as that requirement states them; this requirement adds no field.",
+      "test": "CT-100-318"
+    },
+    {
+      "id": "F100-FR-219",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "A secret value MUST NOT appear in any event, span, digest line, status output or payload of the read model. A test MUST plant canary secrets in the prompt, in the reply of the model, in tool arguments, in tool output, in phase evidence, in the output of a check and in the consumer's comment, with content capture on, and MUST assert that none appears in any sink. Passing this test MUST be a release condition.",
+      "test": "CT-100-319"
+    },
+    {
+      "id": "F100-FR-220",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "A component of Wave 1 MUST NOT open a network listener. A later viewer MUST be started by the consumer, MUST be read-only, MUST bind to loopback only, and MUST refuse every request that lacks the token of the session or that names a foreign origin or host.",
+      "test": "CT-100-320"
+    },
+    {
+      "id": "F100-FR-221",
+      "annex": "X",
+      "section": "§X.9",
+      "text": "Text from outside the runtime MUST be treated as data everywhere: wrapped in random boundaries per call when it enters a prompt, never echoed into a host session by default, rendered as text, and never parsed for control records.",
+      "test": "CT-100-321"
+    },
+    {
+      "id": "F100-FR-222",
+      "annex": "X",
+      "section": "§X.10",
+      "text": "For each of the 19 extension points the conformance suite MUST pass on the sample implementation outside the core and on every Wave 1 implementation, with no core file changed and with the import-boundary check passing.",
+      "test": "CT-100-322"
+    },
+    {
+      "id": "F100-FR-223",
+      "annex": "X",
+      "section": "§X.10",
+      "text": "Under the `parity` profile the parity oracle MUST report no result `different` on any fixture family and any surface, and the second suite MUST pass with equal counters. Every parity test of every feature, those of the behaviour of dsh, Codex and prime included, MUST pass before any release.",
+      "test": "CT-100-323"
+    },
+    {
+      "id": "F100-FR-224",
+      "annex": "X",
+      "section": "§X.10",
+      "text": "On a reference project a run started through the host package for Claude Code MUST reach every phase gate approved, on the same build on which the oracle and the second suite pass. The run MUST be reported per stage against the measured baseline.",
+      "test": "CT-100-324",
+      "status": "unverified (check: one run on the reference project through a live host; verified-on: —; pin: host version and harness versions of the run)"
+    },
+    {
+      "id": "F100-FR-225",
+      "annex": "X",
+      "section": "§X.10",
+      "text": "The build MUST fail when a file of the control plane has no `schema` field, when a reader accepts a different major, when a closed set has no row in §X.6, when a switch has no row in §X.7, or when a specification names state by a physical path. The check of the specifications for physical paths follows the scope rule of F100-FR-226.",
+      "test": "CT-100-325"
+    },
+    {
+      "id": "F100-FR-226",
+      "annex": "X",
+      "section": "§X.10",
+      "text": "A consistency review over the specifications of all features MUST find no exit code, stop reason, state name, logical name, event envelope field or configuration rank that disagrees with the annexes of feature 100, and no requirement that lists harnesses other than by reading the registry. The review MAY run scoped: the runner of the static tests takes a list of feature folders as its subject (the variable `TESTKIT_STATIC_SCOPE`, folder names separated by commas; unset means every feature) and still reads the specifications of every feature as reference, for the harness registry and the vocabulary. A phase gate of an implementation run MAY use the scoped review with the running feature as its subject, so that an edit to another feature's specification does not fail that gate. The full review over all features MUST pass in the last phase of feature 100 and before any release; the scoped review never replaces it. `TESTKIT_STATIC_SCOPE` is an input of the test runner of the `testkit` package, not a switch of the product.",
+      "test": "CT-100-326"
+    }
+  ]
+}

@@ -24,7 +24,7 @@
       "--evaluate",
       "--phase",
       "1",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

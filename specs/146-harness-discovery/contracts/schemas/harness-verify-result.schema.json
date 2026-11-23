@@ -1,0 +1,25 @@
+{
+  "$id": "urn:specstride:schema:specstride.harness-verify/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "harness-verify-result",
+  "description": "Result of `harness verify`, record `specstride.harness-verify/1`. Owner of the field list: feature 146 (annex B §B.20); writer: feature 109; reader: discovery. Types are fixed when the code is written; unknown fields are ignored by a reader.",
+  "type": "object",
+  "required": [
+    "schema"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.harness-verify/1"
+    },
+    "harness": {},
+    "version": {},
+    "descriptorHash": {},
+    "at": {},
+    "outcome": {
+      "description": "`passed` or `failed` (annex X §X.6, row 131); an unknown value is read as `failed`"
+    },
+    "cases": {},
+    "budget": {}
+  },
+  "additionalProperties": true
+}

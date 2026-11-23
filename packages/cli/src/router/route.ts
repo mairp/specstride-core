@@ -497,6 +497,7 @@ async function composedHandler(verb: string, call: RoutedCall): Promise<number> 
   if (verb === "unlock") return composed.unlockHandler(call);
   if (verb === "wait") return composed.waitHandler(call);
   if (verb === "stop") return composed.stopHandler(call);
+  if (verb === "resume") return composed.resumeHandler(call);
   const refusal = composed.NOT_IN_THIS_BUILD[verb];
   if (refusal === undefined) throw new VerbNotMountedError(verb);
   call.io.err(`specstride ${verb}: ${refusal}\n`);
@@ -513,6 +514,10 @@ const INSPECT_DEFAULT_VERBS: readonly string[] = Object.freeze([
   // Phase 5 — `status` is mounted for COMPATIBILITY output only (F119-FR-028);
   // in default output the handler itself refuses truthfully: its owner is 129.
   "status",
+  // Feature 153, phase 11 (T155) — the read-only rows of the report.
+  "report",
+  // Feature 153, phase 26 (T367) — the read-only in-pass scan (F153-FR-027).
+  "scan",
 ]);
 
 let inspectHandlersCache: Promise<RouteHandlers> | undefined;

@@ -42,7 +42,7 @@ export function rulesOfFeature100(): readonly RuleOfFeature100[] {
   );
 }
 
-/** The ids of the rules, N-01 to N-29. */
+/** The ids of the rules, N-01 to N-30. */
 export function ruleIds(): readonly string[] {
   return Object.freeze(rulesOfFeature100().map((r) => r.id));
 }

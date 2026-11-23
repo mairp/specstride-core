@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:specstride:schema:internal:141:oracle-fixture/1",
+  "title": "Declaration of one scenario (fixture.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "system",
+    "entryPoint",
+    "command",
+    "environment",
+    "stubs",
+    "workdirTemplate",
+    "expectedExit",
+    "surfaces",
+    "proves",
+    "os"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:specstride:schema:internal:141:oracle-fixture/1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^FX-[0-9]{2}/[a-z0-9][a-z0-9-]*$"
+    },
+    "variant": {
+      "enum": [
+        "@engine-stub",
+        "@full-stack"
+      ]
+    },
+    "system": {
+      "enum": [
+        "specstride",
+        "mixture-of-loops"
+      ]
+    },
+    "engineSystem": {
+      "type": "string",
+      "description": "the baseline whose own front door answers the as-is engine command on the reference side: the real engine of a `@full-stack` scenario of FX-35 or FX-36 (F141-FR-016). Only a `@full-stack` scenario may declare it, and never its own `system`. Absent means the engine stub answers, named through row 41 of the parity profile."
+    },
+    "entryPoint": {
+      "type": "object",
+      "required": [
+        "reference",
+        "port"
+      ],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "description": "logical component name of feature 100, annex X \u00a7X.8, or a described as-is entry point"
+        },
+        "port": {
+          "type": "string",
+          "description": "command of CLI protocol 1"
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "reference",
+        "port"
+      ],
+      "properties": {
+        "reference": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "port": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "argument lists; the placeholders <WORK>, <FIXTURE>, <IMPL>, <HOME>, <TMP> only"
+    },
+    "steps": {
+      "type": "array",
+      "description": "for a scenario of several commands (run, then stop; run, then resume): the commands in order",
+      "items": {
+        "type": "object"
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "as-is variable names; the port receives them through the alias table"
+    },
+    "stubs": {
+      "type": "object",
+      "description": "per stub kind or harness stub, the script: one step per invocation index",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "verbs"
+          ],
+          "properties": {
+            "verbs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "args": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "workdirTemplate": {
+      "type": "string"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "baseline",
+          "licence"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "baseline": {
+            "enum": [
+              "specstride@9cab15d",
+              "mixture-of-loops@9c88f86"
+            ]
+          },
+          "licence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expectedExit": {
+      "type": "integer"
+    },
+    "surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "exit",
+          "stdout",
+          "stderr",
+          "tree",
+          "state",
+          "events",
+          "transcript",
+          "processes",
+          "pipeline",
+          "telemetry",
+          "repository",
+          "launcher",
+          "home",
+          "events-primary",
+          "control-records",
+          "counters",
+          "transcript.proposer",
+          "transcript.critic",
+          "transcript.diagnostician",
+          "transcript.engine",
+          "transcript.verification",
+          "transcript.installer"
+        ]
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "where the surface `pipeline` (S-09) reads: the as-is names of the state record, of the launch record of the supervisor and of the three logs differ per baseline, and \u00a7O.4 names none of them. A scenario of FX-35 or FX-36 declares them; a scenario that declares nothing keeps the defaults of the capture module.",
+      "properties": {
+        "root": {
+          "type": "string",
+          "description": "the directory the files lie in, with the places of the run in it (`<WORK>`, `<RUN>`, `<FIXTURE>`, `<HOME>`, `<TMP>`)"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "the state record and the launch record of the supervisor, by name, inside `root`"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "the logs of the pipeline, by name, inside `root`"
+        }
+      }
+    },
+    "proves": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^((028|011|002) (FR|SC)-[0-9]{3}|C-[0-9]{3}|B-[0-9]{4})$"
+      }
+    },
+    "os": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "linux",
+          "macos"
+        ]
+      },
+      "minItems": 1
+    },
+    "durationsUnderTest": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pseudoTerminal": {
+      "type": "boolean"
+    },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^DV-[0-9]{3}$"
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "what the reference needs on the host; a missing one is a skip with its reason"
+    },
+    "addedBy": {
+      "type": "string",
+      "pattern": "^[0-9]{3}$",
+      "description": "the feature that added the scenario, when it is not of the first set"
+    },
+    "boundedSeconds": {
+      "type": "number",
+      "description": "for a command of the reference that does not end on its own (`tail -f`): how long it is let to run; the capture records the signal that ended it"
+    },
+    "referenceEdits": {
+      "type": "array",
+      "minItems": 1,
+      "description": "as-is edits applied to a PRIVATE WRITABLE COPY of the reference tree for the reference side only, for a behaviour the SHIPPED registry of the baseline cannot reach (a declared overlay, a routed stream format). The pinned tree is only read (F141-FR-002); the copy is thrown away with the run. Every edit must match exactly once. The port reaches the same behaviour through ordinary configuration and takes no edit.",
+      "items": {
+        "type": "object",
+        "required": [
+          "edit",
+          "file",
+          "why"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "edit": {
+            "enum": [
+              "insert-before",
+              "replace",
+              "copy-asset",
+              "remove"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "description": "relative to the root of the reference tree"
+          },
+          "marker": {
+            "type": "string",
+            "description": "`insert-before`: the text the insertion stands before"
+          },
+          "find": {
+            "type": "string",
+            "description": "`replace`: the text that is replaced"
+          },
+          "text": {
+            "type": "string",
+            "description": "`insert-before` and `replace`: what is put there"
+          },
+          "asset": {
+            "type": "string",
+            "description": "`copy-asset`: the imported as-is asset, relative to fixtures/assets/"
+          },
+          "why": {
+            "type": "string",
+            "description": "why the scenario needs the edit"
+          }
+        }
+      }
+    }
+  }
+}

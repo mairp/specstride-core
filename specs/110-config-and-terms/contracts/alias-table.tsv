@@ -1,0 +1,160 @@
+as-is variable	key	note
+SPECSTRIDE_PROPOSER	roles.proposer.harness	
+SPECSTRIDE_CRITIC	roles.critic.harness	
+SPECSTRIDE_<HARNESS>_PROPOSER_MODEL	roles.proposer.model	for the named harness
+SPECSTRIDE_<HARNESS>_CRITIC_MODEL	roles.critic.model	for the named harness
+SPECSTRIDE_DSH_MODEL	roles.proposer.model; roles.critic.model	the one as-is model variable of that harness, for both roles; the critic reads it after SPECSTRIDE_DSH_CRITIC_MODEL (B-0515, B-0823)
+SPECSTRIDE_DSH_BIN	harnesses.dsh.bin	the launcher of that harness, for both roles (B-0513, B-0820)
+SPECSTRIDE_DSH_PROFILE	harnesses.dsh.profile	passed as --profile, for both roles (B-0514, B-0821)
+SPECSTRIDE_<HARNESS>_OVERLAY	harnesses.<id>.overlay	
+SPECSTRIDE_PROPOSER_TIMEOUT	roles.proposer.timeoutSec	
+SPECSTRIDE_PROPOSER_TIMEOUT_PHASE_<N>	phases.<N>.proposer.timeoutSec	
+SPECSTRIDE_DIAGNOSTICIAN	roles.diagnostician.*	
+SPECSTRIDE_ACCELERATOR	roles.accelerator.*	
+SPECSTRIDE_ACCELERATOR_BACKEND	roles.accelerator.*	
+SPECSTRIDE_MAX_REJECTS	loop.maxRejects	
+SPECSTRIDE_MAX_ITER	loop.maxIter	
+SPECSTRIDE_MAX_WALL_MIN	loop.maxWallMin	
+SPECSTRIDE_OSC_MAX	loop.oscMax	
+SPECSTRIDE_PROMPT_MAX_BYTES	loop.promptMaxBytes	
+SPECSTRIDE_GIT_COMMITS	loop.gitCommits	
+SPECSTRIDE_SPEC_FORMAT	spec.format	
+SPECSTRIDE_FEATURE	spec.feature	
+SPECSTRIDE_VERIFICATION	verification.mode	
+SPECSTRIDE_TEST_PLAN	verification.testPlan	
+SPECSTRIDE_VERIFICATION_COMMANDS	verification.commands	
+SPECSTRIDE_GENERATE_TESTS	verification.generateTests	
+SPECSTRIDE_TELEMETRY_ENABLED	telemetry.enabled	
+SPECSTRIDE_LOKI_URL	telemetry.loki.url	
+SPECSTRIDE_OTEL_ENABLED	telemetry.otel.enabled	
+SPECSTRIDE_OTEL_URL	telemetry.otel.url	
+SPECSTRIDE_LIVE	output.live	
+SPECSTRIDE_LIVE_DETAIL	output.liveDetail	
+SPECSTRIDE_VERBOSE	output.verbose	
+SPECSTRIDE_LEARNING	learning.mode	
+SPECSTRIDE_LEARNING_THROUGH	learning.through	
+SPECSTRIDE_STATE_DIR	state.dir	
+SPECSTRIDE_REVERSE_*	reverse.*	each the key of the same meaning
+SPECSTRIDE_CONTEXT_BUDGET	spec.contextBudget; reverse.contextBudget	one variable feeds two keys
+SPECSTRIDE_GROUNDING_MAX_FILES	roles.critic.groundingMaxFiles	
+SPECSTRIDE_ANCHOR_MAX_BYTES_CEIL	roles.critic.anchorMaxBytes	
+SPECSTRIDE_CRITIC_TIMEOUT	roles.critic.timeoutSec	
+SPECSTRIDE_CRITIC_MALFORMED_LIMIT	roles.critic.malformedLimit	
+SPECSTRIDE_CRITIC_GROUNDING	roles.critic.grounding	
+SPECSTRIDE_CRITIC_CONTEXT_TOKENS	roles.critic.contextTokens	
+SPECSTRIDE_PROPOSER_IDLE_TIMEOUT	roles.proposer.idleTimeoutSec	
+SPECSTRIDE_PROPOSER_PROGRESS_TIMEOUT	roles.proposer.progressTimeoutSec	
+SPECSTRIDE_PROPOSER_REPEAT_LIMIT	roles.proposer.repeatLimit	
+SPECSTRIDE_PROPOSER_REPEAT_IGNORE	roles.proposer.repeatIgnore	
+SPECSTRIDE_PROPOSER_PROGRESS_PATHS	roles.proposer.progressPaths	
+SPECSTRIDE_PROPOSER_MAX_ERRORS	roles.proposer.maxErrors	
+SPECSTRIDE_PROPOSER_MAX_CAPS	roles.proposer.maxCaps	
+SPECSTRIDE_PROPOSER_MAX_NOPROGRESS	roles.proposer.maxNoProgress	
+SPECSTRIDE_WATCHDOG_TICK	loop.watchdogTickSec	
+SPECSTRIDE_SHORT_PASS_SEC	loop.shortPass.sec	
+SPECSTRIDE_SHORT_PASS_NUDGE_AFTER	loop.shortPass.nudgeAfter	
+SPECSTRIDE_YIELD_POLL	loop.yield.pollSec	
+SPECSTRIDE_YIELD_MAX_PER_ATTEMPT	loop.yield.maxPerAttempt	
+SPECSTRIDE_YIELD_COUNTS_AS_ITER	loop.yield.countsAsIter	
+SPECSTRIDE_YIELD_ALLOW_COMMAND	loop.yield.allowCommand	
+SPECSTRIDE_YIELD_WAIT_EVERY	loop.yield.waitEvery	
+SPECSTRIDE_YIELD_LOG_HEAD	loop.yield.logHead	
+SPECSTRIDE_YIELD_LOG_TAIL	loop.yield.logTail	
+SPECSTRIDE_FAILURE_LEDGER	loop.yield.failureLedger	
+SPECSTRIDE_FAILURE_LEDGER_MAX	loop.yield.failureLedgerMax	
+SPECSTRIDE_FAILURE_PATTERN	loop.yield.failurePattern	
+(every further SPECSTRIDE_YIELD_* name)	loop.yield.<key>	each the key of the same meaning (annex X §X.8)
+SPECSTRIDE_LONG_JOB_PHASE	verification.longJob.phase	
+SPECSTRIDE_LONG_JOB_CMD	verification.longJob.cmd	
+SPECSTRIDE_PROMPT_PROTECTED_BLOCKS	loop.promptProtectedBlocks	
+SPECSTRIDE_TICK_TASKS	loop.tickTasks	
+SPECSTRIDE_COLOR	output.color	
+SPECSTRIDE_MOTION	output.motion	
+SPECSTRIDE_BANNER	output.banner	
+SPECSTRIDE_LIVE_RAIL	output.liveRail	
+SPECSTRIDE_BANNER_BG	output.bannerBg	
+SPECSTRIDE_ASCII	output.ascii	
+SPECSTRIDE_AGENT_STREAM	stream.tap	
+SPECSTRIDE_AGENT_TAP	stream.tapExecutable	
+SPECSTRIDE_DSH_PLUGIN_ALLOWLIST	harnesses.dsh.pluginAllowlist	
+SPECSTRIDE_DSH_PLUGIN_TIMEOUT	harnesses.dsh.pluginTimeoutSec	
+SPECSTRIDE_DSH_REASONING_EFFORT	roles.proposer.effort	when the proposer is that harness
+SPECSTRIDE_DSH_CRITIC_REASONING_EFFORT	roles.critic.effort	for that harness; SPECSTRIDE_DSH_REASONING_EFFORT is the fallback (B-0818, B-0819)
+DSH_HOME	harnesses.dsh.home	the real home of that harness, read and handed to its process (B-0509, B-0817, B-2646)
+SPECSTRIDE_DSH_PROVIDER	harnesses.dsh.provider	the provider of a model id without a provider/ prefix; a provider in the model ref that differs is a conflict error (B-0508, B-0825)
+SPECSTRIDE_DSH_CRITIC_PROVIDER	roles.critic.provider	preferred over SPECSTRIDE_DSH_PROVIDER for the critic of that harness (B-0824)
+OPENAI_BASE_URL	harnesses.codex.endpoint.base	
+OPENAI_API_KEY	harnesses.codex.auth.credential	as a secret reference
+SPECSTRIDE_CLAUDE_CRITIC_BASE_URL	harnesses.claude.endpoint.base	
+SPECSTRIDE_CLAUDE_CRITIC_API_KEY	harnesses.claude.auth.credential	as a secret reference
+SPECSTRIDE_CLAUDE_CRITIC_MODEL	roles.critic.model	for this harness
+SPECSTRIDE_PROPOSER_SKILLS	harnesses.claude.proposerSkills	
+SPECSTRIDE_BACKEND_LABEL	harnesses.claude.label	
+SPECSTRIDE_DSH_PERMISSION_MODE	sandbox.permissionMode	for that harness; read before the inherited DSH_PERMISSION_MODE (B-0516)
+SPECSTRIDE_VERIFY_TAIL_LINES	verification.summary.tailLines	B-1028; row 126 of annex X §X.7 (§K.8)
+SPECSTRIDE_VERIFY_TAIL_ERR_LINES	verification.summary.tailErrLines	B-1029; row 126 of annex X §X.7 (§K.8)
+ANTHROPIC_API_KEY	harnesses.claude.auth.credential	as a secret reference; the fallback after SPECSTRIDE_CLAUDE_CRITIC_API_KEY (B-0811, B-0812)
+ANTHROPIC_BASE_URL	harnesses.claude.endpoint.base	the second choice after SPECSTRIDE_CLAUDE_CRITIC_BASE_URL (B-0814)
+SPECSTRIDE_PRIME_BIN	harnesses.prime.launcher	
+SPECSTRIDE_PRIME_AGENT_BIN	harnesses.prime.bin	
+SPECSTRIDE_PRIME_FLEET_BIN	harnesses.prime.launcher	read first; SPECSTRIDE_PRIME_BIN only when it is unset (B-0518, B-0827). The one exception to F110-FR-020: the two names reach one key and do not refuse the launch when they differ; the first set wins. An empty first variable is read as unset, as the pass loop reads it (`proposer.sh:609` at `9cab15d`); the critic of the baseline reads only an absent variable as unset (`lib/critic.py:2196`) and the sources do not settle the difference (assumption: CQ-196)
+SPECSTRIDE_OTEL_TRACES	telemetry.otel.traces	
+RALPH_LOKI_URL	telemetry.loki.url	
+RALPH_OTEL_URL	telemetry.otel.url	
+RALPH_LOKI_TIMEOUT	telemetry.loki.timeoutMs	as-is seconds, decimal, converted to milliseconds (B-2275)
+RALPH_OTEL_TIMEOUT	telemetry.otel.timeoutMs	as-is seconds, decimal, converted to milliseconds (B-2310)
+RALPH_LOKI_MAX_BATCH_BYTES	telemetry.loki.maxBatchBytes	
+RALPH_OTEL_MAX_BATCH_BYTES	telemetry.otel.maxBatchBytes	
+SPECSTRIDE_STDIN_FILE	(no key)	the as-is hand-over of the prompt as a file, which the harness adapter performs (annex X §X.8)
+SPECSTRIDE_OTEL_STATE_DIR	(no key)	accepted, without effect; a launch message says so (CQ-120; annex X §X.8)
+NO_COLOR	(no key)	variable of the platform; it reaches the output layer of feature 145 and no key. Read as at the baseline: set and non-empty gives colour depth `none`, checked after the caller's `--color` (B-1411) and before `FORCE_COLOR` (B-1412)
+FORCE_COLOR	(no key)	variable of the platform; checked after `NO_COLOR` (B-1412)
+TERM	(no key)	variable of the platform
+COLORTERM	(no key)	variable of the platform; `truecolor` or `24bit` selects depth `truecolor` (B-1409)
+SPECSTRIDE_RUN_ID	(no key)	the run’s identity, which the runtime sets and hands to every child; not a setting (B-0064, B-0500, B-0842, B-2078)
+SPECSTRIDE_TASK	(no key)	the run’s task label, set by the runtime from the workspace (B-0064, B-0499, B-0842, B-0843)
+SPECSTRIDE_ROLE	(no key)	the role of the invocation, set per subprocess by the runtime (B-0071, B-0081, B-0502)
+SPECSTRIDE_PHASE	(no key)	the phase number of the invocation, set by the runtime (B-0503)
+SPECSTRIDE_ATTEMPT	(no key)	the attempt number of the invocation, set by the runtime (B-0504)
+SPECSTRIDE_ITERATION	(no key)	the iteration of the invocation, set per subprocess by the runtime (B-0081)
+SPECSTRIDE_INVOCATION_ID	(no key)	the id of one invocation, set by the runtime (B-0082, B-0505)
+SPECSTRIDE_INVOCATION_DIR	(no key)	the artifact directory of one invocation, set by the runtime (B-0082)
+SPECSTRIDE_RUN_START_EPOCH	(no key)	the run start, set by the runtime for the wall-clock budget (B-0068, B-0532, B-0533)
+SPECSTRIDE_EVENTS	(no key)	the path of the run’s event stream, a logical name of annex X, not a setting (B-0064, B-0496, B-0850, B-2077)
+SPECSTRIDE_TRACE_ID	(no key)	an inbound distributed-trace id, passed through untouched; feature 111 reads it from the launch context (B-0063, B-0066, B-0842, B-2337)
+SPECSTRIDE_SHIP	(no key)	the path of the baseline’s Loki shipper script; the port has no shipper script (B-0064)
+SPECSTRIDE_OTEL_SHIP	(no key)	the path of the baseline’s OTLP shipper script; the port has no shipper script (B-0065)
+SPECSTRIDE_TELEMETRY	(no key)	the resolved value of telemetry.enabled that the baseline exports to its children; the port hands the resolved configuration, not a variable (B-0065, B-0840)
+SPECSTRIDE_STATE_NOTICE_SHOWN	(no key)	a once-only marker the baseline exports so a child does not repeat a notice (B-0347)
+SPECSTRIDE_LONG_JOB_LOG	(no key)	the log path of the running long job, set by the runtime for the prompt (B-0348)
+SPECSTRIDE_VERIFICATION_PLAN	(no key)	the path of the run’s own verification-plan artifact, handed to the critic by the runtime, not a setting (B-0849)
+LONG_JOB_PHASE	(no key)	the unprefixed copy the baseline exports so its pass loop can call ensure_long_job; the port hands the resolved value (B-0057)
+LONG_JOB_CMD	(no key)	as above (B-0057)
+LOCK_FD	(no key)	the file-descriptor number of the run lock, exported so a child can close it; feature 122 owns the lock (B-0061)
+YIELD_DIR	(no key)	the yield directory of the pass, set by the runtime (B-0507)
+BACKEND_OVERLAY_MAKE_SCOPE	(no key)	the scope the baseline hands to its overlay script per call; feature 109 resolves the overlay scope (B-0511)
+IS_SANDBOX	(no key)	set to 1 for a root-run agent subprocess; feature 109 owns what a harness is told about its sandbox (B-0067, B-0497)
+DSH_PERMISSION_MODE	(no key)	a variable of the harness itself, inherited from the operator; it reaches the harness through harnesses.<id>.envAllow, after SPECSTRIDE_DSH_PERMISSION_MODE (B-0516, B-0826)
+DSH_AGENTS_HOME	(no key)	a variable of the harness itself; feature 130 (B-2646)
+PI_CODING_AGENT_DIR	(no key)	a variable of the harness itself; feature 134 (B-2646)
+PRIME_AGENT_CODING_AGENT_DIR	(no key)	a variable of the harness itself; feature 138 (B-2646)
+HOME	(no key)	variable of the platform; the home that the state directory and a harness home are keyed by (B-2646)
+TMPDIR	(no key)	variable of the platform; where the baseline writes its temporary trees (B-0512)
+LC_ALL	(no key)	variable of the platform; read first of the three locale names, a locale without utf8 forces ASCII glyphs (B-1419)
+LC_CTYPE	(no key)	variable of the platform; read after LC_ALL (B-1419)
+LANG	(no key)	variable of the platform; read after LC_CTYPE (B-1419)
+COLORFGBG	(no key)	variable of the platform; the last field, when numeric, means light at 11 or more, else dark (B-1416)
+TMUX	(no key)	variable of the platform; set, it skips the terminal background query and yields dark (B-1417)
+STY	(no key)	variable of the platform; as TMUX (B-1417)
+CI	(no key)	variable of the platform; set and non-empty disables animation, as TERM=dumb does (B-1162)
+PYTHONDONTWRITEBYTECODE	(no key)	variable of the platform that the mixture-of-loops supervisor set on launch; the port sets no interpreter variable (B-2694)
+WIGGUM_*	(not carried)	never read; no deprecation line (DV-036)
+(variables of a locally registered backend)	(not carried)	DV-064
+SPECSTRIDE_LOKI_PORT	(not carried)	host port of the bundled observability stack of the baseline; specs 128 and 145 name no key for a port (B-2442)
+SPECSTRIDE_OTEL_PORT	(not carried)	host port of the bundled observability stack of the baseline (B-2443)
+SPECSTRIDE_OTEL_GRPC_PORT	(not carried)	host port of the bundled observability stack of the baseline (B-2444)
+SPECSTRIDE_PROMETHEUS_PORT	(not carried)	host port of the bundled observability stack of the baseline (B-2445)
+SPECSTRIDE_GRAFANA_PORT	(not carried)	host port of the bundled observability stack of the baseline (B-2446)
+SPECSTRIDE_CRITIC_VIA	(not carried)	the transport of the locally registered backend’s critic; DV-064 (B-0834)
+MOL_VIA	(not carried)	a variable of the mixture-of-loops skill scripts, which the consolidated product does not carry (B-2492)
+WIGGUM_<X>	(not carried)	the as-is rename rule: every WIGGUM_<X> was copied to SPECSTRIDE_<X> when the new name was unset. The port never reads the family and prints no deprecation line (DV-036; B-0346)

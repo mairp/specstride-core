@@ -1,0 +1,134 @@
+origin_id	system	disposition	feature	proof	dv_or_roadmap
+028 FR-001	028	ported	104-spec-input	FX-09; PT-104-028FR001-*	
+028 FR-002	028	merged-with 002 FR-029	104-spec-input	FX-10; PT-104-028FR002-*	DV-073
+028 FR-003	028	merged-with 002 FR-008	101-gate-and-verdict	FX-01, FX-13, FX-15; PT-101-028FR003-*	DV-029
+028 FR-004	028	translated	122-detached-runtime	FX-11; PT-122-028FR004-*	DV-022
+028 FR-005	028	merged-with 002 FR-019	101-gate-and-verdict	FX-05; PT-101-028FR005-*	
+028 FR-006	028	merged-with 002 FR-012	101-gate-and-verdict	FX-01, FX-02, FX-05; PT-101-028FR006-*	DV-029
+028 FR-007	028	merged-with 002 FR-014	101-gate-and-verdict	FX-02; PT-101-028FR007-*	DV-011
+028 FR-008	028	merged-with 002 FR-010	101-gate-and-verdict	FX-03; PT-101-028FR008-*	
+028 FR-009	028	ported	101-gate-and-verdict	FX-04; PT-101-028FR009-*	DV-044
+028 FR-010	028	merged-with 002 FR-011	101-gate-and-verdict	FX-05, FX-06, FX-07; PT-101-028FR010-*	
+028 FR-011	028	translated	101-gate-and-verdict	FX-08; PT-101-028FR011-*	DV-066
+028 FR-012	028	ported	101-gate-and-verdict	FX-08; PT-101-028FR012-*	
+028 FR-013	028	ported	101-gate-and-verdict	FX-01; PT-101-028FR013-*	
+028 FR-014	028	ported	101-gate-and-verdict	FX-27; PT-101-028FR014-*	
+028 FR-015	028	merged-with 002 FR-046	102-run-control	FX-12; PT-102-028FR015-*	
+028 FR-016	028	merged-with 002 FR-016	102-run-control	FX-13; PT-102-028FR016-*	DV-021; DV-024
+028 FR-017	028	ported	118-pass-supervision-and-jobs	FX-21; PT-118-028FR017-*	DV-015
+028 FR-018	028	ported	103-proposer-pass	FX-17, FX-18, FX-19, FX-20; PT-103-028FR018-*	DV-005; DV-010
+028 FR-019	028	ported	118-pass-supervision-and-jobs	FX-22; PT-118-028FR019-*	DV-051
+028 FR-020	028	ported	105-verification	FX-14; PT-105-028FR020-*	
+028 FR-021	028	translated	109-harness-seam	FX-26, FX-01; PT-109-028FR021-*	DV-064; DV-004
+028 FR-022	028	translated	128-telemetry-export	FX-31; PT-128-028FR022-*	DV-058
+028 FR-023	028	merged-with 002 FR-003	119-front-door-and-presenter	FX-28; PT-119-028FR023-*	DV-062
+028 FR-024	028	ported	106-learning	FX-29; PT-106-028FR024-*	DV-025
+028 FR-025	028	ported	108-reverse	FX-30; PT-108-028FR025-*	
+028 FR-026	028	ported	108-reverse	FX-30; PT-108-028FR026-*	
+028 FR-027	028	ported	140-reverse-inventory-and-lint	FX-30; PT-140-028FR027-*	
+028 FR-028	028	translated	109-harness-seam	FX-26, FX-39; PT-109-028FR028-*	DV-002
+028 FR-029	028	translated	104-spec-input	FX-10, FX-32; PT-104-028FR029-*	DV-060
+028 FR-030	028	superseded-by DV-057	100-specstride	register row DV-057	DV-057
+028 SC-001	028	translated	101-gate-and-verdict	FX-01; PT-101-028SC001-*	DV-007
+028 SC-002	028	merged-with 002 SC-001	101-gate-and-verdict	FX-05; PT-101-028SC002-*	
+028 SC-003	028	merged-with 002 SC-004	100-specstride	FX-03, FX-04, FX-05, FX-07, FX-11, FX-12, FX-17; PT-100-028SC003-*	
+028 SC-004	028	ported	101-gate-and-verdict	FX-03; PT-101-028SC004-*	DV-011
+028 SC-005	028	ported	101-gate-and-verdict	FX-08; PT-101-028SC005-*	
+028 SC-006	028	ported	108-reverse	FX-30; PT-108-028SC006-*	DV-006
+028 SC-007	028	superseded-by DV-002	109-harness-seam	register row DV-002	DV-002
+028 SC-008	028	superseded-by DV-057	100-specstride	register row DV-057	DV-057
+011 FR-001	011	ported	107-launch-contract	FX-32; PT-107-011FR001-*	
+011 FR-002	011	ported	107-launch-contract	FX-32; PT-107-011FR002-*	DV-066
+011 FR-003	011	translated	106-learning	FX-33; PT-106-011FR003-*	DV-006
+011 FR-004	011	ported	107-launch-contract	FX-33; PT-107-011FR004-*	DV-059
+011 FR-005	011	ported	107-launch-contract	FX-33; PT-107-011FR005-*	
+011 FR-006	011	translated	107-launch-contract	FX-33; PT-107-011FR006-*	DV-066
+011 FR-007	011	ported	104-spec-input	FX-33; PT-104-011FR007-*	
+011 FR-008	011	ported	107-launch-contract	FX-34; PT-107-011FR008-*	
+011 FR-009	011	translated	107-launch-contract	FX-34; PT-107-011FR009-*	DV-008
+011 FR-010	011	translated	107-launch-contract	FX-34; PT-107-011FR010-*	DV-054; DV-008
+011 FR-011	011	ported	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011FR011-*	
+011 FR-012	011	translated	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011FR012-*	DV-006; DV-022
+011 FR-013	011	ported	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011FR013-*	
+011 FR-014	011	ported	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011FR014-*	DV-006
+011 FR-015	011	ported	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011FR015-*	DV-028
+011 FR-016	011	ported	106-learning	FX-35; PT-106-011FR016-*	DV-026; DV-038
+011 FR-017	011	superseded-by DV-009	113-host-claude-code	register row DV-009	DV-009
+011 FR-018	011	ported	106-learning	FX-36; PT-106-011FR018-*	
+011 FR-019	011	translated	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011FR019-*	DV-054
+011 FR-020	011	translated	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011FR020-*	DV-006
+011 FR-021	011	ported	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011FR021-*	DV-005
+011 FR-022	011	translated	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011FR022-*	DV-055
+011 FR-023	011	translated	123-pipeline-runtime-and-supervisor	FX-35, FX-36; PT-123-011FR023-*	DV-033; DV-007
+011 FR-024	011	translated	106-learning	FX-36; PT-106-011FR024-*	DV-006
+011 FR-025	011	superseded-by DV-056	113-host-claude-code	register row DV-056	DV-056
+011 FR-026	011	dropped	none	written justification (notes)	DV-061
+011 FR-027	011	superseded-by DV-038	107-launch-contract	register row DV-038	DV-038
+011 SC-001	011	superseded-by DV-057	100-specstride	register row DV-057	DV-057
+011 SC-002	011	dropped	none	written justification (notes)	DV-057
+011 SC-003	011	ported	123-pipeline-runtime-and-supervisor	FX-35; PT-123-011SC003-*	
+011 SC-004	011	ported	100-specstride	FX-33, FX-35; PT-100-011SC004-*	
+011 SC-005	011	ported	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011SC005-*	
+011 SC-006	011	ported	123-pipeline-runtime-and-supervisor	FX-36; PT-123-011SC006-*	DV-055
+011 SC-007	011	ported	100-specstride	FX-36; PT-100-011SC007-*	
+011 SC-008	011	translated	141-parity-oracle	FX-32; PT-141-011SC008-*	
+002 FR-001	002	merged-with 028 FR-023	119-front-door-and-presenter	CT-119-1 (028 side: FX-28)	
+002 FR-002	002	merged-with 028 FR-023	119-front-door-and-presenter	CT-119-2 (028 side: FX-28)	
+002 FR-003	002	merged-with 028 FR-023	119-front-door-and-presenter	CT-119-3 (028 side: FX-28)	
+002 FR-004	002	superseded-by DV-042	119-front-door-and-presenter	register row DV-042	DV-042
+002 FR-005	002	ported	119-front-door-and-presenter	CT-119-4	
+002 FR-006	002	superseded-by DV-043	110-config-and-terms	register row DV-043	DV-043; DV-004
+002 FR-007	002	merged-with 028 FR-023	119-front-door-and-presenter	CT-119-5 (028 side: FX-28)	
+002 FR-008	002	merged-with 028 FR-003	101-gate-and-verdict	CT-101-1 (028 side: FX-01)	
+002 FR-009	002	superseded-by DV-040	105-verification	register row DV-040	DV-040
+002 FR-010	002	merged-with 028 FR-008	101-gate-and-verdict	CT-101-2 (028 side: FX-03)	
+002 FR-011	002	merged-with 028 FR-010	101-gate-and-verdict	CT-101-3 (028 side: FX-06, FX-07)	
+002 FR-012	002	merged-with 028 FR-006	101-gate-and-verdict	CT-101-4 (028 side: FX-01)	DV-029
+002 FR-013	002	ported	101-gate-and-verdict	CT-101-5	DV-072; DV-029
+002 FR-014	002	merged-with 028 FR-007	101-gate-and-verdict	CT-101-6 (028 side: FX-02)	
+002 FR-015	002	merged-with 028 SC-003	100-specstride	CT-100-1	
+002 FR-016	002	merged-with 028 FR-016	102-run-control	CT-102-1 (028 side: FX-13)	DV-021; DV-082
+002 FR-017	002	superseded-by DV-042	129-run-view-and-status	register row DV-042	DV-042
+002 FR-018	002	merged-with 028 FR-005	101-gate-and-verdict	CT-101-7 (028 side: FX-05)	
+002 FR-019	002	merged-with 028 FR-005	101-gate-and-verdict	CT-101-8 (028 side: FX-05)	
+002 FR-020	002	merged-with 028 FR-006	101-gate-and-verdict	CT-101-9 (028 side: FX-05)	
+002 FR-021	002	merged-with 028 FR-006	117-critic-grounding-and-prompt	CT-117-1 (028 side: FX-25)	
+002 FR-022	002	deferred 3+	roadmap	roadmap entry "Critic ensemble"	roadmap: Critic ensemble
+002 FR-023	002	translated	144-compatibility-projection	CT-144-1	DV-007
+002 FR-024	002	deferred 3+	roadmap	roadmap entry "Event delivery dispatcher"	roadmap: Event delivery dispatcher
+002 FR-025	002	deferred 3+	roadmap	roadmap entry "Human approvals of plan revisions"	roadmap: Human approvals of plan revisions
+002 FR-026	002	deferred 3+	roadmap	roadmap entry "Human approvals of plan revisions"	roadmap: Human approvals of plan revisions
+002 FR-027	002	deferred 3+	roadmap	roadmap entry "Human approvals of plan revisions"	roadmap: Human approvals of plan revisions
+002 FR-028	002	merged-with 028 FR-029	104-spec-input	CT-104-1 (028 side: FX-10)	DV-036
+002 FR-029	002	merged-with 028 FR-002	104-spec-input	CT-104-2 (028 side: FX-10)	DV-073
+002 FR-030	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-031	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-032	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-033	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-034	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-035	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-036	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-037	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 FR-038	002	merged-with 028 FR-020	105-verification	CT-105-1 (028 side: FX-14)	
+002 FR-039	002	deferred 3+	roadmap	roadmap entry "Feature parallelism in separate workspaces"	roadmap: Feature parallelism in separate workspaces
+002 FR-040	002	deferred 3+	roadmap	roadmap entry "Feature parallelism in separate workspaces"	roadmap: Feature parallelism in separate workspaces
+002 FR-041	002	translated	127-quota-budgets-and-pause	CT-127-1	
+002 FR-042	002	translated	127-quota-budgets-and-pause	CT-127-2	DV-063
+002 FR-043	002	deferred 3+	roadmap	roadmap entry "Scheduler queue and cron"	roadmap: Scheduler queue and cron
+002 FR-044	002	deferred 3+	roadmap	roadmap entry "Scheduler queue and cron"	roadmap: Scheduler queue and cron
+002 FR-045	002	deferred 3+	roadmap	roadmap entry "Scheduler queue and cron"	roadmap: Scheduler queue and cron
+002 FR-046	002	merged-with 028 FR-015	102-run-control	CT-102-2 (028 side: FX-12)	
+002 FR-047	002	deferred 3+	roadmap	roadmap entry "Scheduler queue and cron"	roadmap: Scheduler queue and cron
+002 FR-048	002	translated	142-parallel-units	CT-142-1	DV-080
+002 FR-049	002	deferred 3+	roadmap	roadmap entry "Server mode and the index database"	roadmap: Server mode and the index database
+002 FR-050	002	deferred 3+	roadmap	roadmap entry "Human approvals of plan revisions"	roadmap: Human approvals of plan revisions
+002 FR-051	002	deferred 2	121-kanban-ui	roadmap entry "121-kanban-ui"	roadmap: 121-kanban-ui
+002 FR-052	002	deferred 3+	roadmap	roadmap entry "Engine hooks"	roadmap: Engine hooks
+002 FR-053	002	deferred 3+	roadmap	roadmap entry "Server mode and the index database"	roadmap: Server mode and the index database
+002 SC-001	002	merged-with 028 SC-002	101-gate-and-verdict	CT-101-10 (028 side: FX-05)	
+002 SC-002	002	merged-with 028 FR-003	101-gate-and-verdict	CT-101-11 (028 side: FX-13)	DV-011
+002 SC-003	002	ported	101-gate-and-verdict	CT-101-12	DV-072
+002 SC-004	002	merged-with 028 SC-003	100-specstride	CT-100-2	
+002 SC-005	002	deferred 3+	roadmap	roadmap entry "Spec bundle import and verification plans bound to a spec bundle"	roadmap: Spec bundle import and verification plans bound to a spec bundle
+002 SC-006	002	deferred 3+	roadmap	roadmap entry "Human approvals of plan revisions"	roadmap: Human approvals of plan revisions
+002 SC-007	002	deferred 2	121-kanban-ui	roadmap entry "121-kanban-ui"	roadmap: 121-kanban-ui

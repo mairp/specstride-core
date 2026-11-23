@@ -1,0 +1,17 @@
+{
+  "schema": "specstride.internal/result-map",
+  "note": "F103-FR-019. Applies only when the phase evidence is absent. The stop reasons and codes are those of annex E section E.3 and E.4 of feature 100, which stand where this file differs.",
+  "rows": [
+    {"result": 4,  "engineExit": 4, "stopReason": "proposer_max_iter",           "loopWritesStopLine": false, "note": "Defect D-45 preserved: the loop writes no stop line of its own"},
+    {"result": 6,  "engineExit": 6, "stopReason": "stop_flag",                    "loopWritesStopLine": false, "note": "Owned by the feature that owns stop; listed for completeness"},
+    {"result": 7,  "engineExit": 4, "stopReason": "proposer_consecutive_errors", "loopWritesStopLine": true},
+    {"result": 8,  "engineExit": 4, "stopReason": "proposer_no_progress",         "loopWritesStopLine": true, "state": "failed", "note": "W-103-01: this row applies when no declaration of the proposer and no question of the harness was seen in the counted passes"},
+    {"result": 9,  "engineExit": 4, "stopReason": "proposer_yield_budget",        "loopWritesStopLine": true, "note": "The loop writes proposer_yield_budget or proposer_yield_timeout for its own stop; the engine records proposer_yield_budget for both (annex E section E.3, rows 6 and 7)"},
+    {"result": 10, "engineExit": 4, "stopReason": "proposer_cap_exhausted",       "loopWritesStopLine": true},
+    {"result": "other, phase evidence absent (0, 1, 3 included)", "engineExit": 1, "stopReason": "proposer_no_evidence", "loopWritesStopLine": false, "field": "rc"}
+  ],
+  "blockedResults": [
+    {"blocked": "declared-block", "engineExit": 4, "stopReason": "proposer_no_progress", "retryable": false, "state": "blocked-on-human", "when": "a declaration of the proposer that it needs a human, or a question of the harness, was seen in the counted passes (W-103-01)"},
+    {"blocked": "source-changed", "engineExit": 3, "stopReason": "critic_config", "retryable": false}
+  ]
+}

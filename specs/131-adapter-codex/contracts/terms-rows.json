@@ -1,0 +1,5 @@
+{"schema":"specstride.terms/1","provider":"openai","accessed":"2026-09-29","status":"unverified: documentation only","rows":[
+{"tier":1,"audience":"personal","status":"conditional","conditions":["account holder's own trusted machine","no public or untrusted environment","no public or open-source CI","login never copied by the product","a limit signal is a stop"]},
+{"tier":1,"audience":"distributed","status":"personal-only","default":false,"mark":"personal use only"},
+{"tier":2,"audience":"personal","status":"allowed"},{"tier":2,"audience":"distributed","status":"allowed","default":true},
+{"tier":3,"status":"refused"}],"source":"R8v rows 7 and 9, D2, D3"}

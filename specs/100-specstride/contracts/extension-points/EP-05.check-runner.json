@@ -1,0 +1,90 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-05",
+  "ids": [
+    "specstride.check-runner/1"
+  ],
+  "annex": "annex C, §C.8",
+  "operations": [
+    "pin",
+    "start",
+    "poll",
+    "result",
+    "cancel",
+    "environment"
+  ],
+  "requirements": [
+    "F100-FR-097",
+    "F100-FR-098",
+    "F100-FR-099",
+    "F100-FR-100",
+    "F100-FR-232"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.check-runner/1`."
+    ],
+    "Purpose": [
+      "To run a deterministic command for the verification gate, for an inner check, for the closing",
+      "check, for the merge check and for a job the runtime launches, so that a result means the same",
+      "everywhere."
+    ],
+    "Caller and time": [
+      "The engine: `pin` at launch for every entry of the check manifest; `start`, `poll`, `result` and",
+      "`cancel` whenever a check runs. `environment` whenever a caller outside the runner needs the",
+      "environment a command would get (the detached command staged before, F105-FR-035)."
+    ],
+    "Inputs": [
+      "`pin`: an entry of the check manifest. `start`: the pinned identity, the working directory, the",
+      "environment allow-list, the time limit, the containment level. `poll`, `result`, `cancel`: a handle.",
+      "`environment`: an entry of the check manifest (its declared `env`) and the profile in force."
+    ],
+    "Outputs": [
+      "`pin`: an identity record of a declared kind; for the kind `command` the absolute path of the",
+      "executable with its size and hash. `start`: a handle. `poll`: running or ended. `result`: exit",
+      "code, duration, a reference to the captured output, and the conditions, each in a field of its",
+      "own, from the closed set `tainted`, `cached`, `flaky`, `interrupted`, `unchecked` with its reason",
+      "(the reasons include `changed-during-check`, `slow`, `budget`), and optional findings.",
+      "`environment`: the environment the kind `command` would give that entry: the allow-list with no",
+      "provider credential overlaid with the declared `env`, and under the `parity` profile the",
+      "environment of the process overlaid with the declared `env` (row 125 of annex X §X.7). It starts",
+      "no process and returns no handle."
+    ],
+    "Errors": [
+      "`cannot-start`, `timeout`, `interrupted`."
+    ],
+    "Guarantees of the core": [
+      "A check is run by the runtime and never by the proposer's harness. Before a check the runtime ends",
+      "every process of the pass it can identify, except a job held by an accepted yield. The protected",
+      "set is fingerprinted before and after every check; a check run against a changed set is `tainted`",
+      "and never a pass. Every command of a set runs in every check; a check does not stop at a failure.",
+      "Every run of a command emits `check.started` and `check.ended`. Output is captured through the one",
+      "ingress, with a cap. The environment that `environment` returns equals the one `start` gives the",
+      "same entry."
+    ],
+    "Guarantees of an implementation": [
+      "The kind `command` runs a fixed argument list without a shell, in a process group of its own, with",
+      "an environment that holds no provider key, at the proposer's containment level or stricter, with",
+      "no write access to the control plane."
+    ],
+    "Failure of an implementation": [
+      "A runner that cannot start a command returns `cannot-start`; at the verification gate that is a",
+      "failed command, and in an inner check the loop layer is off for the phase attempt. A runner that",
+      "throws is treated as `cannot-start`."
+    ],
+    "Unknown-value rule": [
+      "An unknown kind of identity refuses the entry at `pin`, at launch. An unknown condition in a",
+      "result makes the result `unchecked`."
+    ],
+    "Wave 1 implementations": [
+      "`command`. As an option that is off by default: `steps`, the step runner."
+    ],
+    "Content owner": [
+      "148. Feature 105 consumes the runner and keeps EP-07."
+    ],
+    "Proving test": [
+      "Conformance with scripted commands: pass, fail at step n, slow, never ending, very large output.",
+      "A sample runner registered from the test tree serves an entry of its kind."
+    ]
+  }
+}

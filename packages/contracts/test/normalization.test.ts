@@ -44,15 +44,15 @@ import {
 } from "../src/profile/layout-old-side.ts";
 import { holdsLogicalName } from "../src/ids/logical-names.ts";
 
-test("CT-100-313: the normalization rules are exactly N-01 to N-29 (F100-FR-213)", () => {
-  assert.equal(RULE_COUNT, 29);
+test("CT-100-313: the normalization rules are exactly N-01 to N-30 (F100-FR-213)", () => {
+  assert.equal(RULE_COUNT, 30);
   assert.equal(FIRST_RULE, "N-01");
-  assert.equal(LAST_RULE, "N-29");
-  assert.equal(rules.length, 29);
-  assert.equal((normalizationData as { rules: unknown[] }).rules.length, 29);
+  assert.equal(LAST_RULE, "N-30");
+  assert.equal(rules.length, 30);
+  assert.equal((normalizationData as { rules: unknown[] }).rules.length, 30);
   assert.deepEqual(
     rules.map((r) => r.id),
-    Array.from({ length: 29 }, (_, i) => `N-${String(i + 1).padStart(2, "0")}`),
+    Array.from({ length: 30 }, (_, i) => `N-${String(i + 1).padStart(2, "0")}`),
   );
   for (const r of rules) {
     assert.notEqual(r.subject.trim(), "", `${r.id} names its subject`);
@@ -61,12 +61,32 @@ test("CT-100-313: the normalization rules are exactly N-01 to N-29 (F100-FR-213)
   assert.equal(rule("N-15")?.subject, "Implementation names in text");
   assert.equal(rule("N-99"), undefined);
   // The loader asserts: a rule that is missing, and a rule added without a
-  // register row, are both refused.
+  // register row or the statement of non-determinism, are both refused.
   assert.doesNotThrow(() => assertRules());
   assert.throws(() => assertRules(rules.slice(1)), NormalizationError);
-  const added = [...rules, { id: "N-30", subject: "s", rule: "r" }];
-  assert.throws(() => assertRules(added), /carries no row of the divergence register/);
-  assert.doesNotThrow(() => assertRules(added, (id) => (id === "N-30" ? "DV-999" : undefined)));
+  const added = [...rules, { id: "N-31", subject: "s", rule: "r" }];
+  assert.throws(
+    () => assertRules(added),
+    /carries no row of the divergence register and no statement/,
+  );
+  assert.doesNotThrow(() => assertRules(added, (id) => (id === "N-31" ? "DV-999" : undefined)));
+  // The second escape of F100-FR-213: the rule's own text carries the statement
+  // that the value is not deterministic in the reference itself, as N-30 does.
+  const stated = [
+    ...rules,
+    { id: "N-31", subject: "s", rule: "removed; the value is not deterministic in the reference" },
+  ];
+  assert.throws(() => assertRules(stated), /not deterministic in the reference/);
+  assert.doesNotThrow(() =>
+    assertRules([
+      ...rules,
+      {
+        id: "N-31",
+        subject: "s",
+        rule: "the value is not deterministic in the reference itself, so the line is removed",
+      },
+    ]),
+  );
   // N-02 applies to the text of messages as well as to captured trees, and a
   // rule that replaces nothing fails the suite.
   assert.equal(N_02_APPLIES_TO_MESSAGE_TEXT, true);

@@ -1,0 +1,197 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-02",
+  "ids": [
+    "specstride.harness/1"
+  ],
+  "annex": "annex C, §C.1",
+  "operations": [
+    "detect",
+    "capabilities",
+    "preflight",
+    "startPass",
+    "complete",
+    "stop",
+    "betweenPasses",
+    "classify"
+  ],
+  "requirements": [
+    "F100-FR-008",
+    "F100-FR-023",
+    "F100-FR-076",
+    "F100-FR-077",
+    "F100-FR-078",
+    "F100-FR-079",
+    "F100-FR-080",
+    "F100-FR-081",
+    "F100-FR-082",
+    "F100-FR-083",
+    "F100-FR-084",
+    "F100-FR-085",
+    "F100-FR-086",
+    "F100-FR-087",
+    "F100-FR-088",
+    "F100-FR-230",
+    "F100-FR-231",
+    "F100-FR-090",
+    "F100-FR-091",
+    "F100-FR-092",
+    "F100-FR-093",
+    "F100-FR-094",
+    "F100-FR-111",
+    "F100-FR-113"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.harness/1`. The harness descriptor has its own version field, `descriptorVersion: 1` (§C.2)."
+    ],
+    "Purpose": [
+      "To let the engine run a proposer pass or a critic-class call on any harness without knowing which",
+      "harness it is. A harness is an agent CLI, an SDK or a model endpoint."
+    ],
+    "Caller and time": [
+      "The CLI calls `detect`, `capabilities` and `preflight` at discovery, at launch and in the doctor.",
+      "The pass loop calls `startPass`, `stop` and `betweenPasses`. The critic strategy calls `complete`.",
+      "Every caller hands failures to `classify`. Role resolution runs at launch only."
+    ],
+    "Inputs": [
+      {
+        "table": {
+          "header": [
+            "Operation",
+            "Inputs"
+          ],
+          "rows": [
+            [
+              "`detect`",
+              "Nothing beyond the descriptor"
+            ],
+            [
+              "`capabilities`",
+              "Nothing beyond the descriptor and the detection result"
+            ],
+            [
+              "`preflight`",
+              "The role"
+            ],
+            [
+              "`startPass`",
+              "Reference to the prompt; working directory; session directive (`fresh`, with a minted id where the harness takes one from the caller, or `continue` with an id); model; model tier or effort; containment level; write root; environment allow-list; time limits; trace parent; transport; process-level spending limit where the harness adapter declares that capability"
+            ],
+            [
+              "`complete`",
+              "Prompt; model; output cap; budget cap; form of the `completion` level; for the tool-less form an empty working directory; for the form with read-only tools the working tree and the withheld paths of §C.4; the minted session id"
+            ],
+            [
+              "`stop`",
+              "The handle of a pass and one of `polite`, `terminate`, `kill`"
+            ],
+            [
+              "`betweenPasses`",
+              "The handle of the pass that ended, its result, the working directory"
+            ],
+            [
+              "`classify`",
+              "What the harness adapter saw: a stream record, a status with headers and body code, an exit code, error text"
+            ]
+          ]
+        }
+      }
+    ],
+    "Outputs": [
+      {
+        "table": {
+          "header": [
+            "Operation",
+            "Outputs"
+          ],
+          "rows": [
+            [
+              "`detect`",
+              "Presence, version, whether a configuration home exists"
+            ],
+            [
+              "`capabilities`",
+              "A map of capabilities. Every entry carries its provenance (`declared`, `probed`, `adapter`, `catalogue`) or is null: containment ceiling, continuation, model-tier ladder, usage source, switch for harness-native memory, tool-less mode, read-only critic mode, context window, `concurrentSessions`, process-level spending limit, transports"
+            ],
+            [
+              "`preflight`",
+              "Whether the credential of the role is present and not refused; never a paid call"
+            ],
+            [
+              "`startPass`",
+              "A handle with the identity of the process, the raw stream and the session id"
+            ],
+            [
+              "`complete`",
+              "The reply, usage, and the facts of the initial record: tool list, session id, sandbox mode, network state"
+            ],
+            [
+              "`stop`",
+              "Whether the process ended"
+            ],
+            [
+              "`betweenPasses`",
+              "One of the closed set: `continue`; `stop` with the result 4; `stop` with the result 7"
+            ],
+            [
+              "`classify`",
+              "A typed failure from the closed vocabulary under \"Errors\", which the quota classifier (§C.13) refines"
+            ]
+          ]
+        }
+      }
+    ],
+    "Errors": [
+      "Closed vocabulary: `authentication_failed`, `rate_limited`, `quota_exhausted`,",
+      "`context_window_exceeded`, `transport_failed`, `agent_failure`, `capability_absent`, and",
+      "`critic_not_toolless`. The last is a critic configuration error that halts the run (engine exit 3,",
+      "stop reason `critic_config`)."
+    ],
+    "Guarantees of the core": [
+      "The core sees only the port and never tests a harness name. There is one resolved registry per",
+      "launch, stored with the provenance of each value. The proposer comes from a flag, the environment,",
+      "configuration or the shipped default only; discovery never changes it. The environment of every",
+      "call is an allow-list. Every critic-class call is a fresh session. A call of a harness is refused",
+      "unless the terms gate allows it at that moment."
+    ],
+    "Guarantees of an implementation": [
+      "A harness adapter passes secrets by environment or standard input and never in an argument list;",
+      "starts every process in a process group of its own; switches the harness's own telemetry off where",
+      "the descriptor names the switch; never writes the consumer's real configuration home, except the",
+      "installs of §C.1 \"Wave 1 implementations\" that the consumer listed; states the permission mode on",
+      "every call; reports unknown values as null and never guesses."
+    ],
+    "Failure of an implementation": [
+      "A failure of `detect` or `capabilities` makes the harness absent from the registry, with a doctor",
+      "finding. A failure of `preflight` for a role in use refuses the launch. A failure of `startPass`",
+      "counts as a pass that ended with an error, by the existing breakers. A failure of `complete`",
+      "produces no verdict; it is scored as the baseline scores a transport error of the critic. A failure",
+      "of `betweenPasses` is `continue`. A failure of `classify` yields `agent_failure`."
+    ],
+    "Unknown-value rule": [
+      "`kind`, `stream.format` and the role are open sets, resolved through registries. An unknown",
+      "top-level key of a descriptor refuses the descriptor; an unknown key under `x-` is ignored. An",
+      "unknown capability is null. An unknown failure is `agent_failure`. Auth tier 3 is not a valid value."
+    ],
+    "Wave 1 implementations": [
+      "The harness adapters for Claude (on two transports: the CLI subprocess, and an SDK in process as an",
+      "optional transport with API keys only), dsh, Codex, pi and prime; the generic descriptor-driven",
+      "harness adapter for the kinds `cli`, `openai-chat` and `anthropic-messages`. A harness the consumer",
+      "declares by descriptor runs on the generic harness adapter. The one permitted write to a real",
+      "configuration home is a plugin install of a harness, only for plugins the consumer named in an",
+      "allowlist in user configuration, each recorded."
+    ],
+    "Content owner": [
+      "109 (registry, port, generic harness adapter, conformance suite, sample). Sub-point stream readers:",
+      "126. Sub-point role resolution: 124. The harness adapters are implemented by 125, 130, 131, 134, 138."
+    ],
+    "Proving test": [
+      "The conformance suite of harness adapters: a fake executable and a fake endpoint assert argument",
+      "list, standard input, environment and clean-up; recorded streams are replayed through the reader.",
+      "The descriptor-only sample: a descriptor for a fake CLI and one for a fake endpoint, both in the",
+      "test tree, complete a run as proposer and as critic, are shown by the doctor as unverified, and the",
+      "endpoint is picked as the diverse critic when none is configured, with no product file changed."
+    ]
+  }
+}

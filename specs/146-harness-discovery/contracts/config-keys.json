@@ -1,0 +1,32 @@
+{
+  "schema": "specstride.config-keys/1",
+  "feature": "146",
+  "note": "Feature 110 owns the spelling. Rows 87, 88 and 89 of annex X section X.7 are confirmed (config-keys.tsv of feature 110, lines 146, 147 and 207).",
+  "keys": [
+    {
+      "key": "discovery.enabled",
+      "row": 87,
+      "trust": "neutral",
+      "status": "confirmed"
+    },
+    {
+      "key": "discovery.online",
+      "row": 88,
+      "trust": "neutral",
+      "status": "confirmed"
+    },
+    {
+      "key": "critic.catalogueWindowMargin",
+      "row": 89,
+      "trust": "neutral",
+      "status": "confirmed"
+    },
+    {
+      "key": "harnesses.<id>",
+      "row": null,
+      "trust": "widening",
+      "status": "annex X section X.8 names harnesses.<id>.*; read, not owned"
+    }
+  ],
+  "flags": []
+}

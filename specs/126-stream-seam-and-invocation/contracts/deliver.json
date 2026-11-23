@@ -1,0 +1,12 @@
+{
+  "schema": "specstride.deliver-126/1",
+  "note": "Files of feature 126 that the sync script of feature 100 delivers into packages/contracts/ after its clean copies. Keys are the target names in the package; values are paths relative to this directory. Without this manifest the sync's clean rebuild drops the four stream-seam schemas (found when feature 152's T096 reran the sync after regenerating the annexes).",
+  "owner": "126",
+  "data": {},
+  "schemas": {
+    "invocation-result.schema.json": "schemas/invocation-result.schema.json",
+    "invocation.schema.json": "schemas/invocation.schema.json",
+    "producer-status.schema.json": "schemas/producer-status.schema.json",
+    "provider-terminal.schema.json": "schemas/provider-terminal.schema.json"
+  }
+}

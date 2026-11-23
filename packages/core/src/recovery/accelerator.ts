@@ -534,6 +534,49 @@ export function accelerationNote(inputs: {
 }
 
 /* ==================================================================== *
+ * F153-FR-061 (`parity` profile) — the AS-IS acceleration note.
+ * ==================================================================== */
+
+/**
+ * The acceleration note, byte for byte as the as-is engine wrote it: the same
+ * heading, a fixed four-line admonition that names the criteria the hint
+ * carried, and the changed-files list under its own as-is heading (in the
+ * parity runs the workdir sits under no repository, so the as-is list is the
+ * `none detected` line the golden holds). The accelerator's own note, where
+ * the pass left one, stands under its heading as it was written.
+ */
+export function asIsAccelerationNote(inputs: {
+  readonly phase: number;
+  readonly ordinal: number;
+  /** The signature of unmet criteria the pass acted on. */
+  readonly criteria: string;
+  /** The files the pass changed, from `changedByPass` of the snapshot. */
+  readonly changedByPass: readonly string[];
+  /** The accelerator's own note, where it left one. */
+  readonly ownNote?: string | undefined;
+}): string {
+  const lines: string[] = [
+    accelerationNoteHeading(inputs.phase, inputs.ordinal),
+    "",
+    "An accelerator pass (proposer tools, narrowed prompt) already acted on the",
+    `diagnostician hint for: ${criteriaOfAccelerationStart(inputs.criteria)}`,
+    "Its changes are in the tree. Do NOT redo them — verify they hold, then fix",
+    "whatever the critic still rejects.",
+    "",
+    "## Files this pass changed (vs HEAD; 'new' = untracked)",
+  ];
+  if (inputs.changedByPass.length === 0) {
+    lines.push("(none detected — not a git workdir, or the pass changed nothing)");
+  } else {
+    for (const path of inputs.changedByPass) lines.push(`- ${path}`);
+  }
+  if (inputs.ownNote !== undefined && inputs.ownNote !== "") {
+    lines.push("", OWN_NOTE_HEADING, "", inputs.ownNote.replace(/\n+$/, ""));
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/* ==================================================================== *
  * One accelerated phase attempt, end to end.
  * ==================================================================== */
 
@@ -549,7 +592,27 @@ export type AcceleratedAttemptInputs = {
   readonly signature: string;
   readonly markers: RecoveryMarkers;
   readonly prompt: AcceleratorPromptInputs;
+  /**
+   * F153-FR-061 (`parity` profile) — the as-is accelerator prompt, composed
+   * by the engine byte for byte as the as-is launcher assembled it; where it
+   * stands the block-set prompt of feature 101 is not what the pass is run
+   * with (the golden capture of feature 141 is the authority for the bytes).
+   */
+  readonly asIsPromptText?: string;
+  /**
+   * F153-FR-061 (`parity` profile) — the acceleration note is written in the
+   * as-is shape (`asIsAccelerationNote`), not the block-set shape of feature
+   * 101; the golden capture of feature 141 is the authority for the bytes.
+   */
+  readonly asIsNote?: boolean;
   readonly insideAWorkTree: boolean;
+  /**
+   * The pass-ceiling line of the attempt, printed where the as-is engine
+   * printed it: right AFTER the attempt's opening banner — the accelerator's
+   * own banner on an accelerated attempt (the golden of FX-02 names that
+   * order). Absent where the caller printed it with its own banner already.
+   */
+  readonly afterTheStartLine?: () => void;
 };
 
 /** The ports one accelerated phase attempt calls. */
@@ -622,9 +685,11 @@ export async function runAnAcceleratedPhaseAttempt(
       signature: inputs.signature,
     }),
   );
+  // The as-is ceiling line follows the attempt's opening banner.
+  inputs.afterTheStartLine?.();
 
   const blocks = acceleratorPromptBlocks(inputs.prompt, deps.framing);
-  const promptText = acceleratorPromptText(blocks);
+  const promptText = inputs.asIsPromptText ?? acceleratorPromptText(blocks);
   await deps.runThePass(promptText);
 
   const after = treeStateThroughThePort({
@@ -642,13 +707,22 @@ export async function runAnAcceleratedPhaseAttempt(
 
   // B-0175 — the accelerator's own note is read as a claim and removed.
   const ownNote = deps.takeTheOwnNote?.();
-  const note = accelerationNote({
-    phase: inputs.phase,
-    ordinal: inputs.ordinal,
-    criteria: inputs.signature,
-    changedByPass: snapshot.changedByPass,
-    ...(ownNote === undefined ? {} : { ownNote }),
-  });
+  const note =
+    inputs.asIsNote === true
+      ? asIsAccelerationNote({
+          phase: inputs.phase,
+          ordinal: inputs.ordinal,
+          criteria: inputs.signature,
+          changedByPass: snapshot.changedByPass,
+          ...(ownNote === undefined ? {} : { ownNote }),
+        })
+      : accelerationNote({
+          phase: inputs.phase,
+          ordinal: inputs.ordinal,
+          criteria: inputs.signature,
+          changedByPass: snapshot.changedByPass,
+          ...(ownNote === undefined ? {} : { ownNote }),
+        });
   const notePath = deps.writeNote(note);
   deps.emit(AS_IS_NOTE_EVENT.name, {
     phase: inputs.phase,

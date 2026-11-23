@@ -1,5 +1,5 @@
 /**
- * T056 — rules N-21 to N-29 (F141-FR-020).
+ * T056 — rules N-21 to N-30 (F141-FR-020).
  *
  * | Rule | Subject | What the rule does |
  * |---|---|---|
@@ -12,6 +12,7 @@
  * | N-27 | sorting that depends on the locale | "Both sides run with the same locale; the comparator does not sort for them" |
  * | N-28 | legacy state and names | "The behaviour of the legacy command names, legacy variables and the pre-v2 layout is not compared" |
  * | N-29 | field `schema` of a reverse-run source inventory | "The key `schema` is removed from the source inventory of a reverse run before the inventory is compared" |
+ * | N-30 | the root note of the banner | "The banner line that reports the automatic setting of `IS_SANDBOX` under a root that runs without a sandbox is removed from both sides before the comparison" |
  *
  * N-29 acts on the capture of the PORT alone: the as-is inventory carries
  * `schema_version` 1 and no field `schema` (DV-116), so on the reference the rule
@@ -337,6 +338,27 @@ export const N29: Rule = {
 
 /** The two rules that act on the capture of the port alone (T032, CT-141-120). */
 export const RULES_ON_THE_PORT_ALONE: readonly string[] = Object.freeze(["N-12", "N-29"]);
+
+/**
+ * N-30: the banner line that reports the automatic setting of `IS_SANDBOX`
+ * under a root that runs without a sandbox is removed from both sides before
+ * the comparison. The line is not deterministic in the reference itself: the
+ * reference holds it because the recording ran as root with the variable
+ * unset, and a later capture holds it or not as its environment runs — the
+ * presence of the line says nothing about the behaviour the fixtures compare
+ * (F100-FR-213, by the statement of non-determinism, not by a register row).
+ */
+const ROOT_NOTE_LINE =
+  /^[ \t]*note[ \t]*:[ \t]*root \+ IS_SANDBOX unset -> auto-set IS_SANDBOX=1[ \t]*\r?\n?/gm;
+
+export const N30: Rule = {
+  id: "N-30",
+  subject: "The root note of the banner",
+  surfaces: [],
+  apply(capture: MutableCapture, _context: NormalizeContext): number {
+    return replaceInSurfaces(capture.surfaces, [], (value) => value.replace(ROOT_NOTE_LINE, ""));
+  },
+};
 
 /** Every event record of a capture, for the report. */
 export function eventRecordsOf(capture: MutableCapture): readonly EventRecord[] {

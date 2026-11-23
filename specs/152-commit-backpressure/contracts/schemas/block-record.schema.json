@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.commit-gate-block/1",
+  "x-schema-id": "specstride.commit-gate-block/1",
+  "title": "Block record of the commit gate (F152-FR-013; data-model.md E1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "feature",
+    "phase",
+    "ordinal",
+    "runId",
+    "engineStartId",
+    "verdictId",
+    "hits",
+    "hitsOmitted",
+    "signature",
+    "ruleDataHash",
+    "nonce",
+    "at",
+    "path"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.commit-gate-block/1"
+    },
+    "feature": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ordinal": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "runId": {
+      "type": "string"
+    },
+    "engineStartId": {
+      "type": "string"
+    },
+    "verdictId": {
+      "type": "string"
+    },
+    "hits": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule",
+          "file",
+          "line"
+        ],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,48}$"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "$comment": "0 for a hit of kind 'unreadable' (the file could not be read); rendered as 'line unknown'"
+          }
+        }
+      }
+    },
+    "hitsOmitted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ruleDataHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$",
+      "$comment": "newNonce() of gate/nonce.ts, stored so that a resume renders the same corrective block (data-model.md E1, E3)"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "path": {
+      "enum": [
+        "pre-scan",
+        "step-6",
+        "resume"
+      ]
+    }
+  }
+}

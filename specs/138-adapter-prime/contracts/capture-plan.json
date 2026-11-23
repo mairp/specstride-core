@@ -1,0 +1,80 @@
+{
+  "pin": "prime-agent 0.7.3",
+  "captures": [
+    {
+      "n": 1,
+      "what": "One recorded stream of a proposer pass and one of a critic call in JSON mode; confirms the record set, the extra flags, cost and its unit",
+      "paid": true,
+      "logged": "PROGRESS.md paid probes",
+      "script": [
+        "With the pin on PATH (or the launcher named by SPECSTRIDE_PRIME_FLEET_BIN, else SPECSTRIDE_PRIME_BIN): run one proposer pass in JSON print mode, prompt on standard input, the stream written to tests/fixtures/streams/capture-1-proposer.jsonl and the exit code to capture-1-proposer.exit",
+        "Run one critic call in JSON print mode, the same restricted flag set as the argument table gives the critic, stream to tests/fixtures/streams/capture-1-critic.jsonl and exit code to capture-1-critic.exit"
+      ],
+      "expected": "Both streams parse as stream schema version 3; the record set is a subset of the common record types of the dialect row; the usage spellings and the cost and its unit appear in the terminal or usage records; the exit code is recorded with each stream",
+      "fixtureOut": "tests/fixtures/streams/capture-1-*"
+    },
+    {
+      "n": 2,
+      "what": "The record and the exit code when a provider limit is reached",
+      "paid": "scripted where possible; else one small call",
+      "script": [
+        "Scripted first: feed a stream whose terminal record is an error record of the limit class through the reader replay (no model call); if the scripted capture cannot produce the live record shape, run one small call against a restricted account until the provider answers with the limit error"
+      ],
+      "expected": "The error record and the exit code (0) are captured with the stream; the classifier entry of contracts/classifier-entries.json names the same class",
+      "fixtureOut": "tests/fixtures/streams/capture-2-*"
+    },
+    {
+      "n": 3,
+      "what": "Whether the initial record states the tool list",
+      "paid": false,
+      "note": "read from capture 1",
+      "script": ["Read tests/fixtures/streams/capture-1-proposer.jsonl; no extra call"],
+      "expected": "The session or agent-start record either names the tools or does not; the finding is recorded with the capture date and the version",
+      "fixtureOut": "tests/fixtures/streams/capture-3-*"
+    },
+    {
+      "n": 4,
+      "what": "The resume flag inside a session directory in print mode",
+      "paid": "one small call",
+      "script": [
+        "With a session directory set by PRIME_AGENT_SESSION_DIR and one prior session in it: run one small proposer call with the resume flag of the dialect row and the session id, stream to tests/fixtures/streams/capture-4-resume.jsonl"
+      ],
+      "expected": "The stream continues the prior session (the session record carries the resumed session id); the flag form and the exit code are recorded",
+      "fixtureOut": "tests/fixtures/streams/capture-4-*"
+    },
+    {
+      "n": 5,
+      "what": "The agent executable takes its configuration directory from the home variable (a scripted check that calls no model); read from capture 1, made in a watched home: a call at auth tier 1 with sessions off writes nothing to the home, and a call with the four switches loads none of the four kinds of auto-loaded context",
+      "paid": false,
+      "note": "no extra call",
+      "script": [
+        "Scripted, no model: run the agent executable with HOME set to a watched empty directory and a flag set that starts no model call (the help or version path), and list what appears under the watched home",
+        "Read from capture 1 for the two watched-home observations: nothing written to the real home at auth tier 1 with sessions off, and no auto-loaded context kind in the stream"
+      ],
+      "expected": "The configuration directory is taken from HOME (the watched home gains the state, the real home is untouched), and no skill, extension, context file or prompt template is loaded when the four switches are on",
+      "fixtureOut": "tests/fixtures/streams/capture-5-*"
+    }
+  ],
+  "liveProbes": [
+    {
+      "n": "p1",
+      "role": "proposer",
+      "what": "The one live proposer probe of capture (1): a real call on the pinned version",
+      "paid": true,
+      "logged": "docs/ecosystem/PROGRESS.md, paid probes",
+      "script": ["The script of capture (1), proposer side, against the live provider"],
+      "expected": "A recorded stream of schema version 3 with a success terminal, exit code 0, cost and its unit readable"
+    },
+    {
+      "n": "p2",
+      "role": "critic",
+      "what": "The one live critic probe of capture (1): a real call on the pinned version, JSON mode",
+      "paid": true,
+      "logged": "docs/ecosystem/PROGRESS.md, paid probes",
+      "script": ["The script of capture (1), critic side, against the live provider"],
+      "expected": "A recorded stream of schema version 3 whose visible text is the verdict, with the terminal record deciding the outcome"
+    }
+  ],
+  "live": "One logged probe per role; no other paid call.",
+  "rule": "Run only by explicit authorization; this feature runs none."
+}

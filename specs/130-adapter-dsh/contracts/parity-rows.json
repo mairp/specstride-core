@@ -1,0 +1,117 @@
+{
+  "schema": "specstride.adapter-parity-rows/1",
+  "harness": "dsh",
+  "rowsGivenAValue": [
+    {
+      "row": 10,
+      "key": "carry.continuation",
+      "default": "off always for dsh",
+      "parity": "off"
+    },
+    {
+      "row": 12,
+      "key": "prompt.block_set",
+      "default": "current",
+      "parity": "as-is"
+    },
+    {
+      "row": 25,
+      "key": "sandbox.level",
+      "default": "C1 (unverified)",
+      "parity": "none"
+    },
+    {
+      "row": 26,
+      "key": "sandbox.permissionMode",
+      "default": "workspace-write; read-only for the critic",
+      "parity": "as the baseline, mapped through the argument table"
+    },
+    {
+      "row": 27,
+      "key": "harnesses.dsh.transport",
+      "default": "subprocess",
+      "parity": "subprocess"
+    },
+    {
+      "row": 28,
+      "key": "roles.critic.transport",
+      "default": "CLI, weaker proof",
+      "parity": "as-is: no proof, workdir of the baseline, default window"
+    },
+    {
+      "row": 29,
+      "key": "memory.native.proposer",
+      "default": "off asked; state not-switchable on dsh; critic refused unless off or absent",
+      "parity": "as-is: no flag"
+    },
+    {
+      "row": 30,
+      "key": "harnesses.dsh.overlay",
+      "default": "follows the auth tier",
+      "parity": "scope none"
+    },
+    {
+      "row": 34,
+      "key": "distribution.audience",
+      "default": "distributed",
+      "parity": "personal"
+    },
+    {
+      "row": 35,
+      "key": "critic.autoPick",
+      "default": "never for dsh, under every audience",
+      "parity": "not reached"
+    },
+    {
+      "row": 39,
+      "key": "pause.maxTotalMs",
+      "default": "on",
+      "parity": "not reached"
+    },
+    {
+      "row": 36,
+      "key": "roles.proposer.harness; roles.critic.harness",
+      "default": "never dsh",
+      "parity": "every fixture names both"
+    },
+    {
+      "row": 131,
+      "key": "harnesses.dsh.proposerCustomisations",
+      "default": "off asked; state not-switchable on dsh",
+      "parity": "as-is: no flag"
+    }
+  ],
+  "settings": [
+    "harnesses.dsh.bin",
+    "harnesses.dsh.profile",
+    "harnesses.dsh.home",
+    "harnesses.dsh.provider",
+    "roles.critic.provider",
+    "roles.proposer.effort",
+    "roles.critic.effort",
+    "harnesses.dsh.modelProviders",
+    "harnesses.dsh.contextWindows",
+    "roles.critic.contextTokens",
+    "harnesses.dsh.pluginTimeoutSec",
+    "harnesses.dsh.overlay",
+    "loop.parallel.allow_detect (user configuration only)"
+  ],
+  "rowsOwned": [
+    {
+      "row": 117,
+      "status": "confirmed",
+      "key": "harnesses.dsh.critic.proof",
+      "default": "strict",
+      "parity": "none",
+      "divergence": "DV-110"
+    },
+    {
+      "row": 118,
+      "status": "confirmed",
+      "key": "harnesses.dsh.pluginAllowlist",
+      "default": "empty",
+      "parity": "as the fixture sets it",
+      "divergence": "DV-091"
+    }
+  ]
+}

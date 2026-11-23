@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.red-gate-budget/1",
+  "title": "Red-gate budget record (F153-FR-020 to -023; data-model.md D3)",
+  "description": "The durable red-gate budget count of one (run, phase), derived from the gate result records of the phase and written beside them after each red gate (budget A of CQ-153-05, answered 2026-11-13). Read by the red-gate budget table and by `afterARejection` to decide the halt; survives a resume and a relaunch because it points at the records it was derived from, and it is set aside with the other counts by a reset of the ledger (F153-FR-021). PROPOSAL of spec 153 — not normative until its tasks land.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "phase", "count", "limit", "increments"],
+  "properties": {
+    "schema": { "const": "specstride.red-gate-budget/1" },
+    "phase": { "type": "integer", "minimum": 1 },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "$comment": "the red gates of the phase since the counts were reset — every gate result record whose code is not 0, a code 3 (could not run) like a code 10 (failed), F153-FR-023"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "$comment": "the configuration value the count is counted against (`verification.redGate.limit`), recorded with the increments it produced"
+    },
+    "increments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["record", "ordinal"],
+        "properties": {
+          "record": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "the logical name of the gate result record this increment was derived from (`attempt:<N>:<k>:<n>:verification`)"
+          },
+          "ordinal": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

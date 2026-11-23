@@ -131,6 +131,8 @@ telemetry.delivery		telemetry_delivery	python	engine	sink,batch_id,event_count,s
 event.dropped		-	none	engine	no as-is equivalent
 redaction.commit_blocked		-	none	engine	no as-is equivalent
 commit_gate.blocked		-	none	engine	no as-is equivalent
+commit_gate.started		-	none	engine	no as-is equivalent
+commit_gate.ended		-	none	engine	no as-is equivalent
 redaction.dropped		-	none	engine	no as-is equivalent
 parallel.plan		-	none	engine	DV-088
 parallel.admission		-	none	engine	DV-088

@@ -1,0 +1,15 @@
+{
+  "schema": "specstride.deliver-115/1",
+  "note": "Files of feature 115 that the sync script of feature 100 delivers into packages/contracts/ after its clean copies. Keys are the target names in the package; values are paths relative to this directory. T004 delivered the ledger and the integrity rules; T006, T007 and T078 added the closed sets, the parity rows and the router table (delivered here; found missing when feature 152's T096 reran the sync and the clean rebuild dropped their package copies). The names carry the feature number, per the delivery naming rule. Do not shrink this manifest (it holds five data files and the checkpoint schema): packages/contracts/test/deliver-115.test.ts pins all five targets, and closed-sets-115.test.ts reads the delivered closed-sets-115.json.",
+  "owner": "115",
+  "data": {
+    "closed-sets-115.json": "closed-sets.json",
+    "integrity-rules-115.json": "integrity-rules.json",
+    "ledger-micro-115.json": "ledger-micro.json",
+    "parity-rows-115.json": "parity-rows.json",
+    "router-table-115.json": "router-table.json"
+  },
+  "schemas": {
+    "checkpoint-115.schema.json": "schemas/checkpoint.schema.json"
+  }
+}

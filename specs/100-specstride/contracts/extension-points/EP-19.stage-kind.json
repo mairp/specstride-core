@@ -1,0 +1,77 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-19",
+  "ids": [
+    "specstride.stage-kind/1"
+  ],
+  "annex": "annex F, §F.7",
+  "operations": [
+    "validate",
+    "run",
+    "evaluate"
+  ],
+  "requirements": [
+    "F100-FR-166",
+    "F100-FR-167",
+    "F100-FR-190"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.stage-kind/1`. Two registries: stage kinds and precondition checks."
+    ],
+    "Purpose": [
+      "To let a launch contract name a kind of stage and a kind of check by id, so that a new kind needs",
+      "no change of the schema of the launch contract, of its validator or of the stage executor."
+    ],
+    "Caller and time": [
+      "Validation of a launch contract (`validate`); the pipeline stage executor of the runtime root",
+      "(`run`, `evaluate`); the dry run of the pipeline entry (`evaluate` in read-only form)."
+    ],
+    "Inputs": [
+      "Stage kind, `validate`: the stage as the launch contract declares it. Stage kind, `run`: the",
+      "stage, the flags of the launch (`implement`, `smoke`), the environment after the pins of the",
+      "launch contract were applied, the time limit. Precondition check, `evaluate`: the check as",
+      "declared, its timing (`preflight` or `stage`), and whether the evaluation is a dry run."
+    ],
+    "Outputs": [
+      "`validate`: findings. `run`: the exit code of the child, a stage reason from the closed families",
+      "of annex E §E.3, and the digest evidence path. `evaluate`: `pass`, `fail` or `deferred`."
+    ],
+    "Errors": [
+      "A stage kind or a check that the registries do not hold makes the launch contract invalid",
+      "(pipeline code 20)."
+    ],
+    "Guarantees of the core": [
+      "The stage executor runs stages in the declared order, one at a time; applies the in-stage retry",
+      "policy of the launch contract; reads the outcome of a stage of kind `specstride` from the",
+      "terminal record of the engine; strips the pinned keys of the launch contract from the environment",
+      "of every child. A stage whose child exits 6 ends the pipeline with code 22 and the state",
+      "`stopped`."
+    ],
+    "Guarantees of an implementation": [
+      "A stage kind runs a fixed argument list without a shell. A precondition check reads and never",
+      "writes; in a dry run it executes nothing and reports `deferred` where it would have to execute."
+    ],
+    "Failure of an implementation": [
+      "A stage kind that throws ends the stage with the stage reason `exec-error:` and its detail. A",
+      "check that throws is `fail`."
+    ],
+    "Unknown-value rule": [
+      "An unknown stage kind and an unknown check type each make the launch contract invalid. The as-is",
+      "legacy spelling of the stage kind `specstride` is not accepted."
+    ],
+    "Wave 1 implementations": [
+      "Stage kinds: `setup`, `decision`, `command`, `specstride`, `smoke`. Precondition checks:",
+      "`file_exists`, `dir_exists`, `env_set`, `command_available`, `command_success`,",
+      "`json_field_equals`."
+    ],
+    "Content owner": [
+      "123."
+    ],
+    "Proving test": [
+      "Registry conformance: a sample stage kind and a sample check registered from the test tree are",
+      "validated, shown by the dry run and executed, with no change to the schema of the launch contract",
+      "or to the stage executor."
+    ]
+  }
+}

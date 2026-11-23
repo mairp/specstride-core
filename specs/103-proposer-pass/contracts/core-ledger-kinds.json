@@ -1,0 +1,12 @@
+{
+  "schema": "specstride.internal/core-ledger-kinds",
+  "note": "F103-FR-039. Namespace `core` of the ledger of annex B section B.13. A layer owns the kinds of its own namespace.",
+  "namespace": "core",
+  "kinds": [
+    {"kind": "attempt-open", "when": "A phase attempt opens", "counters": true, "always": true},
+    {"kind": "attempt-closed", "when": "A phase attempt closes", "counters": true, "always": true},
+    {"kind": "pass-closed", "when": "After every pass, while carry.ledger_handoff is on", "counters": true, "always": false},
+    {"kind": "counts-reset", "when": "The consumer passed --reset-counts", "counters": true, "always": true}
+  ],
+  "unknownKind": "A reader keeps the record in the check of the chain and ignores its content"
+}

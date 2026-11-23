@@ -1,0 +1,60 @@
+{
+ "schema": "specstride.launch-checks/1",
+ "checks": [
+  {
+   "order": 1,
+   "name": "launcher-intact",
+   "reasons": [
+    "launcher-not-found",
+    "launcher-edited"
+   ],
+   "decision": "refuse"
+  },
+  {
+   "order": 2,
+   "name": "contract-validated",
+   "reasons": [
+    "learning-decisions-changed",
+    "stale-sources",
+    "open-blocker",
+    "draft-contract",
+    "invalid-contract"
+   ],
+   "decision": "refuse"
+  },
+  {
+   "order": 3,
+   "name": "authorized-root",
+   "reasons": [
+    "unauthorized-root"
+   ],
+   "decision": "refuse"
+  },
+  {
+   "order": 4,
+   "name": "launcher-syntax",
+   "reasons": [
+    "launcher-syntax-error"
+   ],
+   "decision": "refuse"
+  },
+  {
+   "order": 5,
+   "name": "launcher-dry-run",
+   "reasons": [
+    "dry-run-failed"
+   ],
+   "decision": "refuse"
+  },
+  {
+   "order": 6,
+   "name": "run-directory-free",
+   "reasons": [
+    "already-running"
+   ],
+   "decision": "attach"
+  }
+ ],
+ "lb": true,
+ "note": "registered in the doctor registry with the launch-blocking flag (EP-14)"
+}

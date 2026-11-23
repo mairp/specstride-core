@@ -8,7 +8,7 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lchmodSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -28,7 +28,12 @@ function spawnHung(as: string): Promise<number> {
     const dir = mkdtempSync(join(tmpdir(), "leftover-"));
     const bin = join(dir, as);
     symlinkSync(process.execPath, bin);
-    chmodSync(bin, 0o755);
+    // On Linux a symlink carries no mode of its own: the permission that governs
+    // exec is the target's, and the target is this very interpreter. chmodSync
+    // would follow the link and chmod the installed node — permitted to root
+    // only, so a non-root runner (CI) meets EPERM here. Where the platform
+    // records a mode on the link itself, chmod the LINK.
+    if (lchmodSync !== undefined) lchmodSync(bin, 0o755);
     const child = spawn(bin, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
     child.on("spawn", () => done(child.pid!));
   });

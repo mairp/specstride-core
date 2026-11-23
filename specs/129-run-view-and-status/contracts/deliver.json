@@ -1,0 +1,8 @@
+{
+  "schema": "specstride.deliver-129/1",
+  "note": "Files of feature 129 that the sync script of feature 100 delivers into packages/contracts/ after its clean copy (T299 of specs/100-specstride/tasks.md). Keys are the target names in the package; values are paths relative to this directory. A target name that another source already delivered fails the sync. Feature 100's contracts/schemas/ holds no schema of the view (contracts/README.md of this feature); this file is how `specstride.view/1` reaches @specstride/contracts (task T006).",
+  "owner": "129",
+  "schemas": {
+    "run-view.schema.json": "schemas/run-view.schema.json"
+  }
+}

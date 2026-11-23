@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.package-graph/1",
+  "packages": [
+    { "name": "@fixture/a", "mayImport": [] },
+    { "name": "@fixture/b", "mayImport": ["@fixture/a"] },
+    { "name": "@fixture/c", "mayImport": ["@fixture/b"] },
+    { "name": "@fixture/d", "mayImport": [] }
+  ]
+}

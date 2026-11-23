@@ -28,7 +28,10 @@ const fs = require("node:fs"), path = require("node:path");
 const argv = process.argv.slice(2);
 const prompt = fs.readFileSync(0, "utf8");
 const session = argv[argv.indexOf("--session-id") + 1];
-const critic = argv.includes("--max-turns");
+// The critic is the --max-turns call of the default profile; under the
+// parity profile the as-is argv list of F125-FR-009 carries no such flag,
+// so the role falls back to the prompt's own framing line.
+const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");
 console.log(JSON.stringify({ type: "system", subtype: "init", tools: critic ? [] : ["Read"], session_id: session }));
 if (prompt.includes("Diagnostician")) {
   // A call of the diagnostician: no nonce, no verdict; the case and the hint.
@@ -39,7 +42,7 @@ if (prompt.includes("Diagnostician")) {
   const nonce = /VERDICT ([0-9a-f]+): APPROVED/.exec(prompt)[1];
   console.log(JSON.stringify({ type: "result", result: "T001 judged.\\nVERDICT " + nonce + ": ${verdict}" }));
 } else {
-  const evidence = /write (\\.specstride\\S+?):/i.exec(prompt)[1];
+  const evidence = (/Write your evidence to (\\.specstride\\S+?) \\(/i.exec(prompt) ?? /write (\\.specstride\\S+?):/i.exec(prompt))[1];
   fs.mkdirSync(path.dirname(evidence), { recursive: true });
   fs.writeFileSync(evidence, "T001 done\\n");
   fs.writeFileSync("made.txt", process.env.STUB_NEW_FILE ?? "work\\n");
@@ -145,13 +148,12 @@ test("the state directory is not committed", async () => {
 test("a run with a blocked commit exits 1 and says so on the digest and the console", async () => {
   const { dir, restore } = fixture("APPROVED");
   // A hit the gate never excuses: an address with embedded credentials, which
-  // the narrowed url-embedded-credentials pattern still matches. The stub text
-  // is assembled at runtime so THIS file's own diff carries no contiguous
-  // credential address: the commit gate of the campaign that runs this suite
-  // would otherwise hold the approval commit itself back
-  // (cg-url-embedded-credentials). The stub file still receives the exact
-  // bytes the inner gate is meant to trip on.
-  process.env.STUB_NEW_FILE = ['const u = "https', '://user:pass@host";'].join("");
+  // the narrowed url-embedded-credentials pattern still matches. The stub file
+  // is built by concatenation so this test's own source holds no literal of
+  // the credential shape (cg-url-embedded-credentials would block the commit
+  // of this fixture itself — phase 15, attempt 3).
+  const credentialUrl = ["https://", "user:pass", "@host"].join("");
+  process.env.STUB_NEW_FILE = `const u = "${credentialUrl}";`;
   // The as-is behaviour this test pins (the exit-1 rule of 2026-11-04, part A
   // item 2) is now the switch-off behaviour of feature 152 (F152-FR-022,
   // CQ-152-05 A): with the switch off the run goes on and exits 1,
@@ -254,6 +256,16 @@ test("a secret in the change blocks the commit and is not shown to the critic", 
   // switch off, like the sibling test below.
   const beforeSwitch = process.env.SPECSTRIDE_COMMIT_BACKPRESSURE;
   process.env.SPECSTRIDE_COMMIT_BACKPRESSURE = "off";
+  // The test pins the capped-diff rendering (`--- new file made.txt`), which
+  // `critic.evidence.perTask` replaces while it is on (the default), so the
+  // run stands that switch down by configuration alone (`critic.evidence.
+  // perTask: false`) — the parity profile would replace the whole prompt with
+  // the as-is one, which carries no change block at all (F153-FR-061).
+  mkdirSync(join(dir, "..", ".config", "specstride"), { recursive: true });
+  writeFileSync(
+    join(dir, "..", ".config", "specstride", "config.yaml"),
+    "schema: 1\ncritic:\n  evidence:\n    perTask: false\n",
+  );
   try {
     // The run still approves the phase, and its commit stays blocked — so the
     // run no longer exits 0: its work sits uncommitted. Owner ruling
@@ -324,8 +336,8 @@ test("every proposer pass gets its own claude session id", async () => {
     writeFileSync(
       stub,
       original.replace(
-        'const critic = argv.includes("--max-turns");',
-        `const critic = argv.includes("--max-turns");
+        'const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");',
+        `const critic = argv.includes("--max-turns") || prompt.startsWith("You are the CRITIC");
 const seenFile = path.join(${JSON.stringify(join(dir, ".."))}, "sessions-seen.txt");
 const seen = fs.existsSync(seenFile) ? fs.readFileSync(seenFile, "utf8").split("\\n") : [];
 if (seen.includes(session)) { console.error("Error: Session ID " + session + " is already in use."); process.exit(1); }

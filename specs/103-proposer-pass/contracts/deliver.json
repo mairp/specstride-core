@@ -1,0 +1,11 @@
+{
+  "schema": "specstride.deliver-103/1",
+  "note": "Files of feature 103 that the sync script of feature 100 delivers into packages/contracts/ after its clean copy (T299 of specs/100-specstride/tasks.md). Keys are the target names in the package; values are paths relative to this directory. A target name that another source already delivered fails the sync. The request and the result of the pass loop are NOT delivered: they cross no process and no file boundary (the pass loop is a call, not a command, F100-FR-171) and their schemas live with the module in packages/core/src/pass-loop/. The handoff crosses a file boundary (F103-FR-041) and is delivered here.",
+  "owner": "103",
+  "data": {
+    "closed-sets-103.json": "closed-sets.json"
+  },
+  "schemas": {
+    "handoff.schema.json": "schemas/handoff.schema.json"
+  }
+}

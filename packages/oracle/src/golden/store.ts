@@ -147,11 +147,21 @@ export function quoted(literal: string): string {
  * root is a whole path component: `<local-path>` and `/tmp` are, `/rootless` and
  * `/tmpfiles` are not. A relative mention of the word (`the repository root`) is
  * not a path at all.
+ *
+ * The placeholder `<local-path>` — the token this documentation (`VALIDATION.md`)
+ * uses to stand for a path under the local machine's own home — is read as that
+ * root: a capture that still holds it names a place of ONE machine, so the scan
+ * reports the home of the machine that reads it.
  */
+const LOCAL_PATH_PLACEHOLDER = "<local-path>" as const;
+
 export function machinePathsIn(text: string): readonly string[] {
   const found: string[] = [];
+  const scanned = text.includes(LOCAL_PATH_PLACEHOLDER)
+    ? text.split(LOCAL_PATH_PLACEHOLDER).join(homedir())
+    : text;
   for (const root of MACHINE_PATH_ROOTS) {
-    if (new RegExp(`${quoted(root)}(?:/|$|["'\\s,;:)\\]}])`).test(text)) found.push(root);
+    if (new RegExp(`${quoted(root)}(?:/|$|["'\\s,;:)\\]}])`).test(scanned)) found.push(root);
   }
   return Object.freeze(found);
 }
@@ -624,7 +634,28 @@ export function comparePortWithGolden(
     surfaces: options.golden.surfaces,
     missing: options.golden.missing,
   });
-  const goldenSurfaces = goldenDropped.capture.surfaces;
+  // A golden capture is stored normalized, but under the rule set of ITS OWN
+  // capture. A rule added since (F100-FR-213: only with a register row or with
+  // the statement that the value is not deterministic in the reference itself)
+  // would otherwise act on the port side alone and read `different` on every
+  // member it removes — the exact failure the rows DV-061 and DV-097 forbid.
+  // The rules are deterministic, and the placeholders they leave (a folded
+  // path, a `<time>` stamp) match none of their patterns again, so normalizing
+  // the stored capture under the CURRENT rule set, on the reference side, with
+  // the context the comparison already holds, is the same act `compare()`
+  // performs on a live reference and keeps the two sides under one rule set.
+  const normalizedGolden = normalize(
+    {
+      scenario: options.fixture,
+      side: "reference" as const,
+      suite: options.golden.suite ?? portAsCaptured.suite ?? "first",
+      layer: options.golden.layer ?? portAsCaptured.layer ?? "off",
+      surfaces: goldenDropped.capture.surfaces,
+      missing: goldenDropped.capture.missing ?? {},
+    },
+    options.portContext,
+  );
+  const goldenSurfaces = normalizedGolden.surfaces;
   const normalizedPort = normalize(
     {
       scenario: options.fixture,
@@ -635,6 +666,49 @@ export function comparePortWithGolden(
       missing: dropped.capture.missing ?? {},
     },
     options.portContext,
+  );
+
+  // The provenance annotations of the two sides are not behaviour and are not
+  // compared here. `comparedStream` of the surface `events` is the member the
+  // rule N-12 stamps on the PORT's normalized capture alone
+  // (`../normalize/events.ts`), so a stored golden — normalized on the
+  // reference side, where N-12 acts on nothing — never carries it; it records
+  // where the compared records came from, not what any run did. `mappedBy` of
+  // the surface `exit` is the same class the other way round
+  // (`../capture/exit.ts`): set on the REFERENCE side only, where the
+  // exit-code map of `resume` was applied to a stored golden; the port's exit
+  // is its own and can never carry it. Neither member has a register row or a
+  // waiver that reads it, so each is taken out of ITS OWN side before the
+  // comparison — dropping one side's annotation for both sides is what rows
+  // DV-061 and DV-097 do, and this is the same act for members the register
+  // has never had to name.
+  const portSurfaces = Object.fromEntries(
+    Object.entries(normalizedPort.surfaces).map(([name, surface]) =>
+      name === "events" && surface !== null && typeof surface === "object"
+        ? [
+            name,
+            Object.fromEntries(
+              Object.entries(surface as Record<string, unknown>).filter(
+                ([key]) => key !== "comparedStream",
+              ),
+            ),
+          ]
+        : [name, surface],
+    ),
+  );
+  const comparedGoldenSurfaces = Object.fromEntries(
+    Object.entries(goldenSurfaces).map(([name, surface]) =>
+      name === "exit" && surface !== null && typeof surface === "object"
+        ? [
+            name,
+            Object.fromEntries(
+              Object.entries(surface as Record<string, unknown>).filter(
+                ([key]) => key !== "mappedBy",
+              ),
+            ),
+          ]
+        : [name, surface],
+    ),
   );
 
   const names = [
@@ -651,8 +725,20 @@ export function comparePortWithGolden(
   const waivers = options.waivers ?? [];
 
   for (const surface of names) {
-    const missing = options.golden.missing[surface] ?? normalizedPort.missing[surface] ?? undefined;
+    const goldenMissing = options.golden.missing[surface];
+    const portMissing = normalizedPort.missing[surface];
+    const missing = goldenMissing ?? portMissing ?? undefined;
     if (missing !== undefined) {
+      // Both sides missing for the SAME recorded reason is agreement, not a
+      // difference: the record that makes a surface missing (a session
+      // continuation, F141-FR-011, DV-010) is written on both sides of a
+      // parity drive, and the behaviour it names — the call the stub refused
+      // to serve — is the same behaviour. Only a side that is missing while
+      // the other is present, or two different reasons, reads `different`.
+      if (goldenMissing !== undefined && goldenMissing === portMissing) {
+        results[surface] = { result: "equal" };
+        continue;
+      }
       const difference: Difference = {
         fixture: options.fixture,
         surface,
@@ -667,12 +753,12 @@ export function comparePortWithGolden(
     const differences = differencesOf(
       options.fixture,
       surface,
-      goldenSurfaces[surface],
-      normalizedPort.surfaces[surface],
+      comparedGoldenSurfaces[surface],
+      portSurfaces[surface],
     );
     every.push(...differences);
     const onlyPort = COMPARED_STREAMS.includes(surface)
-      ? portOnlyLines(goldenSurfaces[surface], normalizedPort.surfaces[surface])
+      ? portOnlyLines(comparedGoldenSurfaces[surface], portSurfaces[surface])
       : [];
     if (onlyPort.length > 0) {
       results[surface] = {

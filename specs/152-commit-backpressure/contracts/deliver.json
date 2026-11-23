@@ -1,0 +1,16 @@
+{
+  "schema": "specstride.deliver-152/1",
+  "note": "Files of feature 152 that the sync script of feature 100 delivers into packages/contracts/ after its clean copies. The eight record schemas were seeded here from the byte-identical package copies at HEAD (the engine records validated by the approved phases of this campaign): without sources the sync's clean rebuild drops them (found when feature 152's T096 reran the sync after regenerating the annexes). The block-record, corrective-block and commit-gate-rules sources are the corpus copies of this feature's contracts. The halt table stays a corpus file only: the code pins it as an inline frozen constant asserted equal to the corpus file by CT-152-6 (T166), so the package needs no copy.",
+  "owner": "152",
+  "data": {},
+  "schemas": {
+    "accelerator-snapshot.schema.json": "schemas/accelerator-snapshot.schema.json",
+    "approval-key.schema.json": "schemas/approval-key.schema.json",
+    "attempt-record.schema.json": "schemas/attempt-record.schema.json",
+    "block-record.schema.json": "schemas/block-record.schema.json",
+    "commit-gate-rules.schema.json": "schemas/commit-gate-rules.schema.json",
+    "corrective-block.schema.json": "schemas/corrective-block.schema.json",
+    "recovery-markers.schema.json": "schemas/recovery-markers.schema.json",
+    "verdict-record.schema.json": "schemas/verdict-record.schema.json"
+  }
+}

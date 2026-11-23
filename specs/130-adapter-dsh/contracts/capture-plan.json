@@ -1,0 +1,14 @@
+{
+  "schema": "specstride.capture-plan/1",
+  "harness": "dsh",
+  "pin": "0.1.0-rc.8",
+  "rule": "Each capture is a scripted probe, allowed only when explicitly authorized, logged, and stored as a fixture that states the version. No test and no CI job runs one. A capture that needs a paid call says so.",
+  "captures": [
+    { "n": 1, "question": "What does approval mode ask do in a headless run with standard input closed?", "settles": ["F130-FR-017"], "paid": "one small call, under each permission mode" },
+    { "n": 2, "question": "Does the operating system enforce the permission mode (write outside and inside the workspace, network)?", "settles": ["F130-FR-018"], "paid": "one small call in read-only mode" },
+    { "n": 3, "question": "Which tool ids does the pinned version expose, and how are they listed without a model call?", "settles": ["F130-FR-023", "F130-FR-024", "F130-FR-025"], "paid": "no" },
+    { "n": 4, "question": "Are several task arguments rejoined with one space on the proposer path; what size of one argument is accepted?", "settles": ["F130-FR-011"], "paid": "one small call" },
+    { "n": 5, "question": "Which message forms have a limit with a reset time and a credit limit; what are the name and off value of the telemetry variable; does the trace plugin honour the trace parent?", "settles": ["F130-FR-038", "F130-FR-040"], "paid": "no, unless a live limit message is wanted" },
+    { "n": 6, "question": "What does the composed profile of the pinned version load into a call (plugins, host hooks, skills, tool servers); does the harness keep a native memory across sessions; does a patch overlay or a setting switch each off?", "settles": ["F130-FR-003", "F130-FR-043", "F130-FR-044", "F130-FR-045"], "paid": "no for the configuration dump; a check that a switch takes effect in a live call is a paid probe of its own" }
+  ]
+}

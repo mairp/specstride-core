@@ -1,0 +1,68 @@
+{
+  "note": "Generated from the annexes of specs/100-specstride by contracts/tools/generate.py. The annex stands where the two differ.",
+  "ep": "EP-17",
+  "ids": [
+    "specstride.detach/1"
+  ],
+  "annex": "annex F, §F.6",
+  "operations": [
+    "available",
+    "start",
+    "describe"
+  ],
+  "requirements": [
+    "F100-FR-160",
+    "F100-FR-165"
+  ],
+  "sections": {
+    "Id and version": [
+      "`specstride.detach/1`."
+    ],
+    "Purpose": [
+      "To start the runtime root so that it outlives the process that started it."
+    ],
+    "Caller and time": [
+      "The CLI, once per launch (step 2 of the handshake)."
+    ],
+    "Inputs": [
+      "`available`: nothing. `start`: the entry of the runtime, the environment allow-list, the logical",
+      "name of the runtime log, the launch nonce. `describe`: nothing."
+    ],
+    "Outputs": [
+      "`available`: yes or no, with the reason. `start`: the identity of the started process.",
+      "`describe`: the id of the strategy and what it survives (the end of the parent, the end of the",
+      "host session, a reboot)."
+    ],
+    "Errors": [
+      "`unavailable`; `not-ready`, when the handshake does not complete in time."
+    ],
+    "Guarantees of the core": [
+      "Whatever the strategy, readiness is confirmed by the lease that carries the launch nonce. The CLI",
+      "waits for the handshake and no longer. The strategy in use is in the launch record and in the",
+      "doctor's output."
+    ],
+    "Guarantees of an implementation": [
+      "The started process has standard input closed and its output on the runtime log, runs with the",
+      "environment allow-list, and is the leader of a process session of its own (except `foreground`)."
+    ],
+    "Failure of an implementation": [
+      "A strategy that is `unavailable` or `not-ready` refuses the launch with the outcome `refused`;",
+      "the message names the strategy `foreground` as the way to run without detaching."
+    ],
+    "Unknown-value rule": [
+      "An unknown strategy id in configuration is a configuration error (exit 3)."
+    ],
+    "Wave 1 implementations": [
+      "`spawn-detached` (the default); `foreground` (the consumer starts the runtime root in a terminal",
+      "of their own). A strategy that survives a reboot is not part of Wave 1."
+    ],
+    "Content owner": [
+      "122."
+    ],
+    "Proving test": [
+      "Strategy conformance: start; end the parent; confirm that the child lives and that the lease is",
+      "valid; then the same with the parent killed by a signal. A sample strategy is registered from the",
+      "test tree."
+    ]
+  }
+}

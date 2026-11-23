@@ -1,0 +1,448 @@
+SS	cli-command	`specstride run [flags]` replaces the front-door process with `bash orchestrator.sh` given every remaining argument (exec, so the exit code is the orchestrator's).	specstride:183	run|start)	028 FR-023
+SS	cli-command	`specstride start [flags]` is an exact alias of `specstride run` (same `exec bash orchestrator.sh "$@"`).	specstride:183	exec bash "$SCRIPT_DIR/orchestrator.sh"	none (contract: cli.md)
+SS	cli-command	A first argument that starts with `-` (other than `-h`/`--help`/`--reverse`) starts a run: all arguments, including that flag, are passed to `orchestrator.sh` via exec.	specstride:185	bare flag → launch	028 FR-023
+SS	cli-command	`specstride`, `specstride -h`, `specstride --help` and `specstride help` print the inspection usage to stdout and exit 0.	specstride:714	""|-h|--help|help)	none
+SS	output-line	The usage text is lines 2-54 of the front-door script itself with the leading `# ` stripped (so the header comment is the user-visible help).	specstride:63	sed -n '2,54p'	none
+SS	cli-command	An unknown subcommand prints `specstride: unknown subcommand '<SUB>'` and the usage text to stderr.	specstride:718	unknown subcommand '$SUB'	none
+SS	exit-code	`specstride <unknown subcommand>` exits 1.	specstride:720	exit 1	none
+SS	cli-command	`specstride reverse <SRC> ...` and `specstride --reverse <SRC> ...` are the same entry point (`reverse_main`), handled before any other parsing.	specstride:182	--reverse|reverse)	028 FR-023
+SS	behaviour	The front door sources `specstride-lib.sh` from its own directory at startup and runs with `set -uo pipefail` (no `-e`).	specstride:60	specstride-lib.sh"	none
+SS	cli-flag	`-w DIR` / `--workdir DIR` selects the project workdir for every inspection subcommand; default is `$PWD`; a missing value aborts through `${2:?}`.	specstride:202	-w|--workdir) WORKDIR="${2:?}"	028 FR-023
+SS	cli-flag	`-s SPEC` / `--specs SPEC` selects the spec file for inspection subcommands and marks it explicit; default is `<workdir>/SPECS.md`.	specstride:203	SPECS_EXPLICIT="true"	none
+SS	behaviour	A relative `-s` path is resolved against the directory the command was launched from, not against the workdir.	specstride:218	SPECS="$LAUNCH_DIR/$SPECS"	none
+SS	behaviour	When `-s` is absent the inspection spec defaults to `<workdir>/SPECS.md`.	specstride:223	SPECS="${SPECS:-$WORKDIR/SPECS.md}"	none
+SS	cli-flag	`--feature SLUG` selects the feature namespace under `<state>/features/`; missing value aborts through `${2:?}`.	specstride:204	--feature)    FEATURE="${2:?}"	none (contract: cli.md)
+SS	cli-flag	`--all` (used by `status`) lists every feature; it also makes `need_state` skip the per-feature directory check.	specstride:205	--all)        ALL="true"	none (contract: cli.md)
+SS	cli-flag	`-f` / `--follow` (used by `events`) follows the stream for new events.	specstride:206	-f|--follow)  FOLLOW="true"	none (contract: cli.md)
+SS	cli-flag	`--json` (used by `events`) switches the event output to one JSON object per line.	specstride:207	--json)       JSON_OUT="true"	none (contract: cli.md)
+SS	cli-flag	`--now` (used by `stop`) additionally kills the in-flight agent pass.	specstride:208	--now)        NOW="true"	028 FR-015
+SS	cli-flag	`-h` / `--help` anywhere after an inspection subcommand prints usage and exits 0 without running the subcommand.	specstride:209	-h|--help)    usage; exit 0	none
+SS	behaviour	Every argument that is not a recognised flag is collected as a pass-through extra, in order; the first extra is the positional `N` / learn mode.	specstride:210	EXTRA+=("$1"); shift	none
+SS	behaviour	The workdir is canonicalised with `cd && pwd`; if that fails the raw value is kept and later checks report the missing state dir.	specstride:220	pwd || echo "$WORKDIR"	none
+SS	file	The state directory is `<workdir>/<STATE_BASENAME>` where the basename is `.specstride` or a legacy directory name chosen by `specstride_resolve_state_dir`.	specstride:222	STATE_DIR="$WORKDIR/$STATE_BASENAME"	none
+SS	behaviour	Feature selection order for inspection commands: `--feature` (sanitised), else `FEATURE=` in the root `last-run.conf`, else `default`.	specstride:238	[[ -n "$SLUG" ]] || SLUG="default"	none
+SS	behaviour	A `--feature` value is sanitised: every character outside `A-Za-z0-9._-` becomes `-` and leading/trailing `-` are trimmed.	specstride:231	tr -c 'A-Za-z0-9._-' '-'	none (contract: data-model.md)
+SS	file	The root `<state>/last-run.conf` is read (first `FEATURE=` line, quotes stripped) to choose the default feature of every inspection command.	specstride:236	grep -m1 '^FEATURE='	none (contract: files-on-disk.md)
+SS	file	Per-feature state is read from `<state>/features/<slug>/` and gate files from `<state>/features/<slug>/gates/`.	specstride:242	GATES_DIR="$FEATURE_DIR/gates"	none (contract: files-on-disk.md)
+SS	behaviour	When `-s` was not given and `<workdir>/SPECS.md` does not exist, the spec for read-only commands is the `SPECS=` value of the feature's `last-run.conf` if that file exists.	specstride:247	grep -m1 '^SPECS='	none
+SS	output-line	A missing state directory prints `no .specstride/ state dir in <workdir>` to stderr.	specstride:252	state dir in $WORKDIR	none
+SS	exit-code	Any subcommand guarded by `need_state` (status, tail, events, verdicts, watch, stop, resume, learn) exits 1 when the state directory is missing.	specstride:252	>&2; exit 1; }	none
+SS	output-line	A missing feature prints `no feature '<slug>' in <workdir> (<state>/features/<slug> missing).` followed by `known features:` and one `  - <name>` line per existing feature, all on stderr.	specstride:254	no feature '$SLUG' in $WORKDIR	none
+SS	exit-code	A `need_state` subcommand exits 1 when the selected feature directory does not exist (unless `--all`).	specstride:259	exit 1	none
+SS	behaviour	`lock_held` means: with `flock` available, `<state>/lock` exists and a non-blocking `flock -n` on it fails; without `flock`, the directory `<state>/lock.d` exists.	specstride:267	! flock -n "$STATE_DIR/lock" -c true	none (contract: data-model.md)
+SS	file	Without `flock` the run lock is detected through the directory `<state>/lock.d`.	specstride:269	[[ -d "$STATE_DIR/lock.d" ]]	028 FR-004
+SS	behaviour	With `--feature`, status/events read the feature's newest `runs/*/events.jsonl` by modification time; without it they read the root `<state>/events.jsonl` symlink (the last run of any feature).	specstride:285	runs/*/events.jsonl 2>/dev/null	none
+SS	behaviour	With `--feature`, `tail` reads the feature's newest `runs/*/run.log` by modification time; without it the root `<state>/run.log` symlink.	specstride:292	runs/*/run.log 2>/dev/null | head -1	none
+SS	cli-command	`specstride status --all` prints one row per feature directory and exits 0.	specstride:343	status_all; exit 0	none (contract: cli.md)
+SS	output-line	`status --all` starts with `specstride status --all — <workdir>`.	specstride:301	specstride status --all — $WORKDIR	none
+SS	output-line	`status --all` prints `  (no features yet)` when `<state>/features` does not exist.	specstride:302	(no features yet)	none
+SS	output-line	`status --all` prints a table with columns `FEATURE`, `PHASES`, `STATE` (widths 32, 10).	specstride:303	"FEATURE" "PHASES" "STATE"	none
+SS	behaviour	In `status --all` the approved count is the number of `gates/GATE*-APPROVED` files of the feature.	specstride:311	GATE*-APPROVED 2>/dev/null | wc -l	none
+SS	behaviour	In `status --all` the phase total comes from validating the `SPECS=` file of the feature's `last-run.conf` with format auto-detection; it is `?` when the conf or spec is missing or invalid.	specstride:316	SPECSTRIDE_SPEC_FORMAT=''	none
+SS	output-line	`status --all` STATE is `running/crashed` when the feature's newest events file holds no `run_stop`/`run_end`.	specstride:331	print("running/crashed")	none
+SS	output-line	`status --all` STATE is `DONE:<outcome>` when the last terminal event is `run_end`.	specstride:332	print("DONE:%s"	none
+SS	output-line	`status --all` STATE is `HALTED:<reason>@<phase>` when the last terminal event is `run_stop`.	specstride:333	print("HALTED:%s@%s"	none
+SS	output-line	`status --all` STATE is `—` when the feature has no events file; each row shows `<approved>/<total>`.	specstride:337	"${approved}/${total}" "$state"	none
+SS	cli-command	`specstride status [-w DIR] [--feature S]` prints a one-screen state and writes nothing.	specstride:342	status)	028 FR-023
+SS	output-line	`status` starts with `specstride status — <workdir>  (feature: <slug>)`.	specstride:345	(feature: $SLUG)	none
+SS	output-line	`status` prints `  state: RUNNING (<owner>)` when the lock is held; the owner is the first line (at most 200 bytes) of `<state>/lock`.	specstride:350	state: RUNNING${owner:+ ($owner)}	none
+SS	file	`status` reads the first 200 bytes of `<state>/lock` as the lock owner line.	specstride:349	head -c 200 "$STATE_DIR/lock"	none (contract: data-model.md)
+SS	behaviour	`status` derives the run state from the LAST `run_stop` or `run_end` event in the events file; unparsable lines are skipped.	specstride:361	("run_stop", "run_end")	none
+SS	output-line	`status` prints `  state: not running (no clean end recorded — crashed or never finished a run)` when no `run_stop`/`run_end` exists.	specstride:366	state: not running (no clean end	none
+SS	output-line	`status` prints `  state: DONE — <outcome>` from `run_end.outcome`.	specstride:368	state: DONE — %s	none
+SS	stop-reason	`run_stop reason=stop_flag` is shown by `status` as `state: STOPPED at phase <p> — resume with: specstride resume`.	specstride:372	state: STOPPED at phase %s	none
+SS	stop-reason	`run_stop reason=max_rejects` is shown by `status` as `state: HALTED at phase <p> — needs human (max-rejects exceeded)`.	specstride:374	needs human (max-rejects exceeded)	none
+SS	stop-reason	`run_stop reason=proposer_yield_budget` is shown by `status` as a HALTED line saying a declared yield's wait ran out and the job was left running.	specstride:375	"proposer_yield_budget"	none
+SS	stop-reason	`run_stop reason=proposer_yield_timeout` gets the same `status` text as `proposer_yield_budget`, pointing at `.specstride/features/*/yield-jobs/`.	specstride:380	features/*/yield-jobs/	none
+SS	stop-reason	`run_stop reason=proposer_cap_exhausted` is shown by `status` as HALTED with the remedy `--long-job-cmd` or splitting the phase (consecutive `hard_cap` kills).	specstride:381	"proposer_cap_exhausted"	none
+SS	output-line	Any other `run_stop` reason is shown by `status` as `  state: HALTED at phase <p> — <reason>`.	specstride:389	state: HALTED at phase %s — %s	none
+SS	output-line	`status` prints `  state: no run recorded yet` when no events file exists and no lock is held.	specstride:392	state: no run recorded yet	none
+SS	output-line	`status` prints a phase table with columns `PHASE`, `TITLE` (truncated to 28), `EVIDENCE`, `APPROVED`, `FEEDBACK`.	specstride:396	"EVIDENCE" "APPROVED" "FEEDBACK"	none
+SS	behaviour	The phase table marks `✓`/`✗` by file existence of `GATE<n>-EVIDENCE.md`, `GATE<n>-APPROVED`, `GATE<n>-FEEDBACK.md` in the feature's gates directory.	specstride:402	GATE${n}-APPROVED" ]] && ap="✓"	none
+SS	output-line	`status` prints `  current phase: <n>` (first unapproved phase) or `  current phase: <all approved>`.	specstride:408	current phase: ${cur:-<all approved>}	none
+SS	output-line	`status` prints `  (no SPECS.md found)` when the resolved spec file does not exist.	specstride:410	(no SPECS.md found)	none
+SS	file	`status` reads `TELEMETRY`, `OTEL`, `LOKI_URL`, `OTEL_URL` from the feature's `last-run.conf`, falling back to the root `last-run.conf`.	specstride:420	grep -m1 '^TELEMETRY='	none (contract: data-model.md)
+SS	output-line	`status` prints a `  telemetry:` section only when `TELEMETRY` or `OTEL` is `true` in the saved config, one line per enabled sink from `specstride_telemetry_status_line`.	specstride:426	echo "  telemetry:"	none
+SS	behaviour	The telemetry status lines default the endpoints to `http://localhost:3100` (loki) and `http://localhost:4318` (otel) when the saved URL is empty.	specstride:427	${_lokiurl:-http://localhost:3100}	028 FR-022
+SS	output-line	`status` prints `  observability: <mode>[ — <reason>]` from the last `agent_observability` event among the last 400 lines.	specstride:448	print("  observability: %s%s"	none
+SS	output-line	`status` prints `  latest tool: <tool>[ (<summary or status>)]` from the last `agent_tool` event among the last 400 lines.	specstride:453	print("  latest tool: %s%s"	none
+SS	behaviour	`status` scans only the last 400 lines of the events file for observability and tool state.	specstride:436	tail -n 400 "$STATUS_EV"	none
+SS	output-line	`status` prints `  last events:` followed by the last 5 non-`agent_*`, non-`iter_*` events of the last 200 lines.	specstride:466	startswith(("agent_","iter_"))	none
+SS	output-line	Each `last events` line is `<last 8 chars of time>  <event>  k=v ...`, omitting keys `time`, `ts`, `event`, `task`, `backend`, `run_id`.	specstride:471	"time","ts","event","task","backend"	none
+SS	exit-code	`specstride status` exits 0 after printing (the embedded python helpers are `|| true`).	specstride:472	' 2>/dev/null || true	none
+SS	cli-command	`specstride tail` replaces itself with `tail -f <run.log>` of the selected run log.	specstride:480	exec tail -f "$LOG"	028 FR-023
+SS	exit-code	`specstride tail` exits 1 with `no run.log yet for feature '<slug>' in <state>` on stderr when the log is missing.	specstride:479	no run.log yet for feature	none
+SS	cli-command	`specstride events` renders the event stream through `lib/present.py --events <file> --mode plain`.	specstride:493	--mode plain	028 FR-023
+SS	cli-flag	`specstride events --json` runs `present.py --events <file> --quiet` (one JSON object per line).	specstride:491	"${args[@]}" --quiet	none (contract: cli.md)
+SS	cli-flag	`specstride events -f` adds `--follow` to the presenter call.	specstride:489	args+=( --follow )	none (contract: cli.md)
+SS	behaviour	`events --feature S` with no run of that feature falls back to the root `<state>/events.jsonl`.	specstride:486	[[ -n "$EV" ]] || EV=	none
+SS	exit-code	`specstride events` exits 1 with `no events.jsonl yet in <state>` on stderr when the stream does not exist.	specstride:487	no events.jsonl yet in $STATE_DIR	none
+SS	cli-command	`specstride verdicts [N]` dumps every `*.txt` transcript in `<feature>/verdicts/`, or only `phase<N>.*.txt` when N is given.	specstride:502	files=("$VD/phase${POS}."*.txt)	028 FR-023
+SS	file	`verdicts` reads `<state>/features/<slug>/verdicts/*.txt`.	specstride:498	VD="$FEATURE_DIR/verdicts"	none (contract: files-on-disk.md)
+SS	exit-code	`specstride verdicts` exits 1 with `no verdicts recorded yet (<dir>)` when the verdicts directory is missing.	specstride:499	no verdicts recorded yet ($VD)	none
+SS	exit-code	`specstride verdicts N` exits 1 with `no verdicts for phase <N>` when no transcript matches.	specstride:504	no verdicts for phase $POS	none
+SS	output-line	Each transcript is framed by a rule line of 64 `═`, `# <path>`, the rule again, the file content and a blank line.	specstride:512	echo "# $f"	none
+SS	behaviour	`verdicts` with no N and an empty verdicts directory prints nothing and exits 0.	specstride:507	files=("$VD"/*.txt)	none
+SS	cli-command	`specstride feedback <N>` prints `<feature>/gates/GATE<N>-FEEDBACK.md` to stdout; it does not require the state directory check first.	specstride:521	FB="$GATES_DIR/GATE${POS}-FEEDBACK.md"	028 FR-023
+SS	exit-code	`specstride feedback` without N exits 1 with `usage: specstride feedback <N> [-w DIR]` on stderr.	specstride:520	usage: specstride feedback <N> [-w DIR]	none
+SS	exit-code	`specstride feedback N` exits 1 with `no feedback for phase <N> (<path>)` on stderr when the file is missing.	specstride:522	no feedback for phase $POS ($FB)	none
+SS	cli-command	`specstride watch` replaces itself with `present.py --workdir <workdir> --mode card`; it ignores `--feature` and always follows the workdir's root events symlink.	specstride:528	--workdir "$WORKDIR" --mode card	028 FR-023
+SS	cli-command	`specstride phases` lists every phase with its state; it needs only the spec file, not the state directory.	specstride:531	phases)	028 FR-023
+SS	exit-code	`specstride phases` exits 1 with `no SPECS.md in <workdir>` on stderr when the spec file does not exist.	specstride:532	no SPECS.md in $WORKDIR	none
+SS	exit-code	`specstride phases` exits 3 after printing `SPEC INVALID:` and the validator's stderr when the spec does not validate.	specstride:534	echo "SPEC INVALID:"	none
+SS	file	`phases` writes the validator's stderr to the fixed path `/tmp/specstride-spec-err` and deletes it afterwards.	specstride:533	2>/tmp/specstride-spec-err	none
+SS	output-line	`phases` prints `<spec path> — <count> phase(s):` then `  Phase <n> <title, 40 cols> [<state>]` per phase.	specstride:545	"  Phase %-3s %-40.40s [%s]\n"	none
+SS	behaviour	Phase state precedence in `phases`: `pending`, then `evidence-written`, then `rejected(has-feedback)`, then `APPROVED` (the later file wins).	specstride:543	state="rejected(has-feedback)"	none
+SS	cli-command	`specstride stop` requests a clean stop of the run on the workdir (mutating).	specstride:551	if ! lock_held; then	028 FR-015
+SS	file	`specstride stop` creates/touches `<state>/stop.flag` (per workdir, not per feature).	specstride:555	touch "$STATE_DIR/stop.flag"	028 FR-015
+SS	output-line	`stop` prints `stop requested → <state>/stop.flag`.	specstride:556	stop requested → $STATE_DIR/stop.flag	none
+SS	behaviour	`stop` with no lock held still writes `stop.flag` and warns on stderr `no run appears to be active on <workdir> (lock is free).` plus `writing stop.flag anyway (a starting run will honor it).`	specstride:553	writing stop.flag anyway	none
+SS	behaviour	`stop --now` reads the pid in `<state>/proposer.pid` and, if that process is alive, sends TERM to it and recursively to all its descendants (children first via `pgrep -P`).	specstride:562	kill_tree "$pid"	028 FR-015
+SS	behaviour	`kill_tree` uses signal TERM only (no KILL escalation) and ignores kill failures.	specstride:277	kill -TERM "$1" 2>/dev/null || true	none
+SS	file	`stop --now` reads `<state>/proposer.pid`.	specstride:558	PIDF="$STATE_DIR/proposer.pid"	none (contract: files-on-disk.md)
+SS	output-line	`stop --now` prints `killed in-flight agent pass (pid <pid> + descendants)` after killing.	specstride:563	killed in-flight agent pass	none
+SS	output-line	`stop --now` prints `recorded pass (pid <pid or ?>) is not running — nothing to kill` when the pid is dead or empty.	specstride:565	is not running — nothing to kill	none
+SS	output-line	`stop --now` prints `no in-flight pass recorded (<path> missing) — flag-only stop` when `proposer.pid` is absent.	specstride:568	flag-only stop	none
+SS	output-line	`stop --now` ends with `the run will exit 6 (clean stop) momentarily; resume with: specstride resume -w <workdir>`.	specstride:570	the run will exit 6 (clean stop) momenta	none
+SS	output-line	`stop` without `--now` prints `the run finishes its current pass, then exits 6 (clean stop).` and a resume / `stop --now` hint.	specstride:572	the run finishes its current pass	none
+SS	exit-code	`specstride stop` exits 0 in every branch once the state directory and feature exist (its last command is an `echo`).	specstride:573	or stop harder: specstride stop --now	none
+SS	cli-command	`specstride resume` relaunches the orchestrator from a saved config and replaces the front-door process with it.	specstride:629	exec bash "$ORCHESTRATOR" "${args[@]}"	028 FR-016
+SS	file	Bare `resume` sources the root `<state>/last-run.conf`; `resume --feature X` sources `<state>/features/<X>/last-run.conf`.	specstride:582	CONF="$FEATURE_DIR/last-run.conf"	028 FR-016
+SS	exit-code	`resume --feature X` exits 1 with `specstride resume: no last-run config for feature '<slug>' (<path>).` when the feature's conf is missing.	specstride:583	no last-run config for feature	none
+SS	exit-code	Bare `resume` exits 1 with `specstride resume: no <conf> — launch the run once via orchestrator.sh first.` when the root conf is missing.	specstride:586	launch the run once via orchestrator.sh	none
+SS	exit-code	`resume` exits 1 with `specstride resume: a run is already ACTIVE on <workdir> (lock held) — nothing to resume.` when the lock is held.	specstride:589	a run is already ACTIVE on $WORKDIR	028 FR-016
+SS	behaviour	`resume` checks that the conf exists BEFORE checking the lock, so a missing conf is reported even while a run is active.	specstride:588	if lock_held; then	none
+SS	behaviour	`resume` sources the conf as shell code (`. "$CONF"`), so its `WORKDIR`, `SPECS` and `FEATURE` values overwrite the values parsed from the command line before the launch arguments are built.	specstride:593	. "$CONF"	none
+SS	behaviour	`resume` uses the conf's `ORCHESTRATOR` path when that file exists, else the `orchestrator.sh` beside the front door.	specstride:594	|| ORCHESTRATOR="$SCRIPT_DIR/orch	none
+SS	behaviour	`resume` always replays `-w $WORKDIR -s $SPECS --proposer $PROPOSER_BACKEND --critic $CRITIC_BACKEND --max-rejects $MAX_REJECTS --max-iter $MAX_ITER`.	specstride:596	--proposer "$PROPOSER_BACKEND" --critic	028 FR-016
+SS	behaviour	`resume` replays `--feature $FEATURE` only when the conf key is non-empty.	specstride:599	args+=( --feature "$FEATURE" )	028 FR-016
+SS	behaviour	`resume` replays `--spec-format $SPEC_FORMAT` only when the key is non-empty (older confs auto-detect).	specstride:601	args+=( --spec-format "$SPEC_FORMAT" )	028 FR-016
+SS	behaviour	`resume` replays `--verification $VERIFICATION` when non-empty.	specstride:602	args+=( --verification "$VERIFICATION" )	028 FR-016
+SS	behaviour	`resume` replays `--test-plan $TEST_PLAN` when non-empty.	specstride:603	args+=( --test-plan "$TEST_PLAN" )	028 FR-016
+SS	behaviour	`resume` replays `--verification-commands $VERIFICATION_COMMANDS` when non-empty.	specstride:606	args+=( --verification-commands	028 FR-016
+SS	behaviour	`resume` replays `--generate-tests $GENERATE_TESTS` when non-empty.	specstride:607	--generate-tests "$GENERATE_TESTS"	028 FR-016
+SS	behaviour	`resume` replays `--proposer-timeout $PROPOSER_TIMEOUT` when non-empty.	specstride:611	args+=( --proposer-timeout	028 FR-016
+SS	behaviour	`resume` replays one `--proposer-timeout-phase <item>` per whitespace-separated item of `PROPOSER_TIMEOUT_PHASES`.	specstride:612	for _pt in ${PROPOSER_TIMEOUT_PHASES:-}	028 FR-016
+SS	behaviour	`resume` replays `--telemetry --loki-url $LOKI_URL` only when `TELEMETRY` is exactly `true`.	specstride:615	--telemetry --loki-url "$LOKI_URL"	028 FR-016
+SS	behaviour	`resume` replays `--otel --otel-url $OTEL_URL` only when `OTEL` is exactly `true`.	specstride:616	--otel --otel-url "$OTEL_URL"	028 FR-016
+SS	behaviour	`resume` replays `--long-job-phase` and `--long-job-cmd` only when BOTH `LONG_JOB_PHASE` and `LONG_JOB_CMD` are non-empty.	specstride:621	--long-job-phase "$LONG_JOB_PHASE"	none
+SS	env	`resume` exports `SPECSTRIDE_GIT_COMMITS` from the conf key `GIT_COMMITS` when non-empty (it is env-only, not a flag).	specstride:624	export SPECSTRIDE_GIT_COMMITS=	none
+SS	behaviour	Extra arguments given to `resume` are appended after the replayed flags, so they override the saved config (the orchestrator parses last-wins).	specstride:627	args+=( "${EXTRA[@]}" )	028 FR-016
+SS	behaviour	`resume` does not replay the conf key `VERIFICATION_PLAN`, a critic timeout, `--start-phase`, `--live`/`--no-live` or `--debug`; those fall back to env/defaults.	specstride:597	--max-rejects "$MAX_REJECTS" --max-iter	none
+SS	output-line	`resume` prints `resuming: <orchestrator> <args>` before exec.	specstride:628	"resuming: $ORCHESTRATOR ${args[*]}"	none
+SS	cli-command	`specstride learn [mode] [passthrough...]` dispatches to `lib/learn.py`; the mode is the first non-flag/unknown argument and defaults to `--show`.	specstride:640	MODE="${EXTRA[0]:---show}"	none (contract: cli.md)
+SS	behaviour	`learn` feeds learn.py the directory `<feature>/runs` (every run of the feature) when it exists, else the single newest events stream.	specstride:645	EV="$FEATURE_DIR/runs"	none
+SS	behaviour	`learn` passes `--specs <spec>` when the spec file exists and `--spec-format <fmt>` from the feature's `last-run.conf` `SPEC_FORMAT=` line, so samples are keyed on the current phase shape.	specstride:652	grep -m1 '^SPEC_FORMAT='	none
+SS	env	`SPECSTRIDE_PROPOSER_TIMEOUT` (default 1800) is injected as `--default` for `learn --show/--apply` when the knob is `proposer_timeout` and no `--default` was passed.	specstride:672	${SPECSTRIDE_PROPOSER_TIMEOUT:-1800}	none (contract: config-env.md)
+SS	env	`SPECSTRIDE_YIELD_POLL` (default 30) is injected as `--default` for `learn --show/--apply` when `--knob yield_poll_interval` is passed and no `--default` was given.	specstride:671	${SPECSTRIDE_YIELD_POLL:-30}	none (contract: config-env.md)
+SS	cli-flag	`learn --show` (default) runs `learn.py advise` then `learn.py evaluate --report`; the exit code is that of `advise` (the report's failure is ignored).	specstride:683	exit "$rc"	none (contract: cli.md)
+SS	cli-flag	`learn --apply [--phase N ...]` execs `learn.py apply --feature-dir <feature> [--events ...] [--specs ...]` with the pass-through arguments.	specstride:688	learn.py" apply	none (contract: cli.md)
+SS	cli-flag	`learn --summarize` execs `learn.py summarize --events <runs dir>` (read-only, JSON on stdout).	specstride:692	learn.py" summarize --events "$EV"	none (contract: cli.md)
+SS	cli-flag	`learn --evaluate` execs `learn.py evaluate --dry-run --events <runs dir> --feature-dir <feature>`: it prints what evaluate would conclude and writes nothing.	specstride:697	learn.py" evaluate --dry-run	none (contract: cli.md)
+SS	cli-flag	`learn --revert <run-id>` execs `learn.py revert <run-id> --feature-dir <feature>`.	specstride:702	learn.py" revert "${PASSTHRU[0]}"	none (contract: cli.md)
+SS	exit-code	`specstride learn --revert` without a run id exits 1 with `usage: specstride learn --revert <run-id>` on stderr.	specstride:701	usage: specstride learn --revert	none
+SS	cli-flag	`learn --off` execs `learn.py off --feature-dir <feature>`.	specstride:705	learn.py" off --feature-dir	none (contract: cli.md)
+SS	exit-code	`specstride learn <unknown mode>` exits 1 with `specstride learn: unknown option '<mode>' (expected --show|--apply|--revert <run-id>|--off|--summarize|--evaluate)`.	specstride:708	specstride learn: unknown option	none
+SS	cli-flag	`reverse --lint <FEATURE_DIR>` switches to lint mode and execs `python3 lib/reverse.py lint <dir>` (no LLM, no run).	specstride:114	exec python3 "$LIB_DIR/reverse.py"	none (contract: cli.md)
+SS	cli-flag	`reverse --src <DIR>` is forwarded to the linter as `--src` (lint mode only).	specstride:88	--src needs a directory	none (contract: cli.md)
+SS	cli-flag	`reverse --upto <N>` is forwarded to the linter as `--upto` (lint mode only).	specstride:89	--upto needs a level	none (contract: cli.md)
+SS	cli-flag	`reverse --json` is forwarded to the linter as `--json` (lint mode only).	specstride:113	largs+=( --json )	none (contract: cli.md)
+SS	cli-flag	`reverse --out <DIR>` is forwarded to `reverse.py plan --out`.	specstride:138	pargs+=( --out "$out" )	none (contract: cli.md)
+SS	cli-flag	`reverse --name <SLUG>` is forwarded to `reverse.py plan --name`.	specstride:139	pargs+=( --name "$name" )	none (contract: cli.md)
+SS	cli-flag	`reverse --tasks done|open` is forwarded to `reverse.py plan --tasks`.	specstride:140	pargs+=( --tasks "$tasks" )	none (contract: cli.md)
+SS	cli-flag	`reverse --dry-run` prints the plan summary and the orchestrator command without launching anything.	specstride:95	--dry-run)  dry="true"	none (contract: cli.md)
+SS	cli-flag	`reverse --mode <value>` accepts only `source-aware` (or absence); any other value is refused.	specstride:118	"$mode" != "source-aware"	none
+SS	exit-code	`reverse --mode <other>` exits 3 with a stderr message starting `specstride reverse: Runtime-assisted reverse engineering requires an explicit permission and side-effect policy` (`Black-box` when the mode is `black-box`).	specstride:122	exit 3	none
+SS	output-line	The `--mode` refusal ends `Specstride will not infer those permissions; only --mode source-aware is supported.`	specstride:121	only --mode source-aware is supported	none
+SS	exit-code	`reverse` exits 3 with `specstride reverse: <flag> is set by the reverse run itself; it cannot be passed` for `-w`, `--workdir`, `-s`, `--specs`, `--spec-format`, `--feature`, `--verification`, `--verification-commands`, `--test-plan`, `--generate-tests`.	specstride:98	is set by the reverse run itself	none (contract: cli.md)
+SS	cli-flag	`reverse` passes these launch flags with their value through to the orchestrator: `--proposer`, `--critic`, `--max-rejects`, `--max-iter`, `--proposer-timeout`, `--proposer-timeout-phase`, `--critic-timeout`, `--start-phase`, `--loki-url`, `--otel-url`, `--long-job-phase`, `--long-job-cmd`.	specstride:100	--proposer|--critic|--max-rejects	none
+SS	cli-flag	Any other `-*` argument to `reverse` is passed through to the orchestrator as a valueless flag.	specstride:102	launch+=( "$1" ); shift ;;	none
+SS	exit-code	`reverse` exits 2 with `specstride reverse: unexpected argument '<arg>'` on a second positional argument.	specstride:105	unexpected argument '$1'	none
+SS	exit-code	`reverse` without SRC (and without `--lint`) exits 2 with a `usage: specstride reverse <SRC> ...` line on stderr.	specstride:124	usage: specstride reverse <SRC>	none
+SS	cli-flag	`reverse -h` / `--help` prints the front-door usage and exits 0.	specstride:96	-h|--help)  usage; exit 0	none
+SS	file	`reverse` sources `<install dir>/.env` when present; values the caller already exported win (the caller's environment is re-applied after sourcing).	specstride:133	eval "$_caller_env"	none (contract: files-on-disk.md)
+SS	exit-code	`reverse` exits with the exit code of `reverse.py plan` when planning fails.	specstride:142	"${pargs[@]}")" || exit $?	none
+SS	behaviour	`reverse` reads the plan JSON keys `src`, `driver`, `feature`, `verification_commands`, `test_plan`, `generate_tests` to build the launch.	specstride:146	"verification_commands","test_plan"	none
+SS	behaviour	A reverse run launches `orchestrator.sh -w <src> -s <driver> --spec-format native --feature <feature> --verification-commands ... --test-plan ... --generate-tests ...` plus pass-through flags.	specstride:149	--spec-format native --feature	none
+SS	env	`reverse` exports `SPECSTRIDE_GIT_COMMITS=off` before launching the orchestrator, so a reverse run never commits into the source repo.	specstride:176	export SPECSTRIDE_GIT_COMMITS=off	none (contract: cli.md)
+SS	output-line	`reverse` prints `reverse: launching <argv>` before exec.	specstride:177	reverse: launching ${argv[*]}	none
+SS	output-line	`reverse --dry-run` starts with `specstride reverse — dry run (no LLM call, nothing launched)`.	specstride:155	dry run (no LLM call, nothing launched)	none
+SS	output-line	`reverse --dry-run` prints labelled lines `source`, `inventory` (files/skipped/bytes/oversize/units), `languages`, `frameworks`, `constitution`, `output dir`, `tasks mode`, `inventory`, `driver`, `commands`, then `phases:` with `<n>. <title>  (lint --upto <level>)`.	specstride:169	(lint --upto %d)	none
+SS	output-line	`reverse --dry-run` ends with `  orchestrator (not executed):` and the shell-quoted command prefixed `SPECSTRIDE_GIT_COMMITS=off`.	specstride:170	orchestrator (not executed):	none
+SS	exit-code	`reverse --dry-run` exits 0.	specstride:174	exit 0	none
+SS	cli-command	`lib/present.py` is the live presenter: a pure consumer of one events.jsonl that never affects loop control flow.	lib/present.py:30	never affects loop control flow	none
+SS	cli-flag	`present.py --events PATH` names the events file; default is `<workdir>/<state dir>/events.jsonl`.	lib/present.py:1043	specstride_env.state_dir(args.workdir)	none
+SS	cli-flag	`present.py --workdir DIR` (default `.`) locates the events file when `--events` is absent.	lib/present.py:1028	"--workdir", default="."	none
+SS	cli-flag	`present.py --mode timeline|card|plain` (default `timeline`); any other value is an argparse error (exit 2).	lib/present.py:1029	choices=["timeline", "card", "plain"]	none
+SS	cli-flag	`present.py --follow` tails the file for new events.	lib/present.py:1030	"--follow", action="store_true"	none
+SS	cli-flag	`present.py --detail milestones|tools|full` sets timeline verbosity; default `tools`.	lib/present.py:1031	"--detail", choices=list(DETAILS)	none
+SS	env	`SPECSTRIDE_LIVE_DETAIL` supplies the default of `--detail` (`milestones`, `tools` or `full`; default `tools`); an invalid value falls back to `tools`.	lib/present.py:1032	"SPECSTRIDE_LIVE_DETAIL", "tools"	none
+SS	cli-flag	`present.py --quiet` prints each parsed event as one `json.dumps` line (JSONL passthrough) and takes precedence over `--mode`.	lib/present.py:1047	print(json.dumps(ev))	none
+SS	cli-flag	`present.py --debug` makes the timeline print unknown events as a dim `<ts>  · <event> <json of other keys>` line.	lib/present.py:486	if k not in ('event','time','ts')	none
+SS	cli-flag	`present.py --no-color` forces color depth `none`.	lib/present.py:1017	"never" if args.no_color else None	none
+SS	behaviour	`--quiet` output drops lines that are not valid JSON and, with `--follow`, includes a synthetic `{"event": "_reopen"}` object when the symlink is retargeted.	lib/present.py:566	yield {"event": "_reopen"}	none
+SS	exit-code	`present.py` exits 0 on a closed pipe (BrokenPipeError), after redirecting stdout to the null device.	lib/present.py:1082	sys.exit(0)	none
+SS	behaviour	`present.py` swallows KeyboardInterrupt (Ctrl-C) and ends normally.	lib/present.py:1071	except KeyboardInterrupt:	none
+SS	behaviour	`present.py` applies the legacy-to-`SPECSTRIDE_*` environment name mapping at import (`specstride_env.apply()`).	lib/present.py:37	specstride_env.apply()	none
+SS	output-line	Plain mode prints one line per event: `<HH:MM:SS>  <event padded to 18> k=v ...`.	lib/present.py:510	"%s  %-18s %s" % (ts, e, rest)	none
+SS	behaviour	Plain mode omits the keys `time`, `ts`, `event`, `task`, `backend`, `run_id` from the `k=v` list.	lib/present.py:509	"task", "backend", "run_id"))	none
+SS	output-line	Plain mode renders `agent_observability` as `<HH:MM:SS>  observability <mode>[ — <reason>]  <other k=v>`.	lib/present.py:499	tail = "  observability %s" % mode	none
+SS	output-line	Plain mode prints `────── new run ──────` when the followed symlink is retargeted to a new run.	lib/present.py:1057	────── new run ──────	none
+SS	behaviour	The timestamp is the 8 characters after `T` in the event's `time`; else local time from `ts`; else `--:--:--`.	lib/present.py:119	return "--:--:--"	none
+SS	event	`run_start` is rendered as `┏ run start — <phases> phases · <proposer>→<critic> · resume @ phase <resume>`; fields read: `phases`, `proposer`, `critic`, `resume`, `workdir`, `states`.	lib/present.py:287	┏ run start	none (contract: events.md)
+SS	event	`phase_start` is rendered as `◆ phase <phase>/<total>[ — <title>]`; fields read: `phase`, `total`, `title`.	lib/present.py:297	◆ phase {p}/{last}	none
+SS	event	`proposer_start` is rendered as `✱ proposer working — phase <p>, attempt <attempt>, <backend>`; fields read: `phase`, `attempt`, `backend`.	lib/present.py:300	✱ proposer	none
+SS	event	`accelerator_start` is rendered as `✚ accelerator acting on the hint — phase <p>, attempt <n>, <backend>[ · <criteria>]`; fields read: `phase`, `attempt`, `backend`, `criteria`.	lib/present.py:303	✚ accelerator	none (contract: events.md)
+SS	event	`acceleration_note` is rendered as `↦ acceleration note written (phase <p>, attempt <n>)`.	lib/present.py:307	acceleration note written	none
+SS	event	`iter_start` is rendered as `↻ pass <iter>/<max_iter>` (hidden at detail `milestones`); fields read: `iter`, `max_iter`.	lib/present.py:311	{DIM}pass{RESET}	none
+SS	event	`agent_init` is rendered as `● agent up — <provider> / <model>` (or `backend`) with optional `(session <session_id>, schema v<schema_version>, <tools> tools, updated)`; fields read: `provider`, `model`, `backend`, `session_id`, `schema_version`, `tools`, `update`.	lib/present.py:333	agent up —	none
+SS	event	`agent_tool` is rendered per `status`: `… <tool> progress`, `✓ <tool> done` / `✗ <tool> failed` for `end` (by `is_error`), else `<glyph> <tool>[ start]`; fields read: `tool`, `status`, `target`, `summary`, `targets`, `result_summary`, `is_error`, `duration_ms`.	lib/present.py:345	{name} failed{RESET}	none
+SS	event	`agent_text` is rendered only at detail `full` as `│ final|partial <text>`; fields read: `text`, `final_fragment`.	lib/present.py:361	{fragment}{RESET} {ITALIC}	none
+SS	event	`evidence_writing` is rendered as `↑ evidence being written (<tool> <target>)[ · <match or detection_reason>]`.	lib/present.py:365	evidence being written	none
+SS	event	`agent_diagnostic` is rendered as `! <code> — <message>`, red when `severity` is `error`/`fatal`, else yellow; fields read: `code`, `message`, `severity`.	lib/present.py:372	ev.get('code','diagnostic')	none
+SS	event	`agent_observability` is rendered as `◈ observability <mode>[ — <reason>]` plus `provider_format`, `signals`/`supported_signals`, `role`; green for `structured`, red for `degraded`, yellow otherwise.	lib/present.py:394	◈ observability {mode}	none
+SS	event	`telemetry_delivery` is rendered as `✓|! sink <sink> <status>[ — <reason>]` with `HTTP <http_status>`, `batch_id`, `<event_count> events`; a status other than `accepted`/`ok`/`success` counts as failed.	lib/present.py:417	sink {sink} {status}	none
+SS	behaviour	A successful `telemetry_delivery` is shown only at detail `full`; a failed one is shown at `tools` and above.	lib/present.py:403	if not failed and lvl < 2:	none
+SS	event	`agent_result` is rendered as `◦ pass done` or `◦ pass <status>` (error when `is_error` or status in `error`,`timeout`,`cancelled`,`degraded`) with `$cost`, tokens out/in, duration, turns, reason, source; fields read: `status`, `is_error`, `cost`/`cost_usd`, `output_tokens`, `input_tokens`, `duration_ms`, `turns`/`num_turns`, `reason`/`reason_code`, `source`.	lib/present.py:422	"timeout", "cancelled", "degraded")	none
+SS	event	`evidence_written` is rendered as `◇ evidence → <file>  (<iters> iter)`.	lib/present.py:448	ev.get('file','?')	none
+SS	event	`evidence_present` is rendered as `◇ evidence present (resume → critic)`.	lib/present.py:451	evidence present	none
+SS	event	`diagnostician_trigger` is rendered as `! diagnosing phase <p>, after attempt <n> — writing a hint for the next pass`.	lib/present.py:453	! diagnosing	none (contract: events.md)
+SS	event	`critic_start` is rendered as `┿ critic judging phase <p>, <provider>`.	lib/present.py:456	critic judging{RESET}	none
+SS	event	`verdict` with `result=APPROVED` is rendered as `✓ APPROVED phase <p>`.	lib/present.py:460	✓ APPROVED	none (contract: events.md)
+SS	event	`verdict` with `result=REJECTED` is rendered as `✗ REJECTED phase <p> (attempt <n>)[ — <reason>]`; any other result is shown as `✗ MALFORMED` in yellow.	lib/present.py:463	"REJECTED" else "MALFORMED"	none (contract: events.md)
+SS	event	`reject` is consumed but never rendered by the timeline (the `verdict` line already covers it).	lib/present.py:468	already covered by verdict	none
+SS	event	`attempt_archived` is rendered as `↦ archived rejected attempt <attempt> (phase <p>)`.	lib/present.py:470	archived rejected attempt	none
+SS	event	`phase_done` is rendered as `◆ phase <p> done (attempt <n>)`.	lib/present.py:473	◆ phase {p} done	none
+SS	event	`git_checkpoint` is rendered as `⎇ git checkpoint (phase <p>)`.	lib/present.py:476	git checkpoint (phase {p})	none
+SS	event	`run_stop` with `reason=stop_flag` is rendered as `■ stopped cleanly at phase <p> — resume with: specstride resume`.	lib/present.py:480	■ stopped cleanly	none (contract: events.md)
+SS	event	`run_stop` with any other reason is rendered as `■ halt — <reason> (phase <p>)`.	lib/present.py:482	■ halt{RESET}	none (contract: events.md)
+SS	event	`run_end` is rendered as `■ run complete — <outcome>`.	lib/present.py:484	■ run complete	none (contract: events.md)
+SS	event	`_reopen` is a synthetic event made by the follower (never in the file); the timeline renders it as `── new run detected — following it ──`.	lib/present.py:285	new run detected — following it	none
+SS	behaviour	Events with any other name produce no timeline line unless `--debug` is set.	lib/present.py:487	return None	none
+SS	behaviour	Detail level `milestones` hides `iter_start`, `agent_init`, `agent_tool`, `agent_diagnostic`, `agent_observability`, `telemetry_delivery` and `agent_result`.	lib/present.py:309	if lvl < 1:	none
+SS	behaviour	Tool glyphs by tool name (case-insensitive): `read` ◎, `write` ✚, `edit`/`multiedit`/`notebookedit` ✎, `bash` ❯, `grep`/`glob`/`ls` ❍, `task`/`agent` », `webfetch`/`websearch` ⇆, todo/task-list tools ≡ (muted), `mcp__*` ◇, else ›.	lib/present.py:105	n.startswith("mcp__")	none
+SS	behaviour	Event booleans are truthy when a real `true` or one of the strings `1`, `true`, `yes`, `error`, `failed`, `failure` (case-insensitive).	lib/present.py:158	"error", "failed", "failure")	none
+SS	behaviour	Token counts are shown as `<n>`, `<n.n>k` (>=1000) or `<n.n>M` (>=1,000,000); durations as `<s>s`, `<m>m<ss>s` or `<h>h<mm>m`.	lib/present.py:128	return "%.1fM"	none
+SS	behaviour	Without `--follow` a missing events file ends the presenter silently; with `--follow` it waits, polling every 0.3 s, until the file exists.	lib/present.py:530	time.sleep(0.3)	none
+SS	behaviour	Follow mode polls every 0.4 s and, when the path's device/inode changes (symlink retargeted or file replaced), reopens the new file from the top.	lib/present.py:564	now_id != opened_id	none
+SS	behaviour	Lines that are not valid JSON are skipped silently by the presenter.	lib/present.py:546	except json.JSONDecodeError:	none
+SS	file	The presenter treats a stop as requested when `stop.flag` exists in the events file's directory or two levels above it.	lib/present.py:575	"stop.flag")))	none (contract: files-on-disk.md)
+SS	behaviour	Run totals add `agent_result` cost (`cost`, else `cost_usd`), `output_tokens` and `input_tokens`, and count one pass per `agent_result`.	lib/present.py:233	else ev.get("cost_usd")	none
+SS	behaviour	The current-activity text is driven by `run_start`, `phase_start`, `proposer_start`, `accelerator_start`, `iter_start`, `agent_tool`, `agent_text`, `evidence_writing`, `agent_diagnostic`, `critic_start`, `verdict`, `run_stop` (`stopped`) and `run_end` (`complete`).	lib/present.py:248	"stopped" if e == "run_stop" else	none
+SS	behaviour	The gate rail is seeded from `run_start.states` (comma list of A/R/C/P) and `run_start.phases`; without `states` every phase starts pending.	lib/present.py:616	ev.get("states"))	none
+SS	behaviour	A `verdict` REJECTED marks the phase `R` and re-stamps the rail with `attempt <attempt>/<max_rejects>` (field `max_rejects` or `MAX_REJECTS`); MALFORMED changes nothing on the rail.	lib/present.py:635	ev.get("max_rejects", ev.get("MAX_REJ	none
+SS	behaviour	`phase_done` marks the phase approved and re-stamps the rail with the elapsed time since `run_start`.	lib/present.py:640	self._stamp("phase_done"	none
+SS	behaviour	`run_end` marks every phase 1..total approved on the rail.	lib/present.py:648	str(i): "A" for i in range(1	none
+SS	behaviour	Two consecutive `run_stop` events with the same rail states stamp the rail only once.	lib/present.py:662	kind == "run_stop" and self._last_stamp	none
+SS	output-line	The rail's status tail is `<approved>/<total> approved[ · <extra>]`.	lib/present.py:666	"%d/%d approved"	none
+SS	output-line	The re-stamped rail is indented 10 columns (the message column) and never wider than the terminal; under 40 columns it collapses to a one-line rail or a summary.	lib/present.py:689	ONE_LINE_BELOW = 40	none
+SS	behaviour	Outside a TTY or without `--follow` the timeline prints lines and rails only: no spinner, no motion, no `Σ` summary.	lib/present.py:793	if not follow or not is_tty:	none
+SS	output-line	On a TTY in follow mode, after 2.0 s without a printed line a heartbeat line is drawn in place: `<spinner><pulse> <activity> · <dwell>  · run <totals>`, refreshed every 0.25 s.	lib/present.py:850	if idle > 2.0:	none
+SS	output-line	While `stop.flag` exists the heartbeat status is `‖ stop requested — finishing current pass…`.	lib/present.py:855	stop requested — finishing current pass	none
+SS	output-line	On `run_end` the TTY follow timeline prints a totals line `  Σ <$cost> · <tokens> tok out · <n> pass · <elapsed>`.	lib/present.py:843	tr.summary_bits_colored()	none
+SS	behaviour	The terminal size defaults to 100 columns by 24 rows when it cannot be detected.	lib/present.py:782	get_terminal_size((100, 24)).columns	none
+SS	behaviour	Card mode clears the screen (`ESC[2J ESC[H`), replays the whole file once, then follows and redraws whenever events arrive or every 0.5 s.	lib/present.py:997	now - last_render > 0.5	none
+SS	output-line	The card shows the gate rail, `  phase <cur>/<total> (attempt n)  <title up to 40 chars>`, an activity line with spinner, `  run: <totals>`, a divider, a rolling feed and a footer.	lib/present.py:948	{DIM}{self.cur_title[:40]}{RESET}	none
+SS	behaviour	The card shows `(attempt n)` only when the attempt is not 1.	lib/present.py:945	not in ("1", "None")	none
+SS	output-line	The card footer is `  Ctrl-C to detach — the run keeps going`.	lib/present.py:967	Ctrl-C to detach — the run keeps going	none
+SS	output-line	The card outcome line is `■ STOPPED — resume with: specstride resume` for `run_stop reason=stop_flag`, `■ HALT: <reason>` for other stops, and `■ <outcome>` (default `done`) for `run_end`.	lib/present.py:917	STOPPED — resume with: specstride resume	none
+SS	behaviour	The card feed keeps at most 200 lines, drops a line identical to the previous one, and shows the last `max(4, rows - 9)` of them.	lib/present.py:891	if len(self.feed) > 200:	none
+SS	behaviour	A new `run_start` clears the card's outcome, so a card left open survives stop + resume.	lib/present.py:908	self.outcome = None	none
+SS	behaviour	Card mode forces color on (`always`) even off a TTY unless `NO_COLOR` is set or `--no-color` is given.	lib/present.py:1018	args.mode == "card" and not environ.get	none
+SS	behaviour	The presenter never queries the terminal for its background: it uses `SPECSTRIDE_BANNER_BG` or `COLORFGBG`, else dark.	lib/present.py:1021	query=lambda: None	none
+SS	env	`NO_COLOR` (set and non-empty) gives color depth `none` unless the caller passed `--color always|never`.	lib/theme.py:89	_flag(environ, "NO_COLOR")	none
+SS	env	`FORCE_COLOR` (set and non-empty) enables color even when the stream is not a TTY; `NO_COLOR` is checked first.	lib/theme.py:91	_flag(environ, "FORCE_COLOR")	none
+SS	env	`TERM=dumb` (or a non-TTY stream) gives color depth `none`.	lib/theme.py:93	term == "dumb"	none
+SS	env	`COLORTERM` equal to `truecolor` or `24bit` (case-insensitive) selects depth `truecolor`.	lib/theme.py:79	("truecolor", "24bit")	none
+SS	env	`TERM` containing `256color` selects depth `256`; otherwise depth is `16`.	lib/theme.py:81	if "256color" in term:	none
+SS	env	`SPECSTRIDE_COLOR` = `none`|`16`|`256`|`truecolor` overrides the resolved color depth last, even over `--color` and `NO_COLOR`; other values are ignored.	lib/theme.py:98	"SPECSTRIDE_COLOR"	none
+SS	behaviour	An explicit color argument `never` gives `none`; `always` gives the terminal's depth regardless of TTY, `NO_COLOR` or `FORCE_COLOR`.	lib/theme.py:85	if arg == "never":	none
+SS	env	`SPECSTRIDE_BANNER_BG` = `dark`|`light` fixes the background and skips detection.	lib/theme.py:147	"SPECSTRIDE_BANNER_BG"	none
+SS	env	`COLORFGBG`: the last `;` field, when numeric, means light if >= 11 else dark.	lib/theme.py:154	if int(m) >= 11	none
+SS	env	`TMUX` or `STY` set skips the terminal background query and yields `dark`.	lib/theme.py:156	environ.get("TMUX") or	none
+SS	behaviour	Background detection on a TTY writes the OSC 11 query `ESC ] 11 ; ? ESC \` to `/dev/tty` in raw mode, waits up to 0.2 s, and classifies luminance >= 128 as light; the fallback is dark.	lib/theme.py:137	"light" if lum >= 128 else "dark"	none
+SS	env	`SPECSTRIDE_ASCII` set to anything but empty or `0` maps every glyph to ASCII.	lib/theme.py:286	"SPECSTRIDE_ASCII"	none
+SS	env	`LC_ALL`, else `LC_CTYPE`, else `LANG`: a non-empty locale that does not contain `utf8`/`utf-8` forces ASCII glyphs.	lib/theme.py:288	environ.get("LC_ALL")	none
+SS	behaviour	Color roles are `brand`, `accent`, `approved`, `warn`, `reject`, `muted`; `brand` always uses the terminal's own foreground (SGR 39).	lib/theme.py:208	return "\033[39m"	none
+SS	behaviour	16-color SGR codes per role (dark, light): accent 95/35, approved 32/32, warn 33/33, reject 31/31, muted 90/2.	lib/theme.py:53	"16": ("90", "2")	none
+SS	behaviour	Depth `256` quantises each role's hex color to the nearest xterm-256 index; `truecolor` emits `38;2;r;g;b`.	lib/theme.py:214	38;2;%d;%d;%dm	none
+SS	cli-command	`python3 lib/theme.py bg` prints `dark` or `light` once (treating the stream as interactive when stdin or stderr is a TTY).	lib/theme.py:322	print(detect_bg(_Interactive()))	none
+SS	exit-code	`lib/theme.py` with any other arguments exits 1 printing `usage: theme.py bg` on stderr.	lib/theme.py:324	sys.exit("usage: theme.py bg")	none
+SS	behaviour	ASCII glyph substitutions: track `=`, ahead `-`, gate `+`, tip `>`, approved `ok`, rejected `x`, current `>`, pending `.`, times `x`, arrow `->`.	lib/theme.py:247	"approved":  ("✓", "ok")	none
+SS	cli-command	`python3 lib/banner.py` prints the startup splash (mark, name, caption and the gate rail) sized to the terminal.	lib/banner.py:462	prog="banner.py"	none
+SS	cli-flag	`banner.py --plain` prints full-width ASCII with no escape codes (the run.log copy).	lib/banner.py:463	"--plain", action="store_true"	none
+SS	cli-flag	`banner.py --bg dark|light` forces the background.	lib/banner.py:464	"--bg", choices=("dark", "light")	none
+SS	cli-flag	`banner.py --color always|never|auto` (default `auto`).	lib/banner.py:465	choices=("always", "never", "auto")	none
+SS	cli-flag	`banner.py --phases N` sets the number of gates, clamped to 1..40.	lib/banner.py:88	max(1, min(40, int(phases)))	none
+SS	cli-flag	`banner.py --states A,R,C,P,...` gives per-phase states (first letter, case-insensitive); unknown letters become `P`, missing states are pending, at most 40 are used.	lib/banner.py:85	if s in STATE_ROLE else "P"	none
+SS	cli-flag	`banner.py --no-motion` prints only the final frame.	lib/banner.py:468	"--no-motion"	none
+SS	cli-flag	`banner.py --rail-only` prints just the two rail lines (no mark, no name).	lib/banner.py:469	"--rail-only"	none
+SS	cli-flag	`banner.py --preview` prints every tier x background x depth plus the motion frames and the plain copy, and ignores `SPECSTRIDE_BANNER=off`.	lib/banner.py:477	if args.preview:	none
+SS	cli-flag	`banner.py --cols N` / `--rows N` (hidden from help) override the detected terminal size (default 80x24).	lib/banner.py:484	args.cols or size.columns	none
+SS	exit-code	`banner.py` exits 0 on every path, including when the banner is switched off; a closed pipe also exits 0.	lib/banner.py:505	return 0	none
+SS	env	`SPECSTRIDE_BANNER` = `off`|`0`|`false`|`no` (case-insensitive) makes `banner.py` print nothing and also turns the live rail off.	lib/banner.py:422	"SPECSTRIDE_BANNER"	none
+SS	env	`SPECSTRIDE_LIVE_RAIL` = `off`|`0`|`false`|`no` suppresses rail re-stamps: `banner.py --rail-only` prints nothing and the live timeline draws no rail.	lib/banner.py:430	"SPECSTRIDE_LIVE_RAIL"	none
+SS	env	`SPECSTRIDE_MOTION=0` disables animation.	lib/banner.py:413	"SPECSTRIDE_MOTION"	none
+SS	env	`CI` set (non-empty) or `TERM=dumb` disables animation; animation also requires a TTY.	lib/banner.py:415	environ.get("CI")	none
+SS	behaviour	`banner.py` falls back to plain ASCII output when stdout is not a TTY unless `--color always` is given; plain output is at least 80 columns wide and always the `full` tier.	lib/banner.py:485	args.color != "always"	none
+SS	behaviour	Width tiers: 72+ columns `full`, 40-71 `compact`, under 40 columns or under 14 rows `line` (one line).	lib/banner.py:71	FULL_MIN_COLS, COMPACT_MIN_COLS	none
+SS	output-line	The splash text is the name `specstride`, the description `From specs to tested code.` and the caption `Every step, signed off.`	lib/banner.py:68	CAPTION = "Every step, signed off."	none
+SS	output-line	Plain rail labels are `<n> ok` (approved), `<n> rej` (rejected), `<n> now` (current), `<n> -` (pending); the tight form uses `+`, `x`, `>`, `.`.	lib/banner.py:76	ASCII_WORD = {"A": "ok", "R": "rej"	none
+SS	behaviour	The splash animation is 9 frames at 75 ms; only the two rail lines are redrawn, with the cursor hidden and synchronized-output escapes, and cursor/SGR restored on exit or SIGINT/SIGTERM.	lib/banner.py:72	FRAME_SECONDS, FRAMES = 0.075, 9	none
+SS	behaviour	In the one-line rail, runs of 3 or more equal states collapse to `<glyph>×<count>`.	lib/banner.py:265	if run >= 3:	none
+SS	behaviour	With no `--phases` and no `--states` the rail is decorative: five gate posts, all in the brand color, no labels.	lib/banner.py:177	decorative: five posts, all ink	none
+SS	behaviour	When the rail cannot fit the width it is replaced by a summary `<glyph><frontier>/<total>` (or `✓ n/n` when all approved).	lib/banner.py:186	return [_summary(states, th, ascii_)	none
+SS	cli-command	`learn.py` requires one subcommand of `summarize`, `advise`, `apply`, `revert`, `off`, `resolve`, `observe`, `evaluate`; a missing or unknown one is an argparse usage error (exit 2).	lib/learn.py:2113	dest="cmd", required=True	none
+SS	cli-command	`learn.py summarize` computes the metric summary from events streams and prints it as JSON (or writes it with `--out`).	lib/learn.py:2114	sub.add_parser("summarize"	none
+SS	cli-flag	`summarize --events PATH` (required, repeatable): an `events.jsonl`, a run directory holding one, or a directory of run directories (sorted by name).	lib/learn.py:2115	"--events", action="append", required	none
+SS	cli-flag	`summarize --run-log FILE` adds `totals.proposer_live_invocations`: the count of run.log lines starting `→ ` that match `--live-regex`.	lib/learn.py:884	s.startswith("→ ") and rx.search(s)	none
+SS	cli-flag	`summarize --live-regex RE` defaults to `runners/live`.	lib/learn.py:2118	"--live-regex", default=r"runners/live"	none
+SS	cli-flag	`summarize --verification-dir DIR` attaches `gate_duration_ms` and `gate_live_share` per attempt from files named `phase-<N>-attempt-<M>.json`.	lib/learn.py:620	^phase-(\d+)-attempt-(\d+)\.json$	none
+SS	cli-flag	`summarize --verdicts-dir DIR` attaches `critic_prompt_bytes` per attempt from transcripts named `phase<N>.attempt<A>.<YYYYmmdd-HHMMSS>.txt`.	lib/learn.py:633	^phase(\d+)\.attempt(\d+)\.	none
+SS	cli-flag	`summarize --out FILE` writes the JSON there (creating parent directories) and prints a one-line digest instead; `--pretty` indents by 2.	lib/learn.py:1799	with open(args.out, "w"	none
+SS	output-line	`summarize --out` prints `learn: <r> run(s), <a> attempt(s), <p> pass(es), $<cost>, kills=<dict> → <out>`.	lib/learn.py:1802	run(s), {t['attempts']} attempt(s)	none
+SS	exit-code	`learn.py summarize` exits 2 with `learn: no events.jsonl found under: <paths>` on stderr when no events file is found.	lib/learn.py:1787	learn: no events.jsonl found under:	none
+SS	exit-code	`learn.py summarize` exits 0 on success.	lib/learn.py:1806	return 0	none
+SS	cli-command	`learn.py advise` prints one suggestion line per phase and writes nothing unless `--out` is given.	lib/learn.py:2137	sub.add_parser("advise"	none
+SS	cli-flag	`advise/apply --events PATH` (repeatable) or `--summary FILE` (a `summarize --out` document) supplies the telemetry; `--summary` wins when both are given.	lib/learn.py:1883	if getattr(args, "summary", None):	none
+SS	cli-flag	`advise/apply/resolve --knob` accepts only `proposer_timeout` or `yield_poll_interval` (argparse choices); default `proposer_timeout` for advise/apply, required for resolve.	lib/learn.py:2139	choices=sorted(ADJUSTABLE_KNOBS))	028 FR-024
+SS	cli-flag	`advise --phase N` restricts to one phase; default is every phase seen.	lib/learn.py:2140	one phase only (default: every phase	none
+SS	cli-flag	`advise/apply/resolve --default N` (integer, required) is the global default the knob falls back to and the base of the step window.	lib/learn.py:2141	"--default", type=int, required=True	none
+SS	cli-flag	`--feature-dir DIR` derives `<DIR>/learning/applied.json` and `<DIR>/events.jsonl`; explicit `--applied-file` / `--events-file` win.	lib/learn.py:976	"learning", "applied.json")	none
+SS	cli-flag	`advise --out FILE` also writes the advice rows as indented JSON.	lib/learn.py:1946	json.dumps(rows, indent=2)	none
+SS	cli-flag	`--phase-shape DIGEST` keys `--phase` on that shape digest; it overrides the shape computed from `--specs` for that phase.	lib/learn.py:1849	shapes[int(args.phase)] =	none
+SS	cli-flag	`--specs FILE` (with optional `--spec-format native|speckit-tasks|openspec-change`) computes every phase's shape digest through `specstride_spec`.	lib/learn.py:1845	specstride_spec.phase_shape_of(ph)	none
+SS	output-line	A spec that cannot be read prints `learn: cannot read phase shapes from <specs>: <error>` on stderr and continues with no shape restriction.	lib/learn.py:1847	learn: cannot read phase shapes from	none
+SS	cli-flag	`--verdicts-dir DIR` for advise/apply/evaluate defaults to `<feature-dir>/verdicts` when that directory exists.	lib/learn.py:1872	os.path.join(feature_dir, "verdicts")	none
+SS	exit-code	`learn.py advise` exits 2 when neither `--events` nor `--summary` is given (`learn: one of --events or --summary is required`) or no events file is found.	lib/learn.py:1895	one of --events or --summary is required	none
+SS	exit-code	`learn.py advise` exits 1 with `learn: no telemetry for phase <N>` / `learn: no telemetry for any phase` on stderr when there are no rows.	lib/learn.py:1913	return 1	none
+SS	exit-code	`learn.py advise` exits 0 when at least one row was printed, including rows with no suggestion.	lib/learn.py:1947	return 0	none
+SS	output-line	Below the sample floor advise prints `learn: phase <N> <knob>: <n> sample(s) — <reason>; no suggestion (need >=3)`.	lib/learn.py:1930	no suggestion (need {'>=3'})	none
+SS	output-line	A `proposer_timeout` suggestion prints `learn: phase <N> proposer_timeout: <n> sample(s), work p50=<x>s p90=<y>s, current=<c>s → suggest <v>s (bounds=[lo, hi], step_cap=[lo, hi]) [not applied — run `specstride learn --apply` to take effect]`.	lib/learn.py:1933	work p50={r.get('work_sec_p50')}s	none
+SS	output-line	A `yield_poll_interval` suggestion prints `learn: phase <N> yield_poll_interval: <n> sample(s), job_duration p50=<x>s, current=<c>s → suggest <v>s (bounds=..., step_cap=...) [not applied — ...]`.	lib/learn.py:1939	job_duration p50=	none
+SS	output-line	A quarantined suggestion prints `learn: phase <N> <knob>: suggestion <v> is QUARANTINED — auto-reverted by <run-id> (<guardrails>); <k>/6 new samples since; --apply refuses without --force`.	lib/learn.py:1924	is QUARANTINED	none
+SS	output-line	Decisions recorded without a phase shape print the stderr notice `learn: notice — <n> decision(s) for <knob>[<phase>] predate phase-shape keys and are not applied; re-derive with `specstride learn --apply` under the current spec`.	lib/learn.py:1043	predate phase-shape keys	none
+SS	cli-command	`learn.py apply` applies the current suggestion for one phase: it appends one decision to `applied.json` and one `knob_adjusted` event.	lib/learn.py:2148	sub.add_parser("apply"	none (contract: data-model.md)
+SS	cli-flag	`apply --phase N` is required (integer).	lib/learn.py:2152	"--phase", type=int, required=True	none
+SS	cli-flag	`apply --run-id ID` overrides the generated decision run id.	lib/learn.py:2157	"--run-id"	none
+SS	cli-flag	`apply --force` applies a value an auto-revert quarantined; the entry then carries `force: true` and `forced_over: <auto-revert run id>`.	lib/learn.py:1189	entry["forced_over"]	none (contract: data-model.md)
+SS	exit-code	`learn.py apply` exits 2 for a knob outside the allowlist (`learn: '<knob>' is not in the adjustable-knob allowlist (...) — refusing`), a missing summary/events input, or no `--applied-file`/`--feature-dir`.	lib/learn.py:1952	is not in the adjustable-knob allowlist	none
+SS	exit-code	`learn.py apply` exits 3 with `learn: refusing to apply — <reason>` when the phase has no telemetry or is below the 3-sample floor; nothing is written.	lib/learn.py:1977	return 3	none
+SS	exit-code	`learn.py apply` exits 4 with `learn: refusing to apply — quarantined: <detail>` when the value is quarantined and `--force` is absent; nothing is written.	lib/learn.py:1974	return 4	none
+SS	output-line	A successful apply prints `learn: applied <knob>[<phase>] <previous>s -> <value>s (samples=<n>, run_id=<id>) → <applied file>`.	lib/learn.py:1979	learn: applied {entry['knob']}	none
+SS	stop-reason	Apply refusal reason `no telemetry for phase <N>`.	lib/learn.py:1165	no telemetry for phase {phase}	none
+SS	stop-reason	Apply refusal reason `fewer than 3 non-futility-killed samples (have <n>)` for `proposer_timeout`.	lib/learn.py:1061	fewer than 3 non-futility-killed samples	none
+SS	stop-reason	Apply refusal reason `fewer than 3 non-futility-killed job-duration samples (have <n>)` for `yield_poll_interval`.	lib/learn.py:1099	non-futility-killed job-duration samples	none
+SS	cli-command	`learn.py revert <run_id>` undoes exactly one prior apply, restoring the value that was current before it.	lib/learn.py:2163	sub.add_parser("revert"	none (contract: data-model.md)
+SS	exit-code	`learn.py revert` exits 2 when no applied file can be derived, when the run id names no apply entry (`no applied entry with run_id '<id>'`), or when it is not the active decision.	lib/learn.py:1993	return 2	none
+SS	stop-reason	Revert refusal `run_id '<id>' is not the active decision for <knob>[<phase>] — nothing to revert`: only the entry currently on top of its (knob, phase, shape) stack may be undone.	lib/learn.py:1274	is not the active decision for	none (contract: data-model.md)
+SS	output-line	A revert prints `learn: reverted <run-id> — <knob>[<phase>] back to <value>s`.	lib/learn.py:1995	learn: reverted {args.run_id}	none
+SS	cli-command	`learn.py off` reverts every (knob, phase, shape) whose latest decision is an apply, one revert entry and one event each.	lib/learn.py:2170	sub.add_parser("off"	none (contract: cli.md)
+SS	output-line	`off` prints one `learn: reverted ...` line per reverted decision, or `learn: nothing was applied — already at defaults`.	lib/learn.py:2010	nothing was applied — already at	none
+SS	output-line	`off` always ends with the note that `SPECSTRIDE_LEARNING=off` (or unset) in the run's environment is what makes `resolve` ignore `applied.json`; the command only clears recorded decisions.	lib/learn.py:2011	learn: note — SPECSTRIDE_LEARNING=off	none
+SS	exit-code	`learn.py off` exits 0 (2 only when neither `--applied-file` nor `--feature-dir` is given).	lib/learn.py:2013	return 0	none
+SS	cli-command	`learn.py resolve --knob K --phase N --default D` is the shell integration point: it prints one line `<value><TAB><arm>` where arm is `applied` or `baseline`, and always exits 0.	lib/learn.py:2037	resolve_arm(args.knob, args.phase	none
+SS	cli-command	`learn.py observe --events ... --phase N [--out FILE]` writes the per-phase observation document (schema `specstride.learn.observation/1`) or prints it.	lib/learn.py:2188	sub.add_parser("observe"	none
+SS	output-line	`observe --out` prints `learn: phase <N> observation — <a> attempt(s), work p50=<x>s p90=<y>s → <out>` or `learn: no telemetry for phase <N> yet → <out>`.	lib/learn.py:2061	observation — {obs['attempts_total']}	none
+SS	exit-code	`learn.py observe` exits 2 when no events file is found, else 0 (a phase with no telemetry is not an error: `observation` is null).	lib/learn.py:2045	return 2	none
+SS	cli-command	`learn.py evaluate` labels every active decision `helped`/`neutral`/`regressed`/`insufficient` against its recorded baseline.	lib/learn.py:2200	sub.add_parser("evaluate"	none
+SS	cli-flag	`evaluate --dry-run` prints the evaluation and writes no entry, emits no event and reverts nothing.	lib/learn.py:2103	if not args.dry_run:	none
+SS	cli-flag	`evaluate --report` is read-only: it prints the last recorded evaluation of every active decision, `learn: no active decisions`, or `...: not evaluated yet`.	lib/learn.py:2077	learn: no active decisions	none
+SS	cli-flag	`evaluate --phase N` limits evaluation to decisions for that phase.	lib/learn.py:2206	only decisions for this phase	none
+SS	exit-code	`learn.py evaluate` exits 2 when no applied file can be derived or when neither `--events` nor `--report` is given (`learn: --events is required (or --report)`); otherwise 0, also when there are no active decisions.	lib/learn.py:2088	--events is required (or --report)	none
+SS	output-line	An evaluation prints `learn: phase <N> <knob> <prev>s→<value>s [<run-id>]: <label>[ (baseline reset: shape|backend) | (<reason>)] — cost r=... (MDE ±..., n=a/b); wall ...; guardrails ok (<k> unknown below their minimum n) | guardrails: BREACH <names>[ [<action>]]`.	lib/learn.py:1770	guardrails: BREACH	none
+SS	output-line	A primary below the floor prints `<name> n=<a>/<b> (need 6/6)`.	lib/learn.py:1753	(need {EVAL_FLOOR}/{EVAL_FLOOR})	none
+SS	output-line	An automatic revert prints `learn: auto-reverted <run-id> — guardrail <names>; <knob>[<phase>] back to <value>s`.	lib/learn.py:2106	learn: auto-reverted {d['run_id']}	none
+SS	env	`SPECSTRIDE_LEARNING`: only the exact value `apply` makes `resolve` return a learned value; unset, `off`, `suggest` or anything else returns `--default` unchanged and the applied log is not opened.	lib/learn.py:1325	env.get("SPECSTRIDE_LEARNING") !=	none (contract: config-env.md)
+SS	env	`SPECSTRIDE_LEARNING_THROUGH=<decision run id>` makes `resolve` ignore every `apply` entry after the named entry; reverts after it still count; an id that names no entry means no apply counts at all.	lib/learn.py:1329	env.get("SPECSTRIDE_LEARNING_THROUGH")	none
+SS	behaviour	With a `through` id that is not in the log, only `revert` entries are kept, so every knob resolves to its default.	lib/learn.py:1003	e.get("action") == "revert"]	none
+SS	behaviour	The arm printed by `resolve` is `applied` when the latest bound decision for (knob, phase, shape) is an apply under `SPECSTRIDE_LEARNING=apply` (even if its value equals the default), else `baseline`.	lib/learn.py:2027	return "applied" if latest is not None	none
+SS	behaviour	`resolve` prints the shape-less-decisions notice on stderr only when `SPECSTRIDE_LEARNING=apply`.	lib/learn.py:2032	os.environ.get("SPECSTRIDE_LEARNING")	none
+SS	behaviour	`learn.py` applies the legacy-to-`SPECSTRIDE_*` environment name mapping at import.	lib/learn.py:164	specstride_env.apply()	none
+SS	behaviour	The adjustable-knob allowlist is the locked literal set {`proposer_timeout`, `yield_poll_interval`}; a former third knob `inject_yield_hint` was removed.	lib/learn.py:904	ADJUSTABLE_KNOBS = frozenset({	028 FR-024
+SS	behaviour	Hard minimums: `proposer_timeout` 900 s, `yield_poll_interval` 10 s.	lib/learn.py:911	"proposer_timeout": 900	028 FR-024
+SS	behaviour	Hard maximums: `yield_poll_interval` 300 s fixed; `proposer_timeout` 2 x the supplied default.	lib/learn.py:912	{"yield_poll_interval": 300}	028 FR-024
+SS	behaviour	Every numeric knob moves at most ±50 % per step from the value currently in effect (or the default when none is applied).	lib/learn.py:913	STEP_CAP_FRACTION = 0.5	028 FR-024
+SS	behaviour	No suggestion is made (value null) with fewer than 3 samples: `work_sec_samples` for `proposer_timeout`.	lib/learn.py:1058	if samples < 3:	none
+SS	behaviour	No `yield_poll_interval` suggestion is made with fewer than 3 `job_duration_samples`.	lib/learn.py:1093	"job_duration_samples")) or 0	none
+SS	behaviour	The `proposer_timeout` target is 1.25 x the phase's `work_sec_p90` (p50 when p90 is missing), clamped to the step window and hard bounds, rounded to the nearest 60 s, then clamped to the hard bounds again.	lib/learn.py:1067	* 1.25	none
+SS	behaviour	The `yield_poll_interval` target is 0.1 x the phase's `job_duration_p50`, clamped to the step window and [10, 300], rounded to a whole second.	lib/learn.py:920	YIELD_POLL_WASTE_FRACTION = 0.1	none
+SS	behaviour	When the step window and the hard bounds do not overlap, the hard bounds alone are used.	lib/learn.py:1072	if lo > hi:	none
+SS	behaviour	`resolve` clamps a stored value into [hard min, hard max] at read time and always prints an integer.	lib/learn.py:1339	min(max(int(value), hard_lo), hard_hi)	none
+SS	behaviour	A decision applies only to the phase shape it was learned under: a decision recorded under another shape, or under no shape, resolves to the default.	lib/learn.py:1013	_entry_shape(e) == (shape or None)	none
+SS	behaviour	The effective value is a last-one-wins replay of the decision entries (`apply` and `revert`; `evaluate` entries never move a value; entries without `action` count as decisions).	lib/learn.py:989	(None, "apply", "revert")	none
+SS	file	`<feature-dir>/learning/applied.json` is a JSON-lines decision log opened in append mode (one entry per apply/revert/evaluate); the directory is created on demand and existing lines are never rewritten.	lib/learn.py:966	with open(path, "a", encoding="utf-8")	none (contract: data-model.md)
+SS	file	Learning events are appended to `<feature-dir>/events.jsonl` (the feature directory itself, not a run's `runs/<id>/events.jsonl`) unless `--events-file` is given.	lib/learn.py:978	(feature_dir, "events.jsonl")	none
+SS	file	An `apply` entry has the fields `schema`, `action=apply`, `run_id`, `knob`, `phase`, `shape`, `value`, `previous`, `samples`, `source_runs`, `metric`, `applied_at`, `baseline`.	lib/learn.py:1181	"action": "apply", "run_id": run_id	none (contract: data-model.md)
+SS	file	The applied-entry schema written is `specstride.learn.applied/2`; `/1` entries are still read but never match a shape.	lib/learn.py:925	specstride.learn.applied/2	none (contract: data-model.md)
+SS	file	An apply entry's `baseline` holds `backend`, `shape`, `runs`, `cost` and `wall` sample lists of `[run, value]`, and `guardrails` counts; runs under another backend label or flagged tampered are left out.	lib/learn.py:1463	"runs": base_runs	none
+SS	file	A `revert` entry has `schema`, `action=revert`, a new `run_id`, `reverts_run_id`, `knob`, `phase`, `shape`, `value` (the apply's `previous`), `previous` (the apply's `value`), `applied_at`.	lib/learn.py:1278	"reverts_run_id": run_id	none (contract: data-model.md)
+SS	file	An automatic revert entry additionally carries `auto: true`, `guardrail` (list), `evaluated_from`, `quarantined_value`, `backend`, `reverted_ts`.	lib/learn.py:1663	"quarantined_value"	none
+SS	file	An `evaluate` entry is the evaluation result plus `schema`, `action=evaluate`, a new `run_id` and `evaluated_at`; it never modifies the apply entry.	lib/learn.py:1736	action="evaluate", run_id=_new_run_id()	none (contract: data-model.md)
+SS	behaviour	Generated decision run ids are `learn-` followed by 12 hex characters.	lib/learn.py:939	"learn-" + uuid.uuid4().hex[:12]	none
+SS	file	The observation document (`observe --out`, conventionally `<feature-dir>/learning/phase-<N>.json`) has `schema`, `phase`, `shape`, `generated_at`, `observation`, `inputs` and is overwritten whole on each call.	lib/learn.py:1824	"schema": OBSERVATION_SCHEMA	none
+SS	file	The summary document has `schema` = `specstride.learn.summary/7`, `inputs`, `runs`, `attempts`, `phases`, `totals`.	lib/learn.py:166	SCHEMA = "specstride.learn.summary/7"	none
+SS	file	Events files are read leniently: blank lines, non-JSON lines (a half-written tail) and JSON values without an `event` key are skipped.	lib/learn.py:224	isinstance(ev, dict) and "event" in ev	none
+SS	file	Verdict transcripts are read for the byte size of the section between the `═══════════ PROMPT ═══════════` and `═══════════ REPLY ═══════════` markers.	lib/learn.py:634	_PROMPT_START =	none
+SS	behaviour	A transcript is matched to the (phase, attempt) whose verdict time is nearest to the transcript's local timestamp, within 900 s.	lib/learn.py:636	TRANSCRIPT_MATCH_SEC = 900	none
+SS	file	Gate-duration files are JSON with a `commands` list; `durationMs` is summed and the `live` share is the part from commands whose `args` or `executable` contain `live`.	lib/learn.py:615	if any("live" in str(a)	none
+SS	event	`knob_adjusted` (apply of `proposer_timeout`): fields `event`, `ts`, `knob`, `phase`, `from`, `to`, `reason`, `metric`, `samples`, `run_id`; no `time` field is written.	lib/learn.py:1192	"knob": "proposer_timeout", "phase"	none (contract: events.md)
+SS	event	`knob_adjusted` (apply of `yield_poll_interval`): same fields, `metric=job_duration_p50`.	lib/learn.py:1234	"knob": "yield_poll_interval", "phase"	none (contract: events.md)
+SS	event	`knob_adjusted` (revert): fields `event`, `ts`, `knob`, `phase`, `from`, `to`, `reason`, `samples=null`, `metric=null`, `run_id`, `reverts_run_id`.	lib/learn.py:1286	"reverts_run_id": run_id,	none
+SS	event	`knob_auto_reverted`: fields `event`, `ts`, `knob`, `phase`, `guardrail` (comma-joined names), `from`, `to`, `run_id`, `reverts_run_id`; emitted after the `knob_adjusted` of the same revert.	lib/learn.py:1667	"event": "knob_auto_reverted"	none
+SS	event	`knob_evaluated`: fields `event`, `ts`, `knob`, `phase`, `label`, `action`, `reset`, `cost_r`, `cost_mde`, `wall_r`, `wall_mde`, `n_applied`, `n_baseline`, `run_id`, `evaluates_run_id`.	lib/learn.py:1740	"event": "knob_evaluated"	none
+SS	stop-reason	`knob_adjusted reason=learned_from_work_sec_p90` (apply of `proposer_timeout`).	lib/learn.py:1193	learned_from_work_sec_p90	none
+SS	stop-reason	`knob_adjusted reason=learned_from_job_duration_p50` (apply of `yield_poll_interval`).	lib/learn.py:1235	learned_from_job_duration_p50	none
+SS	stop-reason	`knob_adjusted reason=revert` (manual `revert` and `off`).	lib/learn.py:1254	reason: str = "revert"	none
+SS	stop-reason	`knob_adjusted reason=auto_revert` (guardrail breach during evaluate).	lib/learn.py:1665	reason="auto_revert"	none
+SS	stop-reason	`knob_evaluated action` is `evaluated`, `auto_reverted` or `skipped_superseded`.	lib/learn.py:1741	or "evaluated"	none
+SS	behaviour	The `ts` of learning events is the string form of `time.time()` (epoch seconds).	lib/learn.py:931	return str(time.time())	none
+SS	behaviour	Events without a `run_id` are attributed to the run id last seen in the same file; events seen before any run id in that file are dropped.	lib/learn.py:462	ev.get("run_id") or src_run.get(src)	none
+SS	event	`run_start` is read for `ts`, `feature`, `backend`, `resume`.	lib/learn.py:472	if name == "run_start":	none (contract: events.md)
+SS	event	`phase_start` is read for `phase`, `title`, `shape`; it resets the current attempt and pass.	lib/learn.py:479	ev.get("shape") or None	none
+SS	event	`proposer_start` is read for `phase`, `attempt` and sets the attempt start time.	lib/learn.py:480	name == "proposer_start"	none
+SS	event	`iter_start` is read for `iter`; it opens a pass in the current attempt.	lib/learn.py:488	name == "iter_start"	none
+SS	event	`agent_tool` is read for `tool` and `target`; each counts one tool call, and a `Bash` target is classified wait vs work.	lib/learn.py:497	if ev.get("tool") == "Bash":	none
+SS	event	`agent_result` is read for `is_error`, `duration_ms`, `cost_usd`, `cache_creation_tokens`, `cache_read_tokens`, `output_tokens`.	lib/learn.py:501	name == "agent_result"	none
+SS	event	`yield_resume` is read for `job_duration_sec`, else `waited_sec`.	lib/learn.py:511	ev.get("waited_sec")	none
+SS	event	`pass_killed` is read for `reason` (default `unknown`), `elapsed`, `detail`.	lib/learn.py:516	ev.get("reason") or "unknown"	none
+SS	event	`iter_done` is read for `evidence`; any value other than absent or `missing` marks the pass as having written evidence.	lib/learn.py:524	not in (None, "missing")	none
+SS	event	`evidence_written` increments the attempt's evidence count and marks the current pass productive.	lib/learn.py:526	name == "evidence_written"	none
+SS	event	`verification_passed` / `verification_failed` are read for `phase`, `attempt`, `rc` (failed only).	lib/learn.py:532	("verification_passed",	none
+SS	event	`critic_start` is read for its `ts`; `critic_sec` is the time to the following `verdict`.	lib/learn.py:539	name == "critic_start"	none
+SS	event	`diagnostician_done` is read for `case` (default `unknown`).	lib/learn.py:548	ev.get("case") or "unknown"	none
+SS	event	`grounding_gap` is read for `paths` (comma-separated).	lib/learn.py:552	ev.get("paths", "")	none
+SS	event	`verdict` is read for `phase`, `attempt`, `result`, `reason`.	lib/learn.py:556	a.verdict = ev.get("result")	none (contract: events.md)
+SS	event	`phase_done` and `attempt_archived` close an attempt that has no end time yet.	lib/learn.py:561	("phase_done", "attempt_archived")	none
+SS	event	`proposer_cap` is read for `phase`, `seconds`, `source`, `yield_poll`, `yield_poll_source`, `arm`, `yield_poll_arm`, `tamper_bracket`; only the first per (run, phase) counts.	lib/learn.py:575	"tamper_bracket": ev.get	none
+SS	event	`events_tampered` marks the whole run as tampered; the run is excluded from every baseline and evaluation.	lib/learn.py:577	name == "events_tampered"	none
+SS	event	`run_stop` is read for `reason` and `phase`.	lib/learn.py:583	run.stop_reason = ev.get("reason")	none (contract: events.md)
+SS	behaviour	A Bash target is a wait call when it matches `sleep <n>`, `tail -f|-c`, `while pgrep|true`, `until grep`, `pgrep -`, `ps aux ... grep` or `watch -n`, or declares any `sleep` seconds; declared sleep seconds are summed.	lib/learn.py:170	sleep\s+\d|tail\s+-[fc]	none
+SS	behaviour	Kill classes: `hard_cap` = budget, `repeat_stall` and `progress_stall` = futility, `idle_timeout` = hang; other reasons = unknown.	lib/learn.py:178	"hard_cap": "budget"	none
+SS	behaviour	Pass outcome: `budget_kill` (killed for `hard_cap`), `worker_error` (any other kill, or `is_error`), `open` (no result yet), `productive` (evidence written), else `clean_no_progress`.	lib/learn.py:304	"productive" if self.evidence else	none
+SS	behaviour	A pass is billed when it is closed and its result carried `cost_usd`; while open `billed` is null.	lib/learn.py:327	(cost is not None) if outcome != "open"	none
+SS	behaviour	`work_sec_estimate` = max(0, sum of pass elapsed − declared sleep seconds); attempts with any futility kill are excluded from the phase's `work_sec` samples.	lib/learn.py:400	max(0.0, sum(elapsed) - sleep)	none
+SS	behaviour	Percentiles use linear interpolation between sorted samples and are rounded to 0.1.	lib/learn.py:276	(vs[hi] - vs[lo]) * (k - lo), 1)	none
+SS	behaviour	With phase shapes given, a phase's figures use only attempts recorded under that shape; a phase with none is omitted from `phases`, and `other_shape_attempts` counts those left out.	lib/learn.py:804	a.get("shape") == shape	none
+SS	behaviour	The evaluation sample unit is a billed pass that was not killed for futility.	lib/learn.py:768	p.get("kill_class") != "futility"	none
+SS	behaviour	A primary (cost or wall) is `insufficient` unless both arms have at least 6 samples.	lib/learn.py:1348	EVAL_FLOOR = 6	none
+SS	behaviour	The effect r is the difference of mean log values (applied − baseline); `helped` when r <= −MDE, `regressed` when r >= MDE, else `neutral`.	lib/learn.py:1386	"helped" if r <= -m else "regressed"	none
+SS	behaviour	MDE = 2.80 x max(sd, 0.50) x sqrt(1/n_a + 1/n_b) x sqrt(1 + (mean passes per episode − 1) x 0.5).	lib/learn.py:1349	EVAL_Z = 2.80	none
+SS	behaviour	Values are floored before the log: cost at 0.0001, wall at 1.0 s.	lib/learn.py:1354	{"cost": 1e-4, "wall": 1.0}	none
+SS	behaviour	The combined label is `regressed` if either primary regressed, else `helped` if either helped, else `neutral` if either is neutral, else `insufficient`.	lib/learn.py:1395	if "regressed" in labels:	none
+SS	stop-reason	Evaluation reason `no baseline recorded (applied before evaluate existed)` gives label `insufficient`.	lib/learn.py:1519	no baseline recorded	none
+SS	stop-reason	Evaluation `reset=shape`: the phase's shape changed since the decision; label `insufficient`.	lib/learn.py:1525	reset="shape"	none
+SS	stop-reason	Evaluation `reset=backend`: the phase's latest run used another backend label than the baseline; label `insufficient` and applied-arm samples are discarded.	lib/learn.py:1533	reset="backend"	none
+SS	behaviour	A run belongs to a decision's applied arm when its `proposer_cap` recorded arm `applied` with the decision's value and `tamper_bracket=on`; with no arm recorded, when the source is `learned` at that value. The decision's own source runs are never in its applied arm.	lib/learn.py:1483	c.get("tamper_bracket") == "on")	none
+SS	behaviour	The counterfactual for `proposer_timeout` is `censored` for a longer cap, `shorter_cap_wall_only` for a shorter one, `none` otherwise; it never feeds the label.	lib/learn.py:1503	"shorter_cap_wall_only"	none
+SS	behaviour	The arbitration proxy counts episodes whose run stopped at the phase with reason `max_rejects`, `gate_oscillation`, `critic_config` or `proposer_no_progress`.	lib/learn.py:1423	"gate_oscillation", "critic_config"	none
+SS	behaviour	Guardrail states are `ok`, `breach` or `unknown`; a rate guardrail is `unknown` below 10 applied-arm trials, and breaches when the exact one-sided binomial tail against the baseline rate is below 0.01.	lib/learn.py:1582	if n_a < GUARD_MIN_N or n_b < 1:	none
+SS	behaviour	The baseline rate is shrunk to (k + 0.5) / (n + 1).	lib/learn.py:1577	(k + 0.5) / (n + 1.0)	none
+SS	behaviour	Guardrail names: `grounding_gap_rate`, `malformed_rate`, `verification`, `diagnostician_grounding_share`, `critic_input_size`, `arbitration_proxy`, `first_attempt_approval` (two-sided).	lib/learn.py:1631	g["first_attempt_approval"]	none
+SS	behaviour	The `verification` guardrail breaches at any n when the applied arm has a failed verification and the baseline had none; with no applied attempts it is `unknown`.	lib/learn.py:1617	base["verification_failed"] == 0	none
+SS	behaviour	The `critic_input_size` guardrail needs 6 prompt sizes per arm and breaches on an exact rank test with p < 0.01.	lib/learn.py:1559	GUARD_MIN_SIZE_N = 6	none
+SS	behaviour	A guardrail breach makes a non-dry-run `evaluate` revert the decision automatically (the only automatic write to a decision), recording the evaluation with `action_taken=auto_reverted`.	lib/learn.py:1660	action_taken="auto_reverted"	none
+SS	behaviour	If a newer apply overtook the evaluated decision, the breach is recorded as `action_taken=skipped_superseded` and nothing is reverted; after a manual revert or `off` it is a silent no-op.	lib/learn.py:1659	action_taken="skipped_superseded"	none
+SS	behaviour	An evaluation is recorded (entry + `knob_evaluated`) only when its signature (label, reset, action, arm sizes, guardrail states) differs from the last evaluation of the same decision.	lib/learn.py:1734	_signature(last) == _signature(result)	none
+SS	behaviour	Quarantine: after an automatic revert, a suggested value within ±10 % of the reverted value for the same (knob, phase, shape, backend) is refused until 6 new non-futility samples from runs started after the revert exist.	lib/learn.py:1560	QUARANTINE_BAND = 0.10	none
+SS	behaviour	`evaluate` without `--specs`/`--phase-shape` treats each decision's own recorded shape as the current shape, so no shape reset is reported.	lib/learn.py:2100	shapes.get(ph, _entry_shape(d))	none

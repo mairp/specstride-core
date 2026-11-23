@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.red-gate-notice/1",
+  "title": "Inputs of the red-gate notice (F153-FR-016 to F153-FR-019; data-model.md D13)",
+  "description": "What the engine hands to the existing F105-FR-006 feedback renderer and F105-FR-037 failure summary on a failed verification gate. PROPOSAL of the input shape; the rendered text is feature 105's and is not re-specified here. Every stream is the text AFTER the single ingress (F153-FR-017): a stream the redactor could not clear is absent and its drop note stands in its place. The notice is written beside the hashed verification record and never into it (F153-FR-018), and reaches no critic-class input (F153-FR-019).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "phase",
+    "gateResultCode",
+    "commands",
+    "plan",
+    "record"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.red-gate-notice/1"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "gateResultCode": {
+      "enum": [
+        3,
+        10
+      ],
+      "description": "The code of the gate itself: 10 a command failed, 3 the gate could not run."
+    },
+    "plan": {
+      "type": "string",
+      "description": "The logical name of the verification plan."
+    },
+    "record": {
+      "type": "string",
+      "description": "The logical name of the gate result record."
+    },
+    "commands": {
+      "type": "array",
+      "description": "The failed commands, in plan order. Empty when the gate could not run.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "commandId",
+          "executable",
+          "args",
+          "cwd",
+          "exitCode",
+          "passed",
+          "stdout",
+          "stderr"
+        ],
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "executable": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "exitCode": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "null when the command was ended at its limit (signal TIMEOUT)."
+          },
+          "signal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "passed": {
+            "const": false
+          },
+          "stdout": {
+            "$ref": "#/$defs/stream"
+          },
+          "stderr": {
+            "$ref": "#/$defs/stream"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stream": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "present",
+            "text",
+            "truncated"
+          ],
+          "properties": {
+            "present": {
+              "const": true
+            },
+            "text": {
+              "type": "string"
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "present",
+            "note"
+          ],
+          "properties": {
+            "present": {
+              "const": false
+            },
+            "note": {
+              "type": "string",
+              "description": "The drop note that stands in place of a dropped stream."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

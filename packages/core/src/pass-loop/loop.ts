@@ -338,6 +338,15 @@ export type PassLoopResult = {
   readonly message?: string;
   /** The counters as they stand, which the engine writes back to the ledger. */
   readonly counters?: Counters;
+  /**
+   * F103-FR-014/-017 — the stop line the LOOP writes for its own halt, where
+   * a breaker ended it. The result 4 of F103-FR-011 carries none (D-45).
+   */
+  readonly stopLine?: {
+    readonly line: "run_stop";
+    readonly reason: string;
+    readonly fields: Readonly<Record<string, string | number>>;
+  };
 };
 
 /**
@@ -515,6 +524,10 @@ export async function runPassLoop(
         exit_code: accounted.exit_code,
         passReached: accounted.passReached,
         ...(accounted.blocked !== undefined ? { blocked: accounted.blocked } : {}),
+        // F103-FR-014/-017 — the stop line the LOOP writes for its own halt
+        // (the engine writes the second, engine-level one). The result 4 of
+        // F103-FR-011 carries none (D-45, preserved).
+        ...(accounted.stopLine !== undefined ? { stopLine: accounted.stopLine } : {}),
         counters,
       });
     }

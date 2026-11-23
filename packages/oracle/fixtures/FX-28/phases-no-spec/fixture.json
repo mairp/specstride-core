@@ -20,7 +20,7 @@
       "phases",
       "--feature",
       "demo",
-      "--workspace",
+      "--workdir",
       "<WORK>"
     ]
   },

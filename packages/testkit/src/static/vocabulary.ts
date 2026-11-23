@@ -103,7 +103,7 @@ export function runStates(root: string = ROOT): ReadonlySet<string> {
   return out;
 }
 
-/** The 15 stop reasons of annex E §E.3. */
+/** The 16 stop reasons of annex E §E.3 (as amended by feature 152). */
 export function stopReasons(root: string = ROOT): ReadonlySet<string> {
   return new Set(
     contractsData<StopReasons>("stop-reasons.json", root).stopReasons.map((r) => r.literal),

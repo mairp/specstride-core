@@ -1,0 +1,116 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:specstride:schema:specstride.inspect.phases/1",
+ "title": "The `--json` record of `phases` (F119-FR-033; annex B §B.20)",
+ "type": "object",
+ "required": [
+  "schema",
+  "cmd",
+  "ok"
+ ],
+ "properties": {
+  "schema": {
+   "const": "specstride.inspect.phases/1"
+  },
+  "cmd": {
+   "const": "phases"
+  },
+  "ok": {
+   "type": "boolean"
+  },
+  "feature": {
+   "type": "string",
+   "description": "The feature slug."
+  },
+  "reason": {
+   "type": "string",
+   "description": "A member of the closed set of F119-FR-030; required when ok is false."
+  },
+  "fix": {
+   "type": "string",
+   "description": "The fixed fix text of the reason; required when ok is false."
+  },
+  "spec": {
+   "type": "string",
+   "description": "The relative path of the spec; required when ok is true."
+  },
+  "phases": {
+   "type": "integer",
+   "description": "The number of phases; required when ok is true."
+  },
+  "approved": {
+   "type": "integer",
+   "description": "The number of approved phases; required when ok is true."
+  },
+  "current": {
+   "description": "A phase number or the string `done`; required when ok is true.",
+   "oneOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "const": "done"
+    }
+   ]
+  },
+  "states": {
+   "type": "array",
+   "description": "For each state of a phase that occurs, the list of phase numbers; required when ok is true.",
+   "items": {
+    "type": "object",
+    "properties": {
+     "state": {
+      "type": "string"
+     },
+     "phases": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     }
+    }
+   }
+  }
+ },
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": false
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "reason",
+     "fix"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "ok": {
+      "const": true
+     }
+    },
+    "required": [
+     "ok"
+    ]
+   },
+   "then": {
+    "required": [
+     "spec",
+     "phases",
+     "approved",
+     "current",
+     "states"
+    ]
+   }
+  }
+ ]
+}

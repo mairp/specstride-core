@@ -1,0 +1,73 @@
+{
+  "schema": "specstride.config-keys/1",
+  "feature": "124",
+  "note": "Feature 110 owns the spelling. 'row' is the row of annex X section X.7 where one exists.",
+  "keys": [
+    {
+      "key": "roles.proposer.harness",
+      "row": 36,
+      "trust": "neutral",
+      "status": "annex spelling"
+    },
+    {
+      "key": "roles.critic.harness",
+      "row": 36,
+      "trust": "widening",
+      "status": "annex spelling"
+    },
+    {
+      "key": "roles.<role>.model",
+      "row": null,
+      "trust": "as the role",
+      "status": "annex X section X.8, alias table"
+    },
+    {
+      "key": "roles.<role>.fallback",
+      "row": 40,
+      "trust": "widening",
+      "status": "annex spelling; owner 127"
+    },
+    {
+      "key": "critic.autoPick",
+      "row": 35,
+      "trust": "widening",
+      "status": "annex spelling"
+    },
+    {
+      "key": "critic.autoPickMaxUsd",
+      "row": 91,
+      "trust": "widening",
+      "status": "confirmed"
+    },
+    {
+      "key": "critic.warnSameModel",
+      "row": 92,
+      "trust": "neutral",
+      "status": "confirmed"
+    },
+    {
+      "key": "roles.refuseUnknown",
+      "row": 90,
+      "trust": "neutral",
+      "status": "confirmed"
+    }
+  ],
+  "flags": [
+    {
+      "flag": "--resolve-roles",
+      "on": [
+        "resume",
+        "launch"
+      ],
+      "status": "annex G section G.1 of feature 100 names it; the spelling is open under CQ-106"
+    },
+    {
+      "flag": "--no-critic-autopick",
+      "on": [
+        "launch",
+        "run"
+      ],
+      "status": "proposed (R20, R16)"
+    }
+  ]
+}
