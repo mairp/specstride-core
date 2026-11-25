@@ -79,14 +79,19 @@ export function pairAttempts(events: readonly ReportEvent[]): {
     `${str(data.run)}|${str(data.phase)}|${str(data.attempt)}`;
   const started = new Map<string, { event: ReportEvent; key: string }>();
   const closed: PairedAttempt[] = [];
-  const closedKeys = new Set<string>();
+  // A start whose key is opened again before any closer (a relaunch that
+  // reuses an ordinal) stays a start of its own: unclosed, never overwritten.
+  const superseded: { event: ReportEvent; key: string }[] = [];
   for (const event of events) {
     if (event.type === "attempt.started") {
-      started.set(keyOf(event.data), { event, key: keyOf(event.data) });
+      const key = keyOf(event.data);
+      const earlier = started.get(key);
+      if (earlier !== undefined) superseded.push(earlier);
+      started.set(key, { event, key });
     } else if (event.type === "attempt.ended") {
       const key = keyOf(event.data);
       const open = started.get(key);
-      closedKeys.add(key);
+      started.delete(key);
       closed.push({
         runId: str(event.data.run),
         phase: str(event.data.phase),
@@ -97,19 +102,17 @@ export function pairAttempts(events: readonly ReportEvent[]): {
       });
     }
   }
-  const unclosed: PairedAttempt[] = [...started.values()]
-    .filter(({ key }) => !closedKeys.has(key))
-    .map(({ event, key }) => {
-      const [runId, phase, attempt] = key.split("|");
-      return {
-        runId: runId === "null" ? null : runId,
-        phase: phase ?? "",
-        attempt: attempt ?? "",
-        startedAt: event.at,
-        durationMs: null,
-        endCause: null,
-      };
-    });
+  const unclosed: PairedAttempt[] = [...superseded, ...started.values()].map(({ event, key }) => {
+    const [runId, phase, attempt] = key.split("|");
+    return {
+      runId: runId === "null" ? null : runId,
+      phase: phase ?? "",
+      attempt: attempt ?? "",
+      startedAt: event.at,
+      durationMs: null,
+      endCause: null,
+    };
+  });
   return { closed, unclosed };
 }
 
@@ -222,13 +225,37 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
 
   // Phases approved (T128): each approved phase with the attempt ordinal it
   // was approved on.
+  // An approval is a `phase.ended` (the old vocabulary carries no outcome and
+  // means approved; a recorded outcome other than "approved" is not one) or an
+  // `attempt.ended` with `endCause: approved`; distinct (phase, attempt) pairs
+  // are the approvals, distinct phases the phases approved.
   const approved: Record<string, number> = {};
-  for (const attempt of paired.closed) {
-    if (attempt.endCause === "approved") {
-      approved[attempt.phase] = Number(attempt.attempt);
+  const approvals = new Set<string>();
+  const approve = (phase: unknown, attempt: unknown): void => {
+    const key = str(phase);
+    if (key === "null") return;
+    approvals.add(`${key}|${str(attempt)}`);
+    const ordinal = num(attempt) ?? Number(attempt);
+    approved[key] = Number.isFinite(ordinal) ? ordinal : 0;
+  };
+  for (const event of events) {
+    if (event.type === "phase.ended") {
+      const outcome = event.data.outcome;
+      if (outcome === undefined || outcome === null || outcome === "approved") {
+        approve(event.data.phase, event.data.attempt);
+      }
     }
   }
+  for (const attempt of paired.closed) {
+    if (attempt.endCause === "approved") approve(attempt.phase, attempt.attempt);
+  }
   rows.push({ row: "phases approved", value: approved });
+  rows.push({ row: "phases approved count", value: Object.keys(approved).length });
+  rows.push({ row: "approvals", value: approvals.size });
+  rows.push({
+    row: "approvals per attempt started",
+    value: { approvals: approvals.size, started: paired.closed.length + paired.unclosed.length },
+  });
 
   // In-pass checks (T129): count, failed, median, total, minimum, maximum,
   // and each duration with its own `concurrent` flag (F148).
@@ -237,7 +264,9 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
     .map((event) => num(event.data.durationMs))
     .filter((value): value is number => value !== null);
   const checkSeconds = checkDurationsMs.map(seconds);
-  const failedChecks = checkEnds.filter((event) => event.data.result === "failed").length;
+  const failedChecks = checkEnds.filter(
+    (event) => event.data.result === "failed" || event.data.result === "fail",
+  ).length;
   const concurrent: Record<string, number> = {};
   for (const event of checkEnds) {
     const durationMs = num(event.data.durationMs);

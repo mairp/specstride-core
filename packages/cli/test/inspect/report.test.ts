@@ -345,3 +345,63 @@ test("F153-SC-002 no byte of a secret in the report", async () => {
     }
   }
 });
+
+test("CT-153-40 it reads the engine layout: every run of the feature under <control>/runs, in time order", async () => {
+  const root = mkdtempSync(join(tmpdir(), "specstride-report-engine-"));
+  const stateDir = join(root, "control");
+  const slug = "153-loop-feedback-speed";
+  const line = (type: string, at: string, data: Record<string, unknown>): string =>
+    `${JSON.stringify({ type, at, data })}\n`;
+  try {
+    // The engine layout: one file per run, no feature name in the events; the
+    // feature directory holds only phases/ and verification/ of its runs.
+    mkdirSync(join(stateDir, "features", slug, "runs", "run-a", "phases"), { recursive: true });
+    mkdirSync(join(stateDir, "runs", "run-a"), { recursive: true });
+    mkdirSync(join(stateDir, "runs", "run-b"), { recursive: true });
+    writeFileSync(
+      join(stateDir, "runs", "run-b", "events.jsonl"),
+      line("attempt.ended", "2026-11-02T00:10:00.000Z", {
+        phase: 1,
+        attempt: 2,
+        endCause: "approved",
+      }) +
+        line("attempt.started", "2026-11-02T00:00:00.000Z", { phase: 1, attempt: 2 }) +
+        line("attempt.started", "2026-11-01T12:00:00.000Z", { phase: 1, attempt: 1 }) +
+        // Old vocabulary: no outcome means approved; the repeat of phase 1 is no new approval.
+        line("phase.ended", "2026-11-02T00:10:01.000Z", { phase: 1, attempt: 2, title: "t" }) +
+        line("phase.ended", "2026-11-02T00:20:00.000Z", { phase: 2, attempt: 5, title: "t" }) +
+        line("check.ended", "2026-11-02T00:01:00.000Z", { result: "fail", durationMs: 1000 }) +
+        line("check.ended", "2026-11-02T00:02:00.000Z", { result: "pass", durationMs: 3000 }),
+    );
+    writeFileSync(
+      join(stateDir, "runs", "run-a", "events.jsonl"),
+      line("attempt.started", "2026-11-01T00:00:00.000Z", { phase: 1, attempt: 1 }) +
+        line("attempt.ended", "2026-11-01T00:05:00.000Z", {
+          phase: 1,
+          attempt: 1,
+          endCause: "crash",
+        }),
+    );
+    const before = treeOf(root);
+    let out = "";
+    const exit = await route(["report", "--feature", slug], {
+      stateDir,
+      cwd: root,
+      io: { out: (text) => (out += text), err: () => undefined },
+      mode: "default",
+    });
+    assert.equal(exit, 0);
+    assert.match(out, /attempts started: 3\n/);
+    assert.match(out, /attempts closed: 2\n/);
+    assert.match(out, /attempts unclosed: 1\n/);
+    assert.match(out, /in-pass checks: 2\n/);
+    assert.match(out, /checks failed: 1\n/);
+    assert.match(out, /phases approved: 1=2, 2=5\n/);
+    assert.match(out, /phases approved count: 2\n/);
+    assert.match(out, /approvals: 2\n/);
+    assert.match(out, /approvals per attempt started: approvals=2, started=3\n/);
+    assert.deepEqual(treeOf(root), before, "the report writes no file");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

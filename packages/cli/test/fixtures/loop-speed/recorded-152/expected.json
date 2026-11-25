@@ -26,7 +26,24 @@
     },
     {
       "row": "phases approved",
-      "value": {}
+      "value": {
+        "7": 22
+      }
+    },
+    {
+      "row": "phases approved count",
+      "value": 1
+    },
+    {
+      "row": "approvals",
+      "value": 1
+    },
+    {
+      "row": "approvals per attempt started",
+      "value": {
+        "approvals": 1,
+        "started": 2
+      }
     },
     {
       "row": "in-pass checks",
