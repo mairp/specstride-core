@@ -2462,7 +2462,7 @@
         [
           "256",
           "Kinds of source of a launch contract",
-          "`constitution`, `spec`, `plan`, `tasks`, `research`, `data-model`, `quickstart`, `verification-commands`, `contract`, `checklist`",
+          "`constitution`, `spec`, `plan`, `tasks`, `research`, `data-model`, `quickstart`, `verification-commands`, `contract`, `checklist`, `commit-gate-rules`",
           "107",
           "Design",
           "The source is refused"

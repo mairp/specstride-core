@@ -571,6 +571,7 @@ export const kindsOfSourceOfALaunchContract = defineClosedSet(256, [
   "verification-commands",
   "contract",
   "checklist",
+  "commit-gate-rules",
 ] as const);
 
 /**
