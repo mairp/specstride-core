@@ -110,3 +110,34 @@ Read on `aafb367f` by four read-only code readers; every line number verified wi
 - The stage graph: `graph.ts:12-29`, serial by design; the probe outcomes: `probe.ts:120-128`, six.
 - The user-level root: `layout.json:8`, `roots.ts` `userStateRoot:113-115`.
 - The plan renderers: `plan.ts:543` never printed, `contract/launch/dry-run.ts:167-205`; the doctor handler `handlers.ts:580-631` with literal findings; the report `inspect/report.ts:113-145`, `select.ts:138-158` (PR #40).
+
+### Route C to its dry-run (2026-11-25)
+
+- `contract derive` read `tasks.md` through the canonical model: `tasks=172`, the count the file
+  holds. One judgment item asked which phase "the command on plan.md:354" belongs to; its excerpt
+  is the Source Code tree of the plan, a documentation block, so the answer was `out-of-scope`.
+- **A defect on `main`, fixed in `52cb20e5`**: every `contract validate` failed with
+  `sources/0/kind: must be equal to one of the allowed values`. Feature 152's T144 (phase 6,
+  approved 2026-11-13) made the inventory add `commit-gate-rules` to every contract's sources,
+  and the closed set of row 256 kept its ten members. The member is now in the constant, the
+  schema and the annex row, with a test that refuses the drift in either direction.
+- The shim runs an installed CLI; the fixed code ran through `SPECSTRIDE_BIN`, the shim's first
+  resolution rule (F120-FR-011), pointing at `packages/cli/bin/specstride`.
+- `contract promote` → `validated`; `contract render` → launcher and bundle under the product's
+  state root; `launch --mode dry-run` → `stages=1 limits=86400 verification=required
+  reason=configured changed=0`, exit 0. Nothing was launched.
+- **A gap of this spec, not of the product**: no verification command is declared
+  (`declarations=0 commands=0`). The gate of every phase would read `unchecked` (XIV) until a
+  declaration exists. Features 142 and 153 declared none either, so it is the house form, but it
+  is stated here as a finding: `verification-undeclared`, open.
+- `mixture-of-loops` in `generate` mode: the draft held 172 implementation obligations, every one
+  `unclassified/unresolved`, and no stage. It was completed in the form of feature 153's
+  validated contract: one `specstride` stage, `run-154-concurrency-and-parallelism`, to which all
+  172 obligations are mapped; the engine reads the 18 phases of `tasks.md` in order. Promoted to
+  `validated`; the launcher passed `bash -n` and `--dry-run` (`command available: specstride:
+  pass`). The verification plan beside the contract is empty and says so.
+- Noted, not fixed: the launcher's first line is a Node script and must be started through the
+  launch command or with `node`; started with `bash` it hangs on its comment lines, and started
+  bare it crashes in `integrity.ts:79` (`join` of an undefined path) instead of printing a
+  refusal. A refusal line would be the product's own rule (F107-FR-031: a refusal is exit 20 and
+  one line).
