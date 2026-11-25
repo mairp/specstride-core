@@ -1,0 +1,56 @@
+{
+  "schema": "specstride.table/1",
+  "id": "parallel.worker-check",
+  "version": "1.0.0",
+  "description": "The verdict of a group’s acceptance check in its worker tree (WC-1…WC-4). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-034, -035, -036; CQ-154-04 A). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "parallel.worker-check": {
+      "signals": {
+        "checkResolvable": "boolean",
+        "treeChangedDuringCheck": "boolean",
+        "checkPassed": "boolean"
+      },
+      "choices": [
+        "pass",
+        "tainted",
+        "refused",
+        "unchecked"
+      ]
+    }
+  },
+  "rows": {
+    "parallel.worker-check": [
+      {
+        "ruleId": "WC-4",
+        "when": {
+          "op": "equal",
+          "signal": "checkResolvable",
+          "value": false
+        },
+        "choice": "unchecked"
+      },
+      {
+        "ruleId": "WC-3",
+        "when": {
+          "op": "equal",
+          "signal": "treeChangedDuringCheck",
+          "value": true
+        },
+        "choice": "tainted"
+      },
+      {
+        "ruleId": "WC-2",
+        "when": {
+          "op": "equal",
+          "signal": "checkPassed",
+          "value": false
+        },
+        "choice": "refused"
+      },
+      {
+        "ruleId": "WC-1",
+        "choice": "pass"
+      }
+    ]
+  }
+}

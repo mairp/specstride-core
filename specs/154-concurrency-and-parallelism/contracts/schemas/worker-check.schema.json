@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.worker-check/1",
+  "title": "Worker check record (F154-FR-034 to F154-FR-036; data-model.md D6)",
+  "description": "The result of a group's frozen acceptance check, run by the runtime in the worker's tree after the worker's pass has ended and before the barrier closes (F154-FR-034; CQ-154-04 A). PROPOSAL of spec 154. The record is bound to the tree's content fingerprint before and after the check: a difference reads `tainted`, which withholds (F154-FR-035; WC-3). The check can only withhold that worker's delta: it approves, keeps and releases nothing (F154-FR-034), and its result reaches no gate and no critic. A failure refuses the delta with `group-check` (proposed, row 63; WC-2). A group with no resolvable check is `unchecked` and its delta goes on to the merge check (WC-4). Decided by `worker-check-table.json`. A ledger kind `parallel` (row 184, proposed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "phase",
+    "groupId",
+    "workerId",
+    "check",
+    "tree",
+    "limitSeconds",
+    "fingerprintBefore",
+    "fingerprintAfter",
+    "result",
+    "ruleId",
+    "startedAt",
+    "endedAt"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.worker-check/1"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "groupId": {
+      "type": "string"
+    },
+    "workerId": {
+      "type": "string"
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "argv",
+        "limitSeconds"
+      ],
+      "description": "The group's declared acceptance check, or null when none resolves (then the result is `unchecked`).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "limitSeconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "tree": {
+      "type": "string",
+      "description": "The worker tree the check ran in (opaque to every critic-class input; F142-FR-056)."
+    },
+    "limitSeconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The check's declared limit, in force for this run."
+    },
+    "fingerprintBefore": {
+      "type": "string",
+      "description": "The tree store's snapshot fingerprint taken before the check."
+    },
+    "fingerprintAfter": {
+      "type": "string",
+      "description": "The tree store's snapshot fingerprint taken after the check."
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed",
+        "tainted",
+        "unchecked"
+      ],
+      "description": "WC-1 passed, WC-2 failed, WC-3 tainted, WC-4 unchecked."
+    },
+    "ruleId": {
+      "type": "string",
+      "enum": [
+        "WC-1",
+        "WC-2",
+        "WC-3",
+        "WC-4"
+      ]
+    },
+    "exitCode": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The check's exit code; null when it was ended at its limit."
+    },
+    "refusalReason": {
+      "type": "string",
+      "const": "group-check",
+      "description": "Present only on WC-2: the reason the delta is refused with (proposed, row 63). One repair is charged to every task of the group and the group counts as failed (F154-FR-036)."
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

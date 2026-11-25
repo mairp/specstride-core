@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.host-slot/1",
+  "title": "Host slot record (F154-FR-039 to F154-FR-042, F154-FR-044; data-model.md D8)",
+  "description": "One holder of one host bound: full executions of a check set (`host.checks.concurrent`), live sessions of one harness account (`host.sessions.<account>`, F154-FR-040), or an exclusive resource declared with a capacity (F154-FR-042). PROPOSAL of spec 154. A slot is a directory lock under `<user-state>/slots/<bound>/` in user-level state (F100 annex B row proposed), made by the lock of feature 122 with the lock's owner record and lease. It is written by its holder's runtime root only, atomically; a record whose owner is proven dead is reclaimed by a contending runtime root through the lock's liveness proof, one whose owner lives is never removed, and one whose liveness is unknown counts as held (F154-FR-044). Admission is decided by `slot-admission-table.json` (SL-1…SL-5) over the lock's probe outcomes. No model takes or releases a slot (F154-FR-005). Written only with `host.limits` on; a parity-register row names the record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bound",
+    "width",
+    "index",
+    "owner",
+    "lease"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.host-slot/1"
+    },
+    "bound": {
+      "type": "string",
+      "description": "The host bound the slot belongs to: a check-set bound, a session bound of one account, or an exclusive resource."
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The capacity of the bound: N lock directories exist under it."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The position of this slot under its bound, 0 to width - 1; `acquire` tries them in order."
+    },
+    "owner": {
+      "$ref": "#/$defs/owner"
+    },
+    "lease": {
+      "$ref": "#/$defs/lease"
+    }
+  },
+  "$defs": {
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The owner record of the lock (`ownerRecordFor`): who holds the slot.",
+      "required": [
+        "pid",
+        "processGroup",
+        "startTime",
+        "bootId",
+        "hostName",
+        "pidNamespace",
+        "launchId",
+        "runTokenHash",
+        "livenessEndpoint",
+        "acquiredAt",
+        "runId"
+      ],
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The process id of the holder's runtime root."
+        },
+        "processGroup": {
+          "type": "integer",
+          "description": "The process group of the holder."
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the holder's process started; compared with the boot id, as the lock does, when a clock jumps."
+        },
+        "bootId": {
+          "type": "string",
+          "description": "The boot id of the host at the start of the holder."
+        },
+        "hostName": {
+          "type": "string",
+          "description": "The host the slot is held on. A slot held on another host is `held-foreign` and counts as held."
+        },
+        "pidNamespace": {
+          "type": "string",
+          "description": "The pid namespace of the holder, where the host has one."
+        },
+        "launchId": {
+          "type": "string",
+          "description": "The launch the holder's run belongs to."
+        },
+        "runTokenHash": {
+          "type": "string",
+          "description": "The hash of the holder's run token."
+        },
+        "livenessEndpoint": {
+          "type": "string",
+          "description": "The endpoint a contender probes for the liveness proof of the lock (`stale-owner-dead`, `held-live`, `unknown`)."
+        },
+        "acquiredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runId": {
+          "type": "string",
+          "description": "The run that holds the slot."
+        }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The lease of the lock.",
+      "required": [
+        "schema",
+        "runId",
+        "launchId",
+        "launchNonce",
+        "owner",
+        "lockProvider",
+        "heartbeatAt",
+        "heartbeatEverySeconds",
+        "validUntil",
+        "leaseTokenHash"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "description": "The schema id of the lock's lease record, as feature 122 writes it."
+        },
+        "runId": {
+          "type": "string"
+        },
+        "launchId": {
+          "type": "string"
+        },
+        "launchNonce": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/owner"
+        },
+        "lockProvider": {
+          "type": "string",
+          "description": "The lock provider that made the directory lock."
+        },
+        "heartbeatAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "heartbeatEverySeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Compared with the boot id and start time, as the lock does."
+        },
+        "leaseTokenHash": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

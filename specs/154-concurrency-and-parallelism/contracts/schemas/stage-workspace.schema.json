@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.stage-workspace/1",
+  "title": "Stage workspace record (F154-FR-049, F154-FR-055; data-model.md D11)",
+  "description": "One stage run of a wide stage group: its workspace, its run, its state (F154-FR-049). PROPOSAL of spec 154. For a wide group the pipeline runtime makes, through a port in `stage-workspace.ts`, one worktree of home per stage and launches the stage as its own run with its own lock, process tree and runtime root; the workspace is removed after the stage lands or is parked. The pipeline coordinates the stage runs only through files. Each stage run is subject to the host limits of G4 when `host.limits` is on (F154-FR-055). Nothing lands during a stop (F154-FR-079). A ledger kind `parallel` (row 184, proposed); with `pipeline.stageGroups` on only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "pipelineRunId",
+    "stage",
+    "group",
+    "workspace",
+    "state",
+    "createdAt",
+    "landingRecord",
+    "removedAt"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.stage-workspace/1"
+    },
+    "runId": {
+      "type": "string",
+      "description": "The run of the stage, with its own lock and runtime root."
+    },
+    "pipelineRunId": {
+      "type": "string",
+      "description": "The pipeline run the wide group belongs to."
+    },
+    "stage": {
+      "type": "string"
+    },
+    "group": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string"
+      },
+      "description": "The stages of the wide group, in declared order."
+    },
+    "workspace": {
+      "type": "string",
+      "description": "The worktree of home the stage runs in, under the control root."
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "running",
+        "landed",
+        "parked"
+      ],
+      "description": "`parked` carries the existing exit 22 for that stage (F154-FR-052)."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "landingRecord": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The logical name of the stage's `specstride.landing/1` record, or null while the stage has not landed or parked."
+    },
+    "removedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When the workspace was removed after the landing or the park; null while the stage runs."
+    }
+  }
+}
