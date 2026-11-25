@@ -23,7 +23,8 @@
         "quickstart",
         "verification-commands",
         "contract",
-        "checklist"
+        "checklist",
+        "commit-gate-rules"
       ],
       "description": "The kind of the source; the closed set of annex X §X.6 row 256 (kindsOfSourceOfALaunchContract of @specstride/contracts)"
     },
