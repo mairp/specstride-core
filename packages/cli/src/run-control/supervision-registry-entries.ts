@@ -98,10 +98,35 @@ export function entriesOfTheSupervisionRegistry(path: string): readonly ProcessR
  * answer (no entry names a run, or none carries a hash) binds nothing, and
  * the request behaves exactly as an unbound one always has.
  */
-export function newestRunTokenHashOf(entries: readonly ProcessRegistry[]): string | undefined {
+/**
+ * Whether a process is alive, by the probe the engine's own pass guard uses:
+ * `kill(pid, 0)` answers ESRCH for the dead and EPERM for the living.
+ */
+export function processIsAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
+
+/**
+ * The hash of the run token of the newest entry that names a run. An entry
+ * whose process is dead is skipped (seen on 2026-11-25: two entries of runs
+ * that had ended days before stood in `procs.json`, the live run's pass was
+ * not registered there, and a stop request bound to a dead run's token was
+ * discarded by the live run as "another run's").
+ */
+export function newestRunTokenHashOf(
+  entries: readonly ProcessRegistry[],
+  alive: (pid: number) => boolean = processIsAlive,
+): string | undefined {
   let best: ProcessRegistry | undefined;
   for (const entry of entries) {
     if (entry.runId === "" || entry.runTokenHash === "") continue;
+    if (!alive(entry.pid)) continue;
     if (best === undefined || entry.startTime > best.startTime) best = entry;
   }
   return best?.runTokenHash;
