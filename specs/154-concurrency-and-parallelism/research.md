@@ -141,3 +141,19 @@ Read on `aafb367f` by four read-only code readers; every line number verified wi
   bare it crashes in `integrity.ts:79` (`join` of an undefined path) instead of printing a
   refusal. A refusal line would be the product's own rule (F107-FR-031: a refusal is exit 20 and
   one line).
+
+### Bugs found by the run (2026-11-25)
+
+- The first launch through the `mixture-of-loops` launcher failed at once: `child-exit=3`,
+  `engine: unknown arg: --spec-format`. The stage's argv followed the skill's reference example and
+  the house contracts of 142, which call the as-is engine (`/root/specstride/specstride run -s …
+  --feature … --proposer … --critic …`). This product's `run` verb has another grammar (`run [-w
+  DIR] [--detach] [--new-run] [--reset-counts] [--verbose]`) and reads its roles from
+  `~/.config/specstride/config.yaml` and `SPECSTRIDE_CRITIC`; its designed start is
+  `specstride launch --mode run` from the validated contract, supervised by its own `wait` and
+  `status` verbs. Not a defect of the product: the launch went through the product's own route
+  below, and the mismatch is recorded as a finding of the `mixture-of-loops` contract (its stage
+  form does not fit this product's `run` verb). No PR: a skill reference is not this repository.
+- The first fix of row 256 (`52cb20e5`) was incomplete: `closed-sets.test.ts` pins the constant
+  against `packages/contracts/data/closed-sets.json`, a fourth home of the set, and CI refused it
+  (PR #42). Fixed in `079093cf`.
