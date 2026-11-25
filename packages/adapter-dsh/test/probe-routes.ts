@@ -1,5 +1,9 @@
-// Probe of the two model routes of spec 154's run, through the adapter's own overlay.
-// Usage: node packages/adapter-dsh/test/probe-routes.ts  (from the repository root)
+/**
+ * Probe of the two model routes of spec 154's run, through the adapter's own overlay.
+ * Not collected by the suite (its name is not `*.test.ts`): a person runs it
+ * before a launch with `node --experimental-strip-types` (Node 22 strips types).
+ * Usage, from the repository root: node packages/adapter-dsh/test/probe-routes.ts
+ */
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { buildOverlay } from "../src/overlay/index.ts";
@@ -8,7 +12,7 @@ const realHome = process.env.DSH_HOME ?? `${homedir()}/.dsh`;
 const routes = [
   { role: "proposer", provider: "zai", model: "glm-5.3-flash", effort: "max" },
   { role: "critic", provider: "compass-gpt5-high", model: "gpt-5", effort: null },
-];
+] as const;
 let failed = 0;
 for (const r of routes) {
   const overlay = buildOverlay({
@@ -20,11 +24,7 @@ for (const r of routes) {
   const run = spawnSync(
     "dsh",
     ["--profile", "headless", "Reply with exactly the word OK and nothing else."],
-    {
-      env: { ...process.env, DSH_HOME: overlay.home },
-      encoding: "utf8",
-      timeout: 180_000,
-    },
+    { env: { ...process.env, DSH_HOME: overlay.home }, encoding: "utf8", timeout: 180_000 },
   );
   const out = (run.stdout ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
   const err = (run.stderr ?? "").trim().replace(/\s+/g, " ").slice(0, 160);
