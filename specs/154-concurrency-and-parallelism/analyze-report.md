@@ -62,3 +62,25 @@ None open. II, III and XVIII: no deviation (A1, A2, A3 resolved by design). The 
 1. Write `tasks.md` by hand with `speckit-tasks` (`prompts/154-concurrency-and-parallelism/4-tasks-or-script.md`): one phase per slice, every requirement in a task, `[P]` only on disjoint named paths.
 2. Re-run `speckit-analyze` once `tasks.md` exists: the skill's own precondition, and the task-coverage pass it could not make here.
 3. Run the trial of `loop.parallel.units` first; no switch turns on before its record is read.
+
+## Second run (2026-11-25, after `tasks.md`)
+
+`speckit-analyze` over `spec.md`, `plan.md` and `tasks.md` (then 168 tasks): 1 critical, 4 high, 8 medium, 3 low. All resolved; `tasks.md` now holds 172 tasks.
+
+| ID | Severity | Summary | Resolution |
+|---|---|---|---|
+| E1 | CRITICAL | F154-FR-013 and -016 (delivered by PR #40) had no task | Two guard tests added in Phase 4 (`report-pr40-154.test.ts`) |
+| E2 | HIGH | F154-FR-046 had a test and no implementation | Task added in Phase 11 (`register.ts`, the config envelope only lowers) |
+| E3 | HIGH | The coverage map was stale | Regenerated from the citations, 81 FRs and 14 SCs, each with its tasks |
+| E7 | HIGH | A task named a file that does not exist (`validate/compose.ts`) | `contract/commands/validate.ts` `validateContract` |
+| E8 | HIGH | The trial's first case was the recorded read, not the replay | The engine replay of the 28 groups first, then the recorded read |
+| E9 | HIGH | Stage runs were bounded by the check slot only | Every host limit of G4 (checks, sessions, resources) |
+| E4, E5, E6 | MEDIUM | FR-065 cited by a range only; `pipeline.stage.admission` never emitted; eleven tasks without an id | Cited, emitted on take, reclaim and wait, ids added |
+| E10 | MEDIUM | The fake-binary test file differed from the plan | The plan now names the new file and keeps the live capture |
+| E11 | MEDIUM | `ownerRecordFor` anchored at :543-562 | :514, in `lock/directory-lock.ts` |
+| E12 | LOW | The plan's PG row had no PG-0; a symbol in the wrong file | Fixed |
+| E13 | LOW | Stray backticks | Fixed |
+| F2-1 | MEDIUM | Eight implementation tasks preceded their failing test; three embedded it | Swapped and split (pass-mark, merge-baseline, the door) |
+| C1 to C4 | MEDIUM/LOW | A parser without a file; an unrecorded baseline; a bare `doctor.ts`; an overwritten report | `adapters/speckit-tasks.ts`; a baseline-recording task in Phase 1; the path; a dated section |
+
+Coverage after resolution: 81 of 81 requirements and 14 of 14 success criteria have a task; 0 critical, 0 high open.
