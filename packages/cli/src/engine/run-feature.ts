@@ -145,6 +145,7 @@ import {
 } from "./spec-docs.ts";
 import { countLimit, limitsAreOff, timeLimitMs } from "@specstride/kernel/limits";
 import { addedLinesAgainstHead, isAddedLine } from "./commit-lines.ts";
+import { approvalCommitStanding } from "./approval-commit.ts";
 import { restoreMissingState, snapshotWorkspaceState, stateRestoredNote } from "./state-guard.ts";
 import { isParallelConfigurationError, launchTheParallelLayer } from "./parallel-launch.ts";
 import { proposerNameOf } from "./loop-config.ts";
@@ -3033,6 +3034,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   };
   const boundPath = (phase: number): string =>
     inControl(join("features", slug, "bound", `phase${String(phase)}.json`));
+  // The phases whose rewritten approval commit this run already noted.
+  const rebasedApprovalsNoted = new Set<number>();
   const readApproval = (phase: number) => {
     const path = inControl(approvalRecordPath(slug, phase));
     const bound = existsSync(boundPath(phase))
@@ -3066,12 +3069,27 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // valid the record's signature is — the workspace no longer holds the
     // tree that was approved. Where the approval committed nothing (no work
     // tree, commits off) there is no commit to check, as before.
-    if (
-      verified.approved &&
-      typeof bound?.commit === "string" &&
-      bound.commit !== "" &&
-      git(workdir, ["merge-base", "--is-ancestor", bound.commit, "HEAD"]).exit !== 0
-    ) {
+    //
+    // A rebase or a cherry-pick that kept the change is not a reset: HEAD's
+    // history then holds a commit with the same patch-id under another name,
+    // and the approval stands (approval-commit.ts). The rewrite is noted once
+    // per phase and run, with both names, so it stays visible.
+    if (!verified.approved || typeof bound?.commit !== "string" || bound.commit === "") {
+      return verified;
+    }
+    const standing = approvalCommitStanding(workdir, bound.commit);
+    if (standing.standing === "rebased" && !rebasedApprovalsNoted.has(phase)) {
+      rebasedApprovalsNoted.add(phase);
+      emit(INTEGRITY_EVENT_TYPE, {
+        type: INTEGRITY_EVENT_TYPE,
+        kind: "approval-rebased",
+        phase,
+        commit: bound.commit,
+        equivalent: standing.equivalent,
+        detail: `phase ${String(phase)}: the commit ${bound.commit} of the approval was rewritten as ${standing.equivalent}, the same change (patch-id); the approval stands`,
+      });
+    }
+    if (standing.standing === "gone") {
       return Object.freeze({
         approved: false as const,
         failed: "tree" as const,
