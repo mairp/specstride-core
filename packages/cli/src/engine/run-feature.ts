@@ -62,6 +62,7 @@ import {
 } from "@specstride/kernel";
 import type { ProcessTableIo } from "@specstride/kernel";
 import { platformProcessTableIo } from "@specstride/kernel";
+import { callTheCriticThroughQuota } from "./critic-quota.ts";
 import {
   dependentsOf,
   selectionOf,
@@ -6334,6 +6335,150 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                     workdir,
                   });
             if (pinStep.warning !== undefined) process.stderr.write(`${pinStep.warning}\n`);
+            // A quota line is not a verdict. A critic's harness can answer
+            // "You've hit your 5-hour limit · resets 1:10am (Asia/Dubai)" in
+            // place of a reply; read as a verdict that is MALFORMED, and the
+            // phase is rejected for the harness's sake (seen on 2026-11-25).
+            // One call of the critic is `judgeOnce`; `callTheCriticThroughQuota`
+            // waits for the reset and calls it again (F127-FR-010: a quota
+            // window is a pause, never a stop and never a rejection).
+            const judgeOnce = async (request: {
+              readonly sessionId: string;
+              readonly prompt: string;
+            }) => {
+              // The handoff of a kept group enters the critic's prompt
+              // before it judges the attempt (F142-FR-069): the workers'
+              // checkpoints, their deltas and the merge check's outcome.
+              const parallelHandoff = parallelWiring?.handoffForTheCritic() ?? "";
+              const criticPrompt =
+                parallelHandoff === "" ? request.prompt : `${request.prompt}\n\n${parallelHandoff}`;
+              if (critic.dshModel !== null) {
+                const run = await runDshCriticAsync({
+                  prompt: criticPrompt,
+                  cwd: workdir,
+                  // F153-FR-061 (`parity` profile) — the parity harness
+                  // environment, as for the proposer passes above.
+                  env: parityProfile ? parityHarnessEnv(workdir, runId) : process.env,
+                  model: { flag: critic.dshModel },
+                  timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
+                  // F153-FR-061 (`parity` profile) — no permission mode
+                  // value and no telemetry variable in the child env.
+                  asIsEnvironment: parityProfile,
+                  contextTokens:
+                    Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || DSH_CRITIC_WINDOW_DEFAULT,
+                });
+                if (!run.ok) {
+                  say(`[${slug}] critic call failed: ${run.message}`);
+                  throw new Error(run.message);
+                }
+                spend(run.costUsd);
+                lastReply = run.reply;
+                // The weaker proof: this harness gives no session id and no
+                // initial record, so the proof is the pin and the deny list.
+                return {
+                  reply: run.reply,
+                  initialRecord: null,
+                  versionPin: "versionPin" in run.proof ? run.proof.versionPin : null,
+                  preflight: true,
+                  flagSet: "toolCoverage" in run.proof && run.proof.toolCoverage === "passed",
+                };
+              }
+              // F153-FR-061 — under `parity` a critic-class call travels
+              // the way the as-is engine sends it: over HTTP to the stub
+              // address the run environment exports, exactly as the
+              // diagnostician of the same profile does. The as-is engine
+              // never reaches a critic through an executable, so the CLI
+              // child (and the harness record ITS transport wrote, with
+              // the child's `envNames`) is a transport the as-is run
+              // never took; the stub's server writes the record of an
+              // HTTP call, as the golden's critic records were written.
+              if (parityProfile) {
+                const base =
+                  process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL ??
+                  process.env.OPENAI_BASE_URL ??
+                  "";
+                if (base !== "") {
+                  const url = `${base.replace(/\/+$/, "")}${
+                    process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL !== undefined
+                      ? "/v1/messages"
+                      : "/chat/completions"
+                  }`;
+                  try {
+                    const limitMs = timeLimitMs(CRITIC_LIMIT_MS);
+                    const response = await fetch(url, {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({
+                        messages: [{ role: "user", content: criticPrompt }],
+                      }),
+                      ...(limitMs === undefined ? {} : { signal: AbortSignal.timeout(limitMs) }),
+                    });
+                    if (!response.ok) {
+                      throw new Error(
+                        `HTTP Error ${String(response.status)}: ${
+                          response.statusText || "Internal Server Error"
+                        }`,
+                      );
+                    }
+                    const body = (await response.json()) as {
+                      content?: { text?: string }[];
+                      choices?: { message?: { content?: string } }[];
+                    };
+                    const reply =
+                      (body.content ?? []).map((block) => block.text ?? "").join("") ||
+                      body.choices?.[0]?.message?.content ||
+                      "";
+                    if (reply === "") throw new Error("the reply of the critic held no text");
+                    spend(0);
+                    lastReply = reply;
+                    // The weaker proof: the HTTP transport gives no
+                    // session id and no initial record, so the proof is
+                    // the pin and the deny list, as for the dsh path.
+                    return {
+                      reply,
+                      initialRecord: null,
+                      versionPin: null,
+                      preflight: true,
+                      flagSet: true,
+                    };
+                  } catch (error) {
+                    const failure = error instanceof Error ? error.message : String(error);
+                    say(`[${slug}] critic call failed: ${failure}`);
+                    throw new Error(failure);
+                  }
+                }
+              }
+              const answer = await callClaude(
+                buildCriticArgv({
+                  role: "critic",
+                  // F153-FR-061 (`parity` profile) — the as-is engine read
+                  // its critic reply from a plain child call that carried
+                  // no session behaviour (the as-is list of F125-FR-009):
+                  // a `--session-id` on the parity critic call is a
+                  // session continuation the oracle's stub records as
+                  // carried (F141-FR-011, DV-010) and no golden holds.
+                  profile: parityProfile ? "parity" : "default",
+                  authTier: 1,
+                  model: criticModel,
+                  sessionId: request.sessionId,
+                }),
+                criticPrompt,
+                workdir,
+                timeLimitMs(CRITIC_LIMIT_MS),
+                () => undefined,
+              );
+              if (answer.exit !== 0 && answer.reply === "") {
+                const failure = answer.stderr.trim() || `critic exit ${String(answer.exit)}`;
+                say(`[${slug}] critic call failed: ${failure}`);
+                throw new Error(failure);
+              }
+              spend(answer.costUsd);
+              lastReply = answer.reply;
+              return {
+                reply: answer.reply,
+                initialRecord: { tools: answer.tools ?? [], sessionId: answer.sessionId },
+              };
+            };
             const outcomeOfTheCriticCall = await callTheCritic(
               criticCallInputs({
                 workdir,
@@ -6350,144 +6495,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   complete: async (request: {
                     readonly sessionId: string;
                     readonly prompt: string;
-                  }) => {
-                    // The handoff of a kept group enters the critic's prompt
-                    // before it judges the attempt (F142-FR-069): the workers'
-                    // checkpoints, their deltas and the merge check's outcome.
-                    const parallelHandoff = parallelWiring?.handoffForTheCritic() ?? "";
-                    const criticPrompt =
-                      parallelHandoff === ""
-                        ? request.prompt
-                        : `${request.prompt}\n\n${parallelHandoff}`;
-                    if (critic.dshModel !== null) {
-                      const run = await runDshCriticAsync({
-                        prompt: criticPrompt,
-                        cwd: workdir,
-                        // F153-FR-061 (`parity` profile) — the parity harness
-                        // environment, as for the proposer passes above.
-                        env: parityProfile ? parityHarnessEnv(workdir, runId) : process.env,
-                        model: { flag: critic.dshModel },
-                        timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
-                        // F153-FR-061 (`parity` profile) — no permission mode
-                        // value and no telemetry variable in the child env.
-                        asIsEnvironment: parityProfile,
-                        contextTokens:
-                          Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || DSH_CRITIC_WINDOW_DEFAULT,
-                      });
-                      if (!run.ok) {
-                        say(`[${slug}] critic call failed: ${run.message}`);
-                        throw new Error(run.message);
-                      }
-                      spend(run.costUsd);
-                      lastReply = run.reply;
-                      // The weaker proof: this harness gives no session id and no
-                      // initial record, so the proof is the pin and the deny list.
-                      return {
-                        reply: run.reply,
-                        initialRecord: null,
-                        versionPin: "versionPin" in run.proof ? run.proof.versionPin : null,
-                        preflight: true,
-                        flagSet: "toolCoverage" in run.proof && run.proof.toolCoverage === "passed",
-                      };
-                    }
-                    // F153-FR-061 — under `parity` a critic-class call travels
-                    // the way the as-is engine sends it: over HTTP to the stub
-                    // address the run environment exports, exactly as the
-                    // diagnostician of the same profile does. The as-is engine
-                    // never reaches a critic through an executable, so the CLI
-                    // child (and the harness record ITS transport wrote, with
-                    // the child's `envNames`) is a transport the as-is run
-                    // never took; the stub's server writes the record of an
-                    // HTTP call, as the golden's critic records were written.
-                    if (parityProfile) {
-                      const base =
-                        process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL ??
-                        process.env.OPENAI_BASE_URL ??
-                        "";
-                      if (base !== "") {
-                        const url = `${base.replace(/\/+$/, "")}${
-                          process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL !== undefined
-                            ? "/v1/messages"
-                            : "/chat/completions"
-                        }`;
-                        try {
-                          const limitMs = timeLimitMs(CRITIC_LIMIT_MS);
-                          const response = await fetch(url, {
-                            method: "POST",
-                            headers: { "content-type": "application/json" },
-                            body: JSON.stringify({
-                              messages: [{ role: "user", content: criticPrompt }],
-                            }),
-                            ...(limitMs === undefined
-                              ? {}
-                              : { signal: AbortSignal.timeout(limitMs) }),
-                          });
-                          if (!response.ok) {
-                            throw new Error(
-                              `HTTP Error ${String(response.status)}: ${
-                                response.statusText || "Internal Server Error"
-                              }`,
-                            );
-                          }
-                          const body = (await response.json()) as {
-                            content?: { text?: string }[];
-                            choices?: { message?: { content?: string } }[];
-                          };
-                          const reply =
-                            (body.content ?? []).map((block) => block.text ?? "").join("") ||
-                            body.choices?.[0]?.message?.content ||
-                            "";
-                          if (reply === "") throw new Error("the reply of the critic held no text");
-                          spend(0);
-                          lastReply = reply;
-                          // The weaker proof: the HTTP transport gives no
-                          // session id and no initial record, so the proof is
-                          // the pin and the deny list, as for the dsh path.
-                          return {
-                            reply,
-                            initialRecord: null,
-                            versionPin: null,
-                            preflight: true,
-                            flagSet: true,
-                          };
-                        } catch (error) {
-                          const failure = error instanceof Error ? error.message : String(error);
-                          say(`[${slug}] critic call failed: ${failure}`);
-                          throw new Error(failure);
-                        }
-                      }
-                    }
-                    const answer = await callClaude(
-                      buildCriticArgv({
-                        role: "critic",
-                        // F153-FR-061 (`parity` profile) — the as-is engine read
-                        // its critic reply from a plain child call that carried
-                        // no session behaviour (the as-is list of F125-FR-009):
-                        // a `--session-id` on the parity critic call is a
-                        // session continuation the oracle's stub records as
-                        // carried (F141-FR-011, DV-010) and no golden holds.
-                        profile: parityProfile ? "parity" : "default",
-                        authTier: 1,
-                        model: criticModel,
-                        sessionId: request.sessionId,
-                      }),
-                      criticPrompt,
-                      workdir,
-                      timeLimitMs(CRITIC_LIMIT_MS),
-                      () => undefined,
-                    );
-                    if (answer.exit !== 0 && answer.reply === "") {
-                      const failure = answer.stderr.trim() || `critic exit ${String(answer.exit)}`;
-                      say(`[${slug}] critic call failed: ${failure}`);
-                      throw new Error(failure);
-                    }
-                    spend(answer.costUsd);
-                    lastReply = answer.reply;
-                    return {
-                      reply: answer.reply,
-                      initialRecord: { tools: answer.tools ?? [], sessionId: answer.sessionId },
-                    };
-                  },
+                  }) =>
+                    callTheCriticThroughQuota(
+                      () => judgeOnce(request),
+                      (outcome) => outcome.reply,
+                      {
+                        now: Date.now,
+                        sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+                        say: (line: string) => say(`[${slug}] ${line}`),
+                        maxWaits: 3,
+                      },
+                    ),
                   assemble: ({
                     demand,
                     nonce,

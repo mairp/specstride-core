@@ -49,6 +49,7 @@
     "@specstride/kernel": "0.0.0",
     "@specstride/learning": "0.0.0",
     "@specstride/observability": "0.0.0",
+    "@specstride/policy": "0.0.0",
     "@specstride/spec-formats": "0.0.0",
     "@specstride/verification": "0.0.0",
     "ajv": "8.20.0"
