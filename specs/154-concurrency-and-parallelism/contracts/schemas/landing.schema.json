@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.landing/1",
+  "title": "Landing record (F154-FR-050 to F154-FR-054; data-model.md D11)",
+  "description": "One landing of a stage of a wide group: the rebase, the full gate on the rebased tree, the fast-forward, the approvals rewritten (F154-FR-050). PROPOSAL of spec 154. The stage lands home in declared order by a rebase onto home and a fast-forward, by nothing else; the full verification gate of the stage's last phase runs on the rebased tree before home fast-forwards (F154-FR-051). A rebase conflict or a red gate parks that stage alone, with exit 22 for that stage, home unchanged and no model called (F154-FR-052). Decided by `landing-table.json` (LD-1…LD-4); a record without a fast-forward resumes the landing at LD-1's rebase. The approvals stand bound to their verdicts and the rewrite of each approval commit is noted (F154-FR-053); no critic is called again (F154-FR-054; CQ-154-06 A). The record binds the rebased tree's fingerprint and the gate result. A ledger kind `parallel` (row 184, proposed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "pipelineRunId",
+    "stage",
+    "branch",
+    "home",
+    "rebasedOnto",
+    "rebase",
+    "gate",
+    "fastForward",
+    "approvals",
+    "ruleId",
+    "exitForStage"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.landing/1"
+    },
+    "runId": {
+      "type": "string",
+      "description": "The stage's run."
+    },
+    "pipelineRunId": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string",
+      "description": "The stage's branch, rebased onto home by the runtime's hardened git (F154-FR-071)."
+    },
+    "home": {
+      "type": "string",
+      "description": "The home branch the stage lands on."
+    },
+    "rebasedOnto": {
+      "type": "string",
+      "description": "The commit of home the branch was rebased onto."
+    },
+    "rebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "started",
+        "conflict",
+        "aborted"
+      ],
+      "properties": {
+        "started": {
+          "type": "boolean",
+          "description": "False when the record was written before the rebase began (a resume state)."
+        },
+        "conflict": {
+          "type": "boolean",
+          "description": "True on LD-2: the rebase was aborted and home is unchanged."
+        },
+        "aborted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "ran",
+        "passed",
+        "treeFingerprint"
+      ],
+      "description": "The full verification gate of the stage's last phase, run on the rebased tree through the check runner under the P4 slot.",
+      "properties": {
+        "record": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The logical name of the gate result record, or null when it did not run."
+        },
+        "ran": {
+          "type": "boolean"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "True on LD-1; false on LD-3 (red gate, park)."
+        },
+        "treeFingerprint": {
+          "type": "string",
+          "description": "The fingerprint of the rebased tree the gate ran on."
+        }
+      }
+    },
+    "fastForward": {
+      "type": "boolean",
+      "description": "True once home fast-forwarded (LD-1). False while the landing is parked or half landed."
+    },
+    "approvals": {
+      "type": "array",
+      "description": "The stage's approval records; each stands bound to its verdict, with the rewrite of its commit noted.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "approvalRecord",
+          "rewriteNote"
+        ],
+        "properties": {
+          "approvalRecord": {
+            "type": "string"
+          },
+          "rewriteNote": {
+            "type": "string",
+            "description": "The note `approvalCommitStanding` returns: `rebased` by patch-id (PR #41)."
+          }
+        }
+      }
+    },
+    "ruleId": {
+      "type": "string",
+      "enum": [
+        "LD-1",
+        "LD-2",
+        "LD-3",
+        "LD-4"
+      ]
+    },
+    "exitForStage": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "enum": [
+        22,
+        null
+    ],
+      "description": "22 when the stage is parked (the existing exit 22); null otherwise. No exit code is added (F154-FR-002)."
+    }
+  }
+}

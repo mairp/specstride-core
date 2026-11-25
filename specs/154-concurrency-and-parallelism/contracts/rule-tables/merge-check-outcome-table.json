@@ -1,0 +1,62 @@
+{
+  "schema": "specstride.table/1",
+  "id": "parallel.merge-check-outcome",
+  "version": "1.0.0",
+  "description": "Outcome of a merge check (MG-1…MG-3). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-027, -028). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "parallel.merge-check-outcome": {
+      "signals": {
+        "appliedPathCount": "integer",
+        "mergeCheckFailed": "boolean",
+        "failingCommandsAllOnBaseWithSameSignature": "boolean",
+        "baseResultExists": "boolean"
+      },
+      "choices": [
+        "no-check",
+        "no-charge",
+        "f142-fr-061"
+      ]
+    }
+  },
+  "rows": {
+    "parallel.merge-check-outcome": [
+      {
+        "ruleId": "MG-1",
+        "when": {
+          "op": "equal",
+          "signal": "appliedPathCount",
+          "value": 0
+        },
+        "choice": "no-check"
+      },
+      {
+        "ruleId": "MG-2",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "mergeCheckFailed",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "baseResultExists",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "failingCommandsAllOnBaseWithSameSignature",
+              "value": true
+            }
+          ]
+        },
+        "choice": "no-charge"
+      },
+      {
+        "ruleId": "MG-3",
+        "choice": "f142-fr-061"
+      }
+    ]
+  }
+}

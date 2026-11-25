@@ -1,0 +1,54 @@
+{
+  "schema": "specstride.table/1",
+  "id": "trial.pass-mark",
+  "version": "1.0.0",
+  "description": "The pass mark of a trial (TRI-1…TRI-3). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-018, -019; CQ-154-15 A). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "trial.pass-mark": {
+      "signals": {
+        "noBreachInvariantFails": "boolean",
+        "everyRuleTestPasses": "boolean",
+        "closedSetsAreSubsets": "boolean"
+      },
+      "choices": [
+        "pass",
+        "fail"
+      ]
+    }
+  },
+  "rows": {
+    "trial.pass-mark": [
+      {
+        "ruleId": "TRI-1",
+        "when": {
+          "op": "equal",
+          "signal": "noBreachInvariantFails",
+          "value": false
+        },
+        "choice": "fail"
+      },
+      {
+        "ruleId": "TRI-2",
+        "when": {
+          "op": "equal",
+          "signal": "everyRuleTestPasses",
+          "value": false
+        },
+        "choice": "fail"
+      },
+      {
+        "ruleId": "TRI-3",
+        "when": {
+          "op": "equal",
+          "signal": "closedSetsAreSubsets",
+          "value": false
+        },
+        "choice": "fail"
+      },
+      {
+        "ruleId": "TRI-pass",
+        "choice": "pass"
+      }
+    ]
+  }
+}

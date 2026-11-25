@@ -1,0 +1,132 @@
+{
+  "schema": "specstride.fixtures/1",
+  "feature": "154-concurrency-and-parallelism",
+  "note": "The six fixtures of quickstart.md, with stub agents; no test calls a model. FX-PAR-S (spec 142) stays the fixture set of the layer itself.",
+  "fixtures": [
+    {
+      "id": "FX-154-PLAN",
+      "slice": "P1",
+      "stubAgents": "a stub proposer that ticks tasks",
+      "setup": [
+        "a task list with two runs of consecutive [P] tasks naming disjoint paths",
+        "loop.parallel.units off, then on"
+      ],
+      "observe": "the doctor and launch --dry-run print byte-identical plans with serial reasons and the ceiling statement",
+      "successCriteria": [
+        "F154-SC-002"
+      ],
+      "mustNotObserve": "no slot, record or worker after printing; nothing under parity",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-GROUPS",
+      "slice": "P2, P3",
+      "stubAgents": "a stub proposer; a stub critic that approves",
+      "setup": [
+        "a phase whose plan holds three groups",
+        "a quota window above headroom for one group",
+        "for P3: two frozen groups with disjoint scopes and independent by PG-1; a third whose acceptance check fails"
+      ],
+      "observe": "all three groups start in plan order; the group above headroom stays serial with `headroom`; g-23-1 of the 153 replay starts once; the failed check refuses with `group-check` and repairs serially",
+      "successCriteria": [
+        "F154-SC-003",
+        "F154-SC-006",
+        "F154-SC-010",
+        "F154-SC-011"
+      ],
+      "mustNotObserve": "a group restarted over unchanged paths; a merge check after 0 applied paths; a critic call while a worker tree exists",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-SLOTS",
+      "slice": "P4",
+      "stubAgents": "two stub runs on one host",
+      "setup": [
+        "host.limits on, host.checks.concurrent 1",
+        "a slot record whose owner is dead"
+      ],
+      "observe": "no two full check-set executions overlap; the dead holder's slot is reclaimed, the live one never; the wait is a pause of class host_slot that spends nothing",
+      "successCriteria": [
+        "F154-SC-007"
+      ],
+      "mustNotObserve": "a stop while waiting; a budget or count moved by the wait",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-STAGES",
+      "slice": "P5",
+      "stubAgents": "two stub stage runs",
+      "setup": [
+        "a contract with a stage group {A, B}, width 2, no never_together",
+        "then a landing conflict for B"
+      ],
+      "observe": "A and B run at once in workspaces of their own; A lands after the gate on the rebased tree; B is parked with exit 22, home unchanged",
+      "successCriteria": [
+        "F154-SC-008"
+      ],
+      "mustNotObserve": "a model call for the landing; a merge commit; a critic call on the rebased tree",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-PHASES",
+      "slice": "P6",
+      "stubAgents": "a stub proposer; a stub critic",
+      "setup": [
+        "phases 2 and 3 declared independent with disjoint scopes"
+      ],
+      "observe": "both are worked at once in trees of their own; phase 2 is gated, judged and committed first; phase 3 is rebased onto it before its gate",
+      "successCriteria": [
+        "F154-SC-005"
+      ],
+      "mustNotObserve": "the workspace changing before a verdict; two gates at once",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-SPEC",
+      "slice": "P7",
+      "stubAgents": "a stub critic that approves 1 in 12; then one that rejects",
+      "setup": [
+        "loop.speculate on at the default window and rate; then a fixture with the rate above 50 %"
+      ],
+      "observe": "at 1 in 12 no speculative unit starts and `rate` is recorded; above the rate phase n+1's tree exists while n is judged, integrates on approval, and is set aside with no count moved on rejection",
+      "successCriteria": [
+        "F154-SC-004",
+        "F154-SC-013"
+      ],
+      "mustNotObserve": "a critic-class call reading the speculative tree; an outer counter moving; a revert of the workspace",
+      "cost": "none (stub agents only)",
+      "when": "as often as needed; first case of every trial is the frozen events of 153"
+    },
+    {
+      "id": "FX-154-DOOR",
+      "slice": "P2 (the second worker door)",
+      "stubAgents": "none: the fake binary of the conformance suite (XII)",
+      "setup": "the dsh adapter fake-binary test with N = 4 concurrent sessions on one configuration home",
+      "observe": "the home is byte-identical before and after; the adapter records concurrentSessions as tested only with this test, the recorded live check and its pin",
+      "successCriteria": [
+        "F154-SC-014"
+      ],
+      "mustNotObserve": "a file of the operator configuration written; a harness named in a rule",
+      "cost": "none",
+      "when": "with every change of an adapter"
+    }
+  ],
+  "trial": {
+    "id": "FX-154-TRIAL",
+    "slice": "every switch (P1's trial)",
+    "stubAgents": "the stub agents of the six fixtures",
+    "setup": "each fixture run twice by scripts/trial.mjs: the switch off, then only that switch changed; the frozen events of 153 as the first case",
+    "observe": "the sets of exit codes, stop reasons and run states with the switch on are subsets of those with it off; no breach invariant of F142-FR-071 fails; every rule test passes; the report reproduces 336, 29, 274 of 386 and 28 repair on the frozen events",
+    "successCriteria": [
+      "F154-SC-001",
+      "F154-SC-009",
+      "F154-SC-012"
+    ],
+    "mustNotObserve": "a forecast; a file written by the report; any output under parity"
+  }
+}

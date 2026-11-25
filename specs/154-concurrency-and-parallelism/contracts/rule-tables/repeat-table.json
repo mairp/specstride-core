@@ -1,0 +1,45 @@
+{
+  "schema": "specstride.table/1",
+  "id": "parallel.no-repeat",
+  "version": "1.0.0",
+  "description": "No restart of a group that failed over unchanged paths (RP-1, RP-2). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-026; CQ-154-17 A). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "parallel.no-repeat": {
+      "signals": {
+        "sameTaskSetFailedEarlier": "boolean",
+        "namedPathsFingerprintUnchanged": "boolean"
+      },
+      "choices": [
+        "admit",
+        "refuse"
+      ]
+    }
+  },
+  "rows": {
+    "parallel.no-repeat": [
+      {
+        "ruleId": "RP-1",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "sameTaskSetFailedEarlier",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "namedPathsFingerprintUnchanged",
+              "value": true
+            }
+          ]
+        },
+        "choice": "refuse"
+      },
+      {
+        "ruleId": "RP-2",
+        "choice": "admit"
+      }
+    ]
+  }
+}

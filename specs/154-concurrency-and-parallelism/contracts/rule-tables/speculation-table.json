@@ -1,0 +1,77 @@
+{
+  "schema": "specstride.table/1",
+  "id": "loop.speculation",
+  "version": "1.0.0",
+  "description": "Work past an open verdict (SP-1…SP-6). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-061…-067; CQ-154-08 A, CQ-154-18 A). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "loop.speculation": {
+      "signals": {
+        "verdict": "string",
+        "rateAtOrAboveMin": "boolean",
+        "depthBelowBound": "boolean",
+        "sweepConfirmed": "boolean"
+      },
+      "choices": [
+        "start",
+        "skip-rate",
+        "skip-depth",
+        "skip-sweep",
+        "integrate",
+        "set-aside"
+      ]
+    }
+  },
+  "rows": {
+    "loop.speculation": [
+      {
+        "ruleId": "SP-5",
+        "when": {
+          "op": "equal",
+          "signal": "verdict",
+          "value": "approved"
+        },
+        "choice": "integrate"
+      },
+      {
+        "ruleId": "SP-6",
+        "when": {
+          "op": "equal",
+          "signal": "verdict",
+          "value": "rejected"
+        },
+        "choice": "set-aside"
+      },
+      {
+        "ruleId": "SP-2",
+        "when": {
+          "op": "equal",
+          "signal": "rateAtOrAboveMin",
+          "value": false
+        },
+        "choice": "skip-rate"
+      },
+      {
+        "ruleId": "SP-3",
+        "when": {
+          "op": "equal",
+          "signal": "depthBelowBound",
+          "value": false
+        },
+        "choice": "skip-depth"
+      },
+      {
+        "ruleId": "SP-4",
+        "when": {
+          "op": "equal",
+          "signal": "sweepConfirmed",
+          "value": false
+        },
+        "choice": "skip-sweep"
+      },
+      {
+        "ruleId": "SP-1",
+        "choice": "start"
+      }
+    ]
+  }
+}
