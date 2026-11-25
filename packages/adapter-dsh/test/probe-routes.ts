@@ -1,5 +1,5 @@
 // Probe of the two model routes of spec 154's run, through the adapter's own overlay.
-// Usage: node packages/adapter-dsh/test/probe-routes.mjs  (from the repository root)
+// Usage: node packages/adapter-dsh/test/probe-routes.ts  (from the repository root)
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { buildOverlay } from "../src/overlay/index.ts";

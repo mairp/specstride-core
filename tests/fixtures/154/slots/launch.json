@@ -1,0 +1,15 @@
+{
+  "schema": "specstride.launch/1",
+  "feature": "154-concurrency-and-parallelism",
+  "configuration": {
+    "loop.parallel.units": false,
+    "loop.parallel.noRepeat": false,
+    "loop.parallel.mergeBaseline": false,
+    "loop.parallel.groupUnits": false,
+    "loop.parallel.groupCheck": false,
+    "host.limits": false,
+    "pipeline.stageGroups": false,
+    "loop.phases.parallel": false,
+    "loop.speculate": false
+  }
+}

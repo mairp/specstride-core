@@ -1,0 +1,89 @@
+{
+  "schema": "specstride.table/1",
+  "id": "pipeline.stage-admission",
+  "version": "1.0.0",
+  "description": "Admission of a stage into a wide group (SG-1…SG-4). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-048, -003). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "pipeline.stage-admission": {
+      "signals": {
+        "cycle": "boolean",
+        "unknownStage": "boolean",
+        "neverTogetherAcrossGroups": "boolean",
+        "neverTogetherWithAMember": "boolean",
+        "dependenciesInEarlierOrSameGroup": "boolean",
+        "groupAtWidth": "boolean"
+      },
+      "choices": [
+        "refuse",
+        "same-group",
+        "new-group",
+        "own-group"
+      ]
+    }
+  },
+  "rows": {
+    "pipeline.stage-admission": [
+      {
+        "ruleId": "SG-1",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "cycle",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "unknownStage",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "neverTogetherAcrossGroups",
+              "value": true
+            }
+          ]
+        },
+        "choice": "refuse"
+      },
+      {
+        "ruleId": "SG-2",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "neverTogetherWithAMember",
+              "value": false
+            },
+            {
+              "op": "equal",
+              "signal": "dependenciesInEarlierOrSameGroup",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "groupAtWidth",
+              "value": false
+            }
+          ]
+        },
+        "choice": "same-group"
+      },
+      {
+        "ruleId": "SG-3",
+        "when": {
+          "op": "equal",
+          "signal": "groupAtWidth",
+          "value": true
+        },
+        "choice": "new-group"
+      },
+      {
+        "ruleId": "SG-4",
+        "choice": "own-group"
+      }
+    ]
+  }
+}

@@ -251,7 +251,10 @@ test("T004: the guard refuses an outcome whose fields are of the wrong kind", ()
 });
 
 test("T004: neither value has a schema file and neither has a schema id", async () => {
-  const schemas = readdirSync(join(PACKAGE_ROOT, "schemas"));
+  // Only files: schemas/ also holds per-feature directories (e.g. 154/).
+  const schemas = readdirSync(join(PACKAGE_ROOT, "schemas"), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name);
   for (const name of schemas) {
     assert.ok(
       !/attempt-plan|next-attempt|critic-call|call-outcome|ep18/i.test(name),

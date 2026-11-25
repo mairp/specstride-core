@@ -78,10 +78,10 @@ const SOUND_ROW: CatalogueDataRow = Object.freeze({
 });
 
 describe("CT-110-108 — every key has a class, a snapshot class, an owner and a default of its own type (F110-FR-010)", () => {
-  it("reads the whole catalogue: 271 keys, every one with all seven columns of §K.1", () => {
-    assert.equal(CATALOGUE.length, 271);
-    assert.equal(CATALOGUE_SIZE, 271);
-    assert.equal(new Set(CATALOGUE_KEYS).size, 271, "every spelling is unique");
+  it("reads the whole catalogue: 279 keys, every one with all seven columns of §K.1", () => {
+    assert.equal(CATALOGUE.length, 279);
+    assert.equal(CATALOGUE_SIZE, 279);
+    assert.equal(new Set(CATALOGUE_KEYS).size, 279, "every spelling is unique");
   });
 
   it("the shipped catalogue data equals the contract of T004", () => {
@@ -170,7 +170,7 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
       kinds.set(entry.type.kind, (kinds.get(entry.type.kind) ?? 0) + 1);
     assert.equal(
       [...kinds.values()].reduce((a, b) => a + b, 0),
-      271,
+      279,
       "every key has a type the reader could read",
     );
   });
@@ -240,6 +240,18 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
  * one fails this test until it is either entered in the catalogue or named here.
  */
 const NOT_A_CONFIGURATION_KEY: Readonly<Record<string, string>> = Object.freeze({
+  "host.protocolRange":
+    "a field name of the doctor's environment check of feature 111 (the protocol range a sink serves), read as a record field, not a configuration key; the `host` namespace of spec 154 is `host.limits` and the keys under it (F154-FR-039…-047)",
+  "host.quota_observed":
+    "an event type of the run grammar (the quota observation of feature 127), folded by the signal table of feature 129, not a configuration key",
+  "pipeline.started":
+    "an event type of the pipeline run grammar (the stage child of feature 123), not a configuration key",
+  "pipeline.ended":
+    "an event type of the pipeline run grammar (the stage child of feature 123), not a configuration key",
+  "pipeline.root":
+    "a record kind of the pipeline control plane of feature 123, named in the run driver, not a configuration key",
+  "pipeline.terminal.tool.script":
+    "a conformance key of the EP-14 owner stubs of feature 100 (a fixture of the test kit), not a configuration key",
   "budget.run":
     "the prefix of a family of keys, named by the delegate rule of `phases.<N>.budget.*` (§K.4)",
   "budget.role.<role>":

@@ -88,7 +88,15 @@ loop.shortPass.nudgeAfter	whole number	2	as default	- (snap t)	118	118	confirmed
 loop.noProgressStructured	on, off	on	off	N on (snap p)	103	103	confirmed	F E P U	59
 loop.gitCommits	auto, on, off	auto	as default	- (snap p)	101	101	confirmed	F E P U	
 loop.tickTasks	true, false	true	as default	- (snap t)	104	101	confirmed	F E P U	
-loop.parallel.units	on, off	off	off	N off (snap p)	142	142	confirmed	F E P U	20
+loop.parallel.units	on, off	off	off	N off (snap p)	142	142	confirmed	F E P U	20, 145
+loop.parallel.noRepeat	on, off	on	off	N on (snap p)	154	154	confirmed	F E P U	146
+loop.parallel.mergeBaseline	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	147
+loop.parallel.groupUnits	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	148
+loop.parallel.groupCheck	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	149
+host.limits	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	150
+pipeline.stageGroups	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	151
+loop.phases.parallel	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	152
+loop.speculate	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	153
 loop.parallel.workers	whole number, 1 to the value of loop.parallel.workersMax	2	not used	N lo (snap t)	142	142	confirmed	F E P U	21
 loop.parallel.workersMax	whole number, at least 1	4	not used	W; P may lower (snap p)	142	100 (ruling P5)	confirmed	F E U; P lowers	130
 loop.parallel.quota_headroom	percent, 1 to 100	70	not used	N lo (snap t)	142	142	confirmed	F E P U	22

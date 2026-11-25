@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.trial/1",
+  "title": "Trial record (F154-FR-018, F154-FR-019; data-model.md D3)",
+  "description": "One trial: a run of a fixture set with only one switch changed, read with `specstride report` (F154-FR-018). PROPOSAL of spec 154. Written by `scripts/trial.mjs` under `specs/154-concurrency-and-parallelism/trials/<switch>.json` as a ledger kind `parallel` (row 184, proposed). Its pass mark is safety, the table `trial-pass-mark-table.json` (TRI-1…TRI-3): no breach invariant of F142-FR-071 fails, every test of a rule passes, and the sets of exit codes, stop reasons and run states are subsets. Its rows are reported without a pass mark: the share of groups kept, refusals per reason, cost with every pass counted. The trial shows safety, not a default: a switch turns on only when the owner reads this record and writes the register row (CQ-154-15 A). The first case of the trial of P2 and P3 is the replay of feature 153's 28 groups (F154-FR-019).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "switch",
+    "fixtureSet",
+    "firstCase",
+    "arms",
+    "ruleTests",
+    "breachInvariantsFailed",
+    "closedSets",
+    "pass",
+    "rowsWithoutPassMark"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.trial/1"
+    },
+    "switch": {
+      "type": "string",
+      "description": "The one switch the trial changes, e.g. `loop.parallel.noRepeat`."
+    },
+    "fixtureSet": {
+      "type": "string",
+      "description": "The fixture set run twice, e.g. `fixtures-154.json`."
+    },
+    "firstCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "groupsTotal",
+        "groupsKept"
+      ],
+      "description": "The replay of feature 153's 28 groups (F154-FR-019): kept 0 of 28 on record.",
+      "properties": {
+        "name": {
+          "const": "replay of 153's 28 groups"
+        },
+        "groupsTotal": {
+          "const": 28
+        },
+        "groupsKept": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 28
+        }
+      }
+    },
+    "arms": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Two arms: the fixture set with the switch off, and with only that switch changed. Stub agents, the same seed of session ids.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "switchValue",
+          "seed",
+          "rowsWithoutPassMark"
+        ],
+        "properties": {
+          "switchValue": {
+            "type": "boolean",
+            "description": "False for the arm with the switch off; true for the arm with only that switch changed."
+          },
+          "seed": {
+            "type": "string",
+            "description": "The seed of session ids, the same in both arms."
+          },
+          "rowsWithoutPassMark": {
+            "$ref": "#/$defs/rowsWithoutPassMark"
+          }
+        }
+      }
+    },
+    "ruleTests": {
+      "type": "array",
+      "description": "Every test of a rule, with its outcome (TRI-2).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ruleId",
+          "passed"
+        ],
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "enum": [
+              "PG-1",
+              "PG-2",
+              "PG-3",
+              "RP-1",
+              "RP-2",
+              "MG-1",
+              "MG-2",
+              "MG-3",
+              "WC-1",
+              "WC-2",
+              "WC-3",
+              "WC-4",
+              "SL-1",
+              "SL-2",
+              "SL-3",
+              "SL-4",
+              "SL-5",
+              "LD-1",
+              "LD-2",
+              "LD-3",
+              "LD-4",
+              "PQ-1",
+              "PQ-2",
+              "PQ-3",
+              "SP-1",
+              "SP-2",
+              "SP-3",
+              "SP-4",
+              "SP-5",
+              "SP-6",
+              "TRI-1",
+              "TRI-2",
+              "TRI-3"
+            ]
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "breachInvariantsFailed": {
+      "type": "array",
+      "description": "The breach invariants of F142-FR-071 that failed; empty for TRI-1.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "closedSets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exitCodesAreSubset",
+        "stopReasonsAreSubset",
+        "runStatesAreSubset"
+      ],
+      "description": "TRI-3: each set with the switch on must be a subset of the set with it off. No exit code, stop reason or run state is added (F154-FR-002).",
+      "properties": {
+        "exitCodesAreSubset": {
+          "type": "boolean"
+        },
+        "stopReasonsAreSubset": {
+          "type": "boolean"
+        },
+        "runStatesAreSubset": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pass": {
+      "type": "boolean",
+      "description": "Pass = TRI-1 and TRI-2 and TRI-3 (`trial-pass-mark-table.json`). A pass mark of safety only: it is not a default."
+    },
+    "rowsWithoutPassMark": {
+      "$ref": "#/$defs/rowsWithoutPassMark"
+    }
+  },
+  "$defs": {
+    "rowsWithoutPassMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groupsTotal",
+        "groupsKept",
+        "refusalsPerReason",
+        "costWithEveryPassCounted"
+      ],
+      "description": "The rows the trial reports without a pass mark (F154-FR-018).",
+      "properties": {
+        "groupsTotal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groupsKept": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The numerator of the share of groups kept: groupsKept over groupsTotal."
+        },
+        "refusalsPerReason": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reason",
+              "count"
+            ],
+            "properties": {
+              "reason": {
+                "type": "string",
+                "description": "A refusal reason of a delta (row 63), `group-check` proposed, or an admission check of a group (row 61), `repeat` and `dependency` proposed."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "costWithEveryPassCounted": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passes",
+            "tokensIn",
+            "tokensOut",
+            "cycles"
+          ],
+          "description": "Cost of the arm with every pass counted, the set-aside units included.",
+          "properties": {
+            "passes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tokensIn": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tokensOut": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cycles": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

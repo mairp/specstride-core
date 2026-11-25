@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.set-aside/1",
+  "title": "Set-aside record (F154-FR-064; data-model.md D13)",
+  "description": "PROPOSAL of spec 154 (F154-FR-064; data-model.md D13). One speculative unit discarded after a rejection. No outer counter and no count moves; no attempt kind, run state, stop reason or exit code is recorded for it. Its cost is reported.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "phase",
+    "verdictId",
+    "reason",
+    "cost"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.set-aside/1"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verdictId": {
+      "type": "string",
+      "description": "The verdict that rejected the phase before it."
+    },
+    "reason": {
+      "const": "set-aside"
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokens",
+        "wallTimeMs",
+        "cycles"
+      ],
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wallTimeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycles": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

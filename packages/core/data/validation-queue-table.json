@@ -1,0 +1,50 @@
+{
+  "schema": "specstride.table/1",
+  "id": "loop.phase-queue",
+  "version": "1.0.0",
+  "description": "The head of the validation queue (PQ-1…PQ-3). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-056, -058, -059). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "loop.phase-queue": {
+      "signals": {
+        "dependenciesDeclared": "boolean",
+        "everyDependencyApproved": "boolean",
+        "aDependencyRejected": "boolean"
+      },
+      "choices": [
+        "head",
+        "wait"
+      ]
+    }
+  },
+  "rows": {
+    "loop.phase-queue": [
+      {
+        "ruleId": "PQ-3",
+        "when": {
+          "op": "equal",
+          "signal": "dependenciesDeclared",
+          "value": false
+        },
+        "choice": "head"
+      },
+      {
+        "ruleId": "PQ-2",
+        "when": {
+          "op": "equal",
+          "signal": "aDependencyRejected",
+          "value": true
+        },
+        "choice": "wait"
+      },
+      {
+        "ruleId": "PQ-1",
+        "when": {
+          "op": "equal",
+          "signal": "everyDependencyApproved",
+          "value": true
+        },
+        "choice": "head"
+      }
+    ]
+  }
+}

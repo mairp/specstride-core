@@ -73,6 +73,39 @@ export function isADeltaRefusalReason(value: string): value is DeltaRefusalReaso
 }
 
 /**
+ * T019 — the refusal reason spec 154 PROPOSES for row 63 (F154-FR-059,
+ * CQ-154-09): `group-check`, for the delta a refused group check produces
+ * under `loop.parallel.groupCheck`. A PROPOSAL is a member of row 63 only
+ * when the owner copies it into the annex, so it is kept OUT of
+ * `DELTA_REFUSAL_REASONS` and of `isADeltaRefusalReason`
+ * (`test/audits-154.test.ts` guards both, and `refusalReasonDrift` stays
+ * empty). The reader below adds it only while the switch reads on; with
+ * every switch off — the default, and the whole state under the `parity`
+ * profile — the list is exactly row 63.
+ */
+export const PROPOSED_DELTA_REFUSAL_REASON_154 = "group-check" as const;
+
+/**
+ * The refusal reasons in force: the eight of row 63, plus `group-check`
+ * while `loop.parallel.groupCheck` reads on.
+ */
+export function deltaRefusalReasonsOf(
+  switchIsOn: (name: string) => boolean,
+): readonly string[] {
+  return switchIsOn("loop.parallel.groupCheck")
+    ? Object.freeze([...DELTA_REFUSAL_REASONS, PROPOSED_DELTA_REFUSAL_REASON_154])
+    : DELTA_REFUSAL_REASONS;
+}
+
+/** `isADeltaRefusalReason` over the reasons in force (`deltaRefusalReasonsOf`). */
+export function isADeltaRefusalReasonOf(
+  value: string,
+  switchIsOn: (name: string) => boolean,
+): boolean {
+  return deltaRefusalReasonsOf(switchIsOn).includes(value);
+}
+
+/**
  * The members row 63 of the table of annex X §X.6 holds, or an empty list
  * where the table has no such row. `refusalReasonDrift` compares the two.
  */

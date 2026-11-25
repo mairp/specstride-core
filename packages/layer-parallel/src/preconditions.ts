@@ -562,6 +562,20 @@ export function fallbackOfThePreconditions(inputs: PreconditionInputs = {}): Fal
 }
 
 /**
+ * The fallback reason spec 154 proposes beside `harness` (T012, F154-FR-004):
+ * `dependency-unreadable`, for the unreadable phase-dependency declaration of
+ * F154-FR-056. It is a PROPOSAL of CQ-154-09 and is not yet a member of row
+ * 60 — a member only when the owner copies it into the annex — so it is kept
+ * apart from `FALLBACK_REASONS` and no precondition returns it yet
+ * (`test/preconditions.test.ts` guards both sides). It never names the
+ * unreadable slot store: that fallback is SL-5 of the host-limits table in
+ * `@specstride/core` (`host.limits`), not a reason of this layer.
+ */
+export const PROPOSED_FALLBACK_REASONS_154 = Object.freeze([
+  "dependency-unreadable",
+] as const);
+
+/**
  * The reason to print for a value that is no member of row 60: the unknown
  * value of the closed set is "shown as text; the layer is off"
  * (`data/closed-sets.json`). The layer is off either way.

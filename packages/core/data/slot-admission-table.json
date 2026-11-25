@@ -1,0 +1,72 @@
+{
+  "schema": "specstride.table/1",
+  "id": "host.slot-admission",
+  "version": "1.0.0",
+  "description": "Admission to a host slot (SL-1…SL-5). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-039…-042, -044, -045). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "host.slot-admission": {
+      "signals": {
+        "storeReadable": "boolean",
+        "freeSlot": "boolean",
+        "ownerDead": "boolean",
+        "ownerLive": "boolean",
+        "foreignOrUnknown": "boolean"
+      },
+      "choices": [
+        "take",
+        "reclaim",
+        "wait",
+        "unbounded"
+      ]
+    }
+  },
+  "rows": {
+    "host.slot-admission": [
+      {
+        "ruleId": "SL-5",
+        "when": {
+          "op": "equal",
+          "signal": "storeReadable",
+          "value": false
+        },
+        "choice": "unbounded"
+      },
+      {
+        "ruleId": "SL-1",
+        "when": {
+          "op": "equal",
+          "signal": "freeSlot",
+          "value": true
+        },
+        "choice": "take"
+      },
+      {
+        "ruleId": "SL-3",
+        "when": {
+          "op": "equal",
+          "signal": "ownerDead",
+          "value": true
+        },
+        "choice": "reclaim"
+      },
+      {
+        "ruleId": "SL-2",
+        "when": {
+          "op": "equal",
+          "signal": "ownerLive",
+          "value": true
+        },
+        "choice": "wait"
+      },
+      {
+        "ruleId": "SL-4",
+        "when": {
+          "op": "equal",
+          "signal": "foreignOrUnknown",
+          "value": true
+        },
+        "choice": "wait"
+      }
+    ]
+  }
+}

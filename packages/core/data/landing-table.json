@@ -1,0 +1,66 @@
+{
+  "schema": "specstride.table/1",
+  "id": "pipeline.landing",
+  "version": "1.0.0",
+  "description": "Landing of a finished stage (LD-1…LD-4). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-050…-052). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "pipeline.landing": {
+      "signals": {
+        "landingRecordExists": "boolean",
+        "fastForwarded": "boolean",
+        "rebaseClean": "boolean",
+        "gateGreen": "boolean"
+      },
+      "choices": [
+        "rebase",
+        "fast-forward",
+        "park"
+      ]
+    }
+  },
+  "rows": {
+    "pipeline.landing": [
+      {
+        "ruleId": "LD-4",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "landingRecordExists",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "fastForwarded",
+              "value": false
+            }
+          ]
+        },
+        "choice": "rebase"
+      },
+      {
+        "ruleId": "LD-2",
+        "when": {
+          "op": "equal",
+          "signal": "rebaseClean",
+          "value": false
+        },
+        "choice": "park"
+      },
+      {
+        "ruleId": "LD-3",
+        "when": {
+          "op": "equal",
+          "signal": "gateGreen",
+          "value": false
+        },
+        "choice": "park"
+      },
+      {
+        "ruleId": "LD-1",
+        "choice": "fast-forward"
+      }
+    ]
+  }
+}
