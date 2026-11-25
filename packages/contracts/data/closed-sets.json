@@ -3677,7 +3677,8 @@
         "quickstart",
         "verification-commands",
         "contract",
-        "checklist"
+        "checklist",
+        "commit-gate-rules"
       ],
       "owner": "107",
       "closedBy": "Design",
