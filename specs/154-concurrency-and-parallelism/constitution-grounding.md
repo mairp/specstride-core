@@ -113,7 +113,14 @@ ledger R-C3, R-C19, R-Q23.
 - **What a failure spends:** what a failed merge check spends today, one repair per task of the
   unit (F142-FR-061), and no outer counter (XX).
 
-**Verdict: resolved by design.**
+**Verdict: resolved by design against the constitution. It needs an amendment of two specs
+(CQ-154-04).** F142-FR-059 ends "No check MUST run in a worker tree", and F143-FR-011 says "No
+repair, no check, no escalation and no yield MUST take place in a worker". Spec 142 left "repairs
+or checks inside a worker" to its roadmap (Q7). The proposed amendment admits one check in a
+worker tree, the group's frozen acceptance check, run by the runtime after the worker pass has
+ended (I: "only after the pass that produced it has exited"), whose result can only withhold the
+worker's delta. If the amendment is refused, the group's check runs after the application, on the
+workspace, which is today's behaviour (R-C19).
 
 The live record adds a constraint on the merge check that follows. In feature 153 every one of 28
 groups was sent to repair because the merge check runs the phase's whole inner set, which was red
@@ -278,9 +285,9 @@ be MAJOR and is not proposed. Anchor: XX L446; Additional Constraints L488-489, 
   must stay identical apart from fields the register names. So every new field must be named in
   the register: report rows, plan lines, slot records, `approval-rebased`.
 - **Behaviour 2:** its lines are deliveries of 142's own requirements behind 142's switch
-  `loop.parallel.units`. They need no new row (see "Profiles"). One exception: feeding the real
-  failed-group count into the switch-off rule changes what `parity` sees only when the layer is
-  on.
+  `loop.parallel.units`. They need no new row (see "Profiles"). One exception: the rule against restarting
+  a group that failed in an earlier attempt is new (F142-FR-023 counts per attempt), so it gets a
+  row of its own.
 
 **Verdict: resolved by design.** Anchor: XVIII L455-464.
 
@@ -308,7 +315,7 @@ behaviours 5–7 as principle. Anchor: XX L447; Governance L518, L520.
 | 1b report rows | Shipped in PR #40. The report is a read verb outside run output, so `parity` runs are untouched | none needed: confirm in stage 2 that no fixture prints it |
 | 1c trial | Nothing runs | It is a procedure, not a switch |
 | 2 deliveries of 142 | 142's switch `loop.parallel.units` off (row 20 of annex X §X.7) | 142's own rows. These lines are deliveries of F142-FR-016, -018, -020, -023 and need no new row |
-| 2 failed-group count fed into the switch-off rule | Off with the layer | 142's row; the effect shows only with the layer on |
+| 2 no restart of a group that failed in an earlier attempt | Off with the layer | A new row (an amendment of F142-FR-023's scope); the effect shows only with the layer on |
 | 3 task groups as units | `loop.taskGroups` off (153); groups-at-once off | A new row for groups at once, plus the ruling CQ-154-02 |
 | 3 group check in the worker tree | Off | New row |
 | 4 shared limits | Off: each run alone, as today | New row; the files are user-level state |
@@ -361,9 +368,11 @@ shows that it does, row by row.
 1. Two groups of one phase run at once only when a deterministic, recorded rule finds disjoint
    write scopes and "no dependency" by the source CQ-154-02 rules. Otherwise they run one after
    the other, with the reason recorded (XX; T-a).
-2. Every admissible group of a phase is worked in plan order, each at a clean boundary. The
-   failed-group count of the switch-off rule is read from the ledger, never a constant (XX,
-   F142-FR-018, -023; T-a; ledger R-M16).
+2. Every admissible group of a phase is worked in plan order, each at a clean boundary. F142-FR-023
+   counts failed groups per phase attempt, so with one group per attempt it never switches the
+   layer off: a group that failed in an earlier attempt of the same phase, over the same tasks,
+   is not started again unless the tree its tasks read has changed. That is a new rule across
+   attempts, recorded with its reason (XX, F142-FR-018, -023; T-a; ledger R-M16).
 3. A group's acceptance check is the frozen one, run by the runtime in the worker tree with its
    declared limit. A change to what it reads makes it tainted. It can only withhold an
    integration, and a group with no resolvable check is `unchecked` (II, III, XIV, XVII; T-b).
@@ -415,6 +424,7 @@ shows that it does, row by row.
 |---|---|---|---|
 | CQ-154-02 | The deterministic source of "no dependency" between two task groups of one phase | Every task of both groups carries `[P]`, and no task of the later group names a path in the earlier group's write scope; a declared `depends_on` overrides | XX; T-a |
 | CQ-154-03 | The proof that makes a second adapter "tested" for `concurrentSessions` at Tier 1 | Fake-binary test of byte-identical configuration plus a recorded live check; refuse otherwise | VIII; T-c |
+| CQ-154-04 | Amend F142-FR-059 and F143-FR-011 to admit the group's frozen acceptance check in the worker tree, after the worker pass has ended | Yes; if refused, the group check runs on the workspace after the application | I; II; III; T-b |
 | CQ-154-05 | Amend F123-FR-019 so that a declared stage group may be wider than one stage, as one run per workspace | Yes, behind its own switch and register row | I; Additional Constraints; T-e |
 | CQ-154-06 | After a rebase landing, is the critic called again on the rebased tree? | No: the full gate runs, and the phase-entry mismatch is a fact for the next critic | II; XX; T-f |
 | CQ-154-07 | The source of phase dependencies | A field of the canonical model, declared in `tasks.md` and read through the adapter | IV; XX; T-g |
@@ -425,5 +435,5 @@ shows that it does, row by row.
 ## Constitution amendments proposed
 
 None is required. Every tension resolves by design, by an amendment of another spec (F123-FR-019,
-F142-FR-070), or by an owner ruling on a closed set or a source of rules. One amendment is
+F142-FR-023, F142-FR-059, F142-FR-070, F143-FR-011), or by an owner ruling on a closed set or a source of rules. One amendment is
 offered as option B of CQ-154-10 (MINOR), and it is not recommended.
