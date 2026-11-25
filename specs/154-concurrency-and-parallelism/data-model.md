@@ -79,7 +79,9 @@ under the project's repository by a run.
 - PG-1 scopes disjoint, every task of both groups carries `[P]`, no task of the later group names a path in the earlier group's scope: independent. PG-2 a declared `depends_on`: dependent. PG-3 a declaration overrides PG-1.
 - Emitted per task at admission and per group, before the group starts (F154-FR-003). Off under `parity`.
 
-## D5 — Group-as-unit plan record (`specstride.parallel-plan/1`, extended; P3)
+## D5 — Group-as-unit plan record
+
+**Declaration fields (after `speckit-analyze`)**: each frozen group may carry `dependsOn: [group id]` and `independentWith: [group id]` (proposed, CQ-154-02 and -09). A task group carries no `[P]`, so two task groups are independent only through `independentWith`; two `[P]` runs by PG-1. (`specstride.parallel-plan/1`, extended; P3)
 
 - **Serves**: F154-FR-031. **Store**: as D1; built by `planAtLaunch` from the frozen groups (`configuration.taskGroups`).
 
@@ -94,7 +96,9 @@ under the project's repository by a run.
 - One worker per group, tasks in task order inside its worker. The `[P]` groups of 142 stay as they are.
 - Printed through D1's renderer; not stored under `parity`.
 
-## D6 — Worker check record (`specstride.worker-check/1`, new; P3)
+## D6 — Worker check record
+
+**Binding (after `speckit-analyze`)**: the record holds three fingerprints, `baseFingerprint` (the group's base snapshot), `beforeFingerprint` and `afterFingerprint`. WC-3 reads `tainted` when `afterFingerprint` differs from either; a tainted result withholds and is charged as WC-2. (`specstride.worker-check/1`, new; P3)
 
 - **Serves**: F154-FR-034, -035, -036, -070. **Store**: the ledger kinds `parallel` (proposed as a kind).
 
@@ -113,7 +117,7 @@ under the project's repository by a run.
 
 **Transitions (worker check)**: WC-1 `passed` → the delta goes on. WC-2 `failed` → the delta is `refused` with `group-check`, one repair per task of the group, the group counts as failed (F154-FR-036). WC-3 the two fingerprints differ → `tainted`, which withholds. WC-4 no resolvable check → `unchecked`, the delta goes on.
 
-## D7 — Merge baseline comparison (MG-1…MG-3; P2)
+## D7 — Merge baseline comparison (`specstride.merge-baseline/1`, `contracts/schemas/merge-baseline.schema.json`) (MG-1…MG-3; P2)
 
 - **Serves**: F154-FR-027, -028.
 
@@ -155,7 +159,9 @@ under the project's repository by a run.
 
 **Transitions (a slot)**: absent → `free` → taken (SL-1, lease and owner record written). `held-live` → the contender waits as the pause of D14 (SL-2). `stale-owner-dead` → reclaimed by one atomic rename, then SL-1 (SL-3). `held-foreign` or `unknown` → counts as held, wait (SL-4). Store unreadable → proceed unbounded with the reason recorded (SL-5). A held slot → released by its holder, or reclaimed after the liveness proof.
 
-## D9 — Hold record (`specstride.host-hold/1`, new; P4)
+## D9 — Hold record
+
+**Life (after `speckit-analyze`)**: a hold expires at `resetAt` only. It is never reclaimed because its writer died: the window is a fact of the account, not of the run. (`specstride.host-hold/1`, new; P4)
 
 - **Serves**: F154-FR-041, -044, -047. **Store**: user-level state, `<user-state>/holds/<account>.json`, one per harness account.
 
@@ -245,7 +251,9 @@ under the project's repository by a run.
 
 **Transitions (queue entry)**: `waiting` → `head` when every dependency is approved (PQ-1). `head` → `approved` → the next phase is rebased onto it. `head` → `rejected` → repaired at the head; a dependent phase goes back to `waiting` (PQ-2) and is rebased again after approval (F154-FR-059). A phase with no declared dependency takes the phase before it as its dependency (PQ-3).
 
-## D13 — Set-aside record (`specstride.set-aside/1`, new; P7)
+## D13 — Set-aside record
+
+**Not here**: the reasons a speculative unit did not start (`rate`, `depth`, `sweep`) belong to the admission event `loop.speculation.admission`, not to this record. (`specstride.set-aside/1`, new; P7)
 
 - **Serves**: F154-FR-061…-067, -064 in particular.
 
@@ -263,7 +271,9 @@ under the project's repository by a run.
 
 **Transitions (a speculative unit)**: not started (SP-2, SP-3 or SP-4; reason recorded) or `started` at the gate of phase n, in a tree from the frozen snapshot, the workspace unchanged (SP-1; F154-FR-061). `started` → `integrated` like a group before phase n+1's own gate (SP-5; F154-FR-063). `started` → `set-aside` on a rejection (SP-6; F154-FR-064). On a stop its workers end as group workers do (F154-FR-074).
 
-## D14 — Pause of class `host_slot` (existing record, one class proposed; P4)
+## D14 — Pause of class `host_slot`
+
+**Caps and status (after `speckit-analyze`)**: paused time is excluded from every time cap, as a quota pause is; `status` shows the existing pause view with the class `host_slot`. (existing record, one class proposed; P4)
 
 - **Serves**: F154-FR-045, -077. **Schema**: the existing pause record of feature 127, `run:<runId>:pause`; `host_slot` is a proposed member of the class set (CQ-154-09) and spends nothing (`A_QUOTA_CLASS_SPENDS`).
 

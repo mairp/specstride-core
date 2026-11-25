@@ -9,7 +9,7 @@ anchors are in [plan.md](./plan.md); requirements and success criteria in [spec.
 Prerequisites: a built workspace (tests run from source on Node ≥ 22; per-package runner
 `node tests/isolate.ts node --test <file>`); stub agents of the test kit (`stubClaude` of
 `packages/cli/test/engine/loop-speed-helpers.ts`, the `startDoor` and `runner` seams, fake
-binaries); the six fixtures of `contracts/fixtures-154.json` under
+binaries); the fixtures of `contracts/fixtures-154.json` (six, plus the door fixture FX-154-DOOR and the trial) under
 `tests/fixtures/154/`; and the frozen events of feature 153 as `recorded-153/` beside PR #40's
 `recorded-152/` (the first case of every trial, F154-FR-019).
 

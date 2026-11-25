@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-25
 
-**Status**: Rulings answered (2026-11-25; 3 by the owner, 16 by research-backed recommendation, see Clarifications). Ready for planning.
+**Status**: Planned (stage 3, 2026-11-25). Rulings answered: 3 by the owner, 16 by research-backed recommendation (see Clarifications). Next: `tasks.md`.
 
 **Input**: User description: "Let the loop do more than one thing at a time where a deterministic check says it is safe: several task groups of a phase, several features of a pipeline, and several runs on one host and one account. Validation stays one ordered stream and governance stays as it is. Private copies, one writer, one validator, a serial history." (`prompts/154-concurrency-and-parallelism/feature-input.md`, grounded 2026-11-14, re-grounded 2026-11-25 on `main` @ `a4d2df3c`.)
 
@@ -92,6 +92,7 @@ These behaviours are required by an existing requirement that the engine path do
 | F142-FR-008, F142-FR-018: every group of the plan, at a clean boundary | Only `groups[0]`, one group per attempt (R-C3) | F154-FR-020 |
 | F142-FR-016 (a), headroom from observed quota utilisation | A stub, `utilisationPerCent: []` (R-C6) | F154-FR-021 |
 | F142-FR-019, the halving after two transient rate limits | Library only (R-C6) | F154-FR-022 |
+| F142-FR-023, the layer off after failed groups | The count passed in is the constant 0 (R-C5) | F154-FR-025 |
 | F142-FR-021, one cycle charged per admitted worker task | Library only (R-C6) | F154-FR-023 |
 | F142-FR-011 and F142-FR-025, the admission per task with the verdict of every check | `admissionEvent` has no caller (R-C8) | F154-FR-024 |
 | F142-FR-020, a tested adapter that declares `concurrentSessions` | The `claude` path has no worker door (C4) | F154-FR-029 |
@@ -111,6 +112,7 @@ Before any switch is turned on, the operator sees the plan: which groups each ph
 2. **Given** the same task list, **When** the operator runs `specstride doctor`, **Then** it prints the same bytes as the dry run (F154-FR-010).
 3. **Given** a frozen copy of feature 153's event files, **When** the operator runs `specstride report`, **Then** it prints 336 attempts started, 29 approvals, 274 of 386 in-pass checks failed, and per group the outcome `repair` 28 times, and changes no file (F154-FR-012…-017; delivered in part by PR #40).
 4. **Given** a run with a group, **When** the report is printed, **Then** each group shows its outcome, its applied path count, its merge-check result and its wall time, and the time of checks that ran while no pass ran (F154-FR-014, -015).
+5. **Given** a fixture set and one switch, **When** the trial runs it with the switch off and on, **Then** the trial record states the three pass-mark rows, and the switch stays off until the owner writes the register row (F154-FR-018). Its first case is the recorded read of feature 153's events (F154-FR-019).
 
 ### User Story 2 - The parallel layer works as specified (Priority: P2)
 
@@ -154,7 +156,10 @@ Several runs on one host share a bound on full check-set executions, a bound on 
 1. **Given** two runs on one host with `host.checks.concurrent` 1, **When** both reach a gate at once, **Then** one gate runs and the other run waits as a pause, spending no budget and moving no count (F154-FR-039, -045).
 2. **Given** a run that observed a quota window, **When** another run of the same account is about to start a pass, **Then** it reads the hold and waits until the reset (F154-FR-041).
 3. **Given** a slot record whose owner is dead, **When** a contender probes it, **Then** it reclaims the slot atomically; a slot whose owner lives is never removed (F154-FR-044).
+4. **Given** `host.sessions.<account>` 2 and three runs, **When** all three start a pass, **Then** two are live and the third is paused with one admission event and no budget spent (F154-FR-040, -045).
+5. **Given** a resource declared with capacity 1, **When** two runs need it, **Then** one holds it and the other waits as a pause (F154-FR-042).
 4. **Given** a run, **When** it ends, for any cause, **Then** its temporary root is removed (F154-FR-043).
+5. **Given** a hold record whose writer died, **When** the reset time passes, **Then** the hold expires and no run reclaims it before (F154-FR-041).
 
 ### User Story 5 - Features side by side in the pipeline (Priority: P5)
 
@@ -182,6 +187,7 @@ Phases with a declared dependency graph and disjoint write scopes are worked at 
 1. **Given** phases 2 and 3 declared independent with disjoint write scopes, **When** phase 1 is approved, **Then** both are worked at once (F154-FR-056, -057).
 2. **Given** both finished, **When** validation runs, **Then** phase 2 is gated, judged and committed first, then phase 3 is rebased onto it and gated, judged and committed (F154-FR-058).
 3. **Given** a phase with no declared dependency, **When** the plan is computed, **Then** it depends on the phase before it (F154-FR-056).
+4. **Given** the head of the queue rejected, **When** it is repaired and approved, **Then** a later phase that depends on it is rebased again before its own gate (F154-FR-059).
 
 ### User Story 7 - Work past an open verdict (Priority: P7)
 
@@ -194,7 +200,8 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 **Acceptance Scenarios**:
 1. **Given** the switch on and a measured approval rate at or above the threshold, **When** phase n's gate starts, **Then** phase n+1 starts in a tree branched from the frozen snapshot and the workspace does not change (F154-FR-061, -066).
 2. **Given** a rejection of phase n, **When** the verdict lands, **Then** the tree of phase n+1 is discarded, no outer counter and no count moves, and its cost is reported (F154-FR-064).
-3. **Given** the measured rate falls below the threshold, **When** the next gate starts, **Then** no speculative unit starts and the reason is recorded (F154-FR-066).
+3. **Given** the measured rate falls below the threshold, **When** the next gate starts, **Then** no speculative unit starts and one admission event records `rate` (F154-FR-066).
+4. **Given** an approval of phase n and a speculative tree of phase n+1, **When** the tree integrates, **Then** the audits, composition, application and merge check run before phase n+1's own gate (F154-FR-063).
 
 ### Edge Cases
 
@@ -226,7 +233,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 - **F154-FR-005**: No model MUST take or release a lock or a slot, merge content, resolve a conflict, or decide whether two units are independent. *Why: Principle XX, "No model merges conflicting work silently"; models propose, the engine disposes (II).*
   - anchor: XX; II; ledger E6
   - switch: every switch of this feature (an invariant); parity: off under every switch, and the rule itself holds unchanged
-- **F154-FR-006**: Governance MUST stay as it is: one critic per phase in a fresh session; verdicts bound to a per-call nonce; signed approval records bound to their verdict; one approval and one commit per approved phase; the full verification gate on the workspace before the critic, never scoped and never replaced by a result from a group, a worker, a stage or a snapshot. *Why: Principle II cannot be justified away; CQ-153-02 B, CQ-153-07 A, CQ-153-08 A.*
+- **F154-FR-006**: Governance MUST stay as it is: one critic per phase in a fresh session; verdicts bound to a per-call nonce; signed approval records bound to their verdict; one approval and one commit per approved phase; the full verification gate on the tree the critic judges (the workspace, or a phase tree that F154-FR-058 advances to) before the critic, never scoped and never replaced by a result from a group, a worker, a stage or a snapshot. *Why: Principle II cannot be justified away; CQ-153-02 B, CQ-153-07 A, CQ-153-08 A.*
   - anchor: II; F101-FR-011, -029, -031, -035; F142-FR-062
   - switch: every switch of this feature (an invariant); parity: off under every switch, and the rule itself holds unchanged
 - **F154-FR-007**: Every new record (slot, hold, queue entry, stage-group declaration, phase-dependency declaration, set-aside record) MUST have a schema and MUST be validated at every boundary. *Why: Principle VI.*
@@ -238,7 +245,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 
 #### G1 — Measure (P1)
 
-- **F154-FR-009**: Delivers F142-FR-017 in the engine path. With `loop.parallel.units` on, `specstride doctor` and `launch --dry-run` MUST print the stored plan: per phase the groups, every task made serial with the failed check as its reason, and the ceiling of the speed-up under equal task cost. Under ruling CQ-154-19 they MAY also print it with the option off, labelled as the plan the option would produce. *Why: the option's page promises it (R-C7), and no switch can be judged without it.*
+- **F154-FR-009**: Delivers F142-FR-017 in the engine path. With `loop.parallel.units` on, `specstride doctor` and `launch --dry-run` MUST print the stored plan: per phase the groups, every task made serial with the failed check as its reason, and the ceiling of the speed-up under equal task cost. Under ruling CQ-154-19 they MAY also print it with the option off, only behind the verbose flag of F154-FR-010 and labelled as the plan the option would produce; by default nothing is printed with the option off. *Why: the option's page promises it (R-C7), and no switch can be judged without it.*
   - switch: `loop.parallel.units` (142); parity: off (no plan line, with the option on or off: under `parity` the print follows the profile and prints nothing)
 - **F154-FR-010**: The plan printed by the doctor and by `launch --dry-run` MUST be the same bytes for the same inputs. Printing it MUST take no slot, write no record and start no worker. It MUST be terse by default, with the serial list behind the verbose flag. *Why: Principles XV (a dry run withholds consent) and XIX (terse output).*
   - switch: as F154-FR-009; parity: off
@@ -246,14 +253,14 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
   - switch: as F154-FR-009; parity: off
 - **F154-FR-012**: `specstride report` MUST print the shares of the window (proposer passes, in-pass checks, gate and critic outside checks, the rest) computed as a union so that no time counts twice. Each share MUST be computed only from timed events. It MUST be printed as a bound where the gate is bounded by `evidence_written` and the attempt's close, and as "not in the events" where no event holds it. *Why: the feature input's table, reproduced by the product instead of a script (R-M8).*
   - anchor: F153-FR-040; XI; ledger R-M7, R-M8
-  - switch: none (a read verb); parity: the report is not run output
+  - switch: none (a read verb); parity: every new row of G1 is absent under `parity`, as the events it reads are; the rows that existed before this feature print as before
 - **F154-FR-013**: Delivered by PR #40, recorded here. The report MUST print the approvals, the phases approved and the approvals per attempt started, counting a `phase.ended` of the old vocabulary as an approval. *Why: behaviour 7 is switched on against this rate (R-M11).*
   - anchor: F153-FR-040; ledger R-C17
   - switch: none (a read verb); parity: as F154-FR-012
 - **F154-FR-014**: The report MUST print the total time of in-pass checks that ran while no proposer pass of the run ran. *Why: it is the time an overlap could hide (M10).*
   - anchor: ledger M10
   - switch: none (a read verb); parity: the row is not printed, because the events it reads do not exist under `parity`
-- **F154-FR-015**: For a run that used a group, the report MUST print per group its phase, its outcome, the path count of its application, the result of its merge check and its wall time. Over the run it MUST print the counts of groups by outcome, of workers by outcome and refusal reason, and the time of batches flagged `concurrent` on `check.ended`. *Why: 153's 28 groups were visible only by script (R-M9).*
+- **F154-FR-015**: For a run that used a group, the report MUST print per group its phase, its outcome, the path count of its application, the result of its merge check and its wall time. Over the run it MUST print the counts of groups by outcome, of workers by outcome and refusal reason, and the time of batches flagged `concurrent` on `check.ended`. For a run that speculated, it MUST also print the speculative units started, integrated and set aside, and the cost of those set aside (F154-FR-064). *Why: 153's 28 groups were visible only by script (R-M9).*
   - anchor: F142-FR-022, -025; F148-FR-017; ledger R-M9
   - switch: none (a read verb); parity: the row is not printed, because the events it reads do not exist under `parity`
 - **F154-FR-016**: Delivered by PR #40, recorded here. The report MUST read every run file of the feature that the engine wrote, in time order. *Why: a finished feature spans many relaunches (R-C17).*
@@ -274,7 +281,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 
 #### G2 — The parallel layer delivered in the engine path (P2)
 
-- **F154-FR-020**: Delivers F142-FR-008 and F142-FR-018 in the engine path. A phase attempt MUST work every group of the stored plan, in plan order, each started at its clean boundary. It MUST NOT be limited to the first group of the plan. A group left with fewer than 2 tasks after the main line ticked some of them MUST be cancelled (F142-FR-018). *Why: today one group per attempt, always the first (R-C3).*
+- **F154-FR-020**: Delivers F142-FR-008 and F142-FR-018 in the engine path. A phase attempt MUST work every group of the stored plan, in plan order, each started at its clean boundary. It MUST NOT be limited to the first group of the plan. A group left with fewer than 2 tasks after the main line ticked some of them MUST be cancelled (F142-FR-018). The `[P]` groups of one attempt run one after the other; only groups as units (F154-FR-032) and phases (F154-FR-057) run at once. *Why: today one group per attempt, always the first (R-C3).*
   - switch: `loop.parallel.units`; parity: off
 - **F154-FR-021**: Delivers F142-FR-016 (a). The check `headroom` MUST read the last observed utilisation of every quota window of the proposer's account from the window facts of F127-FR-009. With no observation in the run a group MUST have 2 workers. *Why: today the input is an empty list (R-C6).*
   - switch: as F154-FR-020; parity: off
@@ -310,7 +317,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 
 - **F154-FR-031**: With `loop.taskGroups` and `loop.parallel.groupUnits` both on, the frozen task groups of the launch contract (F153-FR-054) MUST be the candidates of the planner for a phase, one worker per group, each group's tasks in task order inside its worker. Under answer A of CQ-154-02 this group is not built and the unit stays the `[P]` task; under B, the `[P]` groups of G2 stay as they are and nothing changes for them. *Why: groups already carry a write scope and an acceptance check (F153-FR-055).*
   - switch: `loop.parallel.groupUnits`, default off; parity: off
-- **F154-FR-032**: Two groups of one phase MUST be worked at once only when their write scopes are pairwise disjoint (F142-FR-009) and they are independent by the source CQ-154-02 rules. Otherwise they MUST run one after the other, with the admission check `dependency` (proposed, CQ-154-09) and its detail recorded. Where independence rests on the marker rule (i) alone, no declaration is read: every task of both groups MUST carry `[P]`, and no task of the later group MAY name a path in the earlier group's write scope. Under answer B of CQ-154-09 the reason is the detail of the existing check `check`. *Why: Principle XX, "only after deterministic checks of dependency and of write scopes" (T-a).*
+- **F154-FR-032**: Two groups of one phase MUST be worked at once only when their write scopes are pairwise disjoint (F142-FR-009) and they are independent by the source CQ-154-02 rules. Otherwise they MUST run one after the other, with the admission check `dependency` (proposed, CQ-154-09) and its detail recorded. Where independence rests on the marker rule (i) alone, no declaration is read: every task of both groups MUST carry `[P]`, and no task of the later group MAY name a path in the earlier group's write scope. A task group of 153 carries no marker, so two task groups are independent only when the frozen record declares it (`independentWith`, a field proposed under CQ-154-09); a declared `dependsOn` decides the other way and overrides the marker rule. Under answer B of CQ-154-09 the reason is the detail of the existing check `check`. *Why: Principle XX, "only after deterministic checks of dependency and of write scopes" (T-a).*
   - anchor: XX; CQ-154-02; constraint 1
   - switch: `loop.parallel.groupUnits`, default off; parity: off
 - **F154-FR-033**: A group MUST be admitted only through the admission checks of F142-FR-011, applied to the group as one candidate whose scope is the group's write scope. *Why: one admission rule for both kinds of unit.*
@@ -319,7 +326,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 - **F154-FR-034**: Under ruling CQ-154-04, after a worker's pass has ended and before the barrier closes, the runtime MUST run the group's frozen acceptance check in that worker's tree, through the check runner, with the check's declared limit. Its result MUST only be able to withhold that worker's delta. It MUST NOT approve, keep or release anything. If the amendment is refused (answer C), this requirement is not built and the acceptance check runs on the workspace after the application, as today (R-C19). *Why: Principles II ("An inner check… never approves anything") and III (run by the runtime); today the check runs in the workspace with a fixed 300 s limit (R-C19).*
   - anchor: II; III; I; F153-FR-056; CQ-154-04 (amends F142-FR-059, F143-FR-011)
   - switch: `loop.parallel.groupCheck`; parity: off
-- **F154-FR-035**: A change by the worker to a path that the acceptance check reads MUST make its result `tainted`, which withholds. A group with no resolvable check MUST be `unchecked`, and its delta goes on to the merge check. *Why: Principles III and XIV.*
+- **F154-FR-035**: The acceptance check (the check of F153-FR-055, run in the worker tree; its record is the worker check record) MUST be bound to three fingerprints of the tree: the group's base snapshot, and the tree before and after the check. A change by the worker to a path that the check reads, whether before or during the check, MUST make its result `tainted`: the after-fingerprint MUST equal both the base snapshot and the before-reading, or the result is `tainted`, which withholds. A tainted result is charged as a failed one (F154-FR-036). A group with no resolvable check MUST be `unchecked`, and its delta goes on to the merge check. *Why: Principles III and XIV.*
   - anchor: III; XIV; F116-FR-005; F153-FR-055
   - switch: as F154-FR-034; parity: off
 - **F154-FR-036**: A worker whose acceptance check failed MUST be `refused` with the reason of CQ-154-09 (`group-check` is proposed). Its tasks return to the main line's repair path, and one repair MUST be charged to every task of the group: a charge rule of its own under CQ-154-04, with the merge-check rule of F142-FR-061 as its precedent, and the one exception to F143-FR-012 ("a refused worker charges nothing"). No outer counter MUST move. The group counts as failed (F142-FR-023). *Why: a failed check spends what a failed merge check spends, and no outer counter (XX).*
@@ -337,17 +344,17 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 - **F154-FR-040**: With `host.limits` on, at most `host.sessions.<account>` proposer sessions of one harness account MUST be live at once across the runs of one host, worker sessions included. *Why: the account's limits are shared by every run (Q15, O5).*
   - anchor: F127-FR-033; switch: as F154-FR-039; parity: off
   - switch: `host.limits`, default off; parity: off
-- **F154-FR-041**: With `host.limits` on, a run that classifies a `quota_window` (F127-FR-010) MUST write one hold record for its harness account with the reset time. Before starting a pass, every run of the same account on the host MUST read it and wait until the reset. *Why: today only the campaign driver knows the hold (O5).*
+- **F154-FR-041**: With `host.limits` on, a run that classifies a `quota_window` (F127-FR-010) MUST write one hold record for its harness account with the reset time. Before starting a pass, every run of the same account on the host MUST read it and wait until the reset. A hold record MUST expire at its reset time only; it MUST never be reclaimed because its writer died, because the window is a fact of the account, not of the run. *Why: today only the campaign driver knows the hold (O5).*
   - anchor: F127-FR-010, -013; switch: as F154-FR-039; parity: off
   - switch: `host.limits`, default off; parity: off
-- **F154-FR-042**: With `host.limits` on, an exclusive resource declared in user configuration with a capacity MUST be held by at most that many runs of the host at once. *Why: ports and labs are shared (F142-FR-015; P9).*
+- **F154-FR-042**: With `host.limits` on, an exclusive resource declared in user configuration with a capacity (`host.resources.<name>.capacity`, a positive integer; the record is a slot of that width) MUST be held by at most that many runs of the host at once. *Why: ports and labs are shared (F142-FR-015; P9).*
   - switch: as F154-FR-039; parity: off
-- **F154-FR-043**: Every run MUST get a temporary root of its own, used for the temporary directories of its checks, and removed when the run ends, for any cause. *Why: one shared `/tmp` ran out of inodes (O4); Principle VIII's Tier 2 rule, "removed afterwards, even when the pass is killed".*
+- **F154-FR-043**: With `host.limits` on, every run MUST get a temporary root of its own, used for the temporary directories of its checks, and removed when the run ends, for any cause. *Why: one shared `/tmp` ran out of inodes (O4); Principle VIII's Tier 2 rule, "removed afterwards, even when the pass is killed".*
   - switch: as F154-FR-039; parity: off
 - **F154-FR-044**: Slot and hold records MUST be files in user-level state, one record per holder. Each MUST be written by its holder's runtime root only, atomically, with an owner record that names the host, the run and the process, and a liveness proof as the workspace lock has. A record whose owner is proven dead MUST be reclaimable by a contending runtime root. A record whose owner lives MUST never be removed, and one whose liveness is unknown counts as held. No service and no watcher MUST carry the coordination. *Why: Principles I and XVI; the lock interface of F122-FR-010…-016.*
   - anchor: I; XVI; F122-FR-013, -015, -016; F100-FR-032; constraint 6
   - switch: `host.limits`, default off; parity: off
-- **F154-FR-045**: A wait for a slot or a hold MUST be a pause: no stop, no budget of any kind spent, no count moved. It MUST be one event when it starts and one when it ends, and MUST be visible in `status`. *Why: Principle XVI, "A pause for quota is not a stop and spends no budget of any kind".*
+- **F154-FR-045**: A wait for a slot or a hold MUST be a pause: no stop, no budget of any kind spent, no count moved. It MUST be one event when it starts and one when it ends, and MUST be visible in `status` as the existing pause view with its class (`host_slot`, a member proposed under CQ-154-09). Paused time MUST be excluded from every time cap, as a quota pause is. The refusal of a slot MUST be one admission event with its reason, never only a pause. *Why: Principle XVI, "A pause for quota is not a stop and spends no budget of any kind".*
   - anchor: XVI; F143-FR-015; constraint 7; CQ-154-14
   - switch: `host.limits`, default off; parity: off
 - **F154-FR-046**: Project configuration MUST only lower the host bounds, never raise them or turn `host.limits` off. *Why: Principle III, "Project configuration may narrow a run but never widen it".*
@@ -357,7 +364,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 
 #### G5 — Features side by side in the pipeline (P5)
 
-- **F154-FR-048**: Under ruling CQ-154-05, a launch contract MAY declare a stage group wider than one stage: its stages, the stages each depends on, the pairs that never run together with a one-line reason, and the width. A declaration with a cycle, an unknown stage, or a `never_together` across groups MUST be refused at validation. *Why: today's lanes carry this as `width` and `never_together` (O2, O3); F123-FR-019 makes the stage graph serial.*
+- **F154-FR-048**: Under ruling CQ-154-05, a launch contract MAY declare a stage group wider than one stage: its stages, the stages each depends on, the pairs that never run together with a one-line reason, and the width. A declaration with a cycle, an unknown stage, or a `never_together` across groups MUST be refused at validation, with the existing exit 20. The admission of a stage into a group MUST be a pure table with a rule id (F154-FR-003), and every admitted and refused stage MUST have one admission event with its reason (F154-SC-006). *Why: today's lanes carry this as `width` and `never_together` (O2, O3); F123-FR-019 makes the stage graph serial.*
   - anchor: F123-FR-019; F107; CQ-154-05 (amends F123-FR-019 and F107's `stages`)
   - switch: `pipeline.stageGroups`, default off; parity: off
 - **F154-FR-049**: Each stage of a wide group MUST run in a workspace of its own, made by the pipeline runtime from home before the stage starts and removed after it lands or is parked, as one run with its own lock, process tree and runtime root. The pipeline MUST coordinate the stage runs only through files. *Why: Principle I and "Single run per workspace" (T-e).*
@@ -388,7 +395,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
 - **F154-FR-057**: Two phases MUST be worked at once only when neither depends on the other and their declared write scopes are pairwise disjoint. Each MUST be worked in a tree of its own. *Why: Principle XX (T-g).*
   - anchor: XX; constraint 11
   - switch: `loop.phases.parallel`, default off; parity: off
-- **F154-FR-058**: Validation MUST be one queue in phase order. For the phase at its head: rebase its tree onto the last approved phase, run the full gate on it, call a fresh critic with its own nonce, write the approval and the commit. A later phase MUST wait at the queue until every earlier phase is approved. *Why: Principles I, II and XX: one validator, a serial history.*
+- **F154-FR-058**: Validation MUST be one queue in phase order. For the phase at its head: rebase its tree onto the last approved phase, run the full gate on it, call a fresh critic with its own nonce, write the approval and the commit. A later phase MUST wait at the queue until every earlier phase is approved. When a phase is approved, its commit is made and the workspace MUST advance to that phase's tree, so that the next phase is branched from it and the gate of the next phase reads the approved tree. *Why: Principles I, II and XX: one validator, a serial history.*
   - anchor: I; II; XX
   - switch: `loop.phases.parallel`, default off; parity: off
 - **F154-FR-059**: A rejected phase MUST be repaired at the head of the queue. A later phase that depends on it MUST be rebased again after its approval. *Why: a serial history.*
@@ -412,7 +419,7 @@ While the gate and the critic judge one phase on a frozen workspace, the next ph
   - switch: `loop.speculate`, default off; parity: off
 - **F154-FR-066**: A speculative unit MUST start only when the approvals per attempt started over the last `loop.speculate.window` attempts of the run are at or above `loop.speculate.minRate`. Under CQ-154-18 the defaults are a window of 20 attempts and a rate of 50 %, with the depth of F154-FR-062 at 1. Below the rate, no speculative unit MUST start, and the reason `rate` MUST be recorded. On every measured run (29 of 336 and 10 of 121) no window reaches the default, so the switch stays off by design until a trial shows otherwise. *Why: the measured rate is about one in twelve (R-M11); prior art speculates only where success is likely (E11, E12).*
   - switch: `loop.speculate`, default off; parity: off
-- **F154-FR-067**: Under ruling CQ-154-08, no speculative tree that the critic could read MUST exist when a critic-class call starts. The critic MUST have no tools, or the read denial of the worker root MUST be confirmed for a read-only critic. If the amendment of F142-FR-070 is refused, a speculative unit MUST start only after the critic call has returned. *Why: Principles II and IX; F142-FR-070.*
+- **F154-FR-067**: Under ruling CQ-154-08, no speculative tree that the critic could read MUST exist when a critic-class call starts. The critic MUST have no tools, or the read denial of the worker root MUST be confirmed for a read-only critic by the two proofs F142-FR-070 already names: the harness's initial record, which shows whether the critic has tools (IX), and the sweep before a critic-class call, which records that every tree outside the read denial is gone. A tree the critic could read is one the sweep finds outside a confirmed denial. If the amendment of F142-FR-070 is refused, a speculative unit MUST start only after the critic call has returned. *Why: Principles II and IX; F142-FR-070.*
   - anchor: II; IX; F142-FR-070; CQ-154-08
   - switch: `loop.speculate`, default off; parity: off
 
@@ -457,6 +464,7 @@ Each requirement closes or narrows a channel that stage 1 marked re-opened or wi
 | Trial record | One run of a fixture set with one switch changed: the rows read, the pass mark, its result | `specstride.trial/1` |
 | Admission decision | One `parallel.admission` event per task, later per group, with the verdict of every check and its detail | the event catalogue of feature 111 |
 | Group-as-unit plan record | The stored plan with groups taken from the frozen task groups, each with its write scope and its independence rule id | `specstride.parallel-plan/1`, extended |
+| Merge baseline comparison | The base result a merge check was compared with, the failing commands matched by signature, the rule id | `specstride.merge-baseline/1` |
 | Worker check record | The result of a group's acceptance check in its worker tree, bound to the tree's fingerprint before and after | `specstride.worker-check/1` |
 | Owner record | Who holds a slot or a hold: host, run, process, start time, boot id, liveness endpoint | the existing owner record of the lock |
 | Slot record | One holder of one host bound (check-set executions, sessions of an account, an exclusive resource), with owner record and liveness | `specstride.host-slot/1` |
@@ -472,10 +480,10 @@ Each requirement closes or narrows a channel that stage 1 marked re-opened or wi
 
 ### Measurable Outcomes
 
-- **F154-SC-001**: Closed sets hold. Over every fixture of this spec (quickstart.md, FX-154-PLAN, -GROUPS, -SLOTS, -STAGES, -PHASES, -SPEC) and of FX-PAR-S, the sets of exit codes, stop reasons and run states with every switch of this feature on are subsets of the sets with them off.
+- **F154-SC-001**: Closed sets hold. Over every fixture of this spec (quickstart.md, FX-154-PLAN, -GROUPS, -SLOTS, -STAGES, -PHASES, -SPEC, -DOOR) and of FX-PAR-S, the sets of exit codes, stop reasons and run states with every switch of this feature on are subsets of the sets with them off.
 - **F154-SC-002**: The plan is deterministic. The same inputs give a byte-identical plan and hash on 100 % of repeated derivations, and the doctor and `launch --dry-run` print the same bytes.
 - **F154-SC-003**: Completion order is inert. Over a property test of every permutation of worker completion on the group fixtures, 0 bytes of the applied tree differ.
-- **F154-SC-004**: The critic is isolated. 0 critic-class calls start while a worker tree, a phase tree or a speculative tree that the critic could read exists, over every fixture.
+- **F154-SC-004**: The critic is isolated. 0 critic-class calls start while a worker tree, a phase tree or a speculative tree exists outside a confirmed read denial (the two proofs of F154-FR-067), over every fixture.
 - **F154-SC-005**: One gate. The full gate executes exactly once per phase attempt, on the merged tree, over every fixture.
 - **F154-SC-006**: Every decision is recorded. On FX-154-GROUPS, -SLOTS, -STAGES, -PHASES and -SPEC, every admitted and every refused group, slot, stage and speculative unit has exactly one event with its reason.
 - **F154-SC-007**: One validator per host. With `host.checks.concurrent` 1 and two runs on one host, 0 pairs of full check-set executions overlap in the event files.
@@ -499,7 +507,8 @@ Each requirement closes or narrows a channel that stage 1 marked re-opened or wi
 | `host.limits` | off | off | new row, CQ-154-14; fields: the slot and hold records, the slot-wait events, the pause |
 | `pipeline.stageGroups` | off | off | new row, CQ-154-05; fields: the stage-group declaration, the landing record and events, the approval rewrite note |
 | `loop.phases.parallel` | off | off | new row, CQ-154-07; fields: the phase-dependency declaration, the queue entry |
-| `loop.speculate` | off | off | new row, CQ-154-08 and -18; fields: the set-aside record and event, the skip reason |
+| `loop.speculate` | off | off | new row, CQ-154-08 and -18; fields: the set-aside record and event, the admission event, the set-aside cost row of the report |
+| the report's new rows (G1) | — | absent | named in the row of the switch whose events they read; absent under `parity` |
 
 The empty-application rule of F154-FR-027 rides `loop.parallel.noRepeat`.
 
@@ -513,27 +522,30 @@ The empty-application rule of F154-FR-027 rides `loop.parallel.noRepeat`.
 | Event types | the slot wait start and end (F154-FR-045), the landing (F154-FR-050…-052), the set-aside (F154-FR-064) proposed | CQ-154-09 |
 | Integrity kinds that reach the critic (row 65) | none | — |
 | Reasons a speculative unit does not start (new set) | `rate` (F154-FR-066), `depth` (F154-FR-062), `sweep` (F154-FR-067) proposed | CQ-154-09 |
+| Quota classes of a pause (§C.13) | `host_slot` (F154-FR-045), spends nothing | CQ-154-09 |
+| Admission events per unit kind | `host.slot.admission`, `pipeline.stage.admission`, `loop.speculation.admission`, each with its verdict and reason (F154-FR-003, -045, -048, -066) proposed | CQ-154-09 |
 | Ledger kinds `parallel` (row 184) | the worker check record, the trial record, the stage workspace, the landing, the set-aside record proposed as kinds | CQ-154-09 |
 
 ## Cross-spec amendments
 
 | Spec / requirement | Amendment (proposed text or delta) | Why | Ruling? |
 |---|---|---|---|
-| F142-FR-017 | "…MAY print, with the option off, the plan the option would produce, labelled as such" | F154-FR-009 | CQ-154-19 |
+| F142-FR-017 | "…MAY print, with the option off and the verbose flag given, the plan the option would produce, labelled as such" | F154-FR-009 | CQ-154-19 |
 | F142-FR-023 | Add: a group over a task set that failed in an earlier attempt of the phase is not started again while its paths are unchanged | F154-FR-026 | CQ-154-17 |
 | F142-FR-059 | "once per group" becomes "once per group whose application changed at least one path"; and admit the group's acceptance check in the worker tree | F154-FR-027, -034 | CQ-154-17, CQ-154-04 |
 | F142-FR-061 | Add the baseline rule of F154-FR-028 | F154-FR-028 | CQ-154-17 |
 | F142-FR-070 | "No worker tree **that the critic could read** MUST exist when a critic-class call starts…" (stage 1, T-h) | F154-FR-067 | CQ-154-08 |
 | F143-FR-011 | Admit the runtime's run of the group's frozen acceptance check after the worker pass has ended | F154-FR-034 | CQ-154-04 |
+| F143-FR-012 | Add the one exception: a worker refused with `group-check` charges one repair to every task of its group | F154-FR-036 | CQ-154-04 |
 | F123-FR-019 | "The stage graph MUST be serial unless the contract declares a stage group under F154-FR-048; each stage of a wide group is a run of its own" | F154-FR-048, -049 | CQ-154-05 |
 | F107 (`stages`) | Stage-group fields: `depends_on`, `never_together` with reason, `width` | F154-FR-048 | CQ-154-05 |
+| F153 frozen task groups (`specstride.task-groups-frozen/1`) | An optional `dependsOn` and `independentWith` per group, read at derivation | F154-FR-032 | CQ-154-02, -09 |
 | F100 annex B | User-level state gains the slot and hold records | F154-FR-044 | CQ-154-14 |
 | F100 annex X §X.6, §X.7 | The closed-set members of "Closed sets"; the switches of "Rows of the `parity` profile" | F154-FR-001 | CQ-154-09 |
 | F127-FR-010 | Add: with `host.limits` on, the pause also writes the account's hold record | F154-FR-041 | CQ-154-14 |
 | F153-FR-042 | State that the inner path's batching is the follow-up L-4 names, or deliver it (R-Q25) | consistency | CQ-154-16 |
 | canonical model (F100 / spec-format adapter) | A per-phase dependency and write-scope declaration | F154-FR-056 | CQ-154-07 |
 
-| F143-FR-012 | Add the one exception: a worker refused with `group-check` charges one repair to every task of its group | F154-FR-036 | CQ-154-04 |
 | F100 annex D (events) | The slot-wait pair, the landing events and the set-aside event of "Closed sets" | F154-FR-045, -050…-052, -064 | CQ-154-09 |
 | F100 annex E (§E.1–§E.4) | None: no attempt kind, stop reason, exit code or run state | F154-FR-002 | — |
 
@@ -567,7 +579,7 @@ The rows marked *Answered (autonomous, 2026-11-25)* were resolved by research-ba
 | CQ-154-16 | In-pass check batching (the follow-up 153 handed to 115; R-Q25) | A: out; F153-FR-042 is read as the gate path. B: in | A: no measurement shows a gain (L-4) | Answered (autonomous, 2026-11-25): A | F153-FR-042; L-4; F153-FR-042 :581; spec 153 L-4 :807; ledger R-C14, R-C18, R-Q25 |
 | CQ-154-17 | The three rules from the live record (no repeat, no empty merge check, merge baseline) | A: all three. B: no repeat and no empty merge check only | A | Answered (autonomous, 2026-11-25): A | R-M16; F142-FR-023, -059, -061; run-feature.ts:2914; core merge-check.ts:283; ledger R-M16 |
 | CQ-154-18 | Speculation: depth, window and threshold | A: depth 1; window 20 attempts; threshold 50 % | A; at 8.6 % it never starts | Answered (autonomous, 2026-11-25): A: depth 1, window 20 attempts, 50 %. At 29 of 336 and 10 of 121 no window of 20 reaches 50 %, so behaviour 7 stays off on every measured run, by design, until a trial shows otherwise | R-M11; E11; ledger R-M11, R-M8; E11 |
-| CQ-154-19 | Print the plan with the option off? | A: yes, labelled. B: only with the option on (F142-FR-017 as written) | A: it is read-only, and the option's page asks the operator to read it before switching on | Answered (autonomous, 2026-11-25): A | XV; R-C7; F142-FR-017 :105; docs/options/parallel-units.md:36, :108; constitution XV L406-407 |
+| CQ-154-19 | Print the plan with the option off? | A: yes, behind the verbose flag, labelled (not a default). B: only with the option on (F142-FR-017 as written) | A: it is read-only, and the option's page asks the operator to read it before switching on | Answered (autonomous, 2026-11-25): A | XV; R-C7; F142-FR-017 :105; docs/options/parallel-units.md:36, :108; constitution XV L406-407 |
 ## Constraints carried from stage 1
 
 | # | Constraint | Where |

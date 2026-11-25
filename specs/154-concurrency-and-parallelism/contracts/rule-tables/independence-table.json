@@ -9,7 +9,8 @@
         "scopesDisjoint": "boolean",
         "everyTaskMarked": "boolean",
         "laterNamesEarlierPath": "boolean",
-        "dependsOnDeclared": "boolean"
+        "dependsOnDeclared": "boolean",
+        "independentWithDeclared": "boolean"
       },
       "choices": [
         "independent",
@@ -20,7 +21,7 @@
   "rows": {
     "parallel.group-independence": [
       {
-        "ruleId": "PG-3a",
+        "ruleId": "PG-2",
         "when": {
           "op": "equal",
           "signal": "dependsOnDeclared",
@@ -29,11 +30,11 @@
         "choice": "dependent"
       },
       {
-        "ruleId": "PG-3b",
+        "ruleId": "PG-3",
         "when": {
           "op": "equal",
-          "signal": "dependsOnDeclared",
-          "value": false
+          "signal": "independentWithDeclared",
+          "value": true
         },
         "choice": "independent"
       },
@@ -62,7 +63,7 @@
         "choice": "independent"
       },
       {
-        "ruleId": "PG-2",
+        "ruleId": "PG-0",
         "choice": "dependent"
       }
     ]

@@ -21,6 +21,7 @@ CQ-154-14 for the slot and hold records); see [closed-set-deltas.md](closed-set-
   - `host-hold.schema.json` — D9, the hold record of one account (F154-FR-041, -044).
   - `stage-workspace.schema.json` — D11, one stage run of a wide group (F154-FR-049, -055).
   - `landing.schema.json` — D11, one landing of a stage (F154-FR-050…-054).
+  - `merge-baseline.schema.json` — D7, the comparison a merge check was judged by (F154-FR-028).
   - `phase-queue.schema.json` — D12, the validation queue entry (F154-FR-056…-060).
   - `set-aside.schema.json` — D13, a speculative unit discarded after a rejection (F154-FR-064).
 - Two declarations of the spec's "Key Entities" are **not** schema files of this directory, because
@@ -35,7 +36,7 @@ CQ-154-14 for the slot and hold records); see [closed-set-deltas.md](closed-set-
   `independence-table.json` (PG-1…PG-3), `repeat-table.json` (RP-1, RP-2),
   `merge-check-outcome-table.json` (MG-1…MG-3), `worker-check-table.json` (WC-1…WC-4),
   `slot-admission-table.json` (SL-1…SL-5), `landing-table.json` (LD-1…LD-4),
-  `validation-queue-table.json` (PQ-1…PQ-3), `speculation-table.json` (SP-1…SP-6),
+  `validation-queue-table.json` (PQ-1…PQ-3), `stage-admission-table.json` (SG-1…SG-4), `speculation-table.json` (SP-1…SP-6),
   `trial-pass-mark-table.json` (TRI-1…TRI-3). Each row carries its rule id, the member text copied
   verbatim from plan.md, its `when`, its decision and the `F154-FR` it serves.
 - `fixtures-154.json` — the six fixtures FX-154-PLAN, -GROUPS, -SLOTS, -STAGES, -PHASES and -SPEC

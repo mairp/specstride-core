@@ -88,6 +88,11 @@ the trial rule is stricter than register rows 134 and 137).
 | What happens when the sweep's wording is not amended | CQ-154-08 A: F142-FR-070 amended (T-h wording); if refused, SP-4: no speculative unit starts before the critic call returns (B) | A speculative tree may exist only if the critic has no tools or the read denial of the worker root is confirmed | No amendment and speculation started anyway (would breach F154-SC-004) |
 | What is out of scope | CQ-154-16 A: in-pass check batching stays out (feature 115's; no measured gain, L-4); also N-candidate selection, a model that merges, multi-host runs, `events`/`tail` on the control root, the attempt loop in `core` | Each has a seam in the plan (the named seams, the reader of PR #40, the amendment row of F153-FR-042) | B: in — feature 115 |
 
+- Decision: the acceptance check is bound to three fingerprints, not two. Rationale: `speckit-analyze` found that two readings around the check miss a change made before it (III). Alternatives: the before/after pair alone (rejected); a scoped re-run of the suite in the tree (rejected: spends the suite per group).
+- Decision: a task group of 153 is independent only when declared `independentWith`; a `[P]` run by the marker rule. Rationale: task groups carry no marker, so the marker rule cannot reach them. Alternatives: the marker alone (a claim); disjoint scopes alone (do not show that B does not read what A writes).
+- Decision: the option-off plan print sits behind the verbose flag only. Rationale: a print on by default is a behaviour on by default (XVIII). Alternatives: a new switch (one more to turn on); always printing (rejected for the same reason).
+- Decision: a hold record expires at its reset time and is never reclaimed on its writer's death. Rationale: the window is the account's fact. Alternatives: the slot's reclaim rule (would re-open the window).
+
 ### Anchors re-pinned by the code readers (2026-11-25)
 
 Read on `aafb367f` by four read-only code readers; every line number verified with grep or sed (plan.md, "Anchors re-pinned").
