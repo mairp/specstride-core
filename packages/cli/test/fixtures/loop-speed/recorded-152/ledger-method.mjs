@@ -19,14 +19,23 @@ const events = readFileSync(inArg ?? new URL("./events.jsonl", import.meta.url),
 const opened = new Map(),
   endCauses = {},
   closedMs = [],
-  approved = {};
+  approved = {},
+  approvalKeys = new Set();
 for (const { type, at, data: d } of events) {
   const key = `${d.phase}|${d.attempt}`;
   if (type === "attempt.started") opened.set(key, at);
+  // The old vocabulary: a phase.ended with no outcome is an approval.
+  if (type === "phase.ended" && (d.outcome === undefined || d.outcome === "approved")) {
+    approved[String(d.phase)] = Number(d.attempt);
+    approvalKeys.add(`${d.phase}|${d.attempt}`);
+  }
   if (type === "attempt.ended") {
     const t0 = opened.get(key);
     if (t0 !== undefined) closedMs.push(at - t0);
-    if (d.endCause === "approved") approved[String(d.phase)] = Number(d.attempt);
+    if (d.endCause === "approved") {
+      approved[String(d.phase)] = Number(d.attempt);
+      approvalKeys.add(`${d.phase}|${d.attempt}`);
+    }
     endCauses[String(d.endCause ?? "")] = (endCauses[String(d.endCause ?? "")] ?? 0) + 1;
   }
 }
@@ -78,6 +87,12 @@ rows.push({ row: "attempts unclosed", value: attemptsUnclosed });
 rows.push({ row: "attempt duration total", value: r3(sum(attemptSeconds)), unit: "s" });
 rows.push({ row: "attempt duration median", value: median(attemptSeconds), unit: "s" });
 rows.push({ row: "phases approved", value: approved });
+rows.push({ row: "phases approved count", value: Object.keys(approved).length });
+rows.push({ row: "approvals", value: approvalKeys.size });
+rows.push({
+  row: "approvals per attempt started",
+  value: { approvals: approvalKeys.size, started: attemptsStarted },
+});
 rows.push({ row: "in-pass checks", value: checkEnds.length });
 rows.push({ row: "checks failed", value: checksFailed });
 rows.push({

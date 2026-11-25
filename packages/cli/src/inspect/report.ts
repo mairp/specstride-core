@@ -16,7 +16,9 @@
 import { readFileSync } from "node:fs";
 import { parseInspectArgs } from "../router/inspect-args.ts";
 import type { RoutedCall } from "../router/route.ts";
-import { select } from "./select.ts";
+import { controlPlaneOf } from "../router/guards.ts";
+import { controlRootOfWorkspace } from "../engine/workspace-control-root.ts";
+import { reportEventFiles } from "./select.ts";
 import {
   NOT_IN_EVENTS,
   reportRowsOf,
@@ -71,6 +73,15 @@ function readReportEvents(path: string): readonly ReportEvent[] {
   return events;
 }
 
+/** The events of several run files in time order; ties keep file then line order. */
+function mergedInTime(streams: readonly (readonly ReportEvent[])[]): readonly ReportEvent[] {
+  return streams
+    .flat()
+    .map((event, index) => ({ event, index }))
+    .sort((a, b) => a.event.at - b.event.at || a.index - b.index)
+    .map((entry) => entry.event);
+}
+
 /** The terse form of one value: `unknown`, the marking, `k=v` records, a unit on a number. */
 
 export function terseValue(row: ReportRow): string {
@@ -101,15 +112,29 @@ export function terseLines(report: Report): readonly string[] {
  */
 export function reportHandler(call: RoutedCall): number {
   const args = parseInspectArgs(call.extras);
-  const chosen = select(args, call.controlPlane);
-  const file = chosen.events;
-  if (file === undefined) {
+  // The engine writes a workspace under `~/.specstride/workspaces/<id>`
+  // (controlRootOfWorkspace, the root `stop` reads); the control plane of the
+  // call is `<workdir>/.specstride` unless the host named one, and its
+  // `features/<slug>/runs/*/events.jsonl` are launch records, not engine
+  // events. Engine runs win: the call's plane, then the engine's root of the
+  // workdir, then the single file of the older layout.
+  const engineRoot = controlPlaneOf(call.workdir, controlRootOfWorkspace(call.workdir));
+  const chosen =
+    [call.controlPlane, engineRoot]
+      .map((cp) => reportEventFiles(args, cp, true))
+      .find((found) => found.files.length > 0) ?? reportEventFiles(args, call.controlPlane);
+  if (chosen.files.length === 0) {
     call.io.err(
       `specstride report: no events of the feature ${chosen.feature} in the control plane\n`,
     );
     return 1;
   }
-  const report = reportRowsOf(readReportEvents(file.path), chosen.runId ?? null);
+  const report = reportRowsOf(
+    chosen.files.length === 1
+      ? readReportEvents(chosen.files[0]?.path ?? "")
+      : mergedInTime(chosen.files.map((file) => readReportEvents(file.path))),
+    chosen.runId ?? null,
+  );
   if (args.json === true) {
     // T154 — one JSON document and nothing else.
     call.io.out(`${JSON.stringify(report, null, 2)}\n`);

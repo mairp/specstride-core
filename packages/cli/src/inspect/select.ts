@@ -15,7 +15,7 @@
  * of the selection (`fellBack`) that the caller may report.
  */
 
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { newestRunOf, eventsPathOf, type ControlPlane } from "../router/guards.ts";
 import {
@@ -125,6 +125,91 @@ export function selectEvents(
   return existsSync(current)
     ? { path: current, logicalName: "workspace:current:events", fellBack: true }
     : undefined;
+}
+
+/**
+ * The event files the engine wrote for one feature, oldest first: the engine
+ * writes `<control>/runs/<runId>/events.jsonl`, one file per run or relaunch.
+ * A run belongs to the feature where `features/<slug>/runs/<runId>` exists, or,
+ * where no feature names the run, when `slug` is the only feature of the
+ * control root (the events carry no feature name). Order is by the first
+ * event time, then run id, so the result is deterministic. Read only.
+ */
+export function engineEventFilesOf(cp: ControlPlane, slug: string): readonly SelectedFile[] {
+  const runsRoot = join(cp.stateDir, "runs");
+  const featuresRoot = join(cp.stateDir, "features");
+  let runIds: string[];
+  let features: string[];
+  try {
+    runIds = readdirSync(runsRoot);
+  } catch {
+    return [];
+  }
+  try {
+    features = readdirSync(featuresRoot);
+  } catch {
+    features = [];
+  }
+  const sole = features.length === 1 && features[0] === slug;
+  const named = (id: string): string | undefined =>
+    features.find((f) => existsSync(join(featuresRoot, f, "runs", id)));
+  const found: { path: string; id: string; at: number }[] = [];
+  for (const id of runIds) {
+    const path = join(runsRoot, id, "events.jsonl");
+    if (!existsSync(path)) continue;
+    const owner = named(id);
+    if (owner === undefined ? !sole : owner !== slug) continue;
+    found.push({ path, id, at: firstEventTime(path) });
+  }
+  found.sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return found.map((f) => ({ path: f.path, logicalName: `run:${f.id}:events` }));
+}
+
+function firstEventTime(path: string): number {
+  try {
+    const text = readFileSync(path, "utf8");
+    const end = text.indexOf("\n");
+    const rec = JSON.parse(end === -1 ? text : text.slice(0, end)) as {
+      at?: unknown;
+      ts?: unknown;
+    };
+    const t = Date.parse(String(rec.at ?? rec.ts));
+    return Number.isFinite(t) ? t : statSync(path).mtimeMs;
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+/**
+ * The event files `report` reads: the feature's own file (legacy layout)
+ * where one exists, else every engine run of the feature, oldest first, else
+ * the single file `select` fell back to (the current file of the workspace).
+ */
+export function reportEventFiles(
+  args: InspectArgs,
+  cp: ControlPlane,
+  engineOnly = false,
+): {
+  readonly feature: string;
+  readonly runId: string | undefined;
+  readonly files: readonly SelectedFile[];
+} {
+  const chosen = select(args, cp);
+  const own = chosen.events;
+  if (engineOnly) {
+    const runs = engineEventFilesOf(cp, chosen.feature);
+    const last = runs[runs.length - 1]?.logicalName.split(":")[1];
+    return { feature: chosen.feature, runId: last, files: runs };
+  }
+  if (own !== undefined && own.logicalName.startsWith("feature:")) {
+    return { feature: chosen.feature, runId: chosen.runId, files: [own] };
+  }
+  const engine = engineEventFilesOf(cp, chosen.feature);
+  if (engine.length > 0) {
+    const last = engine[engine.length - 1]?.logicalName.split(":")[1];
+    return { feature: chosen.feature, runId: last, files: engine };
+  }
+  return { feature: chosen.feature, runId: chosen.runId, files: own === undefined ? [] : [own] };
 }
 
 /**
