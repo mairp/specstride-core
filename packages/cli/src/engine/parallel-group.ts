@@ -125,19 +125,19 @@ export type PlannedMember = {
 
 /**
  * The members of ONE group of the plan of a phase, in the order of the tasks
- * at launch. The group is the one with the ordinal asked for — the first of
- * the phase where none is named. A task of the plan that no group holds is
- * serial and is no member of any group.
+ * at launch. The group is the one with the ordinal asked for — NO FALLBACK to
+ * the plan's first group: the wiring reads the ordinal from the plan's group
+ * itself, in plan order (F154-FR-020). A task of the plan that no group holds
+ * is serial and is no member of any group.
  */
 export function membersOfTheGroup(
   plan: ParallelPlan,
   phase: number,
-  groupOrdinal?: number,
+  groupOrdinal: number,
 ): readonly PlannedMember[] {
   const phasePlan = plan.phases.find((candidate) => candidate.phase === phase);
   if (phasePlan === undefined) return [];
-  const group =
-    phasePlan.groups.find((candidate) => candidate.ordinal === groupOrdinal) ?? phasePlan.groups[0];
+  const group = phasePlan.groups.find((candidate) => candidate.ordinal === groupOrdinal);
   if (group === undefined) return [];
   const scopes = new Map(phasePlan.tasks.map((task) => [task.id, task.scope.prefixes]));
   return group.tasks.map((taskId) => ({

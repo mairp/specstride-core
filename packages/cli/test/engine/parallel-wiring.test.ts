@@ -76,7 +76,7 @@ function git(cwd: string, ...argv: readonly string[]): void {
   assert.equal(done.status, 0, `git ${argv.join(" ")} failed: ${done.stderr}`);
 }
 
-function fixtureOf(name: string): Fixture {
+export function fixtureOf(name: string): Fixture {
   const root = mkdtempSync(join(tmpdir(), `par-wiring-${name}-`));
   const workspace = join(root, "workspace");
   mkdirSync(join(workspace, "src"), { recursive: true });
@@ -205,7 +205,7 @@ const at = path.join(treePath, target);
 fs.writeFileSync(at, fs.readFileSync(at, "utf8") + addition);
 `;
 
-function stubStartDoor(refusalOf?: (workerId: string) => string | undefined) {
+export function stubStartDoor(refusalOf?: (workerId: string) => string | undefined) {
   return {
     start: async (worker: PreparedWorker) => {
       const refused = refusalOf?.(worker.workerId);
@@ -244,7 +244,7 @@ function stubStartDoor(refusalOf?: (workerId: string) => string | undefined) {
  * The wiring's input over the fixture.
  * ------------------------------------------------------------------ */
 
-function wiringOf(
+export function wiringOf(
   fixture: Fixture,
   overrides: {
     readonly plan?: ParallelPlan | null;

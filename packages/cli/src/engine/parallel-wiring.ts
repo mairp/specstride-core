@@ -13,8 +13,9 @@
  * F142-FR-006 — and every decision below is the layer's own, applied at the
  * place the engine holds the state):
  *
- *  - The group of the phase is the FIRST group of its plan (`groups[0]`);
- *    this wiring starts one group per phase attempt.
+ *  - EVERY group of the phase's plan runs, in plan order (F154-FR-020);
+ *    one group is started per call at most when the plan holds one, and a
+ *    group left with fewer than two tasks is cancelled (F142-FR-018).
  *  - The boundary is `cleanPassBoundary` of the layer (F142-FR-018): no
  *    session open (the wiring is read between passes, where none can be), no
  *    yield wait open, no phase evidence in the attempt, and every task of the
@@ -51,11 +52,13 @@ import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { TickOutcome } from "../../../core/src/parallel/integrate.ts";
 import {
   cleanPassBoundary,
+  FAILED_GROUPS_THAT_SWITCH_THE_LAYER_OFF,
   groupFailed,
   layerOffDecision,
   layerOffFor,
   report as reportOfTheLayer,
   reservedTasksBlockText,
+  shrinkOrCancelAGroup,
   workerBlockText,
   workerCachesReading,
   type AdmissionInputs,
@@ -71,7 +74,7 @@ import {
   type QuotaObservation,
   type WorkerCaches,
 } from "../../../layer-parallel/src/index.ts";
-import { tickFile } from "../../../spec-formats/src/tick.ts";
+import { tickFile, tickedTaskIds } from "../../../spec-formats/src/tick.ts";
 import {
   dshStartDoor,
   membersOfTheGroup,
@@ -104,16 +107,29 @@ const THE_TASK_LIST_FORMAT = "speckit-tasks" as const;
 
 /** The first group of a phase of the plan, or `undefined` where none is. */
 export function theGroupOfThePhase(plan: ParallelPlan, phase: number): PlannedGroup | undefined {
-  return plan.phases.find((entry) => entry.phase === phase)?.groups[0];
+  return theGroupsOfThePhase(plan, phase)[0];
+}
+
+/**
+ * EVERY group of a phase of the plan, in plan order (F154-FR-020): a phase
+ * attempt works all of them, one after the other, never only the first.
+ */
+export function theGroupsOfThePhase(plan: ParallelPlan, phase: number): readonly PlannedGroup[] {
+  return plan.phases.find((entry) => entry.phase === phase)?.groups ?? [];
 }
 
 /**
  * The tasks of the phase that precede the group, in the order at launch —
  * the first input of the boundary's kept-unit condition (F142-FR-018).
+ * The group asked for is the plan's first where none is named.
  */
-export function tasksBeforeTheGroup(plan: ParallelPlan, phase: number): readonly string[] {
+export function tasksBeforeTheGroup(
+  plan: ParallelPlan,
+  phase: number,
+  ofTheGroup?: PlannedGroup,
+): readonly string[] {
   const entry = plan.phases.find((candidate) => candidate.phase === phase);
-  const group = theGroupOfThePhase(plan, phase);
+  const group = ofTheGroup ?? theGroupOfThePhase(plan, phase);
   if (entry === undefined || group === undefined) return Object.freeze([]);
   const first = group.tasks[0];
   if (first === undefined) return Object.freeze([]);
@@ -621,31 +637,31 @@ export type TheParallelWiring = {
  */
 export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParallelWiring {
   const plan = input.plan;
-  const group = plan === null ? undefined : theGroupOfThePhase(plan, input.phase);
-  const members = plan === null || group === undefined ? [] : membersOfTheGroup(plan, input.phase);
-  const before = plan === null ? [] : tasksBeforeTheGroup(plan, input.phase);
+  /* F154-FR-020 — EVERY group of the plan, in plan order: from the seam the
+   * composition root wires, else from the plan itself. */
+  const groups: readonly PlannedGroup[] =
+    plan === null
+      ? Object.freeze([])
+      : (input.groupsOfThePhase !== undefined
+          ? input.groupsOfThePhase()
+          : theGroupsOfThePhase(plan, input.phase));
+  const group = groups[0];
+  const before = plan === null || group === undefined ? [] : tasksBeforeTheGroup(plan, input.phase, group);
   const secretsOf = theSecretsOfTheWorker({
     controlRoot: input.controlRoot,
     home: input.home,
     runId: input.runId,
   });
-  const promptOf = (worker: { readonly taskId: string; readonly outboxPath: string }): string => {
-    const member = members.find((one) => one.taskId === worker.taskId);
-    return thePromptOfTheWorker({
-      taskId: worker.taskId,
-      taskText: input.taskTextOf(worker.taskId),
-      prefixes: member?.scopePrefixes ?? [],
-      hash: input.hash,
-      outboxPath: worker.outboxPath,
-    });
-  };
 
-  let started = false;
+  let startedOrdinals: number[] = [];
+  let cancelledOrdinals: number[] = [];
   let layerOffAttempt = false;
   let layerOffRun = false;
   let handoff = "";
   let stopSeen: { readonly now: boolean } | null = null;
   const closedGroups: ClosedGroup[] = [];
+  /** The tasks this attempt's own group runs put on the main line (their ticks). */
+  const workedHere: string[] = [];
 
   const carryOut = (decision: LayerOffDecision): void => {
     input.emit(decision.event.type, decision.event.data);
@@ -655,258 +671,375 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
     else layerOffRun = true;
   };
 
+  /** The prompt of one worker of the group with the ordinal given (F154-FR-020). */
+  const promptOfTheOrdinal = (groupOrdinal: number) => {
+    const members = plan === null ? [] : membersOfTheGroup(plan, input.phase, groupOrdinal);
+    return (worker: { readonly taskId: string; readonly outboxPath: string }): string => {
+      const member = members.find((one) => one.taskId === worker.taskId);
+      return thePromptOfTheWorker({
+        taskId: worker.taskId,
+        taskText: input.taskTextOf(worker.taskId),
+        prefixes: member?.scopePrefixes ?? [],
+        hash: input.hash,
+        outboxPath: worker.outboxPath,
+      });
+    };
+  };
+
+  /**
+   * The tasks the task list as read NOW ticks (F142-FR-018): a task a serial
+   * pass worked and ticked leaves its group. An unreadable task list ticks
+   * nothing — the reading degrades, it never fails (F154-FR-004).
+   */
+  const tickedTaskIdsOfTheTaskList = (): readonly string[] => {
+    try {
+      return tickedTaskIds({
+        path: join(input.workspace, input.taskListPath),
+        format: THE_TASK_LIST_FORMAT,
+      });
+    } catch {
+      return [];
+    }
+  };
+
+  /**
+   * The count of the phase attempt's failed groups read before EVERY group
+   * (F154-FR-025): from the ledger where the composition root reads it, else
+   * the constant the composition root passed, as today.
+   */
+  const failedGroupsBefore = (): number =>
+    input.failedGroupsBeforeOfTheLedger !== undefined
+      ? input.failedGroupsBeforeOfTheLedger(input.phase)
+      : input.failedGroupsBefore;
+
   return {
     group,
     tasksBeforeTheGroup: before,
-    reservedBlock: () =>
-      group === undefined || started || layerOffAttempt || layerOffRun
+    /* The reserved-tasks block stands while the NEXT group of the plan waits
+     * (F154-FR-020): the first group not yet started and not cancelled. */
+    reservedBlock: () => {
+      const waiting = groups.find(
+        (candidate) =>
+          !startedOrdinals.includes(candidate.ordinal) && !cancelledOrdinals.includes(candidate.ordinal),
+      );
+      return waiting === undefined || layerOffAttempt || layerOffRun
         ? ""
-        : reservedTasksBlockText(group.tasks),
+        : reservedTasksBlockText(waiting.tasks);
+    },
     handoffForTheCritic: () => handoff,
     layerOffForTheRun: () => layerOffRun,
     layerOffForTheAttempt: () => layerOffAttempt,
     theStopSeenOfTheGroup: () => stopSeen,
+    /* F154-FR-020 — THE GROUPS LOOP: every group of the plan, in plan order,
+     * each at its clean boundary, until the layer goes off (F142-FR-023) or
+     * a boundary blocks the rest. */
     startIfTheBoundaryIsClean: async () => {
-      if (plan === null || group === undefined) return false;
-      if (started || layerOffAttempt || layerOffRun) return false;
-      /* ---- THE RESUME JOIN (step 4, F143-FR-025): a group of an earlier
-       * engine start may stand open over this feature. Before a fresh start
-       * is even considered, the holders of that run's token are ended after
-       * the identity check, the decision over the last ledger record is
-       * carried out, and where a state stands that this engine cannot carry
-       * out, the group does NOT start: an engine that cannot carry a resume
-       * state out must never answer it by starting the group again over the
-       * open ledger. ---- */
-      let attempt: TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow | undefined;
-      const open = theOpenParallelGroupOf({
-        controlRoot: input.controlRoot,
-      });
-      if (open !== undefined) {
-        const search = await endTheHoldersOfTheOpenGroup({
-          open,
-          controlRoot: input.controlRoot,
-          say: input.say,
-        });
-        // THE TAIL of the eight states, carried out with the facts of THIS
-        // pass boundary — the same audits' inputs, tick, check runner and
-        // hash the fresh group run below takes.
-        const tailDrive: TheTailOfTheResumeDrive = {
-          plan,
-          phase: input.phase,
-          groupOrdinal: 1,
-          workspace: input.workspace,
-          slug: input.slug,
-          taskListPath: input.taskListPath,
-          taskTextAtLaunch: input.taskTextAtLaunch,
-          secretsOf: (workerId: string, workerToken: string) => secretsOf(workerId, workerToken),
-          singleWriter: {
-            taskList: join(input.workspace, input.taskListPath),
-            phaseEvidence: [],
-            notebook: join(input.controlRoot, "notebook.md"),
-            handoff: join(
-              theParallelHomeOfARun(open.runId),
-              ".specstride",
-              "worker-roots",
-              open.runId,
-              "handoff.json",
-            ),
-            workspacePart: join(input.workspace, ".specstride"),
-          },
-          tick: theTickOfTheTaskList(join(input.workspace, input.taskListPath)),
-          runner: input.runner ?? theRealCheckRunner(),
-          innerCheckSet: input.innerCheckSet,
-          containment: input.containment,
-          hash: input.hash,
-          emit: (type, data) => input.emit(type, data),
-        };
-        const carried = await carryOutTheResumeOfTheOpenGroup({
-          open,
-          controlRoot: input.controlRoot,
-          say: input.say,
-          drive: tailDrive,
-          ...(input.resetCounts === true ? { resetCounts: true } : {}),
-          // THE STOP THE CARRIED RESTART RUNS UNDER (F143-FR-026, owed item 4
-          // of par-4): the same request the fresh group runs — a restart runs
-          // worker passes, and its boundaries poll `inbox:stop` exactly as the
-          // fresh group's do.
-          ...(input.stopRequestPath === undefined
-            ? {}
-            : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
-          // THE RESTART of the two states a worker process has to start for
-          // (F143-FR-025 states 1 and 2): the interrupted run's ledger, THIS
-          // start's supervision and start door — the restarted passes run
-          // under this engine's token, the records go on the interrupted
-          // run's ledger.
-          restart: {
-            tail: tailDrive,
-            search,
-            model: input.model,
-            modelTierOrEffort: input.modelTierOrEffort,
-            containment: input.containment,
-            runToken: input.runToken,
-            runId: input.runId,
-            timeLimitSec: Math.ceil(input.timeLimitMs / 1000),
-            enginePid: input.enginePid,
-            engineStartedAtMs: input.engineStartedAtMs,
-            workersAtATime: Math.max(WORKERS_AT_A_TIME_DEFAULT, group.tasks.length),
-            guardScriptPath: input.guardScriptPath,
-            registry: input.registry,
-            promptOf,
-            outputRootOf: (worker) =>
-              theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
-            ...(input.startDoor === undefined ? {} : { startDoor: input.startDoor as never }),
-          },
-        });
-        const stateOfTheResume = carried.carried
-          ? "attempt" in carried
-            ? ` (state ${String(carried.state)} of the resume carried out as this start's group run)`
-            : ""
-          : `, state ${String(carried.state)} of the resume`;
-        input.say(
-          `[LOOP] parallel: a group of run ${open.runId} (${open.groupId}) stands open from an earlier engine start — ${carried.action}${stateOfTheResume}; the survivor search ended ${String(search.ended.length)} worker(s), ${String(
-            search.alreadyGone.length,
-          )} had gone, ${String(search.refused.length)} refused by the identity check`,
-        );
-        if (!carried.carried) return false;
-        if ("attempt" in carried) {
-          /* The tail of F143-FR-025 was carried out: the group's work stands
-           * in the workspace already, and the carried attempt IS this start's
-           * group run — the same close, counts and directives the fresh path
-           * reports below. A fresh start over an open ledger that this engine
-           * just carried is never considered. */
-          started = true;
-          attempt = carried.attempt;
-          if (carried.stopped !== undefined) {
-            // F143-FR-025 state 6 — the loop layer goes off FOR THE RUN.
-            layerOffRun = true;
-            input.say(
-              `[LOOP] parallel: ${carried.stopped.event} — the application of group ${open.groupId} stopped (${carried.stopped.integrityKind}); the loop layer is off for the run`,
-            );
-          }
-        }
+      if (plan === null || groups.length === 0) return false;
+      if (layerOffAttempt || layerOffRun) return false;
+      let ranAny = false;
+      for (const current of groups) {
+        if (layerOffAttempt || layerOffRun) break;
+        if (startedOrdinals.includes(current.ordinal)) continue;
+        if (cancelledOrdinals.includes(current.ordinal)) continue;
+        const outcome = await startOneGroup(current);
+        if (outcome === "ran") ranAny = true;
+        else if (outcome === "stopped") {
+          ranAny = true;
+          break;
+        } else if (outcome === "blocked") break;
+        // "failed" and "skipped" fall through: the next group of the plan
+        // decides for itself at ITS boundary (F154-FR-020).
       }
-      if (attempt === undefined) {
-        const verdict = cleanPassBoundary({
-          sessionOpen: false,
-          yieldWaitOpen: false,
-          phaseEvidencePresent: input.evidencePresent(),
-          tasksBeforeTheGroup: before,
-          tasksNamedByKeptUnits: input.keptUnitsOf(),
-        });
-        if (!verdict.clean) {
-          input.say(
-            `[LOOP] parallel: the group does not start yet — ${verdict.condition}: ${verdict.detail}`,
-          );
-          return false;
-        }
-        started = true;
-        const workersAtATime = Math.max(WORKERS_AT_A_TIME_DEFAULT, group.tasks.length);
-        attempt = await runTheGroupOfTheAttempt({
-          controlRoot: input.controlRoot,
-          runId: input.runId,
-          home: input.home,
-          plan,
-          phase: input.phase,
-          groupOrdinal: 1,
-          workspace: input.workspace,
-          slug: input.slug,
-          taskListPath: input.taskListPath,
+      return ranAny;
+    },
+  };
+
+  /** Where one group's start stood after its run: `ran` when a group was
+   * attempted (true where its run held), `skipped` where the next group may
+   * still start, `stopped` where `stop --now` cut it, `blocked` where the
+   * rest of the plan waits. */
+  async function startOneGroup(
+    current: PlannedGroup,
+  ): Promise<"ran" | "failed" | "skipped" | "stopped" | "blocked"> {
+    if (plan === null) return "blocked";
+    /* F154-FR-025 (CQ-154-13 A) — read the failed count before EVERY group:
+     * at the bound of F142-FR-023 no further group of the attempt starts. */
+    const failed = failedGroupsBefore();
+    if (failed >= FAILED_GROUPS_THAT_SWITCH_THE_LAYER_OFF) {
+      input.say(
+        `[LOOP] parallel: ${String(failed)} group(s) of the attempt have failed — the bound of F142-FR-023 is reached, no further group starts (CQ-154-13)`,
+      );
+      return "blocked";
+    }
+    /* F142-FR-018 (PU-17) — a task the main line worked (a kept unit names
+     * it, or the task list ticks it) leaves the group; a group left with
+     * fewer than two tasks is CANCELLED (F154-FR-020). */
+    const worked = Object.freeze([...input.keptUnitsOf(), ...tickedTaskIdsOfTheTaskList()]);
+    const shrink = shrinkOrCancelAGroup(current, { namedInACheckpoint: worked });
+    if (shrink.kind === "cancelled") {
+      cancelledOrdinals.push(current.ordinal);
+      input.say(
+        `[LOOP] parallel: group ${current.ordinal} is cancelled — ${shrink.detail} (F142-FR-018); ${shrink.left.join(", ")} stay on the main line`,
+      );
+      return "skipped";
+    }
+    /* The gate of the admission (F154-FR-021 to -024, -033), where the
+     * composition root wires it: a refused group's tasks stay serial. */
+    if (input.groupGateOfTheAttempt !== undefined) {
+      const quota = input.quotaObservationOf !== undefined ? input.quotaObservationOf() : null;
+      const gate = input.groupGateOfTheAttempt({
+        workers: Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
+        innerCheckSet: input.innerCheckSet.map((entry) => entry.id),
+        ...(quota === null ? {} : { headroom: { quota } }),
+      });
+      if (!gate.admitted) {
+        input.say(
+          `[LOOP] parallel: group ${current.ordinal} is not admitted — ${gate.reason ?? "gate"}: ${gate.detail}`,
+        );
+        return "skipped";
+      }
+    }
+    let attempt: TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow | undefined;
+    /* ---- THE RESUME JOIN (step 4, F143-FR-025): a group of an earlier
+     * engine start may stand open over this feature. Before a fresh start
+     * is even considered, the holders of that run's token are ended after
+     * the identity check, the decision over the last ledger record is
+     * carried out, and where a state stands that this engine cannot carry
+     * out, the group does NOT start: an engine that cannot carry a resume
+     * state out must never answer it by starting the group again over the
+     * open ledger. ---- */
+    const open = theOpenParallelGroupOf({
+      controlRoot: input.controlRoot,
+    });
+    if (open !== undefined) {
+      const search = await endTheHoldersOfTheOpenGroup({
+        open,
+        controlRoot: input.controlRoot,
+        say: input.say,
+      });
+      // THE TAIL of the eight states, carried out with the facts of THIS
+      // pass boundary — the same audits' inputs, tick, check runner and
+      // hash the fresh group run below takes.
+      const tailDrive: TheTailOfTheResumeDrive = {
+        plan,
+        phase: input.phase,
+        groupOrdinal: current.ordinal,
+        workspace: input.workspace,
+        slug: input.slug,
+        taskListPath: input.taskListPath,
+        taskTextAtLaunch: input.taskTextAtLaunch,
+        secretsOf: (workerId: string, workerToken: string) => secretsOf(workerId, workerToken),
+        singleWriter: {
+          taskList: join(input.workspace, input.taskListPath),
+          phaseEvidence: [],
+          notebook: join(input.controlRoot, "notebook.md"),
+          handoff: join(
+            theParallelHomeOfARun(open.runId),
+            ".specstride",
+            "worker-roots",
+            open.runId,
+            "handoff.json",
+          ),
+          workspacePart: join(input.workspace, ".specstride"),
+        },
+        tick: theTickOfTheTaskList(join(input.workspace, input.taskListPath)),
+        runner: input.runner ?? theRealCheckRunner(),
+        innerCheckSet: input.innerCheckSet,
+        containment: input.containment,
+        hash: input.hash,
+        emit: (type, data) => input.emit(type, data),
+      };
+      const carried = await carryOutTheResumeOfTheOpenGroup({
+        open,
+        controlRoot: input.controlRoot,
+        say: input.say,
+        drive: tailDrive,
+        ...(input.resetCounts === true ? { resetCounts: true } : {}),
+        // THE STOP THE CARRIED RESTART RUNS UNDER (F143-FR-026, owed item 4
+        // of par-4): the same request the fresh group runs — a restart runs
+        // worker passes, and its boundaries poll `inbox:stop` exactly as the
+        // fresh group's do.
+        ...(input.stopRequestPath === undefined
+          ? {}
+          : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
+        // THE RESTART of the two states a worker process has to start for
+        // (F143-FR-025 states 1 and 2): the interrupted run's ledger, THIS
+        // start's supervision and start door — the restarted passes run
+        // under this engine's token, the records go on the interrupted
+        // run's ledger.
+        restart: {
+          tail: tailDrive,
+          search,
           model: input.model,
           modelTierOrEffort: input.modelTierOrEffort,
           containment: input.containment,
           runToken: input.runToken,
+          runId: input.runId,
           timeLimitSec: Math.ceil(input.timeLimitMs / 1000),
-          promptOf,
-          outputRootOf: (worker) =>
-            theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
-          ...(input.startDoor === undefined
-            ? {
-                startDoor: dshStartDoor({
-                  model: input.model,
-                  modelTierOrEffort: input.modelTierOrEffort,
-                  containment: input.containment,
-                  runToken: input.runToken,
-                  timeLimitMs: input.timeLimitMs,
-                  promptOf: (worker) => promptOf(worker),
-                  outputRootOf: (worker) =>
-                    theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
-                }),
-              }
-            : { startDoor: input.startDoor as never }),
           enginePid: input.enginePid,
           engineStartedAtMs: input.engineStartedAtMs,
-          workersAtATime,
+          workersAtATime: Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
           guardScriptPath: input.guardScriptPath,
           registry: input.registry,
-          taskTextAtLaunch: input.taskTextAtLaunch,
-          secretsOf: (workerId: string, workerToken: string) => secretsOf(workerId, workerToken),
-          singleWriter: {
-            taskList: join(input.workspace, input.taskListPath),
-            phaseEvidence: [],
-            notebook: join(input.controlRoot, "notebook.md"),
-            handoff: join(input.home, ".specstride", "worker-roots", input.runId, "handoff.json"),
-            workspacePart: join(input.workspace, ".specstride"),
-          },
-          tick: theTickOfTheTaskList(join(input.workspace, input.taskListPath)),
-          runner: input.runner ?? theRealCheckRunner(),
-          innerCheckSet: input.innerCheckSet,
-          hash: input.hash,
-          ...(input.resetCounts === true ? { resetCounts: true } : {}),
-          ...(input.stopRequestPath === undefined
-            ? {}
-            : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
-          emit: (event) => input.emit(event.type, event.data),
-          say: input.say,
-        });
-      }
-      if (attempt !== undefined && "stoppedByStopNow" in attempt) {
-        /* ---- `stop --now` cut the group (F143-FR-026): nothing was closed,
-         * the ledger stands as the kill left it, and the run stops. ---- */
-        stopSeen = { now: true };
-        input.say(
-          `[LOOP] parallel: stop --now cut group ${attempt.groupId} — no further worker starts, the resume states decide at the next engine start (F143-FR-025, F143-FR-026)`,
-        );
-        return true;
-      }
-      // A clean stop the group ran under takes effect AFTER the group
-      // (F143-FR-026); the composition root reads it at this boundary.
-      if (attempt.ok === true && attempt.stopAfterTheGroup === true) stopSeen = { now: false };
-      const closed = theClosedGroupOf(attempt as TheGroupAttempt | TheGroupAttemptRefused);
-      const counts = attempt.ok
-        ? {
-            wallMs: attempt.counts.wallMs,
-            agentMs: attempt.counts.agentMs,
-            refused: attempt.counts.refused,
-          }
-        : { wallMs: 0, agentMs: 0, refused: 1 };
-      closedGroups.push(closed);
-      input.onClosed(closed, counts);
-      if (attempt.ok) {
-        if (attempt.directive === "keep") {
-          handoff = attempt.handoff;
-          input.onHandoff(attempt.handoff);
-        } else if (attempt.directive === "layerOffForAttempt" && attempt.layerOff !== null) {
-          carryOut(attempt.layerOff);
-        }
-        if (attempt.directive === "repair" || attempt.directive === "none") {
+          promptOf: promptOfTheOrdinal(current.ordinal),
+          outputRootOf: (worker) =>
+            theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
+          ...(input.startDoor === undefined ? {} : { startDoor: input.startDoor as never }),
+        },
+      });
+      const stateOfTheResume = carried.carried
+        ? "attempt" in carried
+          ? ` (state ${String(carried.state)} of the resume carried out as this start's group run)`
+          : ""
+        : `, state ${String(carried.state)} of the resume`;
+      input.say(
+        `[LOOP] parallel: a group of run ${open.runId} (${open.groupId}) stands open from an earlier engine start — ${carried.action}${stateOfTheResume}; the survivor search ended ${String(search.ended.length)} worker(s), ${String(
+          search.alreadyGone.length,
+        )} had gone, ${String(search.refused.length)} refused by the identity check`,
+      );
+      if (!carried.carried) return "blocked";
+      if ("attempt" in carried) {
+        /* The tail of F143-FR-025 was carried out: the group's work stands
+         * in the workspace already, and the carried attempt IS this start's
+         * group run — the same close, counts and directives the fresh path
+         * reports below. A fresh start over an open ledger that this engine
+         * just carried is never considered. */
+        startedOrdinals.push(current.ordinal);
+        attempt = carried.attempt;
+        if (carried.stopped !== undefined) {
+          // F143-FR-025 state 6 — the loop layer goes off FOR THE RUN.
+          layerOffRun = true;
           input.say(
-            `[LOOP] parallel: ${attempt.tasksOnTheMainLine.join(", ")} run on the main line (${attempt.directive})`,
+            `[LOOP] parallel: ${carried.stopped.event} — the application of group ${open.groupId} stopped (${carried.stopped.integrityKind}); the loop layer is off for the run`,
           );
         }
-      } else {
-        carryOut(
-          layerOffFor("harness-error", {
-            groupId: attempt.groupId,
-            detail: attempt.message,
-          }),
+      }
+    }
+    if (attempt === undefined) {
+      /* The boundary of THIS group (F154-FR-020): every task of the phase
+       * that precedes it is worked — named by a kept unit, or ticked on the
+       * task list, or put there by an earlier group of this attempt. */
+      const verdict = cleanPassBoundary({
+        sessionOpen: false,
+        yieldWaitOpen: false,
+        phaseEvidencePresent: input.evidencePresent(),
+        tasksBeforeTheGroup: tasksBeforeTheGroup(plan, input.phase, current),
+        tasksNamedByKeptUnits: [...worked, ...workedHere],
+      });
+      if (!verdict.clean) {
+        input.say(
+          `[LOOP] parallel: the group does not start yet — ${verdict.condition}: ${verdict.detail}`,
+        );
+        return "blocked";
+      }
+      startedOrdinals.push(current.ordinal);
+      const workersAtATime = Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length);
+      attempt = await runTheGroupOfTheAttempt({
+        controlRoot: input.controlRoot,
+        runId: input.runId,
+        home: input.home,
+        plan,
+        phase: input.phase,
+        groupOrdinal: current.ordinal,
+        workspace: input.workspace,
+        slug: input.slug,
+        taskListPath: input.taskListPath,
+        model: input.model,
+        modelTierOrEffort: input.modelTierOrEffort,
+        containment: input.containment,
+        runToken: input.runToken,
+        timeLimitSec: Math.ceil(input.timeLimitMs / 1000),
+        promptOf: promptOfTheOrdinal(current.ordinal),
+        outputRootOf: (worker) =>
+          theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
+        ...(input.startDoor === undefined
+          ? {
+              startDoor: dshStartDoor({
+                model: input.model,
+                modelTierOrEffort: input.modelTierOrEffort,
+                containment: input.containment,
+                runToken: input.runToken,
+                timeLimitMs: input.timeLimitMs,
+                promptOf: (worker) => promptOfTheOrdinal(current.ordinal)(worker),
+                outputRootOf: (worker) =>
+                  theOutputRootOfTheWorker(input.controlRoot, input.runId, worker.workerId),
+              }),
+            }
+          : { startDoor: input.startDoor as never }),
+        enginePid: input.enginePid,
+        engineStartedAtMs: input.engineStartedAtMs,
+        workersAtATime,
+        guardScriptPath: input.guardScriptPath,
+        registry: input.registry,
+        taskTextAtLaunch: input.taskTextAtLaunch,
+        secretsOf: (workerId: string, workerToken: string) => secretsOf(workerId, workerToken),
+        singleWriter: {
+          taskList: join(input.workspace, input.taskListPath),
+          phaseEvidence: [],
+          notebook: join(input.controlRoot, "notebook.md"),
+          handoff: join(input.home, ".specstride", "worker-roots", input.runId, "handoff.json"),
+          workspacePart: join(input.workspace, ".specstride"),
+        },
+        tick: theTickOfTheTaskList(join(input.workspace, input.taskListPath)),
+        runner: input.runner ?? theRealCheckRunner(),
+        innerCheckSet: input.innerCheckSet,
+        hash: input.hash,
+        ...(input.resetCounts === true ? { resetCounts: true } : {}),
+        ...(input.stopRequestPath === undefined
+          ? {}
+          : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
+        emit: (event) => input.emit(event.type, event.data),
+        say: input.say,
+      });
+    }
+    workedHere.push(...current.tasks);
+    if (attempt !== undefined && "stoppedByStopNow" in attempt) {
+      /* ---- `stop --now` cut the group (F143-FR-026): nothing was closed,
+       * the ledger stands as the kill left it, and the run stops. ---- */
+      stopSeen = { now: true };
+      input.say(
+        `[LOOP] parallel: stop --now cut group ${attempt.groupId} — no further worker starts, the resume states decide at the next engine start (F143-FR-025, F143-FR-026)`,
+      );
+      return "stopped";
+    }
+    // A clean stop the group ran under takes effect AFTER the group
+    // (F143-FR-026); the composition root reads it at this boundary.
+    if (attempt.ok === true && attempt.stopAfterTheGroup === true) stopSeen = { now: false };
+    const closed = theClosedGroupOf(attempt as TheGroupAttempt | TheGroupAttemptRefused);
+    const counts = attempt.ok
+      ? {
+          wallMs: attempt.counts.wallMs,
+          agentMs: attempt.counts.agentMs,
+          refused: attempt.counts.refused,
+        }
+      : { wallMs: 0, agentMs: 0, refused: 1 };
+    closedGroups.push(closed);
+    input.onClosed(closed, counts);
+    if (attempt.ok) {
+      if (attempt.directive === "keep") {
+        handoff = attempt.handoff;
+        input.onHandoff(attempt.handoff);
+      } else if (attempt.directive === "layerOffForAttempt" && attempt.layerOff !== null) {
+        carryOut(attempt.layerOff);
+      }
+      if (attempt.directive === "repair" || attempt.directive === "none") {
+        input.say(
+          `[LOOP] parallel: ${attempt.tasksOnTheMainLine.join(", ")} run on the main line (${attempt.directive})`,
         );
       }
-      const decision = layerOffDecision({
-        closedGroups,
-        failedGroupsBefore: input.failedGroupsBefore,
-      });
-      if (decision !== null) carryOut(decision);
-      return attempt.ok;
-    },
-  };
+    } else {
+      carryOut(
+        layerOffFor("harness-error", {
+          groupId: attempt.groupId,
+          detail: attempt.message,
+        }),
+      );
+    }
+    const decision = layerOffDecision({
+      closedGroups,
+      failedGroupsBefore: failed,
+    });
+    if (decision !== null) carryOut(decision);
+    return attempt.ok ? "ran" : "failed";
+  }
 }

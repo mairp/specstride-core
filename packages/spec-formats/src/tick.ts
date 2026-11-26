@@ -248,6 +248,35 @@ export function tickFile(input: TickFileInput, grammar?: SpecGrammar): TickResul
 }
 
 /**
+ * F154-FR-004, F142-FR-018 — a READ-ONLY reader of the task ids whose
+ * checkboxes are TICKED in the file at the path given. The grammar does the
+ * reading (F104-FR-008); this function adds no parsing of its own and writes
+ * nothing. An unreadable file, an unknown format or any other error degrades
+ * to no ticks: `[]`, never a throw.
+ */
+export function tickedTaskIds(input: {
+  readonly path: string;
+  readonly format: ModelFormatName;
+}): readonly string[] {
+  let text: string;
+  try {
+    text = readFileSync(input.path, "utf8");
+  } catch {
+    return Object.freeze([]);
+  }
+  const grammar = grammarOf(input.format);
+  if (grammar === undefined || !grammar.mayBeTicked(text)) return Object.freeze([]);
+  const seen = new Set<string>();
+  splitKeepingLineEnds(text).lines.forEach((line, index) => {
+    const box = readCheckboxLine(line);
+    if (box === undefined || !box.ticked) return;
+    const task = structuredTaskOfLine(line, index + 1, input.path, grammar.taskIdForm);
+    if (task !== undefined) seen.add(task.id);
+  });
+  return Object.freeze([...seen]);
+}
+
+/**
  * F104-FR-017 — the unticked task ids of a phase of a MODEL, which is what a
  * caller that already parsed the spec ticks by id. The model is the one reader
  * of the task lines (F104-FR-008); this function adds no grammar.

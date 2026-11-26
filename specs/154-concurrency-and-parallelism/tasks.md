@@ -224,12 +224,12 @@ Success criteria:
 **Goal**: a phase works every admissible group of its plan, each at a clean boundary, and the layer switches off after the bound of F142-FR-023.
 **Independent test**: on `tests/fixtures/154/groups/`, a phase with three groups starts all three in plan order.
 
-- [ ] T045 [US2] Write `packages/cli/test/engine/parallel-groups-154.test.ts`: the failing test that a plan with three groups starts three, in order, each after `cleanPassBoundary`, and that a group left with fewer than 2 tasks after a tick is cancelled (F154-FR-020).
-- [ ] T046 [US2] In `packages/cli/src/engine/parallel-wiring.ts` replace `theGroupOfThePhase` (:100-102) with `theGroupsOfThePhase` returning the plan's groups; `membersOfTheGroup` (`parallel-group.ts:132-140`) loses its `groups[0]` fallback (F154-FR-020).
-- [ ] T047 [US2] In `packages/cli/src/engine/parallel-wiring.ts` `startIfTheBoundaryIsClean` (:529-772) loop over the groups: resume join, `cleanPassBoundary`, `groupGate`, `runTheGroupOfTheAttempt`, with `groupOrdinal` from the loop instead of `1` (:558, :667) (F154-FR-020); done when T045 passes.
-- [ ] T048 [US2] Write `packages/cli/test/engine/parallel-layer-off-154.test.ts`: after two failed groups of one attempt `layerOffDecision` switches the layer off and no third group starts (F142-FR-023, F154-FR-025; CQ-154-13 A).
-- [ ] T049 [US2] In `packages/cli/src/engine/parallel-wiring.ts` read `failedGroupsBeforeOfTheLedger` before each group and stop the loop when the count reaches the bound (F154-FR-025); done when T048 passes.
-- [ ] T050 [US2] Write `tests/parallel/154/completion-order.test.ts`: the property test that every permutation of worker completion on `tests/fixtures/154/groups/` leaves 0 bytes of the applied tree different (F154-SC-003).
+- [x] T045 [US2] Write `packages/cli/test/engine/parallel-groups-154.test.ts`: the failing test that a plan with three groups starts three, in order, each after `cleanPassBoundary`, and that a group left with fewer than 2 tasks after a tick is cancelled (F154-FR-020).
+- [x] T046 [US2] In `packages/cli/src/engine/parallel-wiring.ts` replace `theGroupOfThePhase` (:100-102) with `theGroupsOfThePhase` returning the plan's groups; `membersOfTheGroup` (`parallel-group.ts:132-140`) loses its `groups[0]` fallback (F154-FR-020).
+- [x] T047 [US2] In `packages/cli/src/engine/parallel-wiring.ts` `startIfTheBoundaryIsClean` (:529-772) loop over the groups: resume join, `cleanPassBoundary`, `groupGate`, `runTheGroupOfTheAttempt`, with `groupOrdinal` from the loop instead of `1` (:558, :667) (F154-FR-020); done when T045 passes.
+- [x] T048 [US2] Write `packages/cli/test/engine/parallel-layer-off-154.test.ts`: after two failed groups of one attempt `layerOffDecision` switches the layer off and no third group starts (F142-FR-023, F154-FR-025; CQ-154-13 A).
+- [x] T049 [US2] In `packages/cli/src/engine/parallel-wiring.ts` read `failedGroupsBeforeOfTheLedger` before each group and stop the loop when the count reaches the bound (F154-FR-025); done when T048 passes.
+- [x] T050 [US2] Write `tests/parallel/154/completion-order.test.ts`: the property test that every permutation of worker completion on `tests/fixtures/154/groups/` leaves 0 bytes of the applied tree different (F154-SC-003).
 
 **Checkpoint**: Phase 5. Three groups start in order on the fixture; the layer-off and completion-order tests are green; T022 still passes.
 
