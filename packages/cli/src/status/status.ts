@@ -33,6 +33,7 @@
  * (F129-SC-009).
  */
 import { PROFILE_NAME } from "@specstride/contracts/profile/parity";
+import { PROPOSED_QUOTA_CLASS_154 } from "@specstride/contracts/ep/quota-classifier";
 import type { ControlPlace } from "./state-readers.ts";
 import {
   eventsPathOf,
@@ -75,6 +76,37 @@ export const EXIT_CODES = Object.freeze({
   /** A usage refusal. */
   usage: 2,
 } as const);
+
+/** The state a pause record puts a run in (transition T6). */
+const PAUSED_STATE = "paused-quota" as const;
+
+/**
+ * T106 (F154-FR-045) — the display of a pause names its class where the class
+ * is one a reader can act on: `paused-quota (host_slot)` while the run waits
+ * for a host slot or for the hold of its account. The class appears ONLY for
+ * the class feature 154 proposes (`host.limits` on): every pause of the
+ * closed set of §C.13 — the pauses feature 127 wrote before this existed —
+ * prints as it always printed, byte for byte, and a pause record without a
+ * class prints as before too (F129-FR-011: the compatibility output holds).
+ */
+export function displayWithPauseClass(
+  display: string,
+  pauseRecord: Readonly<Record<string, unknown>> | null,
+): string {
+  if (display !== PAUSED_STATE) return display;
+  const pauseClass = pauseRecord === null ? null : pauseRecord["class"];
+  if (pauseClass !== PROPOSED_QUOTA_CLASS_154) return display;
+  return `${display} (${PROPOSED_QUOTA_CLASS_154})`;
+}
+
+/** The view of a run with the pause class shown, where the pause names it. */
+function viewWithPauseClass(
+  view: ViewRecord,
+  pauseRecord: Readonly<Record<string, unknown>> | null,
+): ViewRecord {
+  const display = displayWithPauseClass(view.display, pauseRecord);
+  return display === view.display ? view : ({ ...view, display } as ViewRecord);
+}
 
 /** What one run of `status` did. */
 export type StatusRun = {
@@ -280,16 +312,19 @@ export function runStatus(argv: readonly string[], options: StatusOptions): Stat
 
   // The output (F129-FR-025, F129-FR-026, F129-FR-027, F129-SC-009). Under the
   // parity profile `status` prints the compatibility output from the same
-  // view, and `--line` and `--json` print nothing.
+  // view, and `--line` and `--json` print nothing. T106 (F154-FR-045) — a
+  // `paused-quota` whose pause record names the proposed class shows it:
+  // `paused-quota (host_slot)`.
+  const shownView = viewWithPauseClass(view, pauseRecord);
   const lines: readonly string[] = parity
     ? parsed.json || parsed.line
       ? []
-      : compatibilityLines(view)
+      : compatibilityLines(shownView)
     : parsed.json
-      ? [statusJson(view, options.renderView)]
+      ? [statusJson(shownView, options.renderView)]
       : parsed.line
-        ? [statusLineText(view, options.renderLine)]
-        : statusTextLines(view, options.renderLine);
+        ? [statusLineText(shownView, options.renderLine)]
+        : statusTextLines(shownView, options.renderLine);
   for (const line of lines) print(`${line}\n`);
 
   return Object.freeze({ exit: EXIT_CODES.ok, stdout: out.join(""), stderr: err.join(""), view });

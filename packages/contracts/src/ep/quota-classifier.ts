@@ -28,6 +28,39 @@ export const CLASSES = [
 ] as const;
 export type QuotaClass = (typeof CLASSES)[number];
 
+/**
+ * T103 — the class spec 154 PROPOSES for §C.13 (F154-FR-045; CQ-154-09,
+ * CQ-154-14 A): `host_slot`, the class of the pause a run enters while it
+ * waits for a host slot or a hold (`host.limits`). A PROPOSAL is a member of
+ * §C.13 only when the owner copies it into the annex, so it is not in
+ * `CLASSES` and `readQuotaClass` reads it as `CLASS_WHEN_UNKNOWN` — which is
+ * exactly the state under the `parity` profile and with every switch off. A
+ * reader of the `host.limits` switch adds it only while the switch reads on,
+ * and the closed set itself never changes (`packages/policy/test/quota/
+ * host-slot-class.test.ts` pins this; `packages/contracts/test/
+ * parity-154.test.ts` guards the proposal against the closed-sets data).
+ */
+export const PROPOSED_QUOTA_CLASS_154 = "host_slot" as const;
+export type ProposedQuotaClass154 = typeof PROPOSED_QUOTA_CLASS_154;
+export const PROPOSED_QUOTA_CLASSES_154 = Object.freeze([
+  { quotaClass: PROPOSED_QUOTA_CLASS_154, switch: "host.limits" },
+] as const);
+
+/**
+ * T103 — the classes of §C.13 in force: the nine of the annex, plus the
+ * proposed class whose switch reads on. With every switch off — the default,
+ * and the whole state under the `parity` profile — the list is exactly
+ * `CLASSES` (F154-FR-001).
+ */
+export function quotaClassesOf(
+  switchIsOn: (name: string) => boolean,
+): readonly (QuotaClass | ProposedQuotaClass154)[] {
+  const extra = PROPOSED_QUOTA_CLASSES_154.filter((entry) => switchIsOn(entry.switch)).map(
+    (entry) => entry.quotaClass as QuotaClass | ProposedQuotaClass154,
+  );
+  return extra.length === 0 ? CLASSES : [...CLASSES, ...extra];
+}
+
 /** F100-FR-109 — the closed set of confidences. */
 export const CONFIDENCES = ["structured", "status", "text", "stall", "host"] as const;
 export type Confidence = (typeof CONFIDENCES)[number];
@@ -89,6 +122,14 @@ export const A_QUOTA_CLASS_SPENDS = Object.freeze({
   wallClockBudget: false,
   relaunchBudget: false,
 });
+
+/**
+ * T103 — `host_slot` spends what every quota class spends: nothing (F154-FR-045;
+ * "A_QUOTA_CLASS_SPENDS says it spends nothing"). The statement is the same
+ * six-false record as the table above, exported under the proposed class's own
+ * name so that a test can assert it without re-deriving the table.
+ */
+export const A_HOST_SLOT_SPENDS = A_QUOTA_CLASS_SPENDS;
 
 /** Confidences that pause only after a confirming probe (§C.13). */
 export const CONFIDENCES_THAT_NEED_A_PROBE: readonly Confidence[] = Object.freeze([

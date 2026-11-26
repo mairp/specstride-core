@@ -189,6 +189,13 @@ import {
 } from "./run-feature.temp-root.ts";
 // F154-FR-039…-044 (T095, T097) — the host slot seam of the engine start.
 import { makeRunHostSlots, type HostSlotRelease } from "./host-slots.ts";
+// T105 (F154-FR-045, CQ-154-09) — the slot wait enters `paused-quota` through
+// the pause and leaves it through the resume of feature 127 (EP-12).
+import { pause as quotaPause, resume as quotaResume } from "@specstride/policy/quota";
+import type { PolicyEvent } from "@specstride/policy/quota";
+// T108 (F154-FR-041, F154-FR-044) — the atomic hold record of one account.
+import { readHold, writeHold } from "../../../runtime/src/limits/hold-record.ts";
+import { userStateRoot } from "@specstride/contracts/ids/roots";
 // F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
 import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
@@ -3055,6 +3062,290 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   });
   for (const refusal of runHostSlots.refusals) say(`[LOOP] host limits: ${refusal}`);
 
+  // T105 (F154-FR-045, CQ-154-09) — THE SLOT WAIT AS A PAUSE. With
+  // `host.limits` on, a take that must WAIT for a slot does not spin past the
+  // run: the wait enters the state `paused-quota` with the class `host_slot`
+  // (T103's proposed class) through `enterPause` of feature 127, emits
+  // `run.paused` once on entering and `run.resumed` once on leaving
+  // (F127-FR-010), spends NOTHING of the six counts (F127-FR-011 — the pause
+  // is the identity on the counts), and stands OUTSIDE the attempt's time
+  // cap: the cap of a pass is the ceiling the harness call of the pass runs
+  // under, and the wait is over before the pass loop starts. The wait touches
+  // no model: no prompt is composed and no harness call is made while the run
+  // waits (F154-FR-047, T110).
+  const slotPauseRecordPath = inControl(join("features", slug, "runs", runId, "pause.record"));
+  const slotPauseClock = {
+    nowMs: () => Date.now(),
+    nowIso: () => new Date().toISOString(),
+    monotonicMs: () => performance.now(),
+  };
+  const slotPauseFileWriter = {
+    write: (path: string, content: string): void => {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, content);
+    },
+    read: (path: string): string => readFileSync(path, "utf8"),
+    exists: (path: string): boolean => existsSync(path),
+    remove: (path: string): void => rmSync(path, { force: true }),
+  };
+  const slotsLimitsOn = runHostSlots.store !== null;
+  const holdsRootOfTheRun = userStateRoot({
+    home: homedir(),
+    ...(process.env.XDG_STATE_HOME === undefined
+      ? {}
+      : { xdgStateHome: process.env.XDG_STATE_HOME }),
+    workspaceRealPath: workdir,
+    workspaceId: "",
+  });
+  const slotPausePorts = (): Parameters<typeof quotaPause.enterPause>[0] => ({
+    fileWriter: slotPauseFileWriter,
+    eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+    // T109 (F154-FR-041) — the hold ports of the runtime's atomic hold
+    // record, bound while `host.limits` is on: `enterPause` writes the hold
+    // of the account on a `quota_window` with a known reset, and the wait for
+    // the hold reads the same records through `holdOfTheAccount`.
+    ...(slotsLimitsOn
+      ? {
+          holds: {
+            writeHold: (account: string, resetAt: string, owner: quotaPause.HoldOwnerOfThePause) =>
+              writeHold(holdsRootOfTheRun, account, resetAt, {
+                pid: owner.pid === undefined ? process.pid : owner.pid,
+                runId: owner.runId,
+                launchId: owner.launchId,
+                runTokenHash: owner.runTokenHash,
+              }),
+            readHold: (account: string) => readHold(holdsRootOfTheRun, account),
+          },
+        }
+      : {}),
+  });
+  /** The classification of a host slot wait: the proposed class, host-said. */
+  const hostSlotClassification = (resetsAt: string | null) => ({
+    quotaClass: quotaPause.PAUSE_CLASS_OF_THE_HOST_SLOT,
+    confidence: "host" as const,
+    resetsAt,
+    retryable: true,
+    resetsAtSource: null,
+    rateLimitType: null,
+    utilization: null,
+    evidence: null,
+    evidenceDropped: "host-slot-wait" as const,
+    ruleId: "host-slot-wait-154",
+    tableVersion: "154-host",
+    signals: {},
+    failed: false,
+    notes: [],
+  });
+  /**
+   * ONE `host.slot.admission` event per take (CQ-154-09): the deduping
+   * emitter keeps the last admission of the take and emits it ONCE, with the
+   * verdict of the RESOLUTION (`admitted` where a slot was taken or
+   * reclaimed, `queued` where the take ended still waiting, `rejected` where
+   * the bound answers unbounded), the reason, the run and the attempt and the
+   * account, and the instant of the resolution.
+   */
+  const admissionEmitterFor = (attemptId: string, account: string) => {
+    let last: Record<string, unknown> | null = null;
+    let emitted = false;
+    return {
+      push: (admission: Record<string, unknown>): void => {
+        last = { ...admission };
+      },
+      flush: (): void => {
+        if (emitted || last === null) return;
+        emitted = true;
+        const verdict = String(last["verdict"]);
+        emit("host.slot.admission", {
+          runId,
+          attemptId,
+          account,
+          rule: last["rule"],
+          bound: last["bound"],
+          slot: last["slot"],
+          verdict:
+            verdict === "take" || verdict === "reclaim"
+              ? "admitted"
+              : verdict === "wait"
+                ? "queued"
+                : "rejected",
+          slotVerdict: verdict,
+          reason:
+            verdict === "take" || verdict === "reclaim"
+              ? `a slot of \`${String(last["rule"])}\` was admitted after the wait`
+              : verdict === "wait"
+                ? String(last["reason"] ?? "every slot of the bound is held")
+                : String(last["reason"] ?? "the bound answers unbounded"),
+          at: new Date().toISOString(),
+        });
+      },
+    };
+  };
+  /**
+   * THE TAKE OF ONE SLOT THROUGH THE PAUSE (T105). Waits enter
+   * `paused-quota (host_slot)`; the grant resumes. Where nothing is gated the
+   * take is the plain one, byte for byte the path T095 left behind.
+   */
+  const takeSlotThroughThePause = async (
+    bound: string,
+    attemptId: string,
+    account: string,
+    harness: string,
+  ): Promise<HostSlotRelease> => {
+    if (!slotsLimitsOn) {
+      const plain = await runHostSlots.take(bound, (admission) =>
+        emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+      );
+      return plain;
+    }
+    const admissions = admissionEmitterFor(attemptId, account);
+    let paused: quotaPause.PauseRecord | null = null;
+    let sinceMs = 0;
+    const release = await runHostSlots.take(bound, (admission) => {
+      admissions.push(admission as unknown as Record<string, unknown>);
+      if (admission.verdict === "wait" && paused === null) {
+        // The wait begins: one `run.paused`, one record, no count moves.
+        const nowIso = new Date().toISOString();
+        sinceMs = Date.now();
+        try {
+          const entry = quotaPause.enterPause(slotPausePorts(), {
+            runId,
+            attemptId,
+            role: "proposer",
+            harness,
+            account,
+            classification: hostSlotClassification(null),
+            since: nowIso,
+            resumeAt: null,
+            ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            probeIndex: 0,
+            recordPath: slotPauseRecordPath,
+          });
+          paused = entry.record;
+        } catch {
+          paused = null; // the pause is best effort; the run still waits
+        }
+      } else if (admission.verdict !== "wait" && paused !== null) {
+        // The wait is over: one `run.resumed`, the record removed, the pass
+        // given back. The paused milliseconds stand in the event; the pass's
+        // own cap starts later, so the wait never cuts the attempt short.
+        const pausedMs = Math.max(0, Date.now() - sinceMs);
+        try {
+          quotaResume.resume(
+            { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+            {
+              record: paused,
+              recordPath: slotPauseRecordPath,
+              resumedBy: "probe-succeeded",
+              pausedMs,
+              pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+            },
+            { open: true },
+          );
+        } catch {
+          /* the resume is best effort; the run proceeds either way */
+        }
+        paused = null;
+      }
+    });
+    admissions.flush();
+    if (paused !== null) {
+      const pausedMs = Math.max(0, Date.now() - sinceMs);
+      try {
+        quotaResume.resume(
+          { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+          {
+            record: paused,
+            recordPath: slotPauseRecordPath,
+            resumedBy: "probe-succeeded",
+            pausedMs,
+            pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+          },
+          { open: true },
+        );
+      } catch {
+        /* the resume is best effort; the run proceeds either way */
+      }
+      paused = null;
+    }
+    return release;
+  };
+  /**
+   * T109 (F154-FR-041) — THE HOLD WAIT BEFORE A PASS. With `host.limits` on,
+   * before the pass loop starts, the run reads the hold of its account: a
+   * hold that still blocks (now < resetAt) is a wait through the SAME pause,
+   * the class `host_slot`, until the hold's reset — no count moves and no
+   * model is asked. An expired hold (now >= resetAt) is ignored, never
+   * reclaimed early: only its expiry lets the run proceed, whether its writer
+   * lives or died. A hold read as `null` blocks nobody.
+   */
+  const waitForTheHoldOfTheAccount = async (
+    account: string,
+    attemptId: string,
+    harness: string,
+  ): Promise<void> => {
+    if (!slotsLimitsOn || account === "") return;
+    for (;;) {
+      let hold: quotaPause.HoldOfTheAccount | null = null;
+      try {
+        hold = quotaPause.holdOfTheAccount(
+          { readHold: (one: string) => readHold(holdsRootOfTheRun, one) },
+          account,
+        );
+      } catch {
+        hold = null;
+      }
+      const nowIso = new Date().toISOString();
+      if (hold === null || !quotaPause.holdStillBlocks(hold, nowIso)) return;
+      const sinceMs = Date.now();
+      let paused: quotaPause.PauseRecord | null = null;
+      try {
+        const entry = quotaPause.enterPause(slotPausePorts(), {
+          runId,
+          attemptId,
+          role: "proposer",
+          harness,
+          account,
+          classification: hostSlotClassification(hold.resetAt),
+          since: nowIso,
+          resumeAt: hold.resetAt,
+          ceilingAt: hold.resetAt,
+          probeIndex: 0,
+          recordPath: slotPauseRecordPath,
+        });
+        paused = entry.record;
+      } catch {
+        paused = null;
+      }
+      // The wait itself: the engine sleeps until the hold's reset and reads
+      // no model while it waits (F154-FR-047). The hold ends the wait at its
+      // reset, whatever became of the process that wrote it.
+      while (quotaPause.holdStillBlocks(hold, new Date().toISOString())) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (paused !== null) {
+        const pausedMs = Math.max(0, Date.now() - sinceMs);
+        try {
+          quotaResume.resume(
+            { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+            {
+              record: paused,
+              recordPath: slotPauseRecordPath,
+              resumedBy: "resume-time",
+              pausedMs,
+              pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+            },
+            { open: true },
+          );
+        } catch {
+          /* the resume is best effort; the run proceeds either way */
+        }
+      }
+      // A SECOND hold written while this one waited starts the wait again.
+      const next = readHold(holdsRootOfTheRun, account);
+      if (next === null || !quotaPause.holdStillBlocks(next, new Date().toISOString())) return;
+    }
+  };
+
   /**
    * THE `checks` SLOT OF ONE GATE OR MERGE CHECK (T095): take it before any
    * command of the check set starts, release it after the last one ends.
@@ -3062,9 +3353,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
    * store unreadable), and the caller carries on unbounded.
    */
   const takeChecksSlotOfTheRun = (): Promise<HostSlotRelease> =>
-    runHostSlots.take("checks", (admission) =>
-      emit("host.slot.admission", admission as unknown as Record<string, unknown>),
-    );
+    slotsLimitsOn
+      ? takeSlotThroughThePause("checks", "gate", "", "claude")
+      : runHostSlots.take("checks", (admission) =>
+          emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+        );
 
   // The closed groups of THIS phase attempt (F154-FR-025, T021): the ledger
   // the count of failed groups is read from at every wiring of the attempt,
@@ -5397,10 +5690,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const runThePassLoopWith = async (
       standingPrompt: string,
     ): Promise<ReturnType<typeof runPassLoop>> => {
-      const releaseSessionsSlot = await runHostSlots.take(
+      // T109 (F154-FR-041) — the hold of the account is read BEFORE the pass:
+      // a hold that still blocks waits through the pause (class `host_slot`)
+      // until its reset, spending nothing and asking no model; an expired
+      // hold is ignored and the pass proceeds.
+      await waitForTheHoldOfTheAccount(
+        accountOfTheRun,
+        `attempt:${String(phase)}:${String(ordinal)}:1`,
+        implementer === null ? "claude" : "dsh",
+      );
+      // T105 (F154-FR-045) — the `sessions/<account>` slot wait goes through
+      // the pause: the wait enters `paused-quota (host_slot)`, and the pass
+      // starts only once the slot is granted, so the wait never sits inside
+      // the attempt's time cap.
+      const releaseSessionsSlot = await takeSlotThroughThePause(
         `sessions/${accountOfTheRun}`,
-        (admission) =>
-          emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+        `attempt:${String(phase)}:${String(ordinal)}:1`,
+        accountOfTheRun,
+        implementer === null ? "claude" : "dsh",
       );
       try {
         return await runThePassLoopBody(standingPrompt);
@@ -6655,6 +6962,98 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                         sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
                         say: (line: string) => say(`[${slug}] ${line}`),
                         maxWaits: 3,
+                        // T107 (F154-FR-041) — the wait for the window's
+                        // reset is the pause: on a `quota_window` with a
+                        // non-null reset, `enterPause` writes the hold of
+                        // the account (once, with that reset) while
+                        // `host.limits` is on, and the resume closes the
+                        // pause after the wait. No model is asked whether to
+                        // wait (F154-FR-047).
+                        onWaitStart: (window) => {
+                          if (!slotsLimitsOn) return;
+                          try {
+                            quotaPause.enterPause(slotPausePorts(), {
+                              runId,
+                              attemptId: `attempt:${String(phase)}:${String(ordinal)}:1`,
+                              role: "critic",
+                              harness: criticHarness,
+                              account: accountOfTheRun ?? "default",
+                              holdOwner: { pid: process.pid, runId },
+                              classification: {
+                                quotaClass: window.quotaClass === "quota_window" ? "quota_window" : (window.quotaClass as "quota_window"),
+                                confidence: "text",
+                                resetsAt:
+                                  window.resetsAt === null
+                                    ? null
+                                    : new Date(window.resetsAt).toISOString(),
+                                retryable: true,
+                                resetsAtSource: window.resetsAt === null ? null : "parsed_text",
+                                rateLimitType: null,
+                                utilization: null,
+                                evidence: null,
+                                evidenceDropped: "critic-quota-wait",
+                                ruleId: "critic-quota-wait-154",
+                                tableVersion: "154-host",
+                                signals: {},
+                                failed: false,
+                                notes: [],
+                              },
+                              since: new Date().toISOString(),
+                              resumeAt:
+                                window.resetsAt === null
+                                  ? null
+                                  : new Date(window.resetsAt).toISOString(),
+                              ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                              probeIndex: 0,
+                              recordPath: slotPauseRecordPath,
+                            });
+                          } catch {
+                            /* the pause is best effort; the wait stands */
+                          }
+                        },
+                        onWaitEnd: (window) => {
+                          if (!slotsLimitsOn) return;
+                          try {
+                            quotaResume.resume(
+                              {
+                                clock: slotPauseClock,
+                                fileWriter: slotPauseFileWriter,
+                                eventWriter: {
+                                  emit: (event: PolicyEvent) => emit(event.type, event.payload),
+                                },
+                              },
+                              {
+                                record: {
+                                  schema: quotaPause.PAUSE_SCHEMA_ID,
+                                  runId,
+                                  attemptId: `attempt:${String(phase)}:${String(ordinal)}:1`,
+                                  role: "critic",
+                                  harness: criticHarness,
+                                  class: window.quotaClass,
+                                  confidence: "text",
+                                  since: new Date(Date.now() - window.waitMs).toISOString(),
+                                  resetsAt:
+                                    window.resetsAt === null
+                                      ? null
+                                      : new Date(window.resetsAt).toISOString(),
+                                  resumeAt:
+                                    window.resetsAt === null
+                                      ? null
+                                      : new Date(window.resetsAt).toISOString(),
+                                  probeIndex: 0,
+                                  ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                                },
+                                recordPath: slotPauseRecordPath,
+                                resumedBy: "resume-time",
+                                pausedMs: window.waitMs,
+                                pausedTime: { attemptPausedMs: window.waitMs, runPausedMs: window.waitMs },
+                              },
+                              { open: true },
+                            );
+                          } catch {
+                            /* the resume is best effort; the run proceeds */
+                          }
+                        },
                       },
                     ),
                   assemble: ({
