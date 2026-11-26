@@ -271,10 +271,10 @@ Success criteria:
 **Goal**: "tested" for `concurrentSessions` means three proofs, and the dsh adapter has them.
 **Independent test**: on the fake binary with N = 4, the configuration home is byte-identical (F154-SC-014).
 
-- [ ] T068 [US2] Write `packages/adapter-dsh/test/concurrent-sessions-fake-binary.test.ts`: the failing test that four concurrent sessions of the fake binary on one configuration home leave every file of the home byte-identical (F154-FR-030, F154-SC-014).
-- [ ] T069 [US2] In `packages/adapter-dsh/src/descriptor/index.ts` `dshCapabilities` (:203-275) add the `testedUnder` fact naming the three proofs: the fake-binary test, the recorded live check (CT-130-46) and the pin (`data.ts` `DSH_PIN`, `DSH_VERIFIED_ON`) (F154-FR-030); done when T068 passes and the fact reads `tested`.
-- [ ] T070 [US2] Write `packages/layer-parallel/test/preconditions-154.test.ts`: the failing test that an adapter without a `testedUnder` fact is refused with `harness`, and a **guard test** that the claude path runs no group (F142-FR-020, F154-FR-029).
-- [ ] T071 [US2] In `packages/layer-parallel/src/preconditions.ts` `concurrentSessionsOf` (:156-178) refuse a group when the descriptor has no `testedUnder` fact, with the reason `harness`; the claude adapter keeps `concurrentSessions` `null` (`packages/adapter-claude/src/detect.ts` :373-405) (F142-FR-020, F154-FR-029); done when the test before it passes.
+- [x] T068 [US2] Write `packages/adapter-dsh/test/concurrent-sessions-fake-binary.test.ts`: the failing test that four concurrent sessions of the fake binary on one configuration home leave every file of the home byte-identical (F154-FR-030, F154-SC-014).
+- [x] T069 [US2] In `packages/adapter-dsh/src/descriptor/index.ts` `dshCapabilities` (:203-275) add the `testedUnder` fact naming the three proofs: the fake-binary test, the recorded live check (CT-130-46) and the pin (`data.ts` `DSH_PIN`, `DSH_VERIFIED_ON`) (F154-FR-030); done when T068 passes and the fact reads `tested`.
+- [x] T070 [US2] Write `packages/layer-parallel/test/preconditions-154.test.ts`: the failing test that an adapter without a `testedUnder` fact is refused with `harness`, and a **guard test** that the claude path runs no group (F142-FR-020, F154-FR-029).
+- [x] T071 [US2] In `packages/layer-parallel/src/preconditions.ts` `concurrentSessionsOf` (:156-178) refuse a group when the descriptor has no `testedUnder` fact, with the reason `harness`; the claude adapter keeps `concurrentSessions` `null` (`packages/adapter-claude/src/detect.ts` :373-405) (F142-FR-020, F154-FR-029); done when the test before it passes.
 
 **Checkpoint**: Phase 8. T068 and T068 are green; no rule names a harness (`grep -rn "dsh\|claude" packages/layer-parallel/src` finds only comments).
 

@@ -131,6 +131,15 @@ export type HarnessRegistryEntry = {
   readonly containmentCeiling?: ContainmentLevel;
   /** True where the adapter declares a process-level spending limit (PU-88). */
   readonly spendLimitDeclared?: boolean;
+  /**
+   * F154-FR-030 — the proofs the adapter recorded for `concurrentSessions`,
+   * as the descriptor's fact `concurrentSessions.testedUnder` carries them:
+   * the fake-binary test, the recorded live check and the version pin
+   * (`CONCURRENT_SESSIONS_PROOFS`). Absent where the adapter recorded none,
+   * which leaves the capability untested for concurrent sessions and
+   * refuses a group to it (F154-FR-029).
+   */
+  readonly testedUnder?: readonly string[];
 };
 
 /** What `concurrentSessions` says, read from the registry and from nowhere else. */
@@ -152,7 +161,30 @@ export type ConcurrentSessionsReading = {
  * shown is reported `unverified` by F100-FR-077, and such a value declares
  * nothing here: `declared` is true only where the registry carries a value of
  * at least 2, because one session at a time is no concurrency.
+ *
+ * F154-FR-029, F154-FR-030 — a value of at least 2 declares nothing further
+ * until the adapter has recorded the three proofs of F154-FR-030 (the
+ * fake-binary test, the recorded live check, the pin) in its
+ * `concurrentSessions.testedUnder` fact, which the registry entry carries as
+ * `testedUnder`. The fact is read where the registry entry is the **complete
+ * capability read** of the descriptor — the read that also records the
+ * spend-limit declaration of PU-88 (`spendLimitDeclared`), which is exactly
+ * the shape `parallelEntryOfTheRun` builds at the engine. Without the proofs
+ * the adapter is untested for concurrent sessions: `declared` is false,
+ * `harnessReading` refuses a group, and the layer is off for the run with the
+ * reason `harness`.
  */
+/**
+ * The three proofs of F154-FR-030 that make `concurrentSessions` tested.
+ * The fact is read by id from the registry, never by a harness's name
+ * (Principle VII).
+ */
+export const CONCURRENT_SESSIONS_PROOFS = Object.freeze([
+  "fake-binary",
+  "live-check",
+  "pin",
+] as const);
+
 export function concurrentSessionsOf(entry: HarnessRegistryEntry): ConcurrentSessionsReading {
   const capability = entry.concurrentSessions;
   if (capability === undefined) {
@@ -170,11 +202,33 @@ export function concurrentSessionsOf(entry: HarnessRegistryEntry): ConcurrentSes
       detail: `the registry carries \`concurrentSessions\`=${String(value)}: fewer than 2 sessions is no concurrency`,
     });
   }
+  // The proofs are read where the entry is the complete capability read of
+  // the descriptor — the read that carries the spend-limit declaration of
+  // PU-88 beside the concurrency (the engine's `parallelEntryOfTheRun`
+  // builds exactly that shape). An entry that carries no spend-limit fact is
+  // the pre-154 read and is read as it always was.
+  const completeRead = entry.spendLimitDeclared !== undefined;
+  const testedUnder = entry.testedUnder ?? [];
+  const missing = CONCURRENT_SESSIONS_PROOFS.filter((proof) => !testedUnder.includes(proof));
+  if (completeRead && missing.length > 0) {
+    return Object.freeze({
+      declared: false,
+      value,
+      provenance: capability.provenance,
+      detail:
+        `the registry carries \`concurrentSessions\`=${value} with no recorded proof of ` +
+        `F154-FR-030 (missing from \`testedUnder\`: ${missing.join(", ")}): the adapter ` +
+        "is untested for concurrent sessions",
+    });
+  }
   return Object.freeze({
     declared: true,
     value,
     provenance: capability.provenance,
-    detail: `the registry carries \`concurrentSessions\`=${value} with the provenance ${capability.provenance}`,
+    detail: completeRead
+      ? `the registry carries \`concurrentSessions\`=${value} with the provenance ` +
+        `${capability.provenance}, tested under the ${CONCURRENT_SESSIONS_PROOFS.length} proofs of F154-FR-030`
+      : `the registry carries \`concurrentSessions\`=${value} with the provenance ${capability.provenance}`,
   });
 }
 

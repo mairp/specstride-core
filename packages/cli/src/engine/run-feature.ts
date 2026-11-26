@@ -2879,6 +2879,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const find = (id: string) => statement.capabilities.find((row) => row.id === id);
     const concurrent = find("concurrentSessions");
     const ceiling = find("containment.ceiling");
+    // F154-FR-030 — the descriptor's `concurrentSessions.testedUnder` fact,
+    // the three proofs the capability rests on, carried into the registry
+    // entry the layer's `concurrentSessionsOf` reads (F154-FR-029).
+    const testedUnder = find("concurrentSessions.testedUnder");
     return {
       state: concurrent?.status === "verified" ? "tested" : "declared",
       ...(concurrent !== undefined && concurrent.status === "verified"
@@ -2888,6 +2892,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               provenance: concurrent.provenance as CapabilityProvenance | null,
             },
           }
+        : {}),
+      ...(testedUnder !== undefined && testedUnder.status === "verified"
+        ? { testedUnder: testedUnder.value as readonly string[] }
         : {}),
       ...(typeof ceiling?.value === "string"
         ? { containmentCeiling: ceiling.value as ContainmentLevel }
