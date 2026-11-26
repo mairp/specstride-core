@@ -45,7 +45,9 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 import type { CheckRunner, ManifestEntry } from "@specstride/contracts/ep/check-runner";
+import type { CheckResult } from "@specstride/contracts/ep/check-runner";
 import type { RegistryAccess } from "../../../core/src/pass-supervision/ports.ts";
+import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { TickOutcome } from "../../../core/src/parallel/integrate.ts";
 import {
   cleanPassBoundary,
@@ -56,13 +58,17 @@ import {
   reservedTasksBlockText,
   workerBlockText,
   workerCachesReading,
+  type AdmissionInputs,
+  type AdmissionVerdict,
   type BoundaryVerdict,
   type ClosedGroup,
   type FallbackReason,
+  type GroupGate,
   type LayerOffDecision,
   type LayerOffReason,
   type ParallelPlan,
   type PlannedGroup,
+  type QuotaObservation,
   type WorkerCaches,
 } from "../../../layer-parallel/src/index.ts";
 import { tickFile } from "../../../spec-formats/src/tick.ts";
@@ -382,6 +388,59 @@ export function parallelLoopLineField(input: {
  * 5. The wiring of one phase attempt.
  * ================================================================== */
 
+/* ------------------------------------------------------------------ *
+ * 5a. The seams of feature 154 (T020). Each is OPTIONAL and each
+ * defaults to today's behaviour: left out, the wiring reads the plan's
+ * first group, passes the constant `failedGroupsBefore`, and runs no
+ * slot, hold, temp-root, queue or speculation logic. Later phases
+ * replace one seam at a time from its default reader in the
+ * composition root. The types here are inputs only: no behaviour of
+ * the wiring changes because a field exists (F154-FR-001).
+ * ------------------------------------------------------------------ */
+
+/** A slot store of the host (F154-FR-039 to -044), reached by its bound name. */
+export type HostSlotPort = {
+  readonly acquire: (bound: string) => Promise<boolean>;
+  readonly probe: (
+    bound: string,
+  ) => Promise<"free" | "held-live" | "held-foreign" | "stale-owner-dead" | "unknown">;
+  readonly release: (bound: string) => Promise<void>;
+};
+
+/** One quota hold of one harness account (F154-FR-041), or `null` where none is held. */
+export type AccountHold = {
+  readonly account: string;
+  /** The reset time, epoch milliseconds; the hold expires at it and never before. */
+  readonly resetAtMs: number;
+};
+
+/** One finished phase waiting for its gate, in phase order (F154-FR-058). */
+export type QueueEntry = {
+  readonly phase: number;
+};
+
+/** The one ordered validation queue of the run (F154-FR-058, -059). */
+export type ValidationQueuePort = {
+  readonly admit: (entry: QueueEntry) => void;
+  readonly head: () => QueueEntry | undefined;
+  readonly pop: () => QueueEntry | undefined;
+};
+
+/** The verdict of a group's acceptance check run in its worker tree (F154-FR-034, -035). */
+export type WorkerCheckVerdict = {
+  readonly outcome: "passed" | "failed" | "tainted" | "unchecked";
+  /** The rule id of the worker-check table (WC-1 to WC-4). */
+  readonly ruleId: string;
+  readonly detail?: string | undefined;
+};
+
+/** Whether a speculative unit starts past an open verdict (F154-FR-061 to -067). */
+export type SpeculationVerdict = {
+  readonly start: boolean;
+  /** Why not, from the closed set { rate, depth, sweep }; present where `start` is false. */
+  readonly reason?: "rate" | "depth" | "sweep" | undefined;
+};
+
 /** Everything the wiring of one attempt needs, as the composition root holds it. */
 export type ParallelWiringInput = {
   /** The plan of the launch; `null` with the option off or a fallback plan. */
@@ -436,6 +495,87 @@ export type ParallelWiringInput = {
    * documents); left out, the counters carry as they always did.
    */
   readonly resetCounts?: boolean | undefined;
+  /* ----------------------------------------------------------------
+   * The seams of feature 154 (T020). Each is optional; each defaults
+   * to today's behaviour at the place that will read it.
+   * ---------------------------------------------------------------- */
+  /**
+   * Every group of the stored plan for the phase, in plan order
+   * (F154-FR-020). Default: the plan's first group, as today.
+   */
+  readonly groupsOfThePhase?: (() => readonly PlannedGroup[]) | undefined;
+  /**
+   * The group gate of one admission (F154-FR-021 to -024, -033).
+   * Default: no group gate runs, as today.
+   */
+  readonly groupGateOfTheAttempt?: ((inputs: AdmissionInputs) => GroupGate) | undefined;
+  /**
+   * The last observed utilisation of the proposer account's quota
+   * windows (F154-FR-021). Default: no observation.
+   */
+  readonly quotaObservationOf?: (() => QuotaObservation | null) | undefined;
+  /**
+   * The count of the phase's failed groups read from the ledger
+   * (F154-FR-025). Default: the constant `failedGroupsBefore`, as today.
+   */
+  readonly failedGroupsBeforeOfTheLedger?: ((phase: number) => number) | undefined;
+  /**
+   * The no-repeat verdict over one group (F154-FR-026). Default: no
+   * repeat check, the group is admitted.
+   */
+  readonly repeatVerdictOf?: ((group: PlannedGroup) => AdmissionVerdict) | undefined;
+  /**
+   * The number of paths the group's application changed (F154-FR-027).
+   * Default: not read.
+   */
+  readonly appliedPathCountOf?: ((group: PlannedGroup) => number) | undefined;
+  /**
+   * The latest inner-set result whose tree fingerprint equals the given
+   * base snapshot's (F154-FR-028). Default: no base result.
+   */
+  readonly baseResultOfTheInnerSet?: ((snapshotFingerprint: string) => CheckResult | null) | undefined;
+  /**
+   * The group's acceptance check run in its worker tree (F154-FR-034,
+   * -035). Default: the check runs on the workspace, as today.
+   */
+  readonly acceptanceCheckOfTheGroup?:
+    | ((worker: PreparedWorker) => Promise<WorkerCheckVerdict>)
+    | undefined;
+  /**
+   * The phase's frozen task groups, as candidates of the planner
+   * (F154-FR-031). Default: none, the `[P]` tasks stay the unit.
+   */
+  readonly groupCandidatesOfThePhase?: (() => readonly TaskGroup[]) | undefined;
+  /**
+   * The host slot store of the run (F154-FR-039 to -044). Default: no
+   * slot is taken, the host is unbounded.
+   */
+  readonly hostSlots?: (HostSlotPort | null) | undefined;
+  /**
+   * The quota hold of the proposer's harness account, or `null` where
+   * none is held (F154-FR-041). Default: none.
+   */
+  readonly holdOfTheAccount?: (() => AccountHold | null) | undefined;
+  /**
+   * The temporary root of the run (F154-FR-043). Default: none, the
+   * checks keep their own temporary directories.
+   */
+  readonly tempRootOfTheRun?: (() => string | null) | undefined;
+  /**
+   * The declared dependencies of the phase (F154-FR-056). Default: the
+   * phase depends on the phase before it, as today.
+   */
+  readonly phaseDependenciesOf?: ((phase: number) => readonly string[]) | undefined;
+  /**
+   * The one ordered validation queue of the run (F154-FR-058, -059).
+   * Default: no queue, validation stays on the workspace.
+   */
+  readonly validationQueue?: (ValidationQueuePort | null) | undefined;
+  /**
+   * Whether a speculative unit starts at this gate (F154-FR-062, -066,
+   * -067). Default: none starts.
+   */
+  readonly speculationVerdictAt?: (() => SpeculationVerdict) | undefined;
   /* The carry-out. */
   readonly emit: (type: string, data: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;

@@ -62,6 +62,7 @@ import {
 } from "@specstride/kernel";
 import type { ProcessTableIo } from "@specstride/kernel";
 import { platformProcessTableIo } from "@specstride/kernel";
+import { callTheCriticThroughQuota } from "./critic-quota.ts";
 import {
   dependentsOf,
   selectionOf,
@@ -160,7 +161,12 @@ import { writeWorkerGuardScript } from "./worker-supervisor.ts";
 import { dshCapabilities } from "../../../adapter-dsh/src/descriptor/index.ts";
 import { RUN_REFUSED_EXIT } from "../commands/launch-roles.ts";
 import type { CapabilityProvenance, ContainmentLevel } from "@specstride/contracts/ep/harness";
-import type { HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
+// F154-FR-021…-024 (T021) — the group gate of one admission, wired through
+// its seam; the engine passes the same gate the layer computes, unstubbed.
+import {
+  groupGate,
+  type HarnessRegistryEntry,
+} from "../../../layer-parallel/src/index.ts";
 import {
   afterApprovedPhase,
   compatibilityFeedOf,
@@ -170,6 +176,18 @@ import {
 } from "./learning-loop.ts";
 import { phaseShapesOfSpec } from "../learn.ts";
 import { pathsNamedByTheTextOfATask } from "../../../layer-parallel/src/scope.ts";
+// F154-FR-025 (T021) — the count of failed groups, read from the closed
+// groups of the phase attempt, never from a constant.
+import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+// F154-FR-043 (T024) — the temporary root of the run: made, exported and
+// removed through the small helper module next to this file.
+import {
+  cleanupRunTempRoot,
+  exportRunTempRoot,
+  makeRunTempRoot,
+} from "./run-feature.temp-root.ts";
+// F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
+import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
 import {
   clearPins,
@@ -2962,6 +2980,32 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     parallelLaunch.units === "on" ? "on" : "off",
     parallelLaunch.plan?.workers ?? 2,
   );
+  // THE TEMPORARY ROOT OF THE RUN (F154-FR-043, T024): with `host.limits`
+  // on, the run makes ONE temporary root — a `mkdtemp` directory under the
+  // system temporary area, prefix `specstride-run-` — and every temporary
+  // file of the run stands under it. The root is exported as `TMPDIR` (the
+  // variable the gate's checks read) and as `SPECSTRIDE_WORKER_TMPDIR` (the
+  // variable the parallel workers read), and it is removed where the run
+  // ends, for any cause. Off, the run makes no root and the checks keep
+  // their own temporary directories, as before. A failure to make the root
+  // is a fallback, never an error (F154-FR-004): the run carries on with
+  // `runTempRoot` null and says the fact.
+  const runTempRoot: string | null = makeRunTempRoot({
+    home: homedir(),
+    workdir,
+    parityProfile,
+    env: process.env,
+  });
+  if (runTempRoot !== null) {
+    // The export to the gate's checks (:1273 reads `TMPDIR` for the batch
+    // runner's temporary root) and to the parallel workers.
+    exportRunTempRoot(runTempRoot, process.env, say, slug);
+  }
+
+  // The closed groups of THIS phase attempt (F154-FR-025, T021): the ledger
+  // the count of failed groups is read from at every wiring of the attempt,
+  // in place of the constant 0 the wiring was passed before.
+  const closedGroupsOfTheAttempt: ClosedGroup[] = [];
 
   // The directory of the gate files. As the engine holds it, the gate files
   // stand in the feature's `evidence/` directory; under the `parity` profile
@@ -4667,92 +4711,59 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
      */
     const parallelWiring =
       parallelLaunch.units === "on" && parallelLaunch.plan !== null && implementerOfTheRun !== null
-        ? parallelWiringOfTheAttempt({
-            plan: parallelLaunch.plan,
-            phase,
-            ...(resetCounts ? { resetCounts: true } : {}),
-            evidencePresent: () => existsSync(evidencePath),
-            // The kept units of the ledger of the phase (F115's own file):
-            // the tasks its kept units of work name are the boundary's last
-            // input. A file that fails to read names nothing.
-            keptUnitsOf: () => {
-              const path = inControl(join("features", slug, "micro", `phase${String(phase)}.json`));
-              try {
-                if (!existsSync(path)) return [];
-                const state = JSON.parse(readFileSync(path, "utf8")) as {
-                  units?: readonly { outcome?: string; tasks?: readonly string[] }[];
-                };
-                return (state.units ?? [])
-                  .filter((unit) => unit.outcome === "kept")
-                  .flatMap((unit) => unit.tasks ?? []);
-              } catch {
-                return [];
-              }
-            },
-            failedGroupsBefore: 0,
-            controlRoot,
-            home: parallelHome,
-            runId,
-            workspace: workdir,
-            slug,
-            taskListPath: relative(workdir, tasksPath),
-            taskTextAtLaunch: tasksText,
-            taskTextOf: (taskId) =>
-              phases.flatMap((held) => held.tasks).find((task) => task.id === taskId)?.text ??
-              taskId,
-            // The parallel worker carries a NAMED model only; the bare `dsh`
-            // alias selects the harness alone, so the worker takes the run's
-            // default model, as `modelsThatProducedPasses` does.
-            model: implementerOfTheRun ?? model,
-            // The base tier of the proposer, as resolved at launch; the
-            // engine resolves no tier today, so the worker runs the default
-            // tier unless a host sets the escape.
-            modelTierOrEffort: process.env.SPECSTRIDE_WORKER_TIER ?? "default",
-            containment: entryOfTheRun.containmentCeiling ?? "C0",
-            runToken: runId,
-            timeLimitMs: ceiling.seconds * 1000,
-            enginePid: process.pid,
-            engineStartedAtMs,
-            registry,
-            guardScriptPath: workerGuardScriptPath,
-            hash: (text) => createHash("sha256").update(text).digest("hex"),
-            innerCheckSet:
-              checkCommandOf(workdir) !== undefined && npmPath !== undefined
-                ? [
-                    {
-                      id: "check",
-                      kind: "command",
-                      argv: [npmPath, "test"],
-                      phase,
-                      timeLimitMs: loopConfig.checkMin * 60_000,
-                    },
-                  ]
-                : [],
-            emit: (type, data) => emit(type, data),
-            say,
-            // THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request the
-            // `stop` command writes into the inbox, resolved through the
-            // layout table from the same control root the run writes; bound
-            // to THIS run's token so a stale request for a run
-            // that ended cannot stop the group of the run that follows.
-            stopRequestPath: resolveLogicalName(
-              "inbox:stop",
-              {},
-              rootPathsOf({
-                home: homedir(),
-                workspaceRealPath: workdir,
-                workspaceId,
-                controlRoot,
-                workerRoot: "",
-              }),
-            ),
-            runTokenHash,
-            onClosed: (closed, counts) => totalsAfterTheGroup(parallelTotals, closed, counts),
-            // The callback of the PARALLEL units' own handoff (feature 143's
-            // wiring), NOT the pass handoff of F103-FR-041, which `runPass`
-            // writes above.
-            onHandoff: () => {},
-          })
+        ? parallelWiringOfTheAttempt(
+            // F154-FR-020 to -067 (T021) — the argument object is assembled
+            // by the small helper module next to this file
+            // (`run-feature.parallel-call.ts`), which passes EVERY seam of
+            // T020 from its default reader, reads the failed groups from the
+            // LEDGER OF THE ATTEMPT through `countFailedGroups`
+            // (`decide.ts:1640`) instead of the constant 0, and pushes each
+            // closed group into `closedGroupsOfTheAttempt` in `onClosed`
+            // before the totals are updated.
+            parallelWiringInputOf({
+              plan: parallelLaunch.plan,
+              phase,
+              resetCounts,
+              evidencePresent: () => existsSync(evidencePath),
+              keptUnitsPathOf: (rel) => inControl(rel),
+              closedGroupsOfTheAttempt,
+              runTempRoot,
+              controlRoot,
+              home: parallelHome,
+              runId,
+              workspace: workdir,
+              slug,
+              taskListPath: relative(workdir, tasksPath),
+              taskTextAtLaunch: tasksText,
+              implementerOfTheRun,
+              model,
+              containmentCeiling: entryOfTheRun.containmentCeiling ?? "C0",
+              ceilingSeconds: ceiling.seconds,
+              enginePid: process.pid,
+              engineStartedAtMs,
+              registry,
+              guardScriptPath: workerGuardScriptPath,
+              stopRequestPath: resolveLogicalName(
+                "inbox:stop",
+                {},
+                rootPathsOf({
+                  home: homedir(),
+                  workspaceRealPath: workdir,
+                  workspaceId,
+                  controlRoot,
+                  workerRoot: "",
+                }),
+              ),
+              runTokenHash,
+              npmPath,
+              checkCommandOfTheWorkspace: checkCommandOf,
+              checkMin: loopConfig.checkMin,
+              phases,
+              parallelTotals,
+              emit: (type, data) => emit(type, data),
+              say,
+            }),
+          )
         : undefined;
     // THE STOP OF THE SEQUENTIAL LOOP (F102-FR-003/-004): the request the
     // `stop` command writes was read by the parallel group only, so a
@@ -6334,6 +6345,150 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                     workdir,
                   });
             if (pinStep.warning !== undefined) process.stderr.write(`${pinStep.warning}\n`);
+            // A quota line is not a verdict. A critic's harness can answer
+            // "You've hit your 5-hour limit · resets 1:10am (Asia/Dubai)" in
+            // place of a reply; read as a verdict that is MALFORMED, and the
+            // phase is rejected for the harness's sake (seen on 2026-11-25).
+            // One call of the critic is `judgeOnce`; `callTheCriticThroughQuota`
+            // waits for the reset and calls it again (F127-FR-010: a quota
+            // window is a pause, never a stop and never a rejection).
+            const judgeOnce = async (request: {
+              readonly sessionId: string;
+              readonly prompt: string;
+            }) => {
+              // The handoff of a kept group enters the critic's prompt
+              // before it judges the attempt (F142-FR-069): the workers'
+              // checkpoints, their deltas and the merge check's outcome.
+              const parallelHandoff = parallelWiring?.handoffForTheCritic() ?? "";
+              const criticPrompt =
+                parallelHandoff === "" ? request.prompt : `${request.prompt}\n\n${parallelHandoff}`;
+              if (critic.dshModel !== null) {
+                const run = await runDshCriticAsync({
+                  prompt: criticPrompt,
+                  cwd: workdir,
+                  // F153-FR-061 (`parity` profile) — the parity harness
+                  // environment, as for the proposer passes above.
+                  env: parityProfile ? parityHarnessEnv(workdir, runId) : process.env,
+                  model: { flag: critic.dshModel },
+                  timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
+                  // F153-FR-061 (`parity` profile) — no permission mode
+                  // value and no telemetry variable in the child env.
+                  asIsEnvironment: parityProfile,
+                  contextTokens:
+                    Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || DSH_CRITIC_WINDOW_DEFAULT,
+                });
+                if (!run.ok) {
+                  say(`[${slug}] critic call failed: ${run.message}`);
+                  throw new Error(run.message);
+                }
+                spend(run.costUsd);
+                lastReply = run.reply;
+                // The weaker proof: this harness gives no session id and no
+                // initial record, so the proof is the pin and the deny list.
+                return {
+                  reply: run.reply,
+                  initialRecord: null,
+                  versionPin: "versionPin" in run.proof ? run.proof.versionPin : null,
+                  preflight: true,
+                  flagSet: "toolCoverage" in run.proof && run.proof.toolCoverage === "passed",
+                };
+              }
+              // F153-FR-061 — under `parity` a critic-class call travels
+              // the way the as-is engine sends it: over HTTP to the stub
+              // address the run environment exports, exactly as the
+              // diagnostician of the same profile does. The as-is engine
+              // never reaches a critic through an executable, so the CLI
+              // child (and the harness record ITS transport wrote, with
+              // the child's `envNames`) is a transport the as-is run
+              // never took; the stub's server writes the record of an
+              // HTTP call, as the golden's critic records were written.
+              if (parityProfile) {
+                const base =
+                  process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL ??
+                  process.env.OPENAI_BASE_URL ??
+                  "";
+                if (base !== "") {
+                  const url = `${base.replace(/\/+$/, "")}${
+                    process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL !== undefined
+                      ? "/v1/messages"
+                      : "/chat/completions"
+                  }`;
+                  try {
+                    const limitMs = timeLimitMs(CRITIC_LIMIT_MS);
+                    const response = await fetch(url, {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({
+                        messages: [{ role: "user", content: criticPrompt }],
+                      }),
+                      ...(limitMs === undefined ? {} : { signal: AbortSignal.timeout(limitMs) }),
+                    });
+                    if (!response.ok) {
+                      throw new Error(
+                        `HTTP Error ${String(response.status)}: ${
+                          response.statusText || "Internal Server Error"
+                        }`,
+                      );
+                    }
+                    const body = (await response.json()) as {
+                      content?: { text?: string }[];
+                      choices?: { message?: { content?: string } }[];
+                    };
+                    const reply =
+                      (body.content ?? []).map((block) => block.text ?? "").join("") ||
+                      body.choices?.[0]?.message?.content ||
+                      "";
+                    if (reply === "") throw new Error("the reply of the critic held no text");
+                    spend(0);
+                    lastReply = reply;
+                    // The weaker proof: the HTTP transport gives no
+                    // session id and no initial record, so the proof is
+                    // the pin and the deny list, as for the dsh path.
+                    return {
+                      reply,
+                      initialRecord: null,
+                      versionPin: null,
+                      preflight: true,
+                      flagSet: true,
+                    };
+                  } catch (error) {
+                    const failure = error instanceof Error ? error.message : String(error);
+                    say(`[${slug}] critic call failed: ${failure}`);
+                    throw new Error(failure);
+                  }
+                }
+              }
+              const answer = await callClaude(
+                buildCriticArgv({
+                  role: "critic",
+                  // F153-FR-061 (`parity` profile) — the as-is engine read
+                  // its critic reply from a plain child call that carried
+                  // no session behaviour (the as-is list of F125-FR-009):
+                  // a `--session-id` on the parity critic call is a
+                  // session continuation the oracle's stub records as
+                  // carried (F141-FR-011, DV-010) and no golden holds.
+                  profile: parityProfile ? "parity" : "default",
+                  authTier: 1,
+                  model: criticModel,
+                  sessionId: request.sessionId,
+                }),
+                criticPrompt,
+                workdir,
+                timeLimitMs(CRITIC_LIMIT_MS),
+                () => undefined,
+              );
+              if (answer.exit !== 0 && answer.reply === "") {
+                const failure = answer.stderr.trim() || `critic exit ${String(answer.exit)}`;
+                say(`[${slug}] critic call failed: ${failure}`);
+                throw new Error(failure);
+              }
+              spend(answer.costUsd);
+              lastReply = answer.reply;
+              return {
+                reply: answer.reply,
+                initialRecord: { tools: answer.tools ?? [], sessionId: answer.sessionId },
+              };
+            };
             const outcomeOfTheCriticCall = await callTheCritic(
               criticCallInputs({
                 workdir,
@@ -6350,144 +6505,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                   complete: async (request: {
                     readonly sessionId: string;
                     readonly prompt: string;
-                  }) => {
-                    // The handoff of a kept group enters the critic's prompt
-                    // before it judges the attempt (F142-FR-069): the workers'
-                    // checkpoints, their deltas and the merge check's outcome.
-                    const parallelHandoff = parallelWiring?.handoffForTheCritic() ?? "";
-                    const criticPrompt =
-                      parallelHandoff === ""
-                        ? request.prompt
-                        : `${request.prompt}\n\n${parallelHandoff}`;
-                    if (critic.dshModel !== null) {
-                      const run = await runDshCriticAsync({
-                        prompt: criticPrompt,
-                        cwd: workdir,
-                        // F153-FR-061 (`parity` profile) — the parity harness
-                        // environment, as for the proposer passes above.
-                        env: parityProfile ? parityHarnessEnv(workdir, runId) : process.env,
-                        model: { flag: critic.dshModel },
-                        timeoutMs: timeLimitMs(CRITIC_LIMIT_MS),
-                        // F153-FR-061 (`parity` profile) — no permission mode
-                        // value and no telemetry variable in the child env.
-                        asIsEnvironment: parityProfile,
-                        contextTokens:
-                          Number(process.env.SPECSTRIDE_CRITIC_WINDOW) || DSH_CRITIC_WINDOW_DEFAULT,
-                      });
-                      if (!run.ok) {
-                        say(`[${slug}] critic call failed: ${run.message}`);
-                        throw new Error(run.message);
-                      }
-                      spend(run.costUsd);
-                      lastReply = run.reply;
-                      // The weaker proof: this harness gives no session id and no
-                      // initial record, so the proof is the pin and the deny list.
-                      return {
-                        reply: run.reply,
-                        initialRecord: null,
-                        versionPin: "versionPin" in run.proof ? run.proof.versionPin : null,
-                        preflight: true,
-                        flagSet: "toolCoverage" in run.proof && run.proof.toolCoverage === "passed",
-                      };
-                    }
-                    // F153-FR-061 — under `parity` a critic-class call travels
-                    // the way the as-is engine sends it: over HTTP to the stub
-                    // address the run environment exports, exactly as the
-                    // diagnostician of the same profile does. The as-is engine
-                    // never reaches a critic through an executable, so the CLI
-                    // child (and the harness record ITS transport wrote, with
-                    // the child's `envNames`) is a transport the as-is run
-                    // never took; the stub's server writes the record of an
-                    // HTTP call, as the golden's critic records were written.
-                    if (parityProfile) {
-                      const base =
-                        process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL ??
-                        process.env.OPENAI_BASE_URL ??
-                        "";
-                      if (base !== "") {
-                        const url = `${base.replace(/\/+$/, "")}${
-                          process.env.SPECSTRIDE_CLAUDE_CRITIC_BASE_URL !== undefined
-                            ? "/v1/messages"
-                            : "/chat/completions"
-                        }`;
-                        try {
-                          const limitMs = timeLimitMs(CRITIC_LIMIT_MS);
-                          const response = await fetch(url, {
-                            method: "POST",
-                            headers: { "content-type": "application/json" },
-                            body: JSON.stringify({
-                              messages: [{ role: "user", content: criticPrompt }],
-                            }),
-                            ...(limitMs === undefined
-                              ? {}
-                              : { signal: AbortSignal.timeout(limitMs) }),
-                          });
-                          if (!response.ok) {
-                            throw new Error(
-                              `HTTP Error ${String(response.status)}: ${
-                                response.statusText || "Internal Server Error"
-                              }`,
-                            );
-                          }
-                          const body = (await response.json()) as {
-                            content?: { text?: string }[];
-                            choices?: { message?: { content?: string } }[];
-                          };
-                          const reply =
-                            (body.content ?? []).map((block) => block.text ?? "").join("") ||
-                            body.choices?.[0]?.message?.content ||
-                            "";
-                          if (reply === "") throw new Error("the reply of the critic held no text");
-                          spend(0);
-                          lastReply = reply;
-                          // The weaker proof: the HTTP transport gives no
-                          // session id and no initial record, so the proof is
-                          // the pin and the deny list, as for the dsh path.
-                          return {
-                            reply,
-                            initialRecord: null,
-                            versionPin: null,
-                            preflight: true,
-                            flagSet: true,
-                          };
-                        } catch (error) {
-                          const failure = error instanceof Error ? error.message : String(error);
-                          say(`[${slug}] critic call failed: ${failure}`);
-                          throw new Error(failure);
-                        }
-                      }
-                    }
-                    const answer = await callClaude(
-                      buildCriticArgv({
-                        role: "critic",
-                        // F153-FR-061 (`parity` profile) — the as-is engine read
-                        // its critic reply from a plain child call that carried
-                        // no session behaviour (the as-is list of F125-FR-009):
-                        // a `--session-id` on the parity critic call is a
-                        // session continuation the oracle's stub records as
-                        // carried (F141-FR-011, DV-010) and no golden holds.
-                        profile: parityProfile ? "parity" : "default",
-                        authTier: 1,
-                        model: criticModel,
-                        sessionId: request.sessionId,
-                      }),
-                      criticPrompt,
-                      workdir,
-                      timeLimitMs(CRITIC_LIMIT_MS),
-                      () => undefined,
-                    );
-                    if (answer.exit !== 0 && answer.reply === "") {
-                      const failure = answer.stderr.trim() || `critic exit ${String(answer.exit)}`;
-                      say(`[${slug}] critic call failed: ${failure}`);
-                      throw new Error(failure);
-                    }
-                    spend(answer.costUsd);
-                    lastReply = answer.reply;
-                    return {
-                      reply: answer.reply,
-                      initialRecord: { tools: answer.tools ?? [], sessionId: answer.sessionId },
-                    };
-                  },
+                  }) =>
+                    callTheCriticThroughQuota(
+                      () => judgeOnce(request),
+                      (outcome) => outcome.reply,
+                      {
+                        now: Date.now,
+                        sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+                        say: (line: string) => say(`[${slug}] ${line}`),
+                        maxWaits: 3,
+                      },
+                    ),
                   assemble: ({
                     demand,
                     nonce,
@@ -8682,6 +8710,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       /* best effort: the parity tree never fails the run */
     }
   }
+  // THE TEMPORARY ROOT ENDS WITH THE RUN (F154-FR-043, T024): this is where
+  // the run ends, for any cause that reaches its exit — a normal end, a
+  // stop, a fallback, a digest — so the root is removed here and the two
+  // exports are lifted. The removal never throws (T023), and a run that
+  // ends without a root (the switch off) removes nothing.
+  cleanupRunTempRoot(runTempRoot, process.env);
   return exitCode;
 }
 
