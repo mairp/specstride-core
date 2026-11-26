@@ -18,6 +18,9 @@ import { runPreflight, type PreflightResult } from "../executor/preflight.ts";
 import type { PreconditionCheckRegistry, EvaluationContext } from "../kinds/registry.ts";
 import { decideSetupStage } from "../kinds/setup.ts";
 import { redactAction, digestLine } from "../output/lines.ts";
+// Feature 154, T031 — the ONE renderer of the parallel plan (F154-SC-002),
+// shared with the doctor.
+import { printThePlan, UNITS_FORCED_ON } from "../../../layer-parallel/src/plan.ts";
 
 /** The lines of the plan, in the order they are printed. */
 export type DryRunLine = {
@@ -105,6 +108,8 @@ export async function planDryRun(input: {
   shell: Readonly<Record<string, string | undefined>>;
   /** The parallel-units option of F123-FR-006; absent means the option is off. */
   parallel?: ParallelPlanInput;
+  /** The verbose flag (feature 154, CQ-154-19 A): with the option off, the plan the option would produce is printed only behind it. */
+  verbose?: boolean;
 }): Promise<{ lines: DryRunLine[]; preflight: PreflightResult }> {
   const lines: DryRunLine[] = [];
   lines.push({
@@ -145,19 +150,31 @@ export async function planDryRun(input: {
     );
   }
 
-  // The parallel plan (F123-FR-006): with the option on, the plan — the
-  // stored one, or the one the same pure derivation gives — is part of the
-  // dry-run plan; with the option off, and under the `parity` profile, no
-  // line about it is printed at all.
-  if (input.parallel !== undefined && parallelUnitsOn(input.parallel)) {
+  // The parallel plan (F123-FR-006), printed through `printThePlan` — the
+  // ONE renderer the doctor uses, so the bytes are the same (feature 154,
+  // T031, F154-SC-002). The flag rule is CQ-154-19 A: with the option on the
+  // plan is printed (terse unless verbose); with the option off, and under
+  // the `parity` profile, no line about it at all — except that with the
+  // option off (never under `parity`) and the verbose flag on, the plan the
+  // option WOULD produce is printed behind the one-line label.
+  const verbose = input.verbose === true;
+  const profile = input.parallel?.profile;
+  const unitsOn = input.parallel !== undefined && parallelUnitsOn(input.parallel);
+  if (profile !== "parity" && (unitsOn || verbose)) {
     const plan =
-      readStoredParallelPlan(input.parallel.storedPlan) ??
+      readStoredParallelPlan(input.parallel?.storedPlan) ??
       deriveParallelPlan({
-        runId: input.parallel.runId ?? input.contractId,
+        runId: input.parallel?.runId ?? input.contractId,
         stages: input.stages,
-        workers: input.parallel.workers,
+        workers: input.parallel?.workers,
       });
-    for (const text of parallelPlanLines(plan)) {
+    if (!unitsOn) {
+      lines.push({ label: "[PLAN]", text: "plan the option would produce", hue: "cyan" });
+    }
+    const planLines = unitsOn
+      ? printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose })
+      : printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: true });
+    for (const text of planLines) {
       lines.push({ label: "[PLAN]", text, hue: "cyan" });
     }
   }

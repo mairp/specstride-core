@@ -38,6 +38,14 @@ import {
   newestRunTokenHashOf,
 } from "../run-control/supervision-registry-entries.ts";
 import { ownerRecordOfTheLock } from "../run-control/lock-owner-entry.ts";
+// Feature 154, T032 — the ONE renderer of the parallel plan (F154-SC-002),
+// and the observation the parallel doctor probes `parallel.plan` with.
+import {
+  printThePlan,
+  UNITS_FORCED_ON,
+} from "../../../layer-parallel/src/plan.ts";
+import { planObservation } from "../../../layer-parallel/src/doctor.ts";
+import type { UnitsConfiguration, ParallelPlan } from "../../../layer-parallel/src/index.ts";
 import { theLiveRunOfTheEngineRecords } from "../run-control/live-run-evidence.ts";
 import { runWait, digestLineOfThePipeline, type WaitOptions } from "../status/wait.ts";
 // The read model of `wait` is a PARAMETER and not a package import (R-129-04):
@@ -574,10 +582,30 @@ type Finding = {
 };
 
 /**
+ * What the doctor is given about the parallel-units option (feature 154,
+ * T032): the units configuration in force, the plan record the layer derives
+ * at launch, and whether the verbose flag is on. Absent means the option is
+ * off and no plan was observed.
+ */
+export type DoctorParallelPlan = {
+  readonly configuration?: UnitsConfiguration;
+  readonly plan?: ParallelPlan;
+  readonly verbose?: boolean;
+};
+
+/**
  * `specstride doctor`: the facts a first run depends on. It writes nothing and
  * reads no secret. 0 no `fail` finding; 2 at least one.
+ *
+ * Feature 154, T032 (F154-FR-009, -010; CQ-154-19 A): the plan the parallel
+ * doctor observes is printed through `printThePlan` — the ONE renderer
+ * `launch --dry-run` uses, so the bytes are the same (F154-SC-002). The flag
+ * rule is the dry run's: with the option on the plan is printed (terse unless
+ * verbose); with the option off nothing is printed unless the verbose flag is
+ * on, and then the plan the option WOULD produce is printed behind the
+ * one-line label. Under `parity` nothing is printed at all.
  */
-export function doctorHandler(workdir: string, io: RouteIo): number {
+export function doctorHandler(workdir: string, io: RouteIo, parallel?: DoctorParallelPlan): number {
   const has = (command: string, argv: readonly string[]): boolean =>
     spawnSync(command, [...argv], { encoding: "utf8", timeout: 10_000 }).status === 0;
   const major = Number(process.versions.node.split(".")[0]);
@@ -623,6 +651,26 @@ export function doctorHandler(workdir: string, io: RouteIo): number {
   ];
   for (const { severity, check, fix } of findings) {
     io.out(`${severity} ${check}${severity === "ok" ? "" : ` — ${fix}`}\n`);
+  }
+  // The parallel plan (feature 154, T032): the plan the probe of
+  // `parallel.plan` observes (`planObservation` decides presence and the
+  // option gate), rendered by `printThePlan` with the same flag rule as the
+  // dry run. No slot, record or worker is created here: this only prints.
+  if (parallel?.plan !== undefined) {
+    const configuration = parallel.configuration ?? {};
+    const observation = planObservation({ configuration, plan: parallel.plan });
+    const verbose = parallel.verbose === true;
+    const parity = (configuration.profile ?? "") === "parity";
+    let planLines: readonly string[] = [];
+    if (observation.optionOn && !parity) {
+      planLines = printThePlan(parallel.plan, configuration, undefined, { verbose });
+    } else if (verbose && !parity) {
+      planLines = [
+        "plan the option would produce",
+        ...printThePlan(parallel.plan, UNITS_FORCED_ON, undefined, { verbose: true }),
+      ];
+    }
+    for (const line of planLines) io.out(`${line}\n`);
   }
   return findings.some((finding) => finding.severity === "fail") ? 2 : 0;
 }

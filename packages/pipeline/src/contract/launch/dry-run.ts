@@ -47,6 +47,11 @@ import {
 import { StageKindRegistry } from "../../kinds/registry.ts";
 import { DEFAULT_STAGE_KINDS } from "../default-registries.ts";
 import { productLine } from "../commands/lines.ts";
+// Feature 154, T031 — the ONE renderer of the parallel plan (F154-SC-002),
+// shared with the doctor; and the pure derivation the entry uses.
+import { printThePlan, UNITS_FORCED_ON } from "../../../../layer-parallel/src/plan.ts";
+import { deriveParallelPlan } from "../../entry/dry-run.ts";
+import type { Stage } from "../../executor/types.ts";
 
 /** The exit codes of the mode `dry-run` (annex G §G.4, row "`launch`"). */
 export const DRY_RUN_EXIT_CODES = { reported: 0, noContract: 20, stale: 23 } as const;
@@ -223,6 +228,8 @@ export type DryRunInput = {
   readonly root: string;
   /** Parallel units on (F107-FR-038): the plan of the entry carries it once. */
   readonly parallelUnits?: boolean;
+  /** The verbose flag (feature 154, CQ-154-19 A): with the option off, the plan the option would produce is printed only behind it. */
+  readonly verbose?: boolean;
   /** The comment of the call, redacted and cut, as the report shows it. */
   readonly commentShown?: string | undefined;
   /** The ceiling of the workers (F100-FR-127), for the parallel plan. */
@@ -349,11 +356,25 @@ export async function dryRun(input: DryRunInput): Promise<DryRunOutcome> {
   }
 
   // The read-only plan of the pipeline entry (F123-FR-005), with the
-  // parallel plan ONCE inside it when the units are on (F107-FR-038) — and
-  // no line about the parallel plan when they are off.
+  // parallel plan ONCE inside it, printed through `printThePlan` — the ONE
+  // renderer the doctor uses too, so the bytes are the same (feature 154,
+  // T031, F154-SC-002). The flag rule is CQ-154-19 A: with the option on the
+  // plan is printed (terse unless verbose); with the option off and no
+  // verbose flag nothing is printed; with the option off and the verbose flag
+  // the plan the option WOULD produce is printed behind the one-line label.
   lines.push(`plan pipeline-entry=${pipelineId} stages=${stages.length} (read-only)`);
-  if (input.parallelUnits === true) {
-    lines.push(...parallelPlanLines(contract, { workersMax: input.workersMax }));
+  if (input.parallelUnits === true || input.verbose === true) {
+    const plan = deriveParallelPlan({
+      runId: pipelineId,
+      stages: stages.map((one) => ({ id: String(one.id ?? "") })) as unknown as Stage[],
+      workers: input.workersMax,
+    });
+    if (input.parallelUnits === true) {
+      lines.push(...printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: input.verbose === true }));
+    } else {
+      lines.push("plan the option would produce");
+      lines.push(...printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: true }));
+    }
   }
 
   return {

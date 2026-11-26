@@ -170,8 +170,8 @@ test("T104: the plan check prints the plan with the option on", async () => {
   assert.equal(observed.planPresent, true);
   assert.ok(observed.lines.length > 0, "the doctor prints the plan");
   assert.ok(
-    observed.lines[0]?.includes("parallel plan (doctor)"),
-    "the printer names itself as the doctor",
+    observed.lines[0]?.startsWith("parallel plan:"),
+    "the header carries no printer token: the doctor and the dry run print the same bytes (feature 154, T030)",
   );
   assert.ok(
     observed.lines.some((l) => l.includes("group 1: T1, T2")),
