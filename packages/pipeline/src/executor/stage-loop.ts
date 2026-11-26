@@ -40,7 +40,23 @@ import {
   type PipelineEvent,
 } from "./events.ts";
 import { digestFromEvents } from "../output/digest.ts";
-import { exitCodeForState } from "./exit.ts";
+import { exitCodeForState, EXIT_CODES } from "./exit.ts";
+import { join } from "node:path";
+import {
+  lockPathOf,
+  makeStageWorkspace,
+  markStageWorkspace,
+  removeStageWorkspace,
+  type WorktreePort,
+} from "./stage-workspace.ts";
+import {
+  landingRecordPath,
+  runLandingForStage,
+  type LandingApprovalsPort,
+  type LandingChecksPort,
+  type LandingGitPort,
+  type LandingKillpoint,
+} from "./landing-run.ts";
 
 /** The keys of the contract the hash leaves out (F123-FR-009). */
 export const HASH_EXCLUDED_KEYS = [
@@ -346,4 +362,143 @@ function pickKnown(
     if (entry !== undefined) out[stage.id] = entry;
   }
   return out;
+}
+
+/**
+ * The landing outcome of one stage of a wide group, through the glue.
+ */
+export type WideGroupStageLanding = {
+  stage: string;
+  landed: boolean;
+  parked: boolean;
+  /** Exit 22 for a parked stage (F154-FR-052); null otherwise. */
+  exitCode: number | null;
+  /** The landing decision's rule id (LD-1…LD-4), or null when no workspace was made. */
+  ruleId: string | null;
+  /** The workspace of the stage, or null when it could not be made. */
+  workspace: string | null;
+  /** The stage's own lock inside its workspace (F154-FR-049). */
+  lockPath: string | null;
+  /** The stage's own runtime root, under its workspace (F154-FR-049). */
+  runtimeRoot: string | null;
+};
+
+/** The result of the landing glue over one wide group. */
+export type WideGroupLandingResult = {
+  /** The stages that landed, in declared order. */
+  landed: readonly string[];
+  /** The stages that parked (exit 22), in declared order (F154-FR-052). */
+  parked: readonly string[];
+  /** 22 when any stage parked, 0 otherwise (codes 20 to 24 untouched). */
+  exitCode: number;
+  stages: readonly WideGroupStageLanding[];
+};
+
+/** The inputs of the landing glue over one wide group. */
+export type WideGroupLandingInput = {
+  controlRoot: string;
+  home: string;
+  pipelineRunId: string;
+  /** The stages of the wide group, in declared order. */
+  stages: readonly Stage[];
+  ports: {
+    worktree: WorktreePort;
+    git: LandingGitPort;
+    checks: LandingChecksPort;
+    approvals: LandingApprovalsPort;
+  };
+  /** The clock of the records' stamps; the tests hand a fixed one in. */
+  now?: () => Date;
+  /** Where a test kills the landing of one stage (T124). */
+  killpoint?: (stage: string, point: LandingKillpoint) => void;
+};
+
+/**
+ * The stage-loop glue over one wide group's landing (the minimal form of
+ * T119; F154-FR-049, -050…-054). The stages of the group run SEQUENTIALLY
+ * for now — wide-group parallelism (each child with its own workspace,
+ * lock, process tree and runtime root, coordinated only through the landing
+ * records) is T119's remaining work; this glue is the path the parallel
+ * launch replaces.
+ *
+ * Per stage, in declared order: a workspace of its own
+ * (`makeStageWorkspace`, F154-FR-049), its own lock path (`lockPathOf`)
+ * and its own runtime root under that workspace, then the landing
+ * (`runLandingForStage`). A workspace that cannot be made leaves the
+ * stage unlanded and the glue goes on (F154-FR-004: degrade, never stop).
+ * A parked stage carries exit 22 and the other stages go on (F154-FR-052).
+ * A landed or parked workspace is removed; a stage the glue never reaches
+ * keeps its workspace `running` — nothing lands during a stop
+ * (F154-FR-079).
+ */
+export async function runWideGroupLandings(
+  input: WideGroupLandingInput,
+): Promise<WideGroupLandingResult> {
+  const group = input.stages.map((stage) => stage.id);
+  const out: WideGroupStageLanding[] = [];
+  const landed: string[] = [];
+  const parked: string[] = [];
+  for (const stage of input.stages) {
+    const record = await makeStageWorkspace({
+      home: input.home,
+      stage: stage.id,
+      group,
+      pipelineRunId: input.pipelineRunId,
+      runId: `${input.pipelineRunId}:${stage.id}`,
+      controlRoot: input.controlRoot,
+      port: input.ports.worktree,
+      now: input.now,
+    });
+    if (record === null) {
+      // Degrade, never stop (F154-FR-004): the stage's landing is left to a
+      // later run; the glue goes on with the declared order.
+      out.push({
+        stage: stage.id,
+        landed: false,
+        parked: false,
+        exitCode: null,
+        ruleId: null,
+        workspace: null,
+        lockPath: null,
+        runtimeRoot: null,
+      });
+      continue;
+    }
+    const outcome = await runLandingForStage({
+      controlRoot: input.controlRoot,
+      home: input.home,
+      workspace: record.workspace,
+      pipelineRunId: input.pipelineRunId,
+      group,
+      stage: stage.id,
+      ports: { git: input.ports.git, checks: input.ports.checks, approvals: input.ports.approvals },
+      now: input.now,
+      killpoint: input.killpoint !== undefined ? (point) => input.killpoint?.(stage.id, point) : undefined,
+    });
+    // The terminal state of the workspace, with its landing record, then the
+    // removal (T118: nothing under a running stage is removed).
+    const marked = markStageWorkspace(input.controlRoot, record, outcome.parked ? "parked" : "landed", {
+      landingRecord: landingRecordPath(input.controlRoot, input.pipelineRunId, stage.id),
+      now: input.now,
+    });
+    await removeStageWorkspace(input.controlRoot, marked, { port: input.ports.worktree, now: input.now });
+    if (outcome.parked) parked.push(stage.id);
+    else landed.push(stage.id);
+    out.push({
+      stage: stage.id,
+      landed: outcome.landed,
+      parked: outcome.parked,
+      exitCode: outcome.exitCode,
+      ruleId: outcome.ruleId,
+      workspace: record.workspace,
+      lockPath: lockPathOf(record.workspace),
+      runtimeRoot: join(record.workspace, ".specstride", "runtime"),
+    });
+  }
+  return {
+    landed,
+    parked,
+    exitCode: parked.length > 0 ? EXIT_CODES.stageFailed : EXIT_CODES.ok,
+    stages: out,
+  };
 }
