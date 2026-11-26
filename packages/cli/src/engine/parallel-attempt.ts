@@ -282,6 +282,15 @@ export async function runTheGroupOfTheAttempt(input: {
    */
   readonly runTokenHash?: string | undefined;
   readonly say?: ((line: string) => void) | undefined;
+  /**
+   * T056 — the charge of one cycle per admitted task at its first start
+   * (F142-FR-021, F154-FR-023), handed to the runner of the workers as it
+   * stands. Left out, nothing is charged, exactly as before the field
+   * existed.
+   */
+  readonly chargeCyclesOfTheAdmittedTasks?:
+    | ((workerId: string, taskId: string) => void)
+    | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
   const startedAtMs = Date.now();
@@ -419,6 +428,9 @@ export async function runTheGroupOfTheAttempt(input: {
             },
           }),
       say: input.say,
+      ...(input.chargeCyclesOfTheAdmittedTasks === undefined
+        ? {}
+        : { chargeCyclesOfTheAdmittedTasks: input.chargeCyclesOfTheAdmittedTasks }),
     });
     if (!run.ok) {
       /* ---- THE ANSWER TO A START REFUSAL (F143-FR-018): the survivor

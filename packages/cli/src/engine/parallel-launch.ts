@@ -41,6 +41,8 @@ import {
   type UnitsValue,
   type WorkerCountConfiguration,
 } from "../../../layer-parallel/src/index.ts";
+import { windows as quotaWindows } from "@specstride/policy/quota";
+import type { QuotaObservation } from "../../../layer-parallel/src/admission.ts";
 import type { SpecPhase } from "../../../spec-formats/src/model.ts";
 
 /** The hasher of the plan: the canonical record hasher of the kernel. */
@@ -101,6 +103,16 @@ export type ParallelLaunchInput = {
   readonly workers?: WorkerCountConfiguration;
   /** `loop.parallel.quota_headroom`, in per cent, where configuration set it. */
   readonly quotaHeadroomPerCent?: number;
+  /**
+   * The last limit-window facts the run observed of the proposer's account
+   * (F127-FR-009), for the utilisation the check `headroom` reads
+   * (F154-FR-021). Left out — the engine observes no window in this scope
+   * yet — no utilisation was observed and the admission reads the empty
+   * list, exactly as before this field existed.
+   */
+  readonly quotaWindowsOfTheLaunch?: quotaWindows.LimitWindowState;
+  /** The instant the window facts are read at; the caller reads its clock. */
+  readonly nowMs?: number;
   /** Where `loop.parallel.allow_detect` was found. */
   readonly allowDetect?: AllowDetectConfiguration;
   /** The scopes configuration declares, over the two sources of `scope.ts`. */
@@ -210,6 +222,70 @@ function refusalLinesOf(plan: ParallelPlan): readonly string[] {
  * admission is pure and deterministic, so the two computations give the same
  * groups, and the stored hash is the hash of the stored record.
  */
+
+/**
+ * F154-FR-021 (T052) — the quota observation the check `headroom` reads,
+ * from the last limit-window facts the run observed of the proposer's
+ * account (F127-FR-009), read through `readLimitWindow` and `headroomOf`
+ * (`windows.ts:158`, `:318`).
+ *
+ * The observation carries the last observed utilisation of EVERY window the
+ * state holds, in the deterministic order of the target keys, so that the
+ * same facts give the same observation — the plan is derived from it
+ * (F154-SC-002). A state with no window at all gives the empty list, which
+ * the check `headroom` reads as "no quota window was observed in the run"
+ * and the worker count reads as the two of F142-FR-016.
+ */
+export function quotaObservationOfTheWindows(input: {
+  readonly state: quotaWindows.LimitWindowState;
+  /** `loop.parallel.quota_headroom`, in per cent. */
+  readonly headroomPerCent: number;
+  readonly nowMs: number;
+}): QuotaObservation {
+  const utilisation: number[] = [];
+  for (const key of Object.keys(input.state).sort()) {
+    // The key is `<harness>/<model tier>` (`targetKey` of windows.ts); a key
+    // with no slash is a harness whose tier is empty — the same split
+    // `limitedTargets` reads.
+    const slash = key.indexOf("/");
+    const target =
+      slash < 0
+        ? { harness: key, modelTier: "" }
+        : { harness: key.slice(0, slash), modelTier: key.slice(slash + 1) };
+    const reading = quotaWindows.readLimitWindow(input.state, target, input.nowMs);
+    if (reading.fact === null) continue;
+    const headroom = quotaWindows.headroomOf(input.state, target, input.nowMs);
+    if (headroom.utilizationUsed !== null) utilisation.push(headroom.utilizationUsed);
+  }
+  return Object.freeze({
+    utilisationPerCent: Object.freeze(utilisation),
+    headroomPerCent: input.headroomPerCent,
+  });
+}
+
+/**
+ * The quota observation of the launch inputs (F154-FR-021): the observed
+ * windows where the launch was handed any, else the empty list — the value
+ * the admission read before this field existed, and the value it still reads
+ * whenever the run observes no window.
+ */
+function quotaObservationOfTheLaunch(input: ParallelLaunchInput): QuotaObservation {
+  if (input.quotaHeadroomPerCent === undefined) {
+    return Object.freeze({ utilisationPerCent: Object.freeze([]), headroomPerCent: 0 });
+  }
+  if (input.quotaWindowsOfTheLaunch === undefined) {
+    return Object.freeze({
+      utilisationPerCent: Object.freeze([]),
+      headroomPerCent: input.quotaHeadroomPerCent,
+    });
+  }
+  return quotaObservationOfTheWindows({
+    state: input.quotaWindowsOfTheLaunch,
+    headroomPerCent: input.quotaHeadroomPerCent,
+    nowMs: input.nowMs ?? Date.now(),
+  });
+}
+
 export function launchTheParallelLayer(input: ParallelLaunchInput): ParallelLaunchOutcome {
   const units = unitsInForce(input.units);
   if (units === "off") {
@@ -248,10 +324,7 @@ export function launchTheParallelLayer(input: ParallelLaunchInput): ParallelLaun
     ...(input.quotaHeadroomPerCent !== undefined
       ? {
           headroom: {
-            quota: {
-              utilisationPerCent: Object.freeze([]),
-              headroomPerCent: input.quotaHeadroomPerCent,
-            },
+            quota: quotaObservationOfTheLaunch(input),
           },
         }
       : {}),

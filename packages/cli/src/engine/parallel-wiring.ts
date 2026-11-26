@@ -59,6 +59,10 @@ import {
   report as reportOfTheLayer,
   reservedTasksBlockText,
   shrinkOrCancelAGroup,
+  TRANSIENT_RATE_LIMITS_THAT_HALVE,
+  chargeCyclesPerAdmittedTask,
+  cyclesSufficeForTheGroup,
+  type CycleCharge,
   workerBlockText,
   workerCachesReading,
   type AdmissionInputs,
@@ -72,6 +76,7 @@ import {
   type ParallelPlan,
   type PlannedGroup,
   type QuotaObservation,
+  workersForTheRestOfTheAttempt,
   type WorkerCaches,
 } from "../../../layer-parallel/src/index.ts";
 import { tickFile, tickedTaskIds } from "../../../spec-formats/src/tick.ts";
@@ -531,6 +536,28 @@ export type ParallelWiringInput = {
    */
   readonly quotaObservationOf?: (() => QuotaObservation | null) | undefined;
   /**
+   * T056 — the remaining cycles of the micro-loop layer for THIS attempt
+   * (F154-FR-023). Default: none read, the gate's cycles check passes, as
+   * today. What THIS attempt has charged already is subtracted by the
+   * wiring, so the verdict a group is handed reflects the charged budget.
+   */
+  readonly remainingCyclesOfTheAttempt?: (() => number | undefined) | undefined;
+  /**
+   * T056 — the charge of one cycle per admitted task at its first start
+   * (F142-FR-021, rule PU-87). Default: the layer's
+   * `chargeCyclesPerAdmittedTask` over a per-attempt charged set, so a task
+   * is charged once whatever the restarts of its worker did.
+   */
+  readonly chargeCyclesOfTheAdmittedTasks?:
+    | ((workerId: string, taskId: string, admittedTasks: readonly string[]) => CycleCharge)
+    | undefined;
+  /**
+   * The rate limits classified as transient that one group of this attempt
+   * saw (F154-FR-022, F142-FR-019). Default: none seen, the count never
+   * halves, as today.
+   */
+  readonly transientRateLimitsOfTheGroup?: ((group: PlannedGroup) => number) | undefined;
+  /**
    * The count of the phase's failed groups read from the ledger
    * (F154-FR-025). Default: the constant `failedGroupsBefore`, as today.
    */
@@ -712,6 +739,48 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
       ? input.failedGroupsBeforeOfTheLedger(input.phase)
       : input.failedGroupsBefore;
 
+  /**
+   * F154-FR-022 (F142-FR-019) — THE HALVING: the worker count for the rest
+   * of the phase attempt, read BEFORE EVERY group. Each earlier group of the
+   * attempt that ended with two rate limits classified as transient halves
+   * the count once, never below 1.
+   */
+  let groupsWithTwoTransientRateLimits = 0;
+  const workersOfTheGroup = (current: PlannedGroup): number =>
+    workersForTheRestOfTheAttempt(
+      Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
+      groupsWithTwoTransientRateLimits,
+    );
+
+  /**
+   * T056 — THE CHARGED CYCLES of this attempt (F142-FR-021, rule PU-87):
+   * every admitted task whose first start charged its cycle. The set is the
+   * idempotency of the charge — a worker that starts again, or a carried
+   * resume that restarts its workers, charges nothing for a task named here.
+   */
+  const chargedCyclesOfTheAttempt = new Set<string>();
+  /* The charge of one first start: whatever charger answers (the default is
+   * the layer's `chargeCyclesPerAdmittedTask`; the tests of the wiring spy
+   * through the seam), the charge it returns is recorded on the attempt's
+   * charged set, so the charge stays once per task whatever restarts did. */
+  const chargeTheFirstStartOf = (
+    workerId: string,
+    taskId: string,
+    admittedTasks: readonly string[],
+  ): CycleCharge => {
+    const charge =
+      input.chargeCyclesOfTheAdmittedTasks !== undefined
+        ? input.chargeCyclesOfTheAdmittedTasks(workerId, taskId, admittedTasks)
+        : chargeCyclesPerAdmittedTask(
+            [{ workerId, taskId }],
+            admittedTasks.filter((task) => !chargedCyclesOfTheAttempt.has(task)),
+          );
+    for (const [task, charged] of Object.entries(charge.perTask)) {
+      if (charged === 1) chargedCyclesOfTheAttempt.add(task);
+    }
+    return charge;
+  };
+
   return {
     group,
     tasksBeforeTheGroup: before,
@@ -783,14 +852,35 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
       );
       return "skipped";
     }
+    /* F154-FR-022 — the worker count this group runs at, after the halving
+     * of the attempt's earlier groups (F142-FR-019); said where it halved. */
+    const workers = workersOfTheGroup(current);
+    if (groupsWithTwoTransientRateLimits > 0) {
+      input.say(
+        `[LOOP] parallel: group ${current.ordinal} runs ${String(workers)} worker(s) — halved after ${String(groupsWithTwoTransientRateLimits)} group(s) of the attempt ended with ${String(TRANSIENT_RATE_LIMITS_THAT_HALVE)} transient rate limit(s) (F142-FR-019)`,
+      );
+    }
     /* The gate of the admission (F154-FR-021 to -024, -033), where the
      * composition root wires it: a refused group's tasks stay serial. */
     if (input.groupGateOfTheAttempt !== undefined) {
       const quota = input.quotaObservationOf !== undefined ? input.quotaObservationOf() : null;
+      // T056 (F154-FR-023) — the cycles verdict of THIS group: the remaining
+      // cycles of the attempt, less what it charged already, against the
+      // group's tasks, through `cyclesSufficeForTheGroup` of the layer. No
+      // remaining-cycles reading: no verdict, the check passes, as today.
+      const remaining = input.remainingCyclesOfTheAttempt?.();
+      const cycles =
+        remaining === undefined
+          ? undefined
+          : cyclesSufficeForTheGroup({
+              remainingCycles: Math.max(remaining - chargedCyclesOfTheAttempt.size, 0),
+              tasks: current.tasks,
+            });
       const gate = input.groupGateOfTheAttempt({
-        workers: Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
+        workers,
         innerCheckSet: input.innerCheckSet.map((entry) => entry.id),
         ...(quota === null ? {} : { headroom: { quota } }),
+        ...(cycles === undefined ? {} : { cycles: { sufficesForTheGroup: cycles } }),
       });
       if (!gate.admitted) {
         input.say(
@@ -878,7 +968,7 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
           timeLimitSec: Math.ceil(input.timeLimitMs / 1000),
           enginePid: input.enginePid,
           engineStartedAtMs: input.engineStartedAtMs,
-          workersAtATime: Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
+          workersAtATime: workers,
           guardScriptPath: input.guardScriptPath,
           registry: input.registry,
           promptOf: promptOfTheOrdinal(current.ordinal),
@@ -933,7 +1023,7 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
         return "blocked";
       }
       startedOrdinals.push(current.ordinal);
-      const workersAtATime = Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length);
+      const workersAtATime = workers;
       attempt = await runTheGroupOfTheAttempt({
         controlRoot: input.controlRoot,
         runId: input.runId,
@@ -944,6 +1034,10 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
         workspace: input.workspace,
         slug: input.slug,
         taskListPath: input.taskListPath,
+        // T056 — the charge of one cycle per admitted task of THIS group, at
+        // its first start, once per attempt (F142-FR-021, F154-FR-023).
+        chargeCyclesOfTheAdmittedTasks: (workerId, taskId) =>
+          chargeTheFirstStartOf(workerId, taskId, current.tasks),
         model: input.model,
         modelTierOrEffort: input.modelTierOrEffort,
         containment: input.containment,
@@ -1015,6 +1109,14 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
       : { wallMs: 0, agentMs: 0, refused: 1 };
     closedGroups.push(closed);
     input.onClosed(closed, counts);
+    /* F154-FR-022 — the transient rate limits THIS group ended with count
+     * for the groups that follow it in the attempt (F142-FR-019). */
+    const transient = input.transientRateLimitsOfTheGroup !== undefined
+      ? input.transientRateLimitsOfTheGroup(current)
+      : 0;
+    if (transient >= TRANSIENT_RATE_LIMITS_THAT_HALVE) {
+      groupsWithTwoTransientRateLimits += 1;
+    }
     if (attempt.ok) {
       if (attempt.directive === "keep") {
         handoff = attempt.handoff;

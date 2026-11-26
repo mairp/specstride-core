@@ -165,6 +165,16 @@ export type AdmissionInputs = {
   /** The exclusive resources the phase names (F142-FR-015). */
   readonly exclusiveResources?: readonly ExclusiveResource[];
   readonly headroom?: Headroom;
+  /**
+   * T056 — the verdict of `cyclesSufficeForTheGroup` (`decide.ts`) for the
+   * group as it stands (F154-FR-023). Left out, the gate reads no cycles
+   * verdict and passes, exactly as before the field existed.
+   */
+  readonly cycles?: {
+    readonly sufficesForTheGroup?:
+      | { readonly admissible: boolean; readonly needed: number; readonly detail: string }
+      | undefined;
+  };
 };
 
 /* ================================================================== *
@@ -932,6 +942,23 @@ export function workersWithNoQuotaObservation(
 }
 
 /**
+ * T056 — the inner check `cycles` of the gate (F154-FR-023): the verdict
+ * `cyclesSufficeForTheGroup` (`decide.ts`) computed by the engine over the
+ * remaining cycles of the attempt and the group's tasks. A group whose
+ * verdict refuses is not admitted; with no verdict given the check passes,
+ * exactly as before the check was wired.
+ */
+export function theCyclesSufficeForTheGroup(inputs: AdmissionInputs): GroupGate {
+  const verdict = inputs.cycles?.sufficesForTheGroup;
+  if (verdict === undefined) {
+    return admits("no verdict of the remaining cycles was given");
+  }
+  return verdict.admissible
+    ? admits(verdict.detail)
+    : refuses("headroom", `cycles: ${verdict.detail}`);
+}
+
+/**
  * The gates of the phase attempt, in the order of row 61: a group is admitted
  * only where every one of them admits (F142-FR-012 to F142-FR-016). The first
  * that refuses gives the reason the plan prints and the `[LOOP]` line carries.
@@ -943,6 +970,7 @@ export function groupGate(
   const gates = [
     noGroupInAPhaseNamingAnExclusiveResourceWithoutCapacity(inputs),
     checkQuotaBudgetDiskAndCycles(inputs, tasksOfTheGroup),
+    theCyclesSufficeForTheGroup(inputs),
     admitAGroupOnlyWithANonEmptyInnerCheckSet(inputs),
     aPhaseWithALinkThatLeavesTheTreeMayHoldAGroup(inputs),
     noGroupStartsWhileAnAdoptableJobLives(inputs),

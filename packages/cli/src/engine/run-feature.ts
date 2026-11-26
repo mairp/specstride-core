@@ -4758,6 +4758,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               npmPath,
               checkCommandOfTheWorkspace: checkCommandOf,
               checkMin: loopConfig.checkMin,
+              // F154-FR-021 (T052) — `loop.parallel.quota_headroom`, where
+              // configuration set it; the window facts themselves have no
+              // observer in the engine yet, so the seam answers `null` and
+              // the admission reads no observation, as before.
+              ...(loopConfig.parallel.quotaHeadroomPerCent !== undefined
+                ? { quotaHeadroomPerCent: loopConfig.parallel.quotaHeadroomPerCent }
+                : {}),
               phases,
               parallelTotals,
               emit: (type, data) => emit(type, data),

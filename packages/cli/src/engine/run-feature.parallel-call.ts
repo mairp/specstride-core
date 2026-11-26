@@ -11,6 +11,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { groupGate } from "../../../layer-parallel/src/index.ts";
 import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+import { quotaObservationOfTheWindows } from "./parallel-launch.ts";
+import { windows as quotaWindowsModule } from "@specstride/policy/quota";
 import {
   totalsAfterTheGroup,
   type ParallelRunTotals,
@@ -50,6 +52,15 @@ export type TheParallelCallContext = {
   readonly parallelTotals: ParallelRunTotals;
   readonly emit: ParallelWiringInput["emit"];
   readonly say: ParallelWiringInput["say"];
+  /**
+   * F154-FR-021 (T052) — the last limit-window facts the run observed of the
+   * proposer's account (F127-FR-009). Left out, the run observes no window:
+   * the seam answers `null` and the admission reads no observation, exactly
+   * as before this field existed.
+   */
+  readonly quotaWindowsOfTheRun?: (() => quotaWindowsModule.LimitWindowState) | undefined;
+  /** `loop.parallel.quota_headroom`, in per cent, where configuration set it. */
+  readonly quotaHeadroomPerCent?: number | undefined;
 };
 
 /** Build the argument object of `parallelWiringOfTheAttempt` for one attempt. */
@@ -90,9 +101,22 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     // F154-FR-021…-024, -033 — the group gate of one admission, the same
     // pure table the layer computes; no stub.
     groupGateOfTheAttempt: (inputs) => groupGate(inputs),
-    // F154-FR-021 — no quota window is observed in this scope yet (the
-    // neutral default; P2 replaces it with `readLimitWindow`).
-    quotaObservationOf: () => null,
+    // F154-FR-021 (T052) — the last observed utilisation of the proposer
+    // account's quota windows, read through `quotaObservationOfTheWindows`
+    // (`parallel-launch.ts`), which reads the facts through `readLimitWindow`
+    // and `headroomOf` of feature 127. With no headroom configured or no
+    // window observed in the run the seam answers `null` and the admission
+    // reads no observation — the neutral default this seam held before.
+    quotaObservationOf: () => {
+      const headroomPerCent = ctx.quotaHeadroomPerCent;
+      const state = ctx.quotaWindowsOfTheRun?.();
+      if (headroomPerCent === undefined || state === undefined) return null;
+      return quotaObservationOfTheWindows({
+        state,
+        headroomPerCent,
+        nowMs: Date.now(),
+      });
+    },
     // F154-FR-025 (T021) — the count of the phase's failed groups comes from
     // the LEDGER OF THE ATTEMPT, through the seam, never from a constant:
     // the groups this attempt has already closed, counted by

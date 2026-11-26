@@ -465,6 +465,19 @@ export async function runTheGroupWorkers(input: {
    */
   readonly restartIndexOf?: ((workerId: string) => number | undefined) | undefined;
   /**
+   * T056 — THE CHARGE of one cycle per admitted task, at its FIRST start
+   * (F142-FR-021, rule PU-87; F154-FR-023). The runner calls it once per
+   * worker, at the moment the worker's first pass is about to start, before
+   * the door runs: a pass again — a restart within this call, numbered by
+   * `restartIndexOf` above 0 — charges nothing, and no worker charges twice
+   * within one call. Whether a task of an EARLIER engine start was charged
+   * already is the caller's knowledge (the per-attempt charged set of the
+   * wiring); the callback it hands in answers for that.
+   */
+  readonly chargeCyclesOfTheAdmittedTasks?:
+    | ((workerId: string, taskId: string) => void)
+    | undefined;
+  /**
    * THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request `inbox:stop` is
    * read at the boundaries the wait below already runs, never by a watcher
    * and never inside a pass. Left out, no poll runs and the group is exactly
@@ -485,6 +498,9 @@ export async function runTheGroupWorkers(input: {
 > {
   const endedOf = new Map<string, Promise<WorkerEnd>>();
   const killedCheckpoints: KilledCheckpoint[] = [];
+  // T056 — the workers of THIS call whose first start has charged already,
+  // so a worker charges once whatever the runner does (F142-FR-021).
+  const chargedOfThisCall = new Set<string>();
   // The ends the door resolves are carried into the runner AFTER the runner
   // came up: the door runs while `startGroupWorkers` is still in flight, so
   // it cannot hold the group yet. The loop below applies them.
@@ -509,6 +525,17 @@ export async function runTheGroupWorkers(input: {
       start: async (workerId) => {
         const worker = input.prepared.workers.find((row) => row.workerId === workerId);
         if (worker === undefined) throw new WorkerStartRefused(workerId, "no such worker");
+        // T056 — the cycle of the admitted task is charged at its FIRST
+        // start, before the pass runs; a start again (a restart, numbered
+        // above 0) charges nothing (F142-FR-021, rule PU-87).
+        if (
+          input.chargeCyclesOfTheAdmittedTasks !== undefined &&
+          (input.restartIndexOf?.(workerId) ?? 0) === 0 &&
+          !chargedOfThisCall.has(workerId)
+        ) {
+          chargedOfThisCall.add(workerId);
+          input.chargeCyclesOfTheAdmittedTasks(workerId, worker.taskId);
+        }
         const started = await input.start(worker);
         endedOf.set(
           workerId,

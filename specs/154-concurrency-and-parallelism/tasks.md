@@ -238,12 +238,12 @@ Success criteria:
 **Goal**: the unreached functions of the layer have their callers, and every admission is an event.
 **Independent test**: a quota window above headroom keeps a group serial with `headroom`; the admission event carries every verdict.
 
-- [ ] T051 [US2] Write `packages/cli/test/engine/parallel-quota-154.test.ts`: the failing test that with the last observed utilisation at or above `loop.parallel.quota_headroom` a group is not admitted with the check `headroom`, and with no observation it has 2 workers (F154-FR-021).
-- [ ] T052 [US2] In `packages/cli/src/engine/parallel-launch.ts` (:252) and before each group in `startIfTheBoundaryIsClean` feed `utilisationPerCent` from `readLimitWindow` and `headroomOf` (`packages/policy/src/quota/windows.ts:158, :318`) through `quotaObservationOf` (F154-FR-021); done when T051 passes.
-- [ ] T053 [US2] In `packages/cli/src/engine/parallel-wiring.ts` `startIfTheBoundaryIsClean` call `groupGate` (`admission.ts:939`) per group before its start and refuse a group whose verdict fails, with the reason recorded (F154-FR-021, -033).
-- [ ] T054 [US2] Write `packages/layer-parallel/test/halving-154.test.ts`: after a group ended with two transient rate limits the next group's worker count is halved (F142-FR-019, F154-FR-022).
-- [ ] T055 [US2] In `packages/cli/src/engine/parallel-wiring.ts`` `startIfTheBoundaryIsClean` read `workersForTheRestOfTheAttempt` (`plan.ts:202`) with `halvedAfterTransientRateLimits` (:189) before each group (F154-FR-022); done when T054 passes.
-- [ ] T056 [US2] In `packages/cli/src/engine/parallel-group.ts` at a worker's first start call `chargeCyclesPerAdmittedTask` (`decide.ts:1055`), and feed `cyclesSufficeForTheGroup` (:1101) into `groupGate`'s cycles check (F142-FR-021, F154-FR-023).
+- [x] T051 [US2] Write `packages/cli/test/engine/parallel-quota-154.test.ts`: the failing test that with the last observed utilisation at or above `loop.parallel.quota_headroom` a group is not admitted with the check `headroom`, and with no observation it has 2 workers (F154-FR-021).
+- [x] T052 [US2] In `packages/cli/src/engine/parallel-launch.ts` (:252) and before each group in `startIfTheBoundaryIsClean` feed `utilisationPerCent` from `readLimitWindow` and `headroomOf` (`packages/policy/src/quota/windows.ts:158, :318`) through `quotaObservationOf` (F154-FR-021); done when T051 passes.
+- [x] T053 [US2] In `packages/cli/src/engine/parallel-wiring.ts` `startIfTheBoundaryIsClean` call `groupGate` (`admission.ts:939`) per group before its start and refuse a group whose verdict fails, with the reason recorded (F154-FR-021, -033).
+- [x] T054 [US2] Write `packages/layer-parallel/test/halving-154.test.ts`: after a group ended with two transient rate limits the next group's worker count is halved (F142-FR-019, F154-FR-022).
+- [x] T055 [US2] In `packages/cli/src/engine/parallel-wiring.ts`` `startIfTheBoundaryIsClean` read `workersForTheRestOfTheAttempt` (`plan.ts:202`) with `halvedAfterTransientRateLimits` (:189) before each group (F154-FR-022); done when T054 passes.
+- [x] T056 [US2] In `packages/cli/src/engine/parallel-group.ts` at a worker's first start call `chargeCyclesPerAdmittedTask` (`decide.ts:1055`), and feed `cyclesSufficeForTheGroup` (:1101) into `groupGate`'s cycles check (F142-FR-021, F154-FR-023).
 
 **Checkpoint**: Phase 6. T051, T054 and the Phase 5 tests are green; the live-record replay below still has the same counts.
 
