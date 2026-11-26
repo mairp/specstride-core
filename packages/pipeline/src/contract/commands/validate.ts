@@ -121,6 +121,39 @@ export function validateContract(
   };
   const outcome = validateInOrder(reading.record, options);
 
+  // T114 — the wide stage graph (F154-FR-048; F107 as amended): a cycle in
+  // `depends_on`, an unknown stage there, or a `never_together` pair naming a
+  // stage that is not declared is refused with the existing exit 20, before
+  // any run starts. The reasons stand one per line of the refusal.
+  const stageGroupProblems = stageGroupsRefusals(reading.record);
+  if (stageGroupProblems.length > 0) {
+    if (input.json === true) {
+      return {
+        exitCode: exitOf(VALIDATE_EXIT_CODES, 20),
+        stdout: `${JSON.stringify({
+          schema: JSON_SCHEMA_FIELD.validate,
+          ok: false,
+          exit: exitOf(VALIDATE_EXIT_CODES, 20),
+          errors: stageGroupProblems.map((one) => ({
+            rule: "stage-groups",
+            path: one.path,
+            message: one.message,
+            class: "structure",
+          })),
+        })}\n`,
+        stderr: "",
+      };
+    }
+    const lines = stageGroupProblems.map(
+      (one) => `${one.path}: ${one.message}`,
+    );
+    return {
+      exitCode: exitOf(VALIDATE_EXIT_CODES, 20),
+      stdout: "",
+      stderr: `invalid launch contract:\n${lines.join("\n")}\n`,
+    };
+  }
+
   // Exit 20: the composed schema, or the post-schema rules, or the learning
   // binding's structural rules.
   if (outcome.exit === 20) {
@@ -229,3 +262,101 @@ export function validateContract(
 
 /** Re-exported for the parity tests and the wiring. */
 export { ALLOW_DRAFT_SKIPS, VALIDATION_ORDER, physicalStatePath, existsSync, contractStateName };
+
+/** One refusal of the wide stage graph: the path and the one-line reason. */
+export type StageGroupsRefusal = {
+  readonly path: string;
+  readonly message: string;
+};
+
+/** A cycle in the per-stage `depends_on` graph (F107 as amended; SG-1). */
+function dependencyCycleOf(
+  stages: readonly { id: string; dependencies: readonly string[] }[],
+): readonly string[] | undefined {
+  const byId = new Map(stages.map((stage) => [stage.id, stage.dependencies]));
+  const state = new Map<string, "visiting" | "done">();
+  const stack: string[] = [];
+  const visit = (id: string): boolean => {
+    const at = state.get(id);
+    if (at === "visiting") return true;
+    if (at === "done") return false;
+    state.set(id, "visiting");
+    stack.push(id);
+    for (const dependency of byId.get(id) ?? []) {
+      if (visit(dependency)) return true;
+    }
+    stack.pop();
+    state.set(id, "done");
+    return false;
+  };
+  for (const stage of stages) {
+    stack.length = 0;
+    if (visit(stage.id)) return stack.slice(stack.indexOf(stack[stack.length - 1]!));
+  }
+  return undefined;
+}
+
+/**
+ * T114 — the refusals of the wide stage graph over one contract record
+ * (F154-FR-048): the cycle in `depends_on`, the unknown stage it names, and
+ * the `never_together` pair that names a stage outside the declared stages.
+ */
+export function stageGroupsRefusals(record: unknown): readonly StageGroupsRefusal[] {
+  const problems: StageGroupsRefusal[] = [];
+  const stages = (record as { stages?: unknown }).stages;
+  if (!Array.isArray(stages)) return problems;
+  const declared = stages.flatMap((one) => {
+    const id = (one as { id?: unknown }).id;
+    return typeof id === "string" ? [id] : [];
+  });
+  const known = new Set(declared);
+  const rows = stages.flatMap((one) => {
+    const id = (one as { id?: unknown }).id;
+    const dependsOn = (one as { depends_on?: unknown }).depends_on;
+    if (typeof id !== "string" || !Array.isArray(dependsOn)) return [];
+    return [
+      {
+        id,
+        dependencies: dependsOn.filter((one): one is string => typeof one === "string"),
+      },
+    ];
+  });
+  // One refusal per failure, with a concise reason (F154-FR-048).
+  const cycle = dependencyCycleOf(rows);
+  if (cycle !== undefined) {
+    problems.push({
+      path: "/stages",
+      message: `stageGroups: depends_on forms a cycle: ${cycle.join(" -> ")}`,
+    });
+  }
+  for (const row of rows) {
+    for (const [index, dependency] of row.dependencies.entries()) {
+      if (!known.has(dependency)) {
+        problems.push({
+          path: `/stages/${declared.indexOf(row.id)}/depends_on/${index}`,
+          message: `stageGroups: unknown stage: depends_on names "${dependency}", which is not a declared stage`,
+        });
+      }
+    }
+  }
+  const stageGroups = (record as { configuration?: { stageGroups?: unknown } })
+    .configuration?.stageGroups;
+  const neverTogether = (stageGroups as { never_together?: unknown } | undefined)
+    ?.never_together;
+  if (Array.isArray(neverTogether)) {
+    for (const [pairIndex, pair] of neverTogether.entries()) {
+      const ids = (pair as { stages?: unknown }).stages;
+      if (!Array.isArray(ids)) continue;
+      const unknown = ids.filter(
+        (one) => typeof one === "string" && !known.has(one),
+      );
+      if (unknown.length > 0) {
+        problems.push({
+          path: `/configuration/stageGroups/never_together/${pairIndex}`,
+          message: `stageGroups: cross-group pair: never_together [${(ids as string[]).join(", ")}] names stages that are not declared: ${unknown.map((one) => `"${one}"`).join(", ")}`,
+        });
+      }
+    }
+  }
+  return problems;
+}

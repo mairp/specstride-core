@@ -311,6 +311,7 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
       "relaunch",
       "scopes",
       "specstride_live",
+      "stageGroups",
       "telemetry",
       "verification",
     ].sort(),
@@ -364,7 +365,7 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
   ] as Record<string, unknown>;
   assert.deepEqual(
     Object.keys((recordConfiguration.properties as Record<string, unknown>) ?? {}).sort(),
-    ["comment", "learning", "relaunch", "scopes", "verification"].sort(),
+    ["comment", "learning", "relaunch", "scopes", "stageGroups", "verification"].sort(),
     "the record schema of @specstride/contracts names no such configuration members",
   );
   assert.deepEqual(

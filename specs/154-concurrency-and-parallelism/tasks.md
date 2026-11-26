@@ -354,12 +354,12 @@ Success criteria:
 **Goal**: a launch contract declares a stage group, and each stage of it runs in a workspace of its own.
 **Independent test**: two independent stages run at once; a cycle, an unknown stage or a cross-group pair is refused with exit 20.
 
-- [ ] T111 [US5] Write `packages/pipeline/test/executor/stage-admission-154.test.ts`: proves SG-1 to SG-4 over `stage-admission-table.json` (F154-FR-048, -003).
-- [ ] T112 [US5] Write `packages/pipeline/src/executor/stage-admission.ts`: `admitStage(stage, declaration, groupsSoFar)` over `STAGE_ADMISSION_TABLE` (F154-FR-048); done when T111 passes.
-- [ ] T113 [US5] In `packages/pipeline/src/executor/graph.ts` `declareStageGraph` (:24-29): with `pipeline.stageGroups` off one stage per group as today; on, build groups by T112 from `configuration.stageGroups` (`width`, `never_together`) and the per-stage `depends_on`; `StageGraph.mode` gains `wide`; each admitted or refused stage emits one `pipeline.stage.admission` event with its rule id (F154-FR-003, -048) (F123-FR-019 as amended; F154-FR-048).
-- [ ] T114 [US5] In `packages/contracts/schemas/launch-contract.schema.json` and `packages/pipeline/src/contract/schemas/configuration.schema.json` add `configuration.stageGroups` (`width`, `never_together: [{ stages, why }]`), and in `packages/pipeline/src/contract/commands/validate.ts` `validateContract` (:62) refuse a cycle, an unknown stage or a cross-group pair with the existing exit 20 (F107 as amended; F154-FR-048).
-- [ ] T115 [US5] Write `packages/pipeline/test/executor/graph-154.test.ts`: a contract with `{A, B}` width 2 gives one group of two; `never_together` gives two groups; the off switch gives the serial graph of today (F154-FR-048).
-- [ ] T116 [US5] Write `packages/cli/test/contract/stage-groups-validate-154.test.ts`: the three refusals exit 20 with their reason and no run starts (F154-FR-048, F154-FR-002).
+- [x] T111 [US5] Write `packages/pipeline/test/executor/stage-admission-154.test.ts`: proves SG-1 to SG-4 over `stage-admission-table.json` (F154-FR-048, -003).
+- [x] T112 [US5] Write `packages/pipeline/src/executor/stage-admission.ts`: `admitStage(stage, declaration, groupsSoFar)` over `STAGE_ADMISSION_TABLE` (F154-FR-048); done when T111 passes.
+- [x] T113 [US5] In `packages/pipeline/src/executor/graph.ts` `declareStageGraph` (:24-29): with `pipeline.stageGroups` off one stage per group as today; on, build groups by T112 from `configuration.stageGroups` (`width`, `never_together`) and the per-stage `depends_on`; `StageGraph.mode` gains `wide`; each admitted or refused stage emits one `pipeline.stage.admission` event with its rule id (F154-FR-003, -048) (F123-FR-019 as amended; F154-FR-048).
+- [x] T114 [US5] In `packages/contracts/schemas/launch-contract.schema.json` and `packages/pipeline/src/contract/schemas/configuration.schema.json` add `configuration.stageGroups` (`width`, `never_together: [{ stages, why }]`), and in `packages/pipeline/src/contract/commands/validate.ts` `validateContract` (:62) refuse a cycle, an unknown stage or a cross-group pair with the existing exit 20 (F107 as amended; F154-FR-048).
+- [x] T115 [US5] Write `packages/pipeline/test/executor/graph-154.test.ts`: a contract with `{A, B}` width 2 gives one group of two; `never_together` gives two groups; the off switch gives the serial graph of today (F154-FR-048).
+- [x] T116 [US5] Write `packages/cli/test/contract/stage-groups-validate-154.test.ts`: the three refusals exit 20 with their reason and no run starts (F154-FR-048, F154-FR-002).
 
 **Checkpoint**: Phase 13. T111, T115 and T116 are green; the derive of `tests/fixtures/154/stages/` accepts the declaration.
 

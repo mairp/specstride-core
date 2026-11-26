@@ -102,6 +102,46 @@
           "description": "Declared write scopes of tasks, and declared reads and writes of verification commands, each with its source",
           "x-type-in-words": "Record",
           "x-required": "No"
+        },
+        "stageGroups": {
+          "type": "object",
+          "description": "The wide stage graph (F154-FR-048): the width of a group, and the pairs of stages that may never share a group, each with its reason",
+          "x-type-in-words": "Record",
+          "x-required": "No",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The width of one wide stage group"
+            },
+            "never_together": {
+              "type": "array",
+              "description": "The pairs of stages that may never share a group, each with its one-line reason",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "stages": {
+                    "type": "array",
+                    "minItems": 2,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "The stage ids of the pair"
+                  },
+                  "why": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The reason the pair never shares a group"
+                  }
+                },
+                "required": ["stages", "why"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["width", "never_together"],
+          "additionalProperties": false
         }
       },
       "required": [
