@@ -110,6 +110,8 @@ import {
   type GroupAudit,
   type TheMergeCheck,
 } from "./parallel-drive.ts";
+import { MERGE_BASELINE_RECORD } from "../../../core/src/parallel/merge-baseline.ts";
+import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 
 /** The opaque id of the group of one phase attempt (F142-FR-025). */
 export function groupIdOfTheAttempt(phase: number, groupOrdinal: number): string {
@@ -290,6 +292,22 @@ export async function runTheGroupOfTheAttempt(input: {
    */
   readonly chargeCyclesOfTheAdmittedTasks?:
     | ((workerId: string, taskId: string) => void)
+    | undefined;
+  /**
+   * T062/T063 (F154-FR-027) — the paths the group's application changed, as
+   * the composition root's seam reads them. Default: the paths the
+   * integration applied. Zero: no merge check runs at all.
+   */
+  readonly appliedPathCountOfTheGroup?: (() => number | undefined) | undefined;
+  /**
+   * T066 (F154-FR-028) — the latest inner-set result whose recorded tree
+   * fingerprint equals the given snapshot's, where one exists. The wiring
+   * hands this seam through from the composition root; the attempt passes it
+   * to the merge check with the group's base snapshot fingerprint, so the
+   * merge baseline comparison reads the result the base was red on.
+   */
+  readonly baseResultOfTheInnerSet?:
+    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
     | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
@@ -649,8 +667,36 @@ export async function runTheGroupOfTheAttempt(input: {
         : { environmentAllowList: input.environmentAllowList }),
       tasks: integration.ticked,
       hash: input.hash,
+      // T063 (F154-FR-027) — the paths the application changed, the seam's
+      // reading where the wiring gives one, else the integration's own count.
+      appliedPathCountOfTheGroup:
+        input.appliedPathCountOfTheGroup ?? (() => integration.paths.length),
+      // T066 (F154-FR-028) — the base result seam, handed through with the
+      // group's base snapshot fingerprint, where the composition root wires it.
+      ...(input.baseResultOfTheInnerSet === undefined
+        ? {}
+        : {
+            baseResultOfTheInnerSet: input.baseResultOfTheInnerSet,
+            baseSnapshotFingerprint: prepared.baseTreeId,
+          }),
     });
     emit(integrationEvent({ groupId, step: "merge-check", pathCount: merge.run.commands.length }));
+    // T066 (F154-FR-028) — THE COMPARISON IS RECORDED with its rule id, the
+    // record `specstride.merge-baseline/1`, wherever an outcome of this
+    // feature's rules carries one (MG-1 on the empty application, MG-2 on the
+    // baseline match). The event is a `parallel.integration` event (row 74
+    // stays closed), whose data names the record, the rule and the detail.
+    if ("ruleId" in merge.outcome) {
+      emit({
+        type: "parallel.integration",
+        data: Object.freeze({
+          groupId,
+          record: MERGE_BASELINE_RECORD,
+          ruleId: merge.outcome.ruleId,
+          detail: merge.outcome.because,
+        }),
+      });
+    }
 
     /* ---- THE CLOSE (F143-FR-027), and the group's outcome. ---- */
     const integratedTasks = [...integration.ticked];
@@ -666,6 +712,18 @@ export async function runTheGroupOfTheAttempt(input: {
     } else if (merge.outcome.directive === "repair") {
       outcome = "repair";
       directive = "repair";
+    } else if (
+      merge.outcome.directive === "not-run" ||
+      merge.outcome.directive === "no-charge"
+    ) {
+      // T062/T063 and T066 (F154-FR-027, -028; rules MG-1, MG-2): the unit is
+      // neither kept nor repaired nor failed. No repair is charged (the
+      // outcome's `repairsCharged` is empty), the group is NOT counted as a
+      // failed group (the close below says `closed`), and `keptUnits` stays
+      // EMPTY — the unit is not kept, whatever the group's own end says.
+      outcome = "kept";
+      directive = "keep";
+      keptUnits = [];
     } else {
       // `layerOffForAttempt` — the inner check set was empty when the merge
       // check was due (reason `unchecked`, row 185): the layer is off for

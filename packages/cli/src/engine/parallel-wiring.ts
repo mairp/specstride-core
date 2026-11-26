@@ -46,14 +46,18 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 import type { CheckRunner, ManifestEntry } from "@specstride/contracts/ep/check-runner";
-import type { CheckResult } from "@specstride/contracts/ep/check-runner";
+import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
+import type { RepeatVerdict } from "../../../layer-parallel/src/repeat.ts";
 import type { RegistryAccess } from "../../../core/src/pass-supervision/ports.ts";
 import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { TickOutcome } from "../../../core/src/parallel/integrate.ts";
 import {
+  admissionEvent,
   cleanPassBoundary,
   FAILED_GROUPS_THAT_SWITCH_THE_LAYER_OFF,
+  groupAdmissionEvent,
   groupFailed,
+  groupGateVerdicts,
   layerOffDecision,
   layerOffFor,
   report as reportOfTheLayer,
@@ -88,6 +92,7 @@ import {
   type PreparedWorker,
 } from "./parallel-group.ts";
 import {
+  groupIdOfTheAttempt,
   runTheGroupOfTheAttempt,
   type TheGroupAttempt,
   type TheGroupAttemptRefused,
@@ -564,9 +569,13 @@ export type ParallelWiringInput = {
   readonly failedGroupsBeforeOfTheLedger?: ((phase: number) => number) | undefined;
   /**
    * The no-repeat verdict over one group (F154-FR-026). Default: no
-   * repeat check, the group is admitted.
+   * repeat check, the group is admitted. The verdict is the layer's
+   * `RepeatVerdict` (the proposed check `repeat`, row 61 unchanged) or, where
+   * the composition root answers with a row 61 verdict, an `AdmissionVerdict`.
    */
-  readonly repeatVerdictOf?: ((group: PlannedGroup) => AdmissionVerdict) | undefined;
+  readonly repeatVerdictOf?:
+    | ((group: PlannedGroup) => AdmissionVerdict | RepeatVerdict)
+    | undefined;
   /**
    * The number of paths the group's application changed (F154-FR-027).
    * Default: not read.
@@ -576,7 +585,9 @@ export type ParallelWiringInput = {
    * The latest inner-set result whose tree fingerprint equals the given
    * base snapshot's (F154-FR-028). Default: no base result.
    */
-  readonly baseResultOfTheInnerSet?: ((snapshotFingerprint: string) => CheckResult | null) | undefined;
+  readonly baseResultOfTheInnerSet?:
+    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
+    | undefined;
   /**
    * The group's acceptance check run in its worker tree (F154-FR-034,
    * -035). Default: the check runs on the workspace, as today.
@@ -876,15 +887,51 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
               remainingCycles: Math.max(remaining - chargedCyclesOfTheAttempt.size, 0),
               tasks: current.tasks,
             });
-      const gate = input.groupGateOfTheAttempt({
+      const admissionInputs: AdmissionInputs = {
         workers,
         innerCheckSet: input.innerCheckSet.map((entry) => entry.id),
         ...(quota === null ? {} : { headroom: { quota } }),
         ...(cycles === undefined ? {} : { cycles: { sufficesForTheGroup: cycles } }),
+      };
+      const gate = input.groupGateOfTheAttempt(admissionInputs);
+      /* T061 (F154-FR-026) — THE NO-REPEAT CHECK, where the composition root
+       * wires `repeatVerdictOf`: the wiring calls it for the current group —
+       * the seam has closed over the ledger's failed groups of the phase and
+       * over the fingerprint of the group's named paths, computed through the
+       * tree store's `changed` against the earlier attempt's base. RP-1
+       * refuses while the fingerprint is unchanged; RP-2 admits. The
+       * decision is COMBINED: admitted = groupGate.admitted && repeat.passed.
+       * The verdict LIST stays the row 61 checks only (`repeat` is not a
+       * member of ADMISSION_CHECKS); the group event's `admitted` flag
+       * carries the combined decision. No seam: no repeat check, as today. */
+      const repeatVerdict = input.repeatVerdictOf?.(current);
+      const admittedOfTheGroup =
+        gate.admitted && (repeatVerdict === undefined || repeatVerdict.passed);
+      /* T057/T058 (F154-FR-024, F142-FR-011, -025) — THE ADMISSION IS
+       * RECORDED: one `parallel.admission` event per task of the group and
+       * one for the group itself, each with the verdict of every check and
+       * its detail, admitted or refused (F154-SC-006). The verdicts are the
+       * layer's own over the same inputs the gate read; the composition root
+       * emits, the layer decides (F154-FR-003). */
+      const verdictsOfTheGate = groupGateVerdicts(admissionInputs, workers);
+      const groupId = groupIdOfTheAttempt(input.phase, current.ordinal);
+      for (const taskId of current.tasks) {
+        const emitted = admissionEvent({ id: taskId, checks: verdictsOfTheGate });
+        input.emit(emitted.type, emitted.data as Record<string, unknown>);
+      }
+      const groupEvent = groupAdmissionEvent({
+        groupId,
+        ordinal: current.ordinal,
+        phase: input.phase,
+        admitted: admittedOfTheGroup,
+        checks: verdictsOfTheGate,
       });
-      if (!gate.admitted) {
+      input.emit(groupEvent.type, groupEvent.data as Record<string, unknown>);
+      if (!admittedOfTheGroup) {
         input.say(
-          `[LOOP] parallel: group ${current.ordinal} is not admitted — ${gate.reason ?? "gate"}: ${gate.detail}`,
+          repeatVerdict !== undefined && repeatVerdict.passed === false && gate.admitted
+            ? `[LOOP] parallel: group ${current.ordinal} is not admitted — repeat: ${repeatVerdict.detail}`
+            : `[LOOP] parallel: group ${current.ordinal} is not admitted — ${gate.reason ?? "gate"}: ${gate.detail}`,
         );
         return "skipped";
       }
@@ -1078,6 +1125,17 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
         runner: input.runner ?? theRealCheckRunner(),
         innerCheckSet: input.innerCheckSet,
         hash: input.hash,
+        // T062/T063 (F154-FR-027) — the applied path count seam, handed
+        // through so an application of 0 paths runs no merge check.
+        ...(input.appliedPathCountOf === undefined
+          ? {}
+          : { appliedPathCountOfTheGroup: (): number | undefined =>
+                input.appliedPathCountOf?.(current) }),
+        // T066 (F154-FR-028) — the base-result seam, handed through so the
+        // merge baseline comparison reads the base the group started from.
+        ...(input.baseResultOfTheInnerSet === undefined
+          ? {}
+          : { baseResultOfTheInnerSet: input.baseResultOfTheInnerSet }),
         ...(input.resetCounts === true ? { resetCounts: true } : {}),
         ...(input.stopRequestPath === undefined
           ? {}

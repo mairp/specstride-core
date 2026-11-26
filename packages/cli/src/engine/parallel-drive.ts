@@ -102,11 +102,13 @@ import {
   type OneQueue,
 } from "../../../core/src/parallel/queue.ts";
 import {
+  notRunOutcomeOfTheMergeCheck,
   outcomeOfTheMergeCheck,
   runMergeCheck,
   type MergeCheckOutcome,
   type MergeCheckRun,
 } from "../../../core/src/parallel/merge-check.ts";
+import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 import { outcomeOfWorker } from "../../../core/src/parallel/barrier.ts";
 import type { PreparedGroup } from "./parallel-group.ts";
 import { removeTheTemporaryDirectories } from "./parallel-group.ts";
@@ -556,6 +558,19 @@ export type TheMergeCheck = {
  * worker tree, none skipped at a failure; `merge_check_finished` records the
  * result per command and the conditions; the outcome decides keep, repair or
  * `layerOffForAttempt`.
+ *
+ * T063 (F154-FR-027, rule MG-1) — where the group's application changed 0
+ * paths, NO merge check runs: the function returns the `not-run` outcome
+ * before any record is written, any command starts or any repair bookkeeping
+ * happens. The count arrives through `appliedPathCountOfTheGroup` (the seam
+ * the wiring fills from `appliedPathCountOf`; the attempt's own default reads
+ * the paths the integration applied). Not read: the check runs, as before.
+ *
+ * T066 (F154-FR-028) — `baseResultOfTheInnerSet`, with
+ * `baseSnapshotFingerprint` naming the group's base snapshot, is handed to
+ * the outcome, which compares the merge check against that base result and
+ * answers MG-2 where every failing command was already red on it with the
+ * same failure signature (F115-FR-019). Absent: F142-FR-061 unchanged.
  */
 export async function theMergeCheckOfTheGroup(input: {
   readonly store: TreeStoreService;
@@ -570,7 +585,32 @@ export async function theMergeCheckOfTheGroup(input: {
   readonly tasks: readonly string[];
   /** The canonical hash of annex X §X.5, which names the unit. */
   readonly hash: (text: string) => string;
+  /** The paths the group's application changed, where the seam reads them. */
+  readonly appliedPathCountOfTheGroup?: (() => number | undefined) | undefined;
+  /** The fingerprint of the group's base snapshot, where the caller holds one. */
+  readonly baseSnapshotFingerprint?: string | undefined;
+  /** The base-result seam (F154-FR-028), where the composition root wires it. */
+  readonly baseResultOfTheInnerSet?:
+    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
+    | undefined;
 }): Promise<TheMergeCheck> {
+  const appliedPathCount = input.appliedPathCountOfTheGroup?.();
+  if (appliedPathCount === 0) {
+    const fingerprintBefore = await input.store.snapshot(input.workspace);
+    const run: MergeCheckRun = {
+      commands: [],
+      passed: false,
+      condition: null,
+      fingerprintBefore,
+      fingerprintAfter: fingerprintBefore,
+      ranOn: input.workspace,
+      unchecked: false,
+    };
+    return {
+      run,
+      outcome: notRunOutcomeOfTheMergeCheck({ tasks: input.tasks, hash: input.hash }),
+    };
+  }
   const fingerprintBefore = await input.store.snapshot(input.workspace);
   const manifestHash = input.hash(JSON.stringify(input.innerCheckSet.map((entry) => entry.id)));
   const run = await input.writer.ahead(
@@ -609,9 +649,19 @@ export async function theMergeCheckOfTheGroup(input: {
         .map((command) => command.condition),
     }),
   );
+  const baseResult =
+    input.baseResultOfTheInnerSet === undefined || input.baseSnapshotFingerprint === undefined
+      ? undefined
+      : input.baseResultOfTheInnerSet(input.baseSnapshotFingerprint);
   return {
     run,
-    outcome: outcomeOfTheMergeCheck({ run, tasks: input.tasks, hash: input.hash }),
+    outcome: outcomeOfTheMergeCheck({
+      run,
+      tasks: input.tasks,
+      hash: input.hash,
+      ...(appliedPathCount === undefined ? {} : { appliedPathCount }),
+      ...(baseResult === undefined ? {} : { baseResult }),
+    }),
   };
 }
 
