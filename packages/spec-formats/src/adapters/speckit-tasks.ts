@@ -61,7 +61,7 @@ export { duplicateAndContiguityFindings, finding };
 export const FORMAT = "speckit-tasks" as const;
 
 /** The requirements this module carries out. */
-export const REQUIREMENTS = ["F104-FR-012", "F104-FR-014", "F104-FR-015", "F104-FR-017"] as const;
+export const REQUIREMENTS = ["F104-FR-012", "F104-FR-014", "F104-FR-015", "F104-FR-017", "F154-FR-056"] as const;
 
 /** The records of the baseline it is measured against. */
 export const BEHAVIOUR_ROWS = Object.freeze([
@@ -183,13 +183,19 @@ export function phasesOf(text: string, file: string): readonly SpecPhase[] {
       if (number === undefined) continue;
       const body = textOfSection(section);
       phases.push(
-        Object.freeze({
-          number,
-          title: titleOfAnExplicitHeading(section.heading),
-          section: body,
-          criteria: criteriaOf(body),
-          tasks: tasksOf(section, file),
-        }),
+        // F154-FR-056 (T131) — the phase's own specstride comment line, when
+        // the section carries one; a phase with no line carries the EMPTY
+        // `dependsOn` list (no declared dependencies) and no write scope.
+        withDependencyFields(
+          Object.freeze({
+            number,
+            title: titleOfAnExplicitHeading(section.heading),
+            section: body,
+            criteria: criteriaOf(body),
+            tasks: tasksOf(section, file),
+          }),
+          section,
+        ),
       );
     }
     return Object.freeze(phases);
@@ -222,18 +228,244 @@ export function priorityPhasesOf(
   return Object.freeze(
     bearing.map((entry, offset) => {
       const own = textOfSection(entry.section);
-      return Object.freeze({
-        number: first + offset,
-        title: titleOfAPriorityHeading(entry.section.heading),
-        // The shared constraints are part of what an agent is shown...
-        section: [own, ...shared].join("\n"),
-        // ...but the criteria and the tasks are the phase's OWN (see the note
-        // at the head of this module, reading 2).
-        criteria: criteriaOf(own),
-        tasks: tasksOf(entry.section, file),
-      });
+      return withDependencyFields(
+        Object.freeze({
+          number: first + offset,
+          title: titleOfAPriorityHeading(entry.section.heading),
+          // The shared constraints are part of what an agent is shown...
+          section: [own, ...shared].join("\n"),
+          // ...but the criteria and the tasks are the phase's OWN (see the note
+          // at the head of this module, reading 2).
+          criteria: criteriaOf(own),
+          tasks: tasksOf(entry.section, file),
+        }),
+        entry.section,
+      );
     }),
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * The specstride dependency line (feature 154, F154-FR-056; T131).
+ *
+ * UNDER EACH PHASE HEADING there may be EXACTLY ONE comment line of the
+ * form
+ *
+ *     <!-- specstride: depends-on: [2, 5] scope: packages/a/ packages/b/ -->
+ *
+ * Nothing else is parsed (Principle IV): any other line, marker or
+ * annotation of the section is text, and a specstride comment that is NOT
+ * immediately after the heading is an error, not an ignored line.
+ * ------------------------------------------------------------------ */
+
+/** The token names the line may carry — no other token is parsed. */
+export const DEPENDENCY_LINE_TOKENS = Object.freeze(["depends-on", "scope"]);
+
+/** The fields one parsed line carries; a token left out stays absent. */
+export type DependencyLine = {
+  readonly dependsOn?: readonly number[];
+  readonly writeScope?: readonly string[];
+};
+
+/**
+ * The parse error of a malformed line: the 1-based line of the file and the
+ * 1-based column of the offending character travel WITH the error.
+ */
+export class SpecstrideLineError extends Error {
+  readonly line: number;
+  readonly column: number;
+  constructor(message: string, line: number, column: number) {
+    super(`${message} (line ${String(line)}, column ${String(column)})`);
+    this.name = "SpecstrideLineError";
+    this.line = line;
+    this.column = column;
+  }
+}
+
+/** True where the line IS a specstride comment line (well-formed or not). */
+export function isASpecstrideLine(line: string): boolean {
+  return line.includes("specstride:") && /^\s*<!--/.test(line);
+}
+
+/**
+ * T131 — parse ONE specstride comment line. `undefined` where the line is
+ * no specstride comment line at all; a `SpecstrideLineError` where it is
+ * one and malformed. Duplicated numbers of `depends-on` are de-duplicated
+ * silently, first occurrence first; the prefixes of `scope` keep their
+ * order and are normalized to end with `/`; nothing is resolved to an
+ * absolute path.
+ */
+export function parseDependencyLine(line: string, lineNumber: number): DependencyLine | undefined {
+  if (!isASpecstrideLine(line)) return undefined;
+  const open = line.indexOf("<!--");
+  const specAt = line.indexOf("specstride:");
+  const afterOpen = open + 4;
+  const afterOpenText = line.slice(afterOpen, specAt < 0 ? afterOpen : specAt);
+  if (specAt < afterOpen || !/^\s*$/.test(afterOpenText)) {
+    throw new SpecstrideLineError(
+      "the specstride comment must open `<!-- specstride:`",
+      lineNumber,
+      (specAt < 0 ? open : specAt) + 1,
+    );
+  }
+  const contentStart = specAt + "specstride:".length;
+  const close = line.indexOf("-->", contentStart);
+  if (close === -1) {
+    throw new SpecstrideLineError(
+      "the specstride comment never closes (`-->` missing)",
+      lineNumber,
+      line.length + 1,
+    );
+  }
+  if (line.slice(close + 3).trim() !== "") {
+    throw new SpecstrideLineError("text after the comment close", lineNumber, close + 4);
+  }
+  const content = line.slice(contentStart, close);
+  const at = (index: number): number => contentStart + index + 1;
+  const seen = new Set<string>();
+  let p = 0;
+  let parsed: { dependsOn?: readonly number[]; writeScope?: readonly string[] } = {};
+  for (;;) {
+    while (p < content.length && /\s/.test(content[p] as string)) p += 1;
+    if (p >= content.length) break;
+    const nameStart = p;
+    const name = (content.slice(p).match(/^[A-Za-z][A-Za-z0-9-]*/) ?? [""])[0];
+    if (name === "") {
+      throw new SpecstrideLineError("expected a token name", lineNumber, at(p));
+    }
+    p += name.length;
+    if (!DEPENDENCY_LINE_TOKENS.includes(name)) {
+      throw new SpecstrideLineError(`unknown token \`${name}\``, lineNumber, at(nameStart));
+    }
+    if (seen.has(name)) {
+      throw new SpecstrideLineError(`duplicate token \`${name}\``, lineNumber, at(nameStart));
+    }
+    while (p < content.length && /\s/.test(content[p] as string)) p += 1;
+    if (content[p] !== ":") {
+      throw new SpecstrideLineError(`expected \`:\` after \`${name}\``, lineNumber, at(p));
+    }
+    p += 1;
+    seen.add(name);
+    if (name === "depends-on") {
+      while (p < content.length && /\s/.test(content[p] as string)) p += 1;
+      if (content[p] !== "[") {
+        throw new SpecstrideLineError("`depends-on` needs a bracketed list", lineNumber, at(p));
+      }
+      p += 1;
+      const numbers: number[] = [];
+      for (;;) {
+        while (p < content.length && /[\s,]/.test(content[p] as string)) p += 1;
+        if (p >= content.length) {
+          throw new SpecstrideLineError(
+            "the `depends-on` list never closes (`]` missing)",
+            lineNumber,
+            at(content.length - 1) + 1,
+          );
+        }
+        if (content[p] === "]") {
+          p += 1;
+          break;
+        }
+        const digits = (content.slice(p).match(/^\d+/) ?? [""])[0];
+        if (digits === "") {
+          throw new SpecstrideLineError(
+            "`depends-on` holds a value that is not an integer",
+            lineNumber,
+            at(p),
+          );
+        }
+        const endOfDigits = p + digits.length;
+        const after = content[endOfDigits] ?? "";
+        if (after !== "" && !/[\s,\]]/.test(after)) {
+          throw new SpecstrideLineError(
+            "`depends-on` holds a value that is not an integer",
+            lineNumber,
+            at(endOfDigits),
+          );
+        }
+        const value = Number.parseInt(digits, 10);
+        if (!numbers.includes(value)) numbers.push(value);
+        p = endOfDigits;
+      }
+      parsed = { ...parsed, dependsOn: Object.freeze(numbers) };
+    } else {
+      // `scope` — one or more path prefixes, whitespace separated, in order.
+      while (p < content.length && /\s/.test(content[p] as string)) p += 1;
+      const restStart = p;
+      const prefixes = content.slice(p).split(/\s+/).filter((one) => one !== "");
+      if (prefixes.length === 0) {
+        throw new SpecstrideLineError(
+          "`scope` needs at least one path prefix",
+          lineNumber,
+          at(restStart),
+        );
+      }
+      const normalized = prefixes.map((one) => (one.endsWith("/") ? one : `${one}/`));
+      p = content.length;
+      parsed = { ...parsed, writeScope: Object.freeze(normalized) };
+    }
+  }
+  const frozen: DependencyLine = {
+    ...(parsed.dependsOn === undefined ? {} : { dependsOn: parsed.dependsOn }),
+    ...(parsed.writeScope === undefined ? {} : { writeScope: parsed.writeScope }),
+  };
+  return frozen;
+}
+
+/**
+ * The ONE specstride comment line of a phase section: the first non-blank
+ * line after the heading, at most one in the whole section (F154-FR-056).
+ * `undefined` where the section declares none.
+ */
+export function dependencyOfTheSection(section: Level2Section): DependencyLine | undefined {
+  let seen: { readonly fields: DependencyLine } | undefined;
+  let firstBlankPassed = false;
+  for (let index = 1; index < section.lines.length; index += 1) {
+    const line = section.lines[index] as string;
+    const lineNumber = section.headingLine + index;
+    const fields = parseDependencyLine(line, lineNumber);
+    if (fields === undefined) {
+      if (line.trim() !== "") firstBlankPassed = true;
+      continue;
+    }
+    const columnOfFirstChar = (line.match(/\S/)?.index ?? 0) + 1;
+    if (firstBlankPassed) {
+      throw new SpecstrideLineError(
+        "the specstride comment line must come immediately after the phase heading",
+        lineNumber,
+        columnOfFirstChar,
+      );
+    }
+    if (seen !== undefined) {
+      throw new SpecstrideLineError(
+        "a phase carries at most one specstride comment line",
+        lineNumber,
+        columnOfFirstChar,
+      );
+    }
+    seen = { fields };
+  }
+  return seen?.fields;
+}
+
+/**
+ * The fields of the line folded into a phase.
+ *
+ * T131 (F154-FR-056) — a phase whose section carries NO specstride line has
+ * NO DECLARED DEPENDENCIES, and the phase carries that fact EXPLICITLY as
+ * `dependsOn: []` (the empty list, the same value a declared empty
+ * `depends-on: []` gives, so a reader answers one shape for both); its
+ * `writeScope` stays absent, because the source declares no scope. The queue
+ * of the engine (PQ-3) treats a missing and an empty declared list
+ * identically; the parser infers nothing beyond the empty list.
+ */
+function withDependencyFields(phase: SpecPhase, section: Level2Section): SpecPhase {
+  const fields = dependencyOfTheSection(section);
+  return Object.freeze({
+    ...phase,
+    dependsOn: fields?.dependsOn ?? [],
+    ...(fields?.writeScope === undefined ? {} : { writeScope: fields.writeScope }),
+  });
 }
 
 /** B-2028 — the shared constraints of a priority-form task list, as text. */

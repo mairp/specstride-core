@@ -190,6 +190,13 @@ export type LoopConfiguration = {
    */
   readonly parallelGroupUnits: boolean;
   /**
+   * `loop.phases.parallel` (feature 154, US6; CQ-154-12), OFF by default and
+   * OFF under `parity`. With it on, independent phases with disjoint write
+   * scopes are worked at once in trees of their own and validated one at a
+   * time in phase order (F154-FR-057..-059).
+   */
+  readonly phasesParallel: boolean;
+  /**
    * `loop.parallel.groupCheck` (feature 154, row 149 of annex X §X.7;
    * CQ-154-04 A), OFF by default and OFF under `parity`. With it on, the
    * group's frozen acceptance check runs in its WORKER TREE, run by the
@@ -469,6 +476,17 @@ export const LOOP_PARALLEL_GROUP_UNITS_KEY = "loop.parallel.groupUnits";
  */
 export const LOOP_PARALLEL_GROUP_CHECK_KEY = "loop.parallel.groupCheck";
 
+/**
+ * The key of the phases-in-trees switch (feature 154, US6; row 150 of annex
+ * X §X.7; CQ-154-12): OFF by default and OFF under the `parity` profile. With
+ * it on, the phases whose declared write scopes are pairwise disjoint and
+ * that declare no dependency on each other are worked AT ONCE, each in a
+ * worker tree of its own (F154-FR-057), and validated ONE AT A TIME in phase
+ * order through the validation queue (`loop.phase-queue`, PQ-1..PQ-3;
+ * F154-FR-058, -059).
+ */
+export const LOOP_PHASES_PARALLEL_KEY = "loop.phases.parallel";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -625,6 +643,12 @@ export function loopConfigurationOf(input: {
     parallelGroupCheck:
       resolved.profile !== "parity" &&
       switchIsOn(valueOf(LOOP_PARALLEL_GROUP_CHECK_KEY).value),
+    // Row 150 of annex X §X.7 (feature 154, US6; CQ-154-12): OFF by default
+    // and OFF under the `parity` profile whatever a source holds — under
+    // parity every phase runs alone on the workspace, exactly as before
+    // US6 (F154-FR-001, -002).
+    phasesParallel:
+      resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_PHASES_PARALLEL_KEY).value),
     // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
     // `parity` profile whatever a source holds — under parity the
     // compatibility projection drops the new types (CQ-153-09 A, answered

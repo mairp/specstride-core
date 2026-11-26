@@ -15,6 +15,7 @@ import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { GroupIndependenceDeclaration } from "../../../layer-parallel/src/independence.ts";
 import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
 import { quotaObservationOfTheWindows } from "./parallel-launch.ts";
+import type { PhaseTreeCoordinator } from "./phase-trees.ts";
 import { windows as quotaWindowsModule } from "@specstride/policy/quota";
 import {
   totalsAfterTheGroup,
@@ -39,6 +40,13 @@ export type TheParallelCallContext = {
   readonly workspace: string;
   readonly slug: string;
   readonly taskListPath: string;
+  /**
+   * T136 (F154-FR-056, -057) — the coordinator of the phase trees and the
+   * validation queue (`phase-trees.ts`), `null` when `loop.phases.parallel`
+   * is off or no candidate phase exists; the wiring reads its declared
+   * dependencies and its queue port and nothing else.
+   */
+  readonly phaseTrees?: PhaseTreeCoordinator | null | undefined;
   readonly taskTextAtLaunch: string;
   readonly implementerOfTheRun: string | null | undefined;
   readonly model: string;
@@ -275,11 +283,22 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     runTokenHash: ctx.runTokenHash,
     // F154-FR-056 — with the canonical model holding no declared dependency,
     // the default holds: a phase depends on the phase before it, and phase 1
-    // depends on nothing.
-    phaseDependenciesOf: (queuedPhase) => (queuedPhase > 1 ? [String(queuedPhase - 1)] : []),
-    // F154-FR-058, -059 — with `loop.phases.parallel` off, no queue exists
-    // and validation stays on the workspace.
-    validationQueue: null,
+    // depends on nothing. A coordinator (T136) carries the DECLARED fields
+    // the launch contract's coverage holds; the declared list wins when the
+    // source gave a non-empty one (PQ-3).
+    phaseDependenciesOf: (queuedPhase) => {
+      const declared = ctx.phaseTrees?.entryOf(queuedPhase)?.dependsOn ?? [];
+      return declared.length > 0
+        ? declared.map((one) => String(one))
+        : queuedPhase > 1
+          ? [String(queuedPhase - 1)]
+          : [];
+    },
+    // F154-FR-058, -059 — the validation queue of the run, when the
+    // coordinator built one (`loop.phases.parallel` on and candidate phases
+    // exist); with the switch off, no queue exists and validation stays on
+    // the workspace.
+    validationQueue: ctx.phaseTrees?.validationQueue ?? null,
     // F154-FR-062, -066, -067 — with `loop.speculate` off, no speculative
     // unit starts, for no recorded reason (the switch itself is the reason
     // the unit does not exist).

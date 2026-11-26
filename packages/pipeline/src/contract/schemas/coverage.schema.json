@@ -102,6 +102,22 @@
       "type": "string",
       "description": "The rationale: the text of the task for an obligation settled by fact, the reason of the answer for one settled by an answer (F107-FR-041)"
     },
+    "phase_depends_on": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "description": "The declared dependencies of the phase the obligation's task belongs to (feature 154, F154-FR-056, T132), read through the canonical model; absent when the obligation is unclassified"
+    },
+    "phase_write_scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The declared write scope of that phase, as path prefixes (feature 154, F154-FR-056); absent likewise"
+    },
     "evidence": {
       "type": "array",
       "uniqueItems": true,

@@ -168,7 +168,23 @@ function tasksOfFeature(root: string, featureDir: string): readonly ModelTask[] 
     // tasks of such a section are derived with `phase: null`.
     const counted = countingPhaseNumberOf(heading);
     for (const task of phase.tasks) {
-      tasks.push({ task, phase: counted ?? null, file: filePath });
+      // T132 (F154-FR-056) — the phase's declared dependencies and write
+      // scope (the specstride line of F154-FR-056, read through the
+      // canonical model only) travel with each of the phase's tasks; an
+      // uncountable heading derives with `phase: null` and carries neither.
+      tasks.push({
+        task,
+        phase: counted ?? null,
+        file: filePath,
+        ...(counted === undefined
+          ? {}
+          : {
+              phaseDependsOn: phase.dependsOn ?? [],
+              ...(phase.writeScope === undefined
+                ? {}
+                : { phaseWriteScope: phase.writeScope }),
+            }),
+      });
     }
   }
   return tasks;

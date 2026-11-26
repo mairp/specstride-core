@@ -80,7 +80,10 @@ test("a run that waits for a hold asks no model, and models take and release no 
   chmodSync(stub, 0o755);
   const home = process.env.HOME ?? "";
   const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
-  const resetAt = new Date(Date.now() + 1_500).toISOString();
+  // The window is generous on purpose: under the load of the whole suite the
+  // engine takes longer to reach its first pass, and the point of the test is
+  // that the run WAITS while the hold stands — not that it races a clock.
+  const resetAt = new Date(Date.now() + 5_000).toISOString();
   // The hold the TEST wrote, with the owner the TEST chose: if a model or a
   // model-driven path released or rewrote it, the record at the end differs.
   writeHold(root, "default", resetAt, { pid: 999_999, runId: "run-test-writer" });

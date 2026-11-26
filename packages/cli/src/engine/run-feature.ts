@@ -417,6 +417,7 @@ import { readStopRequestFromFile } from "../run-control/records.ts";
 import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
+import { coordinatorOf, type PhaseDeclaration } from "./phase-trees.ts";
 import {
   createMicroAttempt,
   factBlockBuilder,
@@ -2309,6 +2310,31 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     ? asIsRunId(new Date(startTimeOf(process.pid) ?? Date.now()), process.pid)
     : `run-${randomUUID()}`;
   const engineStartId = "e1";
+
+  // T136 (feature 154, US6; F154-FR-056, -057) — the coordinator of the
+  // phase trees and the validation queue, read through the canonical model
+  // the launch parsed the tasks with (`phases`, above, carries the
+  // specstride dependency line of F154-FR-056). With `loop.phases.parallel`
+  // OFF — the default, and forced off under `parity` — or with no candidate
+  // phase (no pairwise-disjoint declared scopes, or a declared dependency
+  // between two of them), the coordinator is NULL and the run is exactly
+  // what it was before US6: no tree, no queue entry, nothing written
+  // (F154-FR-001, -002).
+  const phaseTrees = coordinatorOf({
+    on: loopConfig.phasesParallel,
+    declarations: phases.map(
+      (one): PhaseDeclaration => ({
+        phase: one.number,
+        dependsOn: one.dependsOn ?? [],
+        ...(one.writeScope === undefined ? {} : { writeScope: one.writeScope }),
+      }),
+    ),
+    feature: slug,
+    runId,
+    controlRoot,
+    workspace: workdir,
+    taskListPath: relative(workdir, tasksPath),
+  });
 
   const inControl = (path: string): string => join(controlRoot, path);
   const write = (path: string, text: string): void => {
@@ -5099,6 +5125,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               workspace: workdir,
               slug,
               taskListPath: relative(workdir, tasksPath),
+              // T136 — the coordinator of the phase trees and the queue.
+              phaseTrees,
               taskTextAtLaunch: tasksText,
               implementerOfTheRun,
               model,
@@ -6227,6 +6255,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
     const verdictId = `v-${String(phase)}-${String(ordinal)}`;
     const attemptId = `${engineStartId}-a${String(ordinal)}`;
+    // T136/T137 (F154-FR-057, -058) — at the adjudication of a candidate
+    // phase's attempt the ready trees materialize (ONE snapshot, all the
+    // ready candidates at once) and the attempt is recorded on the queue
+    // entry, so a replayed or resumed attempt of the same number is
+    // refused. With the switch off this is nothing (the coordinator is
+    // null); with the verification gate off the adjudication is the critic
+    // step, so the hook stands HERE, not inside the gate branch.
+    if (phaseTrees !== null && !phaseTrees.gateRanFor(phase, ordinal)) {
+      await phaseTrees.materializeReadyCandidatesOf(phase);
+      phaseTrees.markGated(phase, ordinal);
+    }
     // THE GATE OVER THE DECLARED COMMANDS (feature 153, phase 17,
     // F153-FR-010/-011): the gate of the phase is the one of feature 105,
     // run over the check runner of feature 148, on the commands the
@@ -6427,6 +6466,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               say(
                 `----- verification: phase ${String(phase)} attempt ${String(ordinal)} (fixed argv) -----`,
               );
+            }
+            // T137 (F154-FR-058) — the gate of this attempt is about to
+            // run: record the attempt on the queue entry, so the gate runs
+            // EXACTLY ONCE per attempt of a candidate phase; a replayed or
+            // resumed gate of the same attempt is refused. With the switch
+            // off this is nothing (the coordinator is null).
+            if (phaseTrees !== null && !phaseTrees.gateRanFor(phase, ordinal)) {
+              await phaseTrees.materializeReadyCandidatesOf(phase);
+              phaseTrees.markGated(phase, ordinal);
             }
             const gateOutcome = await runGateOrCode3(async () => ({
               // THE PLAN AT ITS RECORD (F153-FR-013): loaded from the place
@@ -7482,6 +7530,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       );
       clearPins(pinsOfThePhase, phase);
       rmSync(pinsOfThePhase, { force: true, recursive: true });
+      // T137 (F154-FR-058) — the validation of the phase approved: its queue
+      // entry records the approval, which is what ADVANCES THE WORKSPACE
+      // MARKER of the run — the dependents of the phase become workable and
+      // the head of the queue moves past it. With the switch off this is
+      // nothing.
+      phaseTrees?.approved(phase);
       // T075 — the change set the approval commit would hold, computed at the
       // top of the approved branch, BEFORE any record of the approval is
       // written, so the commit gate can run in front of it (F152-FR-001).
@@ -8022,7 +8076,20 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           outcome.outcome === "no-evidence" ? ("no-evidence" as const) : ("error" as const),
       };
     }
-    if (outcome.outcome === "gate-failed") return "gate-failed" as const;
+    if (outcome.outcome === "gate-failed") {
+      // T138 (F154-FR-059) — the validation of the phase REJECTED: its queue
+      // entry keeps the phase AT THE HEAD for the repair (the attempt number
+      // on the entry advances, so the once-per-attempt gate guard opens for
+      // the next attempt), and the phases that depend on it stay HELD —
+      // their verdict is PQ-2 (a dependency rejected -> wait) until the
+      // repair is approved, and their trees, once a dependency approves,
+      // are materialized FROM THE REBASED WORKSPACE. With the switch off
+      // this is nothing.
+      if (phaseTrees !== null && phaseTrees.candidates.includes(phase)) {
+        phaseTrees.rejected(phase);
+      }
+      return "gate-failed" as const;
+    }
     // T356 — F153-FR-024: a candidate the pre-critic scan held back ends the
     // attempt as a `commit-blocked` kind, the kind feature 152 gave a blocked
     // approval commit; the order after a rejection re-enters the loop through

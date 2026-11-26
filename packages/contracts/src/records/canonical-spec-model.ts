@@ -51,6 +51,14 @@ export type SpecPhase = {
   readonly title: string;
   readonly section: string;
   readonly criteria: readonly string[];
+  /**
+   * The phases this phase depends on, when the source declares them (feature 154,
+   * F154-FR-056); the queue of the engine, not this field, derives the implicit
+   * dependency on the phase before it (PQ-3).
+   */
+  readonly dependsOn?: readonly number[];
+  /** The write scope of the phase, as path prefixes, when the source declares it (F154-FR-056). */
+  readonly writeScope?: readonly string[];
   /** Required; it may be empty. */
   readonly tasks: readonly SpecTask[];
 };

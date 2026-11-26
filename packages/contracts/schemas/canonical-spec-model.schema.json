@@ -33,6 +33,24 @@
       "items": {
         "type": "object",
         "properties": {
+          "dependsOn": {
+            "type": "array",
+            "description": "The numbers of the phases this phase depends on (feature 154, F154-FR-056); absent means the source declares no dependency",
+            "x-type-in-words": "List of numbers",
+            "x-required": "No",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "writeScope": {
+            "type": "array",
+            "description": "The write scope of the phase, as path prefixes (feature 154, F154-FR-056); absent means the source declares no scope",
+            "x-type-in-words": "List of texts",
+            "x-required": "No",
+            "items": {
+              "type": "string"
+            }
+          },
           "tasks": {
             "type": "array",
             "description": "Per task: id, markers (for example `[P]` and story tags), text, whether ticked, line",
