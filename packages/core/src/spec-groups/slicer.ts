@@ -36,6 +36,14 @@ export interface DeclaredCheckCommand {
   readonly argv: readonly string[];
   /** The task ids the command checks; a group resolves to it only when it declares every task of the group. */
   readonly forTaskIds: readonly string[];
+  /**
+   * F154-FR-034 (feature 154, phase 10, T078) — the DECLARED time limit of
+   * the command, in milliseconds, from the discovery the derivation read.
+   * OPTIONAL: a declaration without one freezes the field absent, and the
+   * check reads the 300 s the workspace run used before (R-C19) — never 0,
+   * which would mean "no timer" to the check runner.
+   */
+  readonly timeLimitMs?: number;
 }
 
 /** One task of the canonical model, as the slicer consumes it. */
@@ -67,7 +75,19 @@ export interface GroupWriteScope {
 
 /** The resolved acceptance check of a group, or `unchecked`. */
 export type GroupAcceptanceCheck =
-  | { readonly kind: "declared"; readonly id: string; readonly argv: readonly string[] }
+  | {
+      readonly kind: "declared";
+      readonly id: string;
+      readonly argv: readonly string[];
+      /**
+       * F154-FR-034 (T078) — the DECLARED time limit of the check, in
+       * milliseconds, frozen from the declaration; absent where the
+       * declaration gave none (the workspace run's 300 s then stands,
+       * R-C19). The worker-tree run of the check reads this limit, never a
+       * fixed one (T078; `micro-layer.ts`, `parallel-group.ts`).
+       */
+      readonly timeLimitMs?: number;
+    }
   | { readonly kind: "unchecked" };
 
 /** One task group (data-model.md D9; `contracts/schemas/task-group.schema.json`). */
@@ -109,6 +129,14 @@ function acceptanceCheckOf(
     kind: "declared" as const,
     id: covers.id,
     argv: Object.freeze([...covers.argv]),
+    // F154-FR-034 (T078) — the declared limit freezes with the check only
+    // where the declaration gave one; absent otherwise, so a record frozen
+    // before the field existed stays byte-identical (F153-FR-054).
+    ...(typeof covers.timeLimitMs === "number" &&
+    Number.isFinite(covers.timeLimitMs) &&
+    covers.timeLimitMs > 0
+      ? { timeLimitMs: covers.timeLimitMs }
+      : {}),
   });
 }
 

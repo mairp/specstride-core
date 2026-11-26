@@ -708,6 +708,16 @@ export type AuditInput = {
    * `workspace-changed` and nothing is applied (F142-FR-064).
    */
   readonly workspaceChanged?: boolean;
+  /**
+   * F154-FR-036 (T081) — set where the group's acceptance check in its
+   * worker tree FAILED or TAINTED, under `loop.parallel.groupCheck`: the
+   * delta of EVERY worker of the group is refused with `group-check`, the
+   * reason the feature proposes for row 63 (`PROPOSED_DELTA_REFUSAL_REASON_154`),
+   * and nothing of the group merges. The caller sets it only while the
+   * switch reads on — with the switch off the reason is not in force and
+   * nothing sets this.
+   */
+  readonly groupCheckRefuses?: true;
 };
 
 /**
@@ -735,6 +745,20 @@ export function auditADelta(input: AuditInput): WorkerAuditVerdict {
       ...base,
       verdict: Object.freeze({ refused: "workspace-changed" as const }),
       detail: "the workspace at the barrier differs from the workspace at group start",
+      authorisedProtectedChanges: Object.freeze([]),
+    });
+  }
+  if (input.groupCheckRefuses === true) {
+    // F154-FR-036 (T081) — the worker-check refusal of the whole group. The
+    // reason is the one feature 154 proposes for row 63; it is in force only
+    // while `loop.parallel.groupCheck` reads on, which is exactly when the
+    // caller sets this input — the cast states that pairing.
+    return Object.freeze({
+      ...base,
+      verdict: Object.freeze({
+        refused: PROPOSED_DELTA_REFUSAL_REASON_154 as DeltaRefusalReason,
+      }),
+      detail: "the group's acceptance check in its worker tree refuses the delta (group-check)",
       authorisedProtectedChanges: Object.freeze([]),
     });
   }

@@ -417,6 +417,14 @@ export async function auditTheGroupThroughTheStore(input: {
   readonly endRefusalOf?: ((workerId: string) => EndThatRefuses | undefined) | undefined;
   /** Set where the workspace at the barrier differs from the workspace at group start. */
   readonly workspaceChanged?: boolean | undefined;
+  /**
+   * F154-FR-036 (T081) — set where the group's acceptance check in its worker
+   * tree read `failed` or `tainted` (the record `specstride.worker-check/1`):
+   * the delta of EVERY worker of the group is refused with `group-check` and
+   * nothing of the group merges. Set only while `loop.parallel.groupCheck`
+   * reads on.
+   */
+  readonly groupCheckRefusalOf?: ((workerId: string) => true | undefined) | undefined;
   readonly caseFolds?: boolean | undefined;
 }): Promise<GroupAudit> {
   const audits: AuditInput[] = input.deltas.map((delta) => ({
@@ -430,6 +438,7 @@ export async function auditTheGroupThroughTheStore(input: {
       ? { endRefuses: input.endRefusalOf?.(delta.workerId) }
       : {}),
     ...(input.workspaceChanged === true ? { workspaceChanged: true } : {}),
+    ...(input.groupCheckRefusalOf?.(delta.workerId) === true ? { groupCheckRefuses: true } : {}),
     ...(input.caseFolds === undefined ? {} : { caseFolds: input.caseFolds }),
   }));
   const verdicts = auditTheGroup(audits);

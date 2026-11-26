@@ -36,7 +36,12 @@
           "properties": {
             "kind": { "const": "declared" },
             "id": { "type": "string" },
-            "argv": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+            "argv": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "timeLimitMs": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "F154-FR-034 (feature 154, phase 10, T078; CQ-154-04 A) — OPTIONAL. The DECLARED time limit of the check, in milliseconds, frozen from the declaration the derivation read. A declaration without one freezes the field absent, exactly as feature 153 froze it, and the check reads the 300 s the workspace run used (R-C19) — never 0, which would mean no timer to the check runner."
+            }
           }
         },
         {

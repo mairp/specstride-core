@@ -190,6 +190,17 @@ export type LoopConfiguration = {
    */
   readonly parallelGroupUnits: boolean;
   /**
+   * `loop.parallel.groupCheck` (feature 154, row 149 of annex X §X.7;
+   * CQ-154-04 A), OFF by default and OFF under `parity`. With it on, the
+   * group's frozen acceptance check runs in its WORKER TREE, run by the
+   * runtime, after the worker's pass has ended (F154-FR-034) — and the
+   * workspace run of the same check with the fixed 300 s stands down
+   * (T078, `micro-layer.ts`); the check can only withhold a delta
+   * (F154-FR-036). Under answer C of CQ-154-04 the switch never reads on
+   * and the check stays on the workspace, as before.
+   */
+  readonly parallelGroupCheck: boolean;
+  /**
    * `events.commitGateTiming` (feature 153, row 144 of annex X §X.7), ON by
    * default and OFF under `parity`. CQ-153-09 answered A on 2026-11-13: the
    * timed pair of the commit gate (`commit_gate.started`, `commit_gate.ended`)
@@ -448,6 +459,16 @@ export const EVENTS_COMMIT_GATE_TIMING_KEY = "events.commitGateTiming";
  */
 export const LOOP_PARALLEL_GROUP_UNITS_KEY = "loop.parallel.groupUnits";
 
+/**
+ * The key of the group-check-in-the-worker-tree switch (feature 154, row 149
+ * of annex X §X.7; CQ-154-04 A): OFF by default and OFF under the `parity`
+ * profile. With it on, the group's frozen acceptance check runs in its
+ * worker tree, run by the runtime, with the check's declared limit
+ * (F154-FR-034), and the workspace run with the fixed 300 s stands down
+ * (T078).
+ */
+export const LOOP_PARALLEL_GROUP_CHECK_KEY = "loop.parallel.groupCheck";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -597,6 +618,13 @@ export function loopConfigurationOf(input: {
     parallelGroupUnits:
       resolved.profile !== "parity" &&
       switchIsOn(valueOf(LOOP_PARALLEL_GROUP_UNITS_KEY).value),
+    // Row 149 of annex X §X.7 (feature 154; CQ-154-04 A): OFF by default and
+    // OFF under the `parity` profile whatever a source holds — under parity
+    // the group's acceptance check stays on the workspace with the fixed
+    // 300 s (R-C19), exactly as feature 153 ran it.
+    parallelGroupCheck:
+      resolved.profile !== "parity" &&
+      switchIsOn(valueOf(LOOP_PARALLEL_GROUP_CHECK_KEY).value),
     // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
     // `parity` profile whatever a source holds — under parity the
     // compatibility projection drops the new types (CQ-153-09 A, answered

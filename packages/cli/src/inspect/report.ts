@@ -13,7 +13,8 @@
  * (F153-FR-003, CQ-153-14).
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { parseInspectArgs } from "../router/inspect-args.ts";
 import type { RoutedCall } from "../router/route.ts";
 import { controlPlaneOf } from "../router/guards.ts";
@@ -116,6 +117,7 @@ export function terseLines(report: Report): readonly string[] {
 export function rows154Lines(
   events: readonly ReportEvent[],
   feature: string,
+  workerChecks?: ReadonlyMap<string, { readonly result: string; readonly phase: number }>,
 ): readonly string[] {
   const rows154 = reportRows154Of(events, feature);
   const summary = groupSummaryOf(events);
@@ -137,7 +139,73 @@ export function rows154Lines(
         `mergeCheck=${group.mergeCheckResult ?? "unknown"} wallTimeMs=${group.wallTimeMs}`,
     );
   }
+  // T086 (F154-FR-015) — ONE line per group whose acceptance check refused
+  // the group (`failed` or `tainted`): the record `specstride.worker-check/1`
+  // is the surface, not the events, so the line is printed only where a
+  // record is found under the control plane. `passed` and `unchecked`
+  // groups print nothing.
+  if (workerChecks !== undefined) {
+    for (const [groupId, check] of workerChecks) {
+      if (check.result !== "failed" && check.result !== "tainted") continue;
+      lines.push(`group-check: groupId=${groupId} result=${check.result}`);
+    }
+  }
   return lines;
+}
+
+/**
+ * T086 (F154-FR-015) — the reader of the worker-check records of one run
+ * (`specstride.worker-check/1`, T080): every worker-check.json record under
+ * `features/<slug>/runs/<runId>/parallel/phaseN/groups/<groupId>/` in the
+ * control plane, as `groupId → {result, phase}`. The records a
+ * group wrote are the only surface of the worker check (F142-FR-066's event
+ * vocabulary is unchanged); the reader reads, it decides nothing.
+ */
+export function workerCheckResultsOf(
+  controlRoot: string,
+  feature: string,
+  runId?: string,
+): ReadonlyMap<string, { readonly result: string; readonly phase: number }> {
+  const results = new Map<string, { result: string; phase: number }>();
+  const runsRoot = join(controlRoot, "features", feature, "runs");
+  if (!existsSync(runsRoot)) return results;
+  const runDirs =
+    runId !== undefined
+      ? [runId]
+      : existsSync(runsRoot)
+        ? readdirSync(runsRoot, { withFileTypes: true })
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name)
+        : [];
+  for (const run of runDirs) {
+    const parallelRoot = join(runsRoot, run, "parallel");
+    if (!existsSync(parallelRoot)) continue;
+    for (const phaseDir of readdirSync(parallelRoot, { withFileTypes: true })) {
+      if (!phaseDir.isDirectory() || !/^phase\d+$/.test(phaseDir.name)) continue;
+      const phase = Number(phaseDir.name.slice("phase".length));
+      const groupsRoot = join(parallelRoot, phaseDir.name, "groups");
+      if (!existsSync(groupsRoot)) continue;
+      for (const groupDir of readdirSync(groupsRoot, { withFileTypes: true })) {
+        if (!groupDir.isDirectory()) continue;
+        const recordPath = join(groupsRoot, groupDir.name, "worker-check.json");
+        if (!existsSync(recordPath)) continue;
+        try {
+          const parsed = JSON.parse(readFileSync(recordPath, "utf8")) as {
+            result?: unknown;
+            groupId?: unknown;
+          };
+          if (typeof parsed.result !== "string") continue;
+          results.set(
+            typeof parsed.groupId === "string" ? parsed.groupId : groupDir.name,
+            { result: parsed.result, phase },
+          );
+        } catch {
+          // A torn record contributes nothing; the report stays read only.
+        }
+      }
+    }
+  }
+  return results;
 }
 
 /** A count record in the terse `k=v` form, `none` when empty. */
@@ -198,6 +266,19 @@ export function reportHandler(call: RoutedCall): number {
   // without an as-is equivalent reaches the output (F154-FR-001, F154-SC-012,
   // F119-FR-029). The verb stays read only (F154-FR-017).
   if (process.env.SPECSTRIDE_PROFILE === "parity") return 0;
-  for (const line of rows154Lines(events, chosen.feature)) call.io.out(`${line}\n`);
+  // T086 (F154-FR-015) — the worker-check records of the runs the events came
+  // from, read from both planes the events were searched in; the group-check
+  // lines follow the per-group lines, in default output only.
+  const workerChecks = new Map<string, { result: string; phase: number }>();
+  for (const cp of [call.controlPlane.stateDir, engineRoot.stateDir]) {
+    for (const [groupId, check] of workerCheckResultsOf(
+      cp,
+      chosen.feature,
+      chosen.runId ?? undefined,
+    )) {
+      if (!workerChecks.has(groupId)) workerChecks.set(groupId, check);
+    }
+  }
+  for (const line of rows154Lines(events, chosen.feature, workerChecks)) call.io.out(`${line}\n`);
   return 0;
 }

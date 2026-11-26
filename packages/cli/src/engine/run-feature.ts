@@ -4530,6 +4530,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         // F153-FR-054 (T379) — the frozen groups of the phase; empty unless
         // `loop.taskGroups` is on, so the unit stays the checkpoint claim.
         taskGroups: frozenGroupsOfThePhase(phase),
+        // F154-FR-034 (T078) — `loop.parallel.groupCheck` (row 149, OFF by
+        // default and OFF under `parity`): with it on the group's acceptance
+        // check runs in the worker tree, and the workspace run here stands
+        // down; with it off the check runs here as feature 153 ran it, with
+        // the declared limit where the record froze one.
+        parallelGroupCheck: loopConfig.parallelGroupCheck,
         caps: loopConfig.caps,
         closingCheckOn: loopConfig.closingCheck,
         // F153-FR-012 (feature 153, T249) — the equality test of the

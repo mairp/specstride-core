@@ -32,8 +32,10 @@ const BASELINE: { readonly lines: readonly string[] } = JSON.parse(readFileSync(
  * (the content hash of `CMD-<hash>`), `durationMs`, `latencyMs`, `planRef`
  * (its content hash and the temporary paths and run id it carries), the
  * temporary root `/tmp/specstride-inert-154-<suffix>` and the run id
- * `<YYYYMMDD>-<HHMMSS>-<micros>` inside the paths of `run.started`,
- * `verification.*` and `verdict.recorded`. Nothing else varies.
+ * `<YYYYMMDD>-<HHMMSS>-<pid>` (the as-is form B-0500; the last segment is the
+ * PID, whose digit count varies with the host, so one to seven digits fold)
+ * inside the paths of `run.started`, `verification.*` and `verdict.recorded`.
+ * Nothing else varies.
  */
 export function normalise(text: string): string {
   return text
@@ -44,7 +46,7 @@ export function normalise(text: string): string {
     .replace(/"latencyMs":\d+/g, '"latencyMs":@ms')
     .replace(/verification-[0-9a-f]{20}/g, "verification-@ref")
     .replace(/\/tmp\/specstride-inert-154-[A-Za-z0-9_]+/g, "@root")
-    .replace(/\d{8}-\d{6}-\d{7}/g, "@run");
+    .replace(/\d{8}-\d{6}-\d{1,7}/g, "@run");
 }
 
 /** Every `events.jsonl` the run wrote under its user-state root, in path order. */

@@ -47,6 +47,7 @@
  * records, already parsed (annex A, §A.3).
  */
 import { PARALLEL_LEDGER_KINDS, type ParallelLedgerKind } from "./ledger-kinds.ts";
+import { PROPOSED_DELTA_REFUSAL_REASON_154 } from "./audits.ts";
 
 /* ------------------------------------------------------------------ *
  * The five counters.
@@ -359,3 +360,76 @@ export const COUNTED_FROM: Readonly<
   restartsUsed: Object.freeze(["worker_started"] as ParallelLedgerKind[]),
   cyclesSpent: "repeated records",
 });
+
+/* ================================================================== *
+ * The repair charge of a `group-check` refusal (F154-FR-036, T082).
+ * ================================================================== */
+
+/** F154-FR-036 — the refusal code of the group check the worker tree ran. */
+export const GROUP_CHECK_REFUSAL = PROPOSED_DELTA_REFUSAL_REASON_154;
+
+/** One repair charged to one task of the refused group (F154-FR-036, CQ-154-04 A). */
+export type GroupCheckRepairCharge = {
+  readonly groupId: string;
+  readonly taskId: string;
+  readonly repairs: 1;
+};
+
+/**
+ * THE EXCEPTION TO F143-FR-012 (T082, F154-FR-036; CQ-154-04 A): a refused
+ * worker charges nothing to its task — EXCEPT where the refusal is the
+ * `group-check` refusal, which charges ONE repair to EVERY task of the
+ * group, per refusal. The charge is per task and per refusal only: no outer
+ * counter of the layer moves (`OUTER_COUNTERS_A_GROUP_CHECK_REFUSAL_MOVES`
+ * is empty; `noOuterCounterMoved` reads it against two snapshots).
+ */
+export const OUTER_COUNTERS_A_GROUP_CHECK_REFUSAL_MOVES: readonly LayerCounter[] = Object.freeze(
+  [],
+);
+
+/** One repair charged to every task of the refused group, in the group's task order. */
+export function repairsChargedByTheGroupCheckRefusal(
+  groupId: string,
+  taskIds: readonly string[],
+): readonly GroupCheckRepairCharge[] {
+  return Object.freeze(
+    taskIds.map((taskId) =>
+      Object.freeze({ groupId, taskId, repairs: 1 as const }),
+    ),
+  );
+}
+
+/** The repairs the charges of `group-check` refusals have charged to one task so far. */
+export function repairsOfTheGroupCheckCharges(
+  charges: readonly GroupCheckRepairCharge[],
+  taskId: string,
+): number {
+  return charges
+    .filter((charge) => charge.taskId === taskId)
+    .reduce((sum, charge) => sum + charge.repairs, 0);
+}
+
+/**
+ * F154-FR-036 — a `group-check` refusal moves NO outer counter: the two
+ * snapshots of the layer counters stand before and after the refusal, and
+ * none of the five may differ. The per-task repair charge is not an outer
+ * counter; it travels in the charges themselves.
+ */
+export function noOuterCounterMoved(before: LayerCounters, after: LayerCounters): boolean {
+  const counterMoved = (one: LayerCounters, other: LayerCounters): boolean =>
+    one.groupsStarted !== other.groupsStarted ||
+    one.groupsFailed !== other.groupsFailed ||
+    one.cyclesSpent !== other.cyclesSpent;
+  if (counterMoved(before, after)) return false;
+  const ids = new Set([...Object.keys(before.perWorker), ...Object.keys(after.perWorker)]);
+  for (const workerId of ids) {
+    const one = before.perWorker[workerId];
+    const other = after.perWorker[workerId];
+    const passesStarted = one === undefined ? 0 : one.passesStarted;
+    const restartsUsed = one === undefined ? 0 : one.restartsUsed;
+    const otherPasses = other === undefined ? 0 : other.passesStarted;
+    const otherRestarts = other === undefined ? 0 : other.restartsUsed;
+    if (passesStarted !== otherPasses || restartsUsed !== otherRestarts) return false;
+  }
+  return true;
+}

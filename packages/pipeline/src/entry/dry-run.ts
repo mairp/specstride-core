@@ -19,8 +19,17 @@ import type { PreconditionCheckRegistry, EvaluationContext } from "../kinds/regi
 import { decideSetupStage } from "../kinds/setup.ts";
 import { redactAction, digestLine } from "../output/lines.ts";
 // Feature 154, T031 — the ONE renderer of the parallel plan (F154-SC-002),
-// shared with the doctor.
+// shared with the doctor. The plan types are the layer's own (the plan the
+// renderer reads is ONE record, `specstride.parallel-plan/1`), so the derived
+// plan and the stored plan are the same type.
 import { printThePlan, UNITS_FORCED_ON } from "../../../layer-parallel/src/plan.ts";
+import type {
+  ParallelPlan,
+  PlannedGroup,
+  SerialTask,
+  CandidateTask,
+  FallbackReason,
+} from "../../../layer-parallel/src/types.ts";
 
 /** The lines of the plan, in the order they are printed. */
 export type DryRunLine = {
@@ -237,38 +246,9 @@ export const WORKERS_DEFAULT = 2 as const;
 /** Why a task is serial where its run of consecutive tasks was too short. */
 export const ALONE_IN_ITS_RUN = "alone-in-its-run-of-admitted-tasks" as const;
 
-/** One group of the plan. */
-export type PlannedGroup = {
-  readonly ordinal: number;
-  readonly phase: number;
-  readonly tasks: readonly string[];
-};
-
-/** One task made serial, with its reason. */
-export type SerialTask = {
-  readonly id: string;
-  readonly reason: string;
-};
-
-/** One phase of the plan (annex D §D.3). */
-export type PhasePlan = {
-  readonly phase: number;
-  readonly groups: readonly PlannedGroup[];
-  readonly serial: readonly SerialTask[];
-  /** The ceiling of the speed-up of the phase under equal task cost. */
-  readonly ceiling: number;
-};
-
-/** The parallel plan (annex D §D.3, `specstride.parallel-plan/1`). */
-export type ParallelPlan = {
-  readonly schema: typeof PARALLEL_PLAN_SCHEMA;
-  readonly runId: string;
-  /** The canonical hash of the stored plan; empty where the plan is derived. */
-  readonly hash: string;
-  readonly workers: number;
-  readonly phases: readonly PhasePlan[];
-  readonly fallback: string | null;
-};
+// The plan types are the layer's own (`PlannedGroup`, `SerialTask`,
+// `PhasePlan`, `ParallelPlan` of layer-parallel): the renderer reads one
+// record, and a derived plan and a stored plan are the same type.
 
 /** What the dry run is given about the parallel-units option. */
 export type ParallelPlanInput = {
@@ -359,11 +339,23 @@ export function deriveParallelPlan(input: {
       index = ids.length;
     }
   }
-  const tasks = Object.freeze(ids.map((id) => ({ id })));
-  const phase: PhasePlan = Object.freeze({
+  const tasks: readonly CandidateTask[] = Object.freeze(
+    ids.map(
+      (id): CandidateTask => ({
+        id,
+        // The derivation at the dry run computes no admission and reads no
+        // scope source: the empty scope and no verdicts are the derived
+        // values (the layer's own derivation fills them at launch).
+        scope: Object.freeze({ prefixes: Object.freeze([]), source: "consumer" }),
+        checks: Object.freeze([]),
+      }),
+    ),
+  );
+  const phase = Object.freeze({
     phase: 1,
     groups: Object.freeze(groups),
     serial: Object.freeze(serial),
+    tasks,
     ceiling: ceilingOfTheSpeedUp({ tasks, groups }),
   });
   return Object.freeze({

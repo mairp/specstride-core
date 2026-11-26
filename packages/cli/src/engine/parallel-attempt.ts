@@ -97,7 +97,11 @@ import {
   type PreparedGroup,
   type PreparedWorker,
   type StartedWorkerPass,
+  type WorkerCheckRecord,
 } from "./parallel-group.ts";
+import type { GroupCheckRepairCharge } from "../../../core/src/parallel/counters.ts";
+import { repairsChargedByTheGroupCheckRefusal } from "../../../core/src/parallel/counters.ts";
+import type { GroupAcceptanceCheck } from "../../../core/src/spec-groups/slicer.ts";
 import {
   auditTheGroupThroughTheStore,
   closeTheGroupRun,
@@ -175,6 +179,12 @@ export type TheGroupAttempt = {
    * effect now, after `group_closed`, at the boundary that follows.
    */
   readonly stopAfterTheGroup?: true | undefined;
+  /**
+   * F154-FR-036 (T082; CQ-154-04 A) — the repairs a `group-check` refusal
+   * charged: ONE per task of the refused group, per refusal. Present only
+   * where the group's acceptance check refused the group.
+   */
+  readonly repairsCharged?: readonly GroupCheckRepairCharge[] | undefined;
 };
 
 /** A start refusal: the group never started whole. */
@@ -311,6 +321,15 @@ export async function runTheGroupOfTheAttempt(input: {
    */
   readonly baseResultOfTheInnerSet?:
     | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
+    | undefined;
+  /**
+   * F154-FR-034/-035 (T080, T081) — the group's acceptance check run in its
+   * worker tree under `loop.parallel.groupCheck`. Left out or `on: false`,
+   * NOTHING of the worker check runs: the workspace behaviour stands
+   * unchanged (T078), and under `parity` the switch reads off.
+   */
+  readonly workerCheck?:
+    | { readonly on: boolean; readonly acceptanceCheck: GroupAcceptanceCheck }
     | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
@@ -501,6 +520,7 @@ export async function runTheGroupOfTheAttempt(input: {
     }
 
     /* ---- THE BARRIER (F143-FR-017), and the one `worker_ended` per worker. ---- */
+    let workerCheckRecord: WorkerCheckRecord | undefined;
     const barrier = await closeTheGroup({
       store,
       workspace: input.workspace,
@@ -516,6 +536,22 @@ export async function runTheGroupOfTheAttempt(input: {
         // reach the worker events emitted just below.
       },
       checkpointLeftByAKilledPass: run.checkpointLeftByAKilledPass,
+      ...(input.workerCheck !== undefined && input.workerCheck.on === true
+        ? {
+            workerCheck: {
+              on: true,
+              acceptanceCheck: input.workerCheck.acceptanceCheck,
+              controlRoot: input.controlRoot,
+              runId: input.runId,
+              slug: input.slug,
+              phase: input.phase,
+              groupId,
+            },
+            onWorkerCheck: (record: WorkerCheckRecord) => {
+              workerCheckRecord = record;
+            },
+          }
+        : {}),
     });
     for (const row of barrier.perWorker) {
       const outcome: WorkerOutcome = row.outcome.outcome;
@@ -559,6 +595,14 @@ export async function runTheGroupOfTheAttempt(input: {
       },
       singleWriter: input.singleWriter,
       ...(input.workspaceChanged === undefined ? {} : { workspaceChanged: input.workspaceChanged }),
+      // F154-FR-036 (T081) — where the group's acceptance check in its worker
+      // tree read `failed` or `tainted`, EVERY delta of the group is refused
+      // with `group-check`: nothing of the group merges (T085's serial
+      // equality rests on this — the withheld group leaves the workspace the
+      // other groups only).
+      ...(workerCheckRecord?.result === "failed" || workerCheckRecord?.result === "tainted"
+        ? { groupCheckRefusalOf: () => true as const }
+        : {}),
     });
     emit(
       integrationEvent({
@@ -583,6 +627,8 @@ export async function runTheGroupOfTheAttempt(input: {
     const integrated = workersForIntegration.filter(
       (worker) => worker.outcome.outcome === "integrated",
     );
+    const groupCheckRefused =
+      workerCheckRecord?.result === "failed" || workerCheckRecord?.result === "tainted";
     const failedWith = async (
       reason: string,
       theIntegration?: IntegrationResult,
@@ -613,6 +659,14 @@ export async function runTheGroupOfTheAttempt(input: {
         ...(theIntegration === undefined ? {} : { integration: theIntegration }),
         closed,
         ...(run.stop !== undefined && run.stop.now === false ? { stopAfterTheGroup: true } : {}),
+        // F154-FR-036 (T082; CQ-154-04 A) — the exception to F143-FR-012: a
+        // `group-check` refusal charges ONE repair to EVERY task of the
+        // group, and moves NO outer counter.
+        ...(groupCheckRefused
+          ? {
+              repairsCharged: repairsChargedByTheGroupCheckRefusal(groupId, tasksOfTheGroup),
+            }
+          : {}),
         counts: {
           refused: audit.refused.length,
           wallMs: Date.now() - startedAtMs,

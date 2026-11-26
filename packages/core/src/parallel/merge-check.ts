@@ -56,8 +56,23 @@ export const NO_COMMAND_IS_SKIPPED_AT_A_FAILURE = true as const;
 /** The merge check runs where the application put the work: the workspace. */
 export const RUNS_ON_THE_WORKSPACE = true as const;
 
-/** No check runs in a worker tree (F142-FR-059, PU-49). */
-export const NO_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
+/**
+ * F142-FR-059 AS AMENDED (F154-FR-034, T083) — the guard is NARROWED TO THE
+ * MERGE CHECK. The blanket "no check runs in a worker tree" no longer holds:
+ * the group's ACCEPTANCE check now runs in its worker tree (`parallel-group.ts`,
+ * the record `specstride.worker-check/1`). What still never runs in a worker
+ * tree is the merge check: every command of the inner set runs in the
+ * workspace, and a request whose workspace is a worker tree is refused before
+ * any command starts (`CHECK_IN_A_WORKER_TREE`, below). The three constants
+ * state the narrowed rule in its parts.
+ */
+export const NO_CHECK_RUNS_IN_A_WORKER_TREE = false as const;
+
+/** The merge check still never runs in a worker tree (F142-FR-059 as amended). */
+export const NO_MERGE_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
+
+/** The group's acceptance check is the check that now runs in a worker tree (F154-FR-034). */
+export const THE_ACCEPTANCE_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
 
 /** Nothing is reverted, whatever the merge check says (F142-FR-061, PU-49). */
 export const NOTHING_IS_REVERTED = true as const;

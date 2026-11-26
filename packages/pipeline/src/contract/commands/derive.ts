@@ -640,7 +640,19 @@ export function derive(input: DeriveArgs, learning?: LearningBindingRulesPort): 
         },
         declaredCommands: discoveries
           .filter((command) => command.phase === phase)
-          .map((command) => ({ id: command.id, argv: command.argv, forTaskIds: taskIds })),
+          .map((command) => ({
+            id: command.id,
+            argv: command.argv,
+            forTaskIds: taskIds,
+            // F154-FR-034 (T078) — the declared time limit freezes WITH the
+            // check (the worker-tree run reads it, never a fixed 300 s); a
+            // declaration the discovery gave no limit for freezes the field
+            // absent, so records frozen before the field existed stay
+            // byte-identical (F153-FR-054).
+            ...(typeof command.timeLimitMs === "number" && command.timeLimitMs > 0
+              ? { timeLimitMs: command.timeLimitMs }
+              : {}),
+          })),
       });
       hashes[`phase${String(phase)}`] = sliced.hash;
       // F154-FR-032 (T075) — the declared `dependsOn` and `independentWith`
