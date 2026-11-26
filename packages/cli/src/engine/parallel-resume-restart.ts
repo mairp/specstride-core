@@ -704,7 +704,7 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
     // group — answered as ONE group attempt of this engine start. The writer
     // of THIS opening is released first: two writers over one ledger within
     // one process are refused, not merged.
-    releaseTheWriter(`${open.runId}:ledger`);
+    releaseTheWriter(`${open.runId}:ledger`); // one writer per group (F154-FR-032): this clears every group of the ledger
     const tail = await carryOutTheTailOfTheOpenGroup({
       open,
       controlRoot: input.controlRoot,
@@ -730,7 +730,7 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
       ...(tail.stopped === undefined ? {} : { stopped: tail.stopped }),
     });
   } finally {
-    releaseTheWriter(`${open.runId}:ledger`);
+    releaseTheWriter(`${open.runId}:ledger`); // one writer per group (F154-FR-032): this clears every group of the ledger
     for (const directory of temporaryDirectories) {
       rmSync(directory, { recursive: true, force: true });
     }

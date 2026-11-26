@@ -11,6 +11,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { groupGate } from "../../../layer-parallel/src/index.ts";
 import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
+import type { GroupIndependenceDeclaration } from "../../../layer-parallel/src/independence.ts";
+import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
 import { quotaObservationOfTheWindows } from "./parallel-launch.ts";
 import { windows as quotaWindowsModule } from "@specstride/policy/quota";
 import {
@@ -61,6 +64,26 @@ export type TheParallelCallContext = {
   readonly quotaWindowsOfTheRun?: (() => quotaWindowsModule.LimitWindowState) | undefined;
   /** `loop.parallel.quota_headroom`, in per cent, where configuration set it. */
   readonly quotaHeadroomPerCent?: number | undefined;
+  /**
+   * F154-FR-031 (T076) — `loop.parallel.groupUnits` is on: the frozen task
+   * groups of the launch record are the planner's candidates, one worker per
+   * group, and pairs are decided over the independence table. Left out (the
+   * default), the `[P]` tasks stay the unit and nothing of this runs.
+   */
+  readonly groupUnitsOn?: boolean | undefined;
+  /**
+   * F154-FR-031 (T076) — the frozen task groups of the launch record per
+   * phase, as `frozenGroupsOfThePhase` reads them (`run-feature.ts`), each
+   * carrying the optional `dependsOn`/`independentWith` the derivation froze
+   * into it (F154-FR-032). Left out, the reader answers no groups (rule
+   * TG-1's stated fallback).
+   */
+  readonly frozenGroupsOfThePhase?:
+    | ((phase: number) => readonly (TaskGroup & {
+        readonly dependsOn?: readonly string[];
+        readonly independentWith?: readonly string[];
+      })[])
+    | undefined;
 };
 
 /** Build the argument object of `parallelWiringOfTheAttempt` for one attempt. */
@@ -150,9 +173,41 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
       void worker;
       return { outcome: "unchecked", ruleId: "WC-4" };
     },
-    // F154-FR-031 — with `loop.parallel.groupUnits` off, the frozen task
-    // groups are no candidates; the `[P]` task stays the unit.
-    groupCandidatesOfThePhase: () => [],
+    // F154-FR-031 (T076) — with `loop.parallel.groupUnits` off, the frozen
+    // task groups are no candidates; the `[P]` task stays the unit. On, the
+    // frozen groups of the phase ARE the candidates, one worker per group.
+    groupCandidatesOfThePhase: () =>
+      ctx.groupUnitsOn === true
+        ? (ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []).map(
+            (group): FrozenTaskGroupShape => ({
+              groupId: group.groupId,
+              phase: group.phase,
+              taskIds: [...group.taskIds],
+              writeScope: {
+                prefixes: [...group.writeScope.prefixes],
+                ...(group.writeScope.caseFolded === true ? { caseFolded: true } : {}),
+              },
+            }),
+          )
+        : [],
+    // F154-FR-032 (T076) — the declarations the frozen record carries per
+    // group (`dependsOn`, `independentWith`), as the independence decision
+    // of a pair reads them. Off, no group declares anything.
+    groupUnitsOn: ctx.groupUnitsOn === true,
+    groupDeclarationOf: (): GroupIndependenceDeclaration => {
+      if (ctx.groupUnitsOn !== true) return {};
+      const dependsOn: Record<string, readonly string[]> = {};
+      const independentWith: Record<string, readonly string[]> = {};
+      for (const group of ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []) {
+        if (group.dependsOn !== undefined && group.dependsOn.length > 0) {
+          dependsOn[group.groupId] = group.dependsOn;
+        }
+        if (group.independentWith !== undefined && group.independentWith.length > 0) {
+          independentWith[group.groupId] = group.independentWith;
+        }
+      }
+      return { dependsOn, independentWith };
+    },
     // F154-FR-039…-044 — with `host.limits` off, the host is unbounded: no
     // slot is taken.
     hostSlots: null,

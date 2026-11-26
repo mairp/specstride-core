@@ -147,6 +147,23 @@ export type TheLedgerOfARun = {
  * writer is THE ONE WRITER of core: a second opening over the same ledger
  * name in the same process is refused, not interleaved.
  */
+/**
+ * The live queues of the ledger files, one per file while any group attempt
+ * of the run holds it (F154-FR-032). `releaseTheLedgerQueueOf` gives it up.
+ */
+const queuesOfTheLedgerFiles = new Map<
+  string,
+  { readonly queue: ReturnType<typeof oneQueue>; holders: number }
+>();
+
+/** Give up ONE holder's share of the ledger file's queue (F154-FR-032). */
+export function releaseTheLedgerQueueOf(ledgerFile: string): void {
+  const live = queuesOfTheLedgerFiles.get(ledgerFile);
+  if (live === undefined) return;
+  if (live.holders <= 1) queuesOfTheLedgerFiles.delete(ledgerFile);
+  else queuesOfTheLedgerFiles.set(ledgerFile, { ...live, holders: live.holders - 1 });
+}
+
 export function openTheLedgerOfTheRun(input: {
   readonly controlRoot: string;
   readonly runId: string;
@@ -160,19 +177,29 @@ export function openTheLedgerOfTheRun(input: {
 }): TheLedgerOfARun {
   const ledgerFile = parallelLedgerPathOf(input.controlRoot, input.runId);
   mkdirSync(dirname(ledgerFile), { recursive: true, mode: 0o700 });
+  const hashOf = (line: string): string => createHash("sha256").update(line).digest("hex");
+  /* F154-FR-032 (feature 154, phase 9, T076) — while groups as units run at
+   * once, TWO group attempts of one run hold the ledger at the same time.
+   * The ONE ledger file keeps ONE queue while any holder stands: the chain
+   * of `seq` and `prev` stays one chain, and the appends of the two groups
+   * interleave whole line at a time. The writers are distinct per group
+   * (`integrate.ts` `writerKeyOfTheLedger`); the queue is the file's. */
+  const live = queuesOfTheLedgerFiles.get(ledgerFile);
   const before = readAppendedRecords(
     existsSync(ledgerFile) ? readFileSync(ledgerFile, "utf8") : "",
   );
-  const hashOf = (line: string): string => createHash("sha256").update(line).digest("hex");
-  const queue = oneQueue(
-    {
-      // ONE WHOLE LINE, ONE call — the contract that makes a torn line a
-      // property of a crash and never of the queue.
-      appendLine: (line) => appendFileSync(ledgerFile, line),
-      hashOf,
-    },
-    continuationOf(before, hashOf),
-  );
+  const queue =
+    live?.queue ??
+    oneQueue(
+      {
+        // ONE WHOLE LINE, ONE call — the contract that makes a torn line a
+        // property of a crash and never of the queue.
+        appendLine: (line) => appendFileSync(ledgerFile, line),
+        hashOf,
+      },
+      continuationOf(before, hashOf),
+    );
+  queuesOfTheLedgerFiles.set(ledgerFile, { queue, holders: (live?.holders ?? 0) + 1 });
   const ports: OneWriterPorts = {
     append: (record) => {
       queue.appendNow(record);

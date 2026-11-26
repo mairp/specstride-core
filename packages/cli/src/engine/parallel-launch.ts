@@ -43,6 +43,12 @@ import {
 } from "../../../layer-parallel/src/index.ts";
 import { windows as quotaWindows } from "@specstride/policy/quota";
 import type { QuotaObservation } from "../../../layer-parallel/src/admission.ts";
+import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
+
+/** The frozen task groups of the launch record per phase number (F154-FR-031). */
+export type GroupCandidatesOfThePhases = Readonly<
+  Record<number, readonly FrozenTaskGroupShape[]>
+>;
 import type { SpecPhase } from "../../../spec-formats/src/model.ts";
 
 /** The hasher of the plan: the canonical record hasher of the kernel. */
@@ -142,6 +148,15 @@ export type ParallelLaunchInput = {
   readonly emit: (type: string, data: Readonly<Record<string, unknown>>) => void;
   /** The hasher, for tests; the canonical hasher of the kernel at launch. */
   readonly hasher?: PlanHasher;
+  /**
+   * F154-FR-031 (feature 154, phase 9, T076; CQ-154-02, -09) — the frozen
+   * task groups of the launch record per phase number, AS THE CANDIDATES of
+   * the planner, read where `loop.parallel.groupUnits` is on. Left out, the
+   * `[P]` tasks stay the unit and the admission slices as before. The launch
+   * passes them through to BOTH `planAtLaunch` calls, so the pre- and the
+   * post-precondition plan stay the same plan (F154-SC-002).
+   */
+  readonly groupCandidatesOfThePhases?: GroupCandidatesOfThePhases;
 };
 
 /** What the launch of the layer hands the engine back. */
@@ -330,7 +345,18 @@ export function launchTheParallelLayer(input: ParallelLaunchInput): ParallelLaun
       : {}),
   });
   const hasher = input.hasher ?? THE_PLAN_HASHER;
-  const first = planAtLaunch({ runId: input.runId, tasks, admission, fallback: null }, hasher);
+  const first = planAtLaunch(
+    {
+      runId: input.runId,
+      tasks,
+      admission,
+      fallback: null,
+      ...(input.groupCandidatesOfThePhases !== undefined
+        ? { groupCandidatesOfThePhases: input.groupCandidatesOfThePhases }
+        : {}),
+    },
+    hasher,
+  );
   const outcome = evaluatePreconditions({
     ...input.preconditions,
     groupsInThePlan: groupsInThePlan(first),
@@ -338,7 +364,18 @@ export function launchTheParallelLayer(input: ParallelLaunchInput): ParallelLaun
   const plan =
     outcome.reason === null
       ? first
-      : planAtLaunch({ runId: input.runId, tasks, admission, fallback: outcome.reason }, hasher);
+      : planAtLaunch(
+          {
+            runId: input.runId,
+            tasks,
+            admission,
+            fallback: outcome.reason,
+            ...(input.groupCandidatesOfThePhases !== undefined
+              ? { groupCandidatesOfThePhases: input.groupCandidatesOfThePhases }
+              : {}),
+          },
+          hasher,
+        );
 
   // The engine stores the plan (the layer never writes, F142-FR-006) under the
   // logical name `run:<runId>:parallel-plan`, and emits the event that carries

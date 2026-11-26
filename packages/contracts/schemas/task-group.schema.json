@@ -47,6 +47,16 @@
         }
       ]
     },
-    "sizeRuleId": { "enum": ["TG-1", "TG-2", "TG-3"] }
+    "sizeRuleId": { "enum": ["TG-1", "TG-2", "TG-3"] },
+    "dependsOn": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "F154-FR-032 (feature 154, phase 9, T075; CQ-154-02, -09) — OPTIONAL. The group ids this group declares a dependency on, frozen at derivation into the per-group records of `specstride.task-groups-frozen/1` (the `configuration.taskGroups` block of the launch contract, `pipeline/src/contract/commands/derive.ts`, `taskGroupDeclarations`). A group with no declaration carries neither this field nor `independentWith`, exactly as feature 153 froze it; the frozen record's schema id is unchanged."
+    },
+    "independentWith": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "F154-FR-032 (T075) — OPTIONAL. The group ids this group declares independence with; read at run time by the independence decision (`layer-parallel/src/independence.ts`) and overriding the PG-1 marker rule (PG-3), never the pairwise scope disjointness of F142-FR-009 (closed-set-deltas.md row 21)."
+    }
   }
 }

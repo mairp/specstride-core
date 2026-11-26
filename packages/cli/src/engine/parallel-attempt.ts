@@ -66,7 +66,10 @@ import type {
 import type { BarrierResult } from "../../../core/src/parallel/barrier.ts";
 import { passOrdinalOf } from "../../../core/src/parallel/group-executor.ts";
 import type { IntegrationResult, TickOutcome } from "../../../core/src/parallel/integrate.ts";
-import { releaseTheWriter } from "../../../core/src/parallel/integrate.ts";
+import {
+  releaseTheWriterOfTheGroup,
+} from "../../../core/src/parallel/integrate.ts";
+import { releaseTheLedgerQueueOf } from "./parallel-drive.ts";
 import { initStore, treeStore, type StorePlaces } from "../../../tree-store/src/index.ts";
 import {
   groupEndedEvent,
@@ -795,7 +798,11 @@ export async function runTheGroupOfTheAttempt(input: {
     }
     throw error;
   } finally {
-    releaseTheWriter(ledgerName);
+    // F154-FR-032 (T076) — THIS group's writer and this holder's share of
+    // the ledger file's queue: the other groups of the attempt that hold
+    // the ledger at once keep theirs.
+    releaseTheWriterOfTheGroup(ledgerName, groupId);
+    releaseTheLedgerQueueOf(parallelLedgerPathOf(input.controlRoot, input.runId));
   }
 }
 

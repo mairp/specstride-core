@@ -37,6 +37,9 @@ import {
   WORKERS_MAX_DEFAULT,
 } from "./types.ts";
 import type { FallbackReason, ParallelPlan, PhasePlan, SerialTask } from "./types.ts";
+import { plannedGroupOf } from "./groups.ts";
+import type { FrozenTaskGroupShape, PlannedGroupOfATaskGroup } from "./groups.ts";
+import { ALONE_IN_ITS_RUN } from "./types.ts";
 
 /** `loop.parallel.workers` — the worker count of a group (row 21 of annex X §X.7). */
 export const WORKERS_KEY = "loop.parallel.workers" as const;
@@ -306,7 +309,50 @@ export type PlanAtLaunchInput = {
   readonly workers?: number;
   /** The fallback reason the preconditions found, or `null` where none did. */
   readonly fallback?: FallbackReason | null;
+  /**
+   * F154-FR-031 (feature 154, phase 9, T076; CQ-154-02, -09) — per phase
+   * number, the frozen task groups of the launch record AS THE CANDIDATES of
+   * the planner. Left out (or left empty for a phase), the admission slices
+   * the `[P]` tasks as before; present, each group of the phase becomes ONE
+   * planned group through `plannedGroupOf` — the group as a unit, one worker
+   * per group (F154-FR-031) — and every task of the phase that no candidate
+   * carries is serial with the reason `alone-in-its-run…`. The invariant
+   * `tasksNotPlacedExactlyOnce` still holds over the phase: every task is
+   * either in one candidate group or serial.
+   */
+  readonly groupCandidatesOfThePhases?: Readonly<
+    Record<number, readonly FrozenTaskGroupShape[]>
+  >;
 };
+
+/**
+ * One phase of the plan rebuilt over the frozen task groups AS UNITS
+ * (F154-FR-031): the candidates become the groups of the phase in their
+ * frozen order, and the tasks no candidate carries are serial with the
+ * reason `alone-in-its-run…` in the order of the tasks at launch.
+ */
+function phasePlanOfTheCandidates(
+  phasePlan: PhasePlan,
+  candidates: readonly FrozenTaskGroupShape[],
+): PhasePlan {
+  const groups = candidates.map((candidate, index) =>
+    plannedGroupOf(candidate, index + 1),
+  ) as readonly PlannedGroupOfATaskGroup[];
+  const placed = new Set<string>(groups.flatMap((group) => [...group.tasks]));
+  const serial = [
+    ...phasePlan.serial.filter((one) => !placed.has(one.id)),
+    ...phasePlan.tasks
+      .filter((one) => !placed.has(one.id))
+      .map(
+        (one): SerialTask => ({
+          id: one.id,
+          reason: ALONE_IN_ITS_RUN,
+          detail: "loop.parallel.groupUnits on: the task is no member of a frozen task group (F154-FR-031)",
+        }),
+      ),
+  ];
+  return Object.freeze({ ...phasePlan, groups, serial });
+}
 
 /**
  * Compute the plan at launch (T051, F142-FR-017).
@@ -320,7 +366,14 @@ export type PlanAtLaunchInput = {
 export function computeThePlanAtLaunch(input: PlanAtLaunchInput): ParallelPlan {
   const workers = input.workers ?? input.admission?.workers ?? WORKERS_DEFAULT;
   const admission: AdmissionInputs = Object.freeze({ ...(input.admission ?? {}), workers });
-  const phases = admitEveryPhase(input.tasks, admission).map(phasePlanOf);
+  const phases = admitEveryPhase(input.tasks, admission)
+    .map(phasePlanOf)
+    .map((phasePlan) => {
+      const candidates = input.groupCandidatesOfThePhases?.[phasePlan.phase];
+      return candidates === undefined || candidates.length === 0
+        ? phasePlan
+        : phasePlanOfTheCandidates(phasePlan, candidates);
+    });
   return Object.freeze({
     schema: PARALLEL_PLAN_SCHEMA,
     runId: input.runId,

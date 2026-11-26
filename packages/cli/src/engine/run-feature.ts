@@ -2909,6 +2909,24 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     return read === null ? undefined : { major: Number(read[1]), minor: Number(read[2]) };
   };
   const parallelPlanPath = inControl(join("runs", runId, "parallel-plan.json"));
+  // F154-FR-031 (T076) — where `loop.parallel.groupUnits` is on, the frozen
+  // task groups of the launch record are the planner's candidates for their
+  // phases, one worker per group. Where the switch is off, or the record
+  // carries no groups (rule TG-1's stated fallback), the `[P]` tasks stay
+  // the unit and nothing of this reaches the layer.
+  const groupCandidatesOfThePhases = loopConfig.parallelGroupUnits
+    ? Object.freeze(
+        frozenTaskGroupsOfTheLaunchRecord(controlRoot).reduce<
+          Record<number, readonly TaskGroup[]>
+        >((map, group) => {
+          map[group.phase] = [
+            ...(map[group.phase] ?? []),
+            withResolvedCheckExecutableOf(group, searchPathAtLaunch),
+          ];
+          return map;
+        }, {}),
+      )
+    : undefined;
   const parallelLaunch = launchTheParallelLayer({
     runId,
     units: loopConfig.parallel.units,
@@ -2942,6 +2960,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     planPath: parallelPlanPath,
     store: write,
     emit: (type, data) => emit(type, data),
+    ...(groupCandidatesOfThePhases !== undefined
+      ? { groupCandidatesOfThePhases }
+      : {}),
   });
   if (isParallelConfigurationError(parallelLaunch)) {
     // A configured worker count over its ceiling is an error of the launch,
@@ -4771,6 +4792,13 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               // the admission reads no observation, as before.
               ...(loopConfig.parallel.quotaHeadroomPerCent !== undefined
                 ? { quotaHeadroomPerCent: loopConfig.parallel.quotaHeadroomPerCent }
+                : {}),
+              // F154-FR-031, -032 (T076) — `loop.parallel.groupUnits` on:
+              // the frozen groups of the phase are the planner's candidates,
+              // one worker per group, and the pair decisions read the
+              // independence table with the declarations the record froze.
+              ...(loopConfig.parallelGroupUnits
+                ? { groupUnitsOn: true, frozenGroupsOfThePhase }
                 : {}),
               phases,
               parallelTotals,

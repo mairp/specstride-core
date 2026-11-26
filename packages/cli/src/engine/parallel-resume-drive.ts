@@ -803,7 +803,7 @@ export async function carryOutTheTailOfTheOpenGroup(input: {
       ...(stopped === undefined ? {} : { stopped }),
     });
   } finally {
-    releaseTheWriter(`${open.runId}:ledger`);
+    releaseTheWriter(`${open.runId}:ledger`); // one writer per group (F154-FR-032): this clears every group of the ledger
   }
 }
 

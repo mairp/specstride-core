@@ -48,6 +48,16 @@ import { join } from "node:path";
 import type { CheckRunner, ManifestEntry } from "@specstride/contracts/ep/check-runner";
 import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 import type { RepeatVerdict } from "../../../layer-parallel/src/repeat.ts";
+import {
+  independenceOf,
+  SCOPES_DISJOINT_REQUIRED,
+  type GroupIndependenceDeclaration,
+  type GroupUnit,
+  type IndependenceVerdict,
+} from "../../../layer-parallel/src/independence.ts";
+import { scopesAreDisjoint } from "../../../layer-parallel/src/scope.ts";
+import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
+import type { WriteScope } from "../../../layer-parallel/src/types.ts";
 import type { RegistryAccess } from "../../../core/src/pass-supervision/ports.ts";
 import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { TickOutcome } from "../../../core/src/parallel/integrate.ts";
@@ -599,7 +609,23 @@ export type ParallelWiringInput = {
    * The phase's frozen task groups, as candidates of the planner
    * (F154-FR-031). Default: none, the `[P]` tasks stay the unit.
    */
-  readonly groupCandidatesOfThePhase?: (() => readonly TaskGroup[]) | undefined;
+  readonly groupCandidatesOfThePhase?: (() => readonly FrozenTaskGroupShape[]) | undefined;
+  /**
+   * F154-FR-031 (T076; CQ-154-02, -09) — `loop.parallel.groupUnits` is on:
+   * the groups of the plan are the frozen task groups AS UNITS, one worker
+   * per group, and two groups of the attempt run at once only where the
+   * independence decision finds them independent (F154-FR-032). Default:
+   * off, the scheduling of the attempt stays exactly as feature 154 phase 7
+   * left it.
+   */
+  readonly groupUnitsOn?: boolean | undefined;
+  /**
+   * F154-FR-032 (T076) — the declared relations between the groups of the
+   * phase, read from the frozen task-group record (`dependsOn`,
+   * `independentWith`). Default: no group declares anything, so a pair is
+   * independent only where the marker rule of PG-1 holds.
+   */
+  readonly groupDeclarationOf?: (() => GroupIndependenceDeclaration) | undefined;
   /**
    * The host slot store of the run (F154-FR-039 to -044). Default: no
    * slot is taken, the host is unbounded.
@@ -685,6 +711,93 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
           : theGroupsOfThePhase(plan, input.phase));
   const group = groups[0];
   const before = plan === null || group === undefined ? [] : tasksBeforeTheGroup(plan, input.phase, group);
+
+  /* F154-FR-031, -032 (T076) — the groups of the phase AS UNITS. Where
+   * `loop.parallel.groupUnits` is on, a group the planner took from the
+   * frozen task-group record carries its id, its write scope and its
+   * provenance (`fromTaskGroup`); the independence decision of a pair reads
+   * exactly those. A group of the `[P]` slicing carries none of them and is
+   * never a unit of a pair: such an attempt schedules exactly as before. */
+  const groupUnitOf = (one: PlannedGroup): GroupUnit | null => {
+    const candidate = one as PlannedGroup & {
+      readonly groupId?: string;
+      readonly writeScope?: WriteScope;
+      readonly fromTaskGroup?: boolean;
+    };
+    if (candidate.fromTaskGroup !== true) return null;
+    if (candidate.groupId === undefined || candidate.writeScope === undefined) return null;
+    return {
+      groupId: candidate.groupId,
+      group: one,
+      writeScope: candidate.writeScope,
+      taskTexts: one.tasks.map((task) => input.taskTextOf(task)),
+    };
+  };
+  const NO_DECLARATION: GroupIndependenceDeclaration = {};
+  const declarationOf = input.groupDeclarationOf ?? (() => NO_DECLARATION);
+
+  /**
+   * The pair decision over `INDEPENDENCE_TABLE` (F154-FR-032): independent
+   * by a recorded rule AND pairwise disjoint write scopes (F142-FR-009 —
+   * the declaration overrides the marker rule of PG-1, never the scope
+   * condition), or dependent, with the verdict recorded either way.
+   */
+  const pairOfTheAttempt = (
+    earlier: PlannedGroup,
+    later: PlannedGroup,
+  ): { readonly atOnce: boolean; readonly verdict: IndependenceVerdict | null } => {
+    const unitA = groupUnitOf(earlier);
+    const unitB = groupUnitOf(later);
+    if (unitA === null || unitB === null) return { atOnce: false, verdict: null };
+    const verdict = independenceOf(unitA, unitB, declarationOf());
+    const atOnce =
+      verdict.independent &&
+      (SCOPES_DISJOINT_REQUIRED ? scopesAreDisjoint([unitA.writeScope, unitB.writeScope]) : true);
+    return { atOnce, verdict };
+  };
+
+  /* F154-SC-006 (T076) — ONE `parallel.admission` event per DEPENDENT pair,
+   * carrying the check `dependency`, its rule id and its detail, so the run
+   * says why the later group waited. */
+  const emitTheDependencyEvent = (
+    earlier: PlannedGroup,
+    later: PlannedGroup,
+    verdict: IndependenceVerdict,
+  ): void => {
+    input.emit("parallel.admission", {
+      groupId: groupIdOfTheAttempt(input.phase, later.ordinal),
+      ordinal: later.ordinal,
+      phase: input.phase,
+      admitted: false,
+      reason: verdict.check,
+      verdicts: [{ check: verdict.check, verdict: "refused", detail: verdict.detail }],
+      ruleId: verdict.ruleId,
+    });
+    input.say(
+      `[LOOP] parallel: group ${String(later.ordinal)} waits for group ${String(earlier.ordinal)} — ${verdict.check}: ${verdict.detail}`,
+    );
+  };
+
+  /* F154-FR-032 (T076) — an INDEPENDENT pair is recorded too: one event for
+   * the pair decision, admitted, with the rule id and its detail. */
+  const emitThePairAdmittedEvent = (
+    earlier: PlannedGroup,
+    later: PlannedGroup,
+    verdict: IndependenceVerdict,
+  ): void => {
+    input.emit("parallel.admission", {
+      groupId: groupIdOfTheAttempt(input.phase, earlier.ordinal),
+      pairWith: groupIdOfTheAttempt(input.phase, later.ordinal),
+      ordinal: earlier.ordinal,
+      phase: input.phase,
+      admitted: true,
+      verdicts: [{ check: verdict.check, verdict: "admitted", detail: verdict.detail }],
+      ruleId: verdict.ruleId,
+    });
+    input.say(
+      `[LOOP] parallel: groups ${String(earlier.ordinal)} and ${String(later.ordinal)} start at once — ${verdict.ruleId}: ${verdict.detail}`,
+    );
+  };
   const secretsOf = theSecretsOfTheWorker({
     controlRoot: input.controlRoot,
     home: input.home,
@@ -758,10 +871,15 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
    */
   let groupsWithTwoTransientRateLimits = 0;
   const workersOfTheGroup = (current: PlannedGroup): number =>
-    workersForTheRestOfTheAttempt(
-      Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
-      groupsWithTwoTransientRateLimits,
-    );
+    /* F154-FR-031 (T076) — with `loop.parallel.groupUnits` on, a group that
+     * came from the frozen record is ONE unit: ONE worker runs it, whatever
+     * its task count holds. */
+    input.groupUnitsOn === true && groupUnitOf(current) !== null
+      ? 1
+      : workersForTheRestOfTheAttempt(
+          Math.max(WORKERS_AT_A_TIME_DEFAULT, current.tasks.length),
+          groupsWithTwoTransientRateLimits,
+        );
 
   /**
    * T056 — THE CHARGED CYCLES of this attempt (F142-FR-021, rule PU-87):
@@ -817,10 +935,55 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
       if (plan === null || groups.length === 0) return false;
       if (layerOffAttempt || layerOffRun) return false;
       let ranAny = false;
-      for (const current of groups) {
+      for (let index = 0; index < groups.length; index += 1) {
+        const current = groups[index] as PlannedGroup;
         if (layerOffAttempt || layerOffRun) break;
         if (startedOrdinals.includes(current.ordinal)) continue;
         if (cancelledOrdinals.includes(current.ordinal)) continue;
+        /* F154-FR-032 (T076) — the pair this group makes with the NEXT one,
+         * decided over the independence table where `loop.parallel.groupUnits`
+         * is on and both groups are units. A DEPENDENT pair records ONE
+         * `parallel.admission` event with the check `dependency` before the
+         * groups run one after the other; an INDEPENDENT pair whose write
+         * scopes are disjoint runs AT ONCE, the later over the FIRST group's
+         * boundary (F154-FR-031, F154-SC-006). */
+        const next = groups[index + 1];
+        if (
+          input.groupUnitsOn === true &&
+          next !== undefined &&
+          !startedOrdinals.includes(next.ordinal) &&
+          !cancelledOrdinals.includes(next.ordinal)
+        ) {
+          const pair = pairOfTheAttempt(current, next);
+          if (pair.verdict !== null && !pair.atOnce) {
+            emitTheDependencyEvent(current, next, pair.verdict);
+          }
+          if (
+            pair.atOnce &&
+            /* No open group ledger stands: a pair never starts over one, so
+             * the resume join of F143-FR-025 stays single. */
+            theOpenParallelGroupOf({ controlRoot: input.controlRoot }) === undefined
+          ) {
+            emitThePairAdmittedEvent(current, next, pair.verdict as IndependenceVerdict);
+            /* The pair shares the FIRST group's boundary: both start only
+             * where every task before the first group is worked. */
+            const sharedBefore =
+              plan === null ? [] : tasksBeforeTheGroup(plan, input.phase, current);
+            const outcomes = await Promise.all([
+              startOneGroup(current, sharedBefore),
+              startOneGroup(next, sharedBefore),
+            ]);
+            index += 1; /* the pair consumed the next group too */
+            if (outcomes.some((one) => one === "ran")) ranAny = true;
+            if (outcomes.some((one) => one === "stopped")) {
+              ranAny = true;
+              break;
+            }
+            if (outcomes.some((one) => one === "blocked")) break;
+            // "failed" and "skipped" fall through to the next group.
+            continue;
+          }
+        }
         const outcome = await startOneGroup(current);
         if (outcome === "ran") ranAny = true;
         else if (outcome === "stopped") {
@@ -840,6 +1003,10 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
    * rest of the plan waits. */
   async function startOneGroup(
     current: PlannedGroup,
+    /* F154-FR-032 (T076) — the boundary of a group started as the LATER
+     * member of an independent pair: the FIRST group's boundary, since both
+     * start together. Left out, the group's own boundary stands. */
+    tasksBeforeOverride?: readonly string[],
   ): Promise<"ran" | "failed" | "skipped" | "stopped" | "blocked"> {
     if (plan === null) return "blocked";
     /* F154-FR-025 (CQ-154-13 A) — read the failed count before EVERY group:
@@ -1060,7 +1227,7 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
         sessionOpen: false,
         yieldWaitOpen: false,
         phaseEvidencePresent: input.evidencePresent(),
-        tasksBeforeTheGroup: tasksBeforeTheGroup(plan, input.phase, current),
+        tasksBeforeTheGroup: tasksBeforeOverride ?? tasksBeforeTheGroup(plan, input.phase, current),
         tasksNamedByKeptUnits: [...worked, ...workedHere],
       });
       if (!verdict.clean) {

@@ -120,7 +120,19 @@ export type ContractConfiguration = {
     readonly schema: "specstride.task-groups-frozen/1";
     /** The slicing hash per phase (`phase<N>` → the hash of that phase's groups). */
     readonly hashes: Readonly<Record<string, string>>;
-    /** The frozen groups, in task order, as the slicer produced them. */
+    /**
+     * The frozen groups, in task order, as the slicer produced them. Each
+     * entry is one group of `specstride.task-groups-frozen/1`; F154-FR-032
+     * (feature 154, phase 9, T075; CQ-154-02, -09) adds two OPTIONAL fields
+     * a group may carry, frozen by derive from `taskGroupDeclarations`:
+     * `dependsOn` — the group ids a group declares a dependency on — and
+     * `independentWith` — the group ids a group declares independence with.
+     * A group with neither field is absent both, exactly as feature 153
+     * froze it; the run-time independence decision
+     * (`layer-parallel/src/independence.ts`) reads them and lets the
+     * declaration override the `[P]` marker rule, never the scope
+     * disjointness of F142-FR-009.
+     */
     readonly groups: readonly unknown[];
   };
 };

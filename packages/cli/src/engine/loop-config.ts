@@ -181,6 +181,15 @@ export type LoopConfiguration = {
    */
   readonly taskGroupsAreSliced: boolean;
   /**
+   * `loop.parallel.groupUnits` (feature 154, row 148 of annex X §X.7), OFF
+   * by default and OFF under `parity` (CQ-154-02, -09). With it on, the
+   * frozen task groups of the launch record are the planner's candidates for
+   * a phase, one worker per group (F154-FR-031), and two groups run at once
+   * only when `independenceOf` finds them independent (F154-FR-032) and
+   * their write scopes are disjoint (F142-FR-009).
+   */
+  readonly parallelGroupUnits: boolean;
+  /**
    * `events.commitGateTiming` (feature 153, row 144 of annex X §X.7), ON by
    * default and OFF under `parity`. CQ-153-09 answered A on 2026-11-13: the
    * timed pair of the commit gate (`commit_gate.started`, `commit_gate.ended`)
@@ -429,6 +438,16 @@ export const LOOP_TASK_GROUPS_KEY = "loop.taskGroups";
 /** The key of the commit-gate timing switch (feature 153, row 144). */
 export const EVENTS_COMMIT_GATE_TIMING_KEY = "events.commitGateTiming";
 
+/**
+ * The key of the task-groups-as-units switch (feature 154, row 148 of annex
+ * X §X.7; CQ-154-02, -09): OFF by default and OFF under the `parity`
+ * profile. With it on, a phase's frozen task groups — not the `[P]` tasks —
+ * are the candidates of the planner (F154-FR-031), and the admission check
+ * `dependency` travels beside the row 61 checks (`layer-parallel/src/types.ts`,
+ * `PROPOSED_ADMISSION_CHECKS_154`).
+ */
+export const LOOP_PARALLEL_GROUP_UNITS_KEY = "loop.parallel.groupUnits";
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -571,6 +590,13 @@ export function loopConfigurationOf(input: {
     // stays a checkpoint claim (CQ-153-15 A, answered 2026-11-13).
     taskGroupsAreSliced:
       resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_TASK_GROUPS_KEY).value),
+    // Row 148 of annex X §X.7 (feature 154; CQ-154-02, -09): OFF by default
+    // and OFF under the `parity` profile whatever a source holds — under
+    // parity a unit stays a checkpoint claim and the check `dependency`
+    // travels nowhere (F154-FR-002).
+    parallelGroupUnits:
+      resolved.profile !== "parity" &&
+      switchIsOn(valueOf(LOOP_PARALLEL_GROUP_UNITS_KEY).value),
     // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
     // `parity` profile whatever a source holds — under parity the
     // compatibility projection drops the new types (CQ-153-09 A, answered
