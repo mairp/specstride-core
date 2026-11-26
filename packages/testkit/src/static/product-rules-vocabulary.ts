@@ -303,6 +303,13 @@ export function checkLanguage(options: CheckOptions = {}): readonly Finding[] {
       ) {
         continue;
       }
+      // The frozen record of feature 153's whole run (the approved task T035
+      // of feature 154 names it as `.jsonl`): a frozen copy of the recorded
+      // run files read by the report tests, not source of the product, and
+      // no published package ships it.
+      if (path.startsWith("packages/cli/test/fixtures/loop-speed/recorded-153/")) {
+        continue;
+      }
       // The test of feature 153's parallel ci-test (the approved task T253
       // names it as `.mjs`) and its golden file of the serial run (the
       // approved task T264 names it as `.txt`): a test of the repository's

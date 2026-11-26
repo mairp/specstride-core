@@ -1,0 +1,37 @@
+{"type":"strategy.selected","at":"2026-11-13T13:41:41.591Z","data":{"strategy":"micro","level":"L1","manifestHashes":["c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99"]}}
+{"type":"integrity.noted","at":"2026-11-13T13:41:41.686Z","data":{"type":"integrity.noted","kind":"approval-invalid","phase":2,"failed":"missing","detail":"phase 2: missing"}}
+{"type":"phase.started","at":"2026-11-13T13:41:41.688Z","data":{"phase":2,"title":"Foundational — the switches of the ready slices","total":29,"shape":""}}
+{"type":"attempt.started","at":"2026-11-13T13:41:44.882Z","data":{"phase":2,"attempt":3,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-13T13:41:44.884Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-13T13:56:20.210Z","data":{"unitId":"u1","taskIds":["T010","T011","T012","T013","T014","T015","T016","T017","T018","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-13T13:56:20.212Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-13T14:05:44.010Z","data":{"checkId":"check","result":"fail","unitId":"u1","durationMs":557825,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-13T14:05:44.020Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.single-unit","choice":"off:micro"}}
+{"type":"microloop.unit","at":"2026-11-13T14:05:44.024Z","data":{"unitId":"u1","check":"check","result":"repair","layerOff":"single-unit"}}
+{"type":"evidence_written","at":"2026-11-13T14:05:44.044Z","data":{"file":"GATE2-EVIDENCE.md","iters":1}}
+{"type":"phase.ended","at":"2026-11-13T14:15:37.978Z","data":{"phase":2,"attempt":3,"title":"Foundational — the switches of the ready slices"}}
+{"type":"tasks.ticked","at":"2026-11-13T14:15:38.027Z","data":{"phase":2,"count":19}}
+{"type":"commit.made","at":"2026-11-13T14:15:40.938Z","data":{"phase":2}}
+{"type":"phase.started","at":"2026-11-13T14:15:40.943Z","data":{"phase":3,"title":"Foundational — the one adapter to the check runner","total":29,"shape":""}}
+{"type":"attempt.started","at":"2026-11-13T14:15:43.480Z","data":{"phase":3,"attempt":1,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-13T14:15:43.489Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.refused","at":"2026-11-13T14:25:42.539Z","data":{"reason":"empty","bytes":0}}
+{"type":"evidence_written","at":"2026-11-13T14:25:42.545Z","data":{"file":"GATE3-EVIDENCE.md","iters":1}}
+{"type":"recovery.unmet-report-fallback","at":"2026-11-13T14:36:50.607Z","data":{"phase":3,"attempt":1,"criteria":"T029,T030,T031,T032,T033,T034,T035,T036,T037,T038,T039,T040,T041,T042","fallback":"all-tasks"}}
+{"type":"attempt.ended","at":"2026-11-13T14:36:50.611Z","data":{"phase":3,"attempt":1}}
+{"type":"diagnostician_trigger","at":"2026-11-13T14:36:51.237Z","data":{"phase":3,"attempt":1}}
+{"type":"diagnostician_start","at":"2026-11-13T14:36:51.248Z","data":{"phase":3,"attempt":1,"provider":"compass-gpt5-high"}}
+{"type":"diagnostician_done","at":"2026-11-13T14:38:32.782Z","data":{"phase":3,"attempt":1,"bytes":2881,"case":"real_gap"}}
+{"type":"attempt.started","at":"2026-11-13T14:38:45.899Z","data":{"phase":3,"attempt":2,"strategy":"micro"}}
+{"type":"accelerator_start","at":"2026-11-13T14:38:50.030Z","data":{"phase":3,"attempt":2,"backend":"dsh","criteria":"T029,T030,T031,T032,T033,T034,T035,T036,T037,T038,T039,T040,T041,T042"}}
+{"type":"iter_start","at":"2026-11-13T14:38:50.048Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.removed","at":"2026-11-13T14:38:50.053Z","data":{"bytes":0}}
+{"type":"iter_error","at":"2026-11-13T15:06:09.810Z","data":{"iter":1,"subtype":"agent_error","consec":1,"reason":"agent_error","kill_class":"agent"}}
+{"type":"iter_no_progress","at":"2026-11-13T15:06:09.814Z","data":{"iter":1,"consec":1}}
+{"type":"iter_done","at":"2026-11-13T15:06:09.815Z","data":{"iter":1,"evidence":"missing"}}
+{"type":"iter_start","at":"2026-11-13T15:06:11.818Z","data":{"iter":2,"max_iter":9007199254740991}}
+{"type":"iter_no_progress","at":"2026-11-13T15:51:15.170Z","data":{"iter":2,"consec":2}}
+{"type":"iter_done","at":"2026-11-13T15:51:15.170Z","data":{"iter":2,"evidence":"missing"}}
+{"type":"iter_start","at":"2026-11-13T15:51:17.173Z","data":{"iter":3,"max_iter":9007199254740991}}
+{"type":"iter_no_progress","at":"2026-11-13T16:36:21.769Z","data":{"iter":3,"consec":3}}
+{"type":"acceleration_note","at":"2026-11-13T16:36:21.990Z","data":{"phase":3,"attempt":2,"note":"/root/.specstride/workspaces/fbc656c3ba51cb79/features/153-loop-feedback-speed/recovery/phase3/acceleration.md"}}
