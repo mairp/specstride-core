@@ -286,6 +286,11 @@ export async function runTheGroupOfTheAttempt(input: {
   /* The live events, as the engine emits them (F142-FR-025). */
   readonly emit: (event: EventRequest) => void;
   /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check. Left out, the merge check runs unbounded.
+   */
+  readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
+  /**
    * THE PATH OF THE STOP REQUEST (`inbox:stop`, annex B §B.5), which the
    * group's wait polls at its boundaries (F143-FR-026). Left out, no poll
    * runs — the behaviour with the join off is the single-pass behaviour.
@@ -713,6 +718,7 @@ export async function runTheGroupOfTheAttempt(input: {
 
     /* ---- THE MERGE CHECK (F142-FR-059 to F142-FR-061), in the workspace. ---- */
     const merge = await theMergeCheckOfTheGroup({
+      ...(input.takeChecksSlot === undefined ? {} : { takeChecksSlot: input.takeChecksSlot }),
       store,
       writer: ledger.writer,
       runner: input.runner,

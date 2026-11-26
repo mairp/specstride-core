@@ -269,6 +269,11 @@ function theHeldTreeOf(
  * ------------------------------------------------------------------ */
 
 export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check on the resume tail. Left out, unbounded.
+   */
+  readonly takeChecksSlotOfTheRun?: (() => Promise<(() => Promise<void>) | null>) | undefined;
   readonly open: TheOpenParallelGroup;
   readonly controlRoot: string;
   /** `--reset-counts` (F100-FR-045): zeroes the counters THIS start writes. */
@@ -710,6 +715,7 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
       controlRoot: input.controlRoot,
       ...(input.resetCounts === true ? { resetCounts: true } : {}),
       drive: drive.tail,
+      ...(input.takeChecksSlotOfTheRun === undefined ? {} : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
     });
     if (!tail.carried) {
       return refused(

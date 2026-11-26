@@ -184,8 +184,11 @@ import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src
 import {
   cleanupRunTempRoot,
   exportRunTempRoot,
+  hostLimitsInForceOfTheStart,
   makeRunTempRoot,
 } from "./run-feature.temp-root.ts";
+// F154-FR-039…-044 (T095, T097) — the host slot seam of the engine start.
+import { makeRunHostSlots, type HostSlotRelease } from "./host-slots.ts";
 // F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
 import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
@@ -3030,6 +3033,39 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     exportRunTempRoot(runTempRoot, process.env, say, slug);
   }
 
+  // THE HOST SLOTS OF THIS START (F154-FR-039, T095, T097): with `host.limits`
+  // on (and outside `parity`) the run takes slots of the host bounds — the
+  // gate's check set and every merge check under the `checks` rule, the
+  // proposer pass under `sessions/<account>`, the named resources under
+  // `resources/<name>`. The bounds arrive from the start's environment (the
+  // configuration catalogue carries no rows for them, so a configuration
+  // file cannot hold them); an unreadable store answers `unbounded` and the
+  // run proceeds without the bound (F154-FR-004), exactly as with the
+  // limits off.
+  const runHostSlots = makeRunHostSlots({
+    home: homedir(),
+    workdir,
+    env: process.env as Readonly<Record<string, string | undefined>>,
+    limitsOn: hostLimitsInForceOfTheStart({
+      home: homedir(),
+      workdir,
+      parityProfile,
+      env: process.env,
+    }),
+  });
+  for (const refusal of runHostSlots.refusals) say(`[LOOP] host limits: ${refusal}`);
+
+  /**
+   * THE `checks` SLOT OF ONE GATE OR MERGE CHECK (T095): take it before any
+   * command of the check set starts, release it after the last one ends.
+   * The release answers `null` where nothing is gated (`host.limits` off,
+   * store unreadable), and the caller carries on unbounded.
+   */
+  const takeChecksSlotOfTheRun = (): Promise<HostSlotRelease> =>
+    runHostSlots.take("checks", (admission) =>
+      emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+    );
+
   // The closed groups of THIS phase attempt (F154-FR-025, T021): the ledger
   // the count of failed groups is read from at every wiring of the attempt,
   // in place of the constant 0 the wiring was passed before.
@@ -4762,6 +4798,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               keptUnitsPathOf: (rel) => inControl(rel),
               closedGroupsOfTheAttempt,
               runTempRoot,
+              // T095 (F154-FR-039) — the `checks` slot taker of this start.
+              takeChecksSlotOfTheRun: takeChecksSlotOfTheRun,
               controlRoot,
               home: parallelHome,
               runId,
@@ -5346,7 +5384,31 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
     // The pass loop of THIS attempt, as a function of its standing prompt: the
     // plain prompt of the phase, or the narrowed prompt of the accelerator.
+    // T097 (F154-FR-040) — the `sessions/<account>` slot of THIS proposer
+    // pass: taken before the pass loop runs, released when it ends (either
+    // path), so the pass never overlaps more sessions of this host than the
+    // bound allows. Where nothing is gated, the release is `null` and the
+    // pass runs unbounded, exactly as before the seam existed.
+    const accountOfTheRun = (
+      process.env.SPECSTRIDE_HOST_ACCOUNT === undefined || process.env.SPECSTRIDE_HOST_ACCOUNT === ""
+        ? "default"
+        : process.env.SPECSTRIDE_HOST_ACCOUNT
+    ).toLowerCase();
     const runThePassLoopWith = async (
+      standingPrompt: string,
+    ): Promise<ReturnType<typeof runPassLoop>> => {
+      const releaseSessionsSlot = await runHostSlots.take(
+        `sessions/${accountOfTheRun}`,
+        (admission) =>
+          emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+      );
+      try {
+        return await runThePassLoopBody(standingPrompt);
+      } finally {
+        if (releaseSessionsSlot !== null) await releaseSessionsSlot();
+      }
+    };
+    const runThePassLoopBody = async (
       standingPrompt: string,
     ): Promise<ReturnType<typeof runPassLoop>> => {
       const normalized = normalizeRequest(
@@ -5926,6 +5988,28 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             ? () => preCriticScanOfTheCandidate(phase, ordinal, verdictId)
             : undefined,
         runVerificationGate: async () => {
+          // T095 (F154-FR-039) — the `checks` slot of THIS verification: taken
+          // BEFORE the timed pair opens, released when the pair closes (in the
+          // `finally` below), so two starts of this host never run their check
+          // sets over each other, and the events never overlap either. Where
+          // nothing is gated (`host.limits` off, store unreadable) the release
+          // is `null` and the gate runs unbounded, as before.
+          const releaseGateChecksSlot = await takeChecksSlotOfTheRun();
+          // T098 (F154-FR-042) — every DECLARED resource of this host is held
+          // for the same verification window: the bounded rules of the start
+          // that name a `resources/<name>` slot are taken here, so two runs
+          // of one host never use a shared resource of the account past its
+          // capacity. Unbounded rules are skipped: nothing to hold.
+          const releaseGateResourceSlots: HostSlotRelease[] = [];
+          for (const rule of Object.keys(runHostSlots.bounds).filter((bound) =>
+            bound.startsWith("resources/"),
+          )) {
+            releaseGateResourceSlots.push(
+              await runHostSlots.take(rule, (admission) =>
+                emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+              ),
+            );
+          }
           // F153-FR-034 — the timed pair of the gate opens first: the run of
           // the verification gate is on the record from its first statement.
           emit("verification.started", {
@@ -6360,6 +6444,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               synthesized: false,
             });
             throw error;
+          } finally {
+            // T095 — the `checks` slot is released only when the pair is
+            // closed (either path), so the held interval covers the whole
+            // verification window of this start.
+            if (releaseGateChecksSlot !== null) await releaseGateChecksSlot();
+            // T098 — every held resource slot is released with the window.
+            for (const releaseResource of releaseGateResourceSlots) {
+              if (releaseResource !== null) await releaseResource();
+            }
           }
         },
         callTheCritic: async () => {

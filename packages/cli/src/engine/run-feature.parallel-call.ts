@@ -31,6 +31,8 @@ export type TheParallelCallContext = {
   readonly keptUnitsPathOf: (relative: string) => string;
   readonly closedGroupsOfTheAttempt: ClosedGroup[];
   readonly runTempRoot: string | null;
+  /** T095 (F154-FR-039) — the `checks` slot taker of this engine start. */
+  readonly takeChecksSlotOfTheRun: (() => Promise<(() => Promise<void>) | null>) | null;
   readonly controlRoot: string;
   readonly home: string;
   readonly runId: string;
@@ -211,6 +213,12 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     // F154-FR-039…-044 — with `host.limits` off, the host is unbounded: no
     // slot is taken.
     hostSlots: null,
+    // T095 (F154-FR-039) — the `checks` slot of this start: handed to the
+    // group's merge check so its window never overlaps a gate or merge
+    // check of another start on this host (`null` take: unbounded).
+    ...(ctx.takeChecksSlotOfTheRun === null
+      ? {}
+      : { takeChecksSlotOfTheRun: ctx.takeChecksSlotOfTheRun }),
     // F154-FR-041 — no hold record exists while `host.limits` is off.
     holdOfTheAccount: () => null,
     // F154-FR-043 (T024) — the run's temporary root, where `host.limits`

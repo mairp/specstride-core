@@ -773,9 +773,22 @@ export async function startWorkers(
     readonly mintSessionId: (worker: PlannedWorker) => string;
     readonly profile?: ToolchainProfile | undefined;
     readonly processSpendingLimit?: number | undefined;
+    /**
+     * T097 (F154-FR-040) — the `sessions/<account>` slot of the host,
+     * INJECTED (the core holds no file system of its own): taken before the
+     * first worker session starts, released when the last slice of this
+     * call has been started. Answers `null` where nothing is gated
+     * (`host.limits` off, store unreadable) — the workers start unbounded.
+     */
+    readonly takeSessionSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
   },
 ): Promise<readonly StartedWorker[]> {
   const started: StartedWorker[] = [];
+  // T097 — one slot for the worker sessions of THIS start call, held from
+  // the first session to the last slice started, whatever the outcome.
+  const releaseSessionSlot =
+    input.takeSessionSlot === undefined ? null : await input.takeSessionSlot();
+  try {
   // F143-FR-010 — AT MOST `workers` AT A TIME, in the order of the tasks.
   for (const slice of inSlicesOfAtMost(input.workers, input.workersAtATime)) {
     for (const worker of slice) {
@@ -852,6 +865,10 @@ export async function startWorkers(
         }),
       );
     }
+  }
+  } finally {
+    // T097 — the sessions slot is released whatever the slices did.
+    if (releaseSessionSlot !== null) await releaseSessionSlot();
   }
   return Object.freeze(started);
 }

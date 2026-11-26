@@ -637,3 +637,128 @@ export function breachesOfF142FR006(layer: LoopLayer): readonly string[] {
   }
   return Object.freeze(breaches);
 }
+
+/* ================================================================== *
+ * 7. THE HOST LIMITS IN FORCE (feature 154, US4 — T099, T100).
+ * ================================================================== */
+
+/** The bound keys a configuration may carry, with the slot rule each names. */
+export const HOST_BOUND_KEYS = Object.freeze([
+  "host.checks.concurrent",
+  "host.sessions.<account>",
+  "host.resources.<name>.capacity",
+] as const);
+export type HostBoundKey = (typeof HOST_BOUND_KEYS)[number];
+
+/** One source's host limits: the switch and the bounds it names. */
+export type HostLimitsSource = {
+  /** The `host.limits` switch as the source holds it. */
+  readonly limits?: "on" | "off" | undefined;
+  /** The bounds the source names, keyed as the configuration declares them. */
+  readonly bounds?: Readonly<Record<string, number>> | undefined;
+};
+
+/** The host limits in force, and what was refused of what a source held. */
+export type HostLimitsInForce = {
+  /** The switch in force: a project can never turn it off (T100). */
+  readonly on: boolean;
+  /** The bounds in force, keyed by slot rule (`checks`, `sessions/<a>`, `resources/<n>`). */
+  readonly bounds: Readonly<Record<string, number>>;
+  /** One line per refused value: never a throw, a refusal carries its reason. */
+  readonly refusals: readonly string[];
+};
+
+/** True where the value is a usable bound width. */
+function isBoundWidth(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+/** The slot rule a configuration key names, or `null` where it names none. */
+export function hostBoundRuleOf(key: string): string | null {
+  if (key === "host.checks.concurrent") return "checks";
+  const sessions = /^host\.sessions\.([a-z0-9-]+)$/.exec(key);
+  if (sessions !== null) return `sessions/${sessions[1]!}`;
+  const resources = /^host\.resources\.([a-z0-9-]+)\.capacity$/.exec(key);
+  if (resources !== null) return `resources/${resources[1]!}`;
+  return null;
+}
+
+/**
+ * T099 — the bounds ONE source names: only the three declared key shapes,
+ * only positive integers, keyed by slot rule. A key that names no bound, or
+ * a value that is not a positive integer, is REFUSED with its reason —
+ * never an error, never silently narrowed away (F154-FR-046).
+ */
+export function hostBoundsOfASource(
+  source: Readonly<Record<string, number>> | undefined,
+  origin: string,
+): { bounds: Record<string, number>; refusals: readonly string[] } {
+  const bounds: Record<string, number> = {};
+  const refusals: string[] = [];
+  if (source === undefined) return { bounds, refusals };
+  for (const [key, value] of Object.entries(source)) {
+    const rule = hostBoundRuleOf(key);
+    if (rule === null) {
+      refusals.push(`${origin}: the key \`${key}\` names no host bound`);
+      continue;
+    }
+    if (!isBoundWidth(value)) {
+      refusals.push(`${origin}: the bound \`${key}=${String(value)}\` is not a positive integer`);
+      continue;
+    }
+    bounds[rule] = value;
+  }
+  return { bounds, refusals };
+}
+
+/**
+ * T100 (F154-FR-046, principle III) — the host limits in force:
+ *
+ * - the `parity` profile turns the limits OFF whatever any source held;
+ * - the switch of the user configuration decides whether the limits are on
+ *   at all; the project configuration can NEVER turn them off — it may only
+ *   NARROW, and a project switch of `off` is refused with its reason;
+ * - a project bound may only LOWER a user bound of the same rule. A project
+ *   bound that raises, or names a rule the user did not bound, is refused.
+ */
+export function hostLimitsInForce(input: {
+  readonly userConfiguration?: HostLimitsSource | undefined;
+  readonly projectConfiguration?: HostLimitsSource | undefined;
+  readonly profile?: string | undefined;
+}): HostLimitsInForce {
+  const refusals: string[] = [];
+  const user = hostBoundsOfASource(input.userConfiguration?.bounds, "user");
+  refusals.push(...user.refusals);
+  const project = hostBoundsOfASource(input.projectConfiguration?.bounds, "project");
+  refusals.push(...project.refusals);
+  const bounds: Record<string, number> = { ...user.bounds };
+  for (const [rule, width] of Object.entries(project.bounds)) {
+    const held = bounds[rule];
+    if (held === undefined) {
+      refusals.push(
+        `project: the bound of the rule \`${rule}\` is refused: the user configuration names no bound for the rule, and a project may only lower`,
+      );
+      continue;
+    }
+    if (width > held) {
+      refusals.push(
+        `project: the bound of the rule \`${rule}\` may not RISE from ${String(held)} to ${String(width)} — a project may only lower (F154-FR-046)`,
+      );
+      continue;
+    }
+    bounds[rule] = width;
+  }
+  if (input.profile === PARITY_PROFILE) {
+    return Object.freeze({ on: false, bounds: Object.freeze({}), refusals: Object.freeze(refusals) });
+  }
+  const projectTurnsItOff = input.projectConfiguration?.limits === "off";
+  if (projectTurnsItOff) {
+    refusals.push(
+      "project: `host.limits: off` is refused — a project may never turn the host limits off, only lower a bound (F154-FR-046)",
+    );
+  }
+  // The switch in force is the USER's: a project's `off` is refused above
+  // and cannot turn the limits off, and it cannot turn them on either.
+  const on = input.userConfiguration?.limits === "on";
+  return Object.freeze({ on, bounds: Object.freeze({ ...bounds }), refusals: Object.freeze(refusals) });
+}

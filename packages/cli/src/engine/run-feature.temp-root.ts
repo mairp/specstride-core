@@ -66,6 +66,39 @@ export function exportRunTempRoot(
   say(`[${slug}] temporary root of the run: ${root}`);
 }
 
+/**
+ * F154-FR-039 (T095) — whether the resolved `host.limits` switch is IN FORCE
+ * for this start: on outside the `parity` profile and on in the resolved
+ * values. Every failure of the configuration read is off — never an error.
+ */
+export function hostLimitsInForceOfTheStart(input: {
+  home: string;
+  workdir: string;
+  parityProfile: boolean;
+  env: RunTempRootEnv;
+}): boolean {
+  if (input.parityProfile) return false;
+  try {
+    const files = loadConfigFiles({
+      home: input.home,
+      ...(input.env.XDG_CONFIG_HOME === undefined
+        ? {}
+        : { xdgConfigHome: input.env.XDG_CONFIG_HOME }),
+      workspaceRealPath: realpathSync(input.workdir),
+      startDir: input.workdir,
+    });
+    const resolved = resolveConfiguration({
+      ...(files.user === undefined ? {} : { user: files.user }),
+      ...(files.project === undefined ? {} : { project: files.project }),
+      environment: process.env,
+    });
+    const hostLimits = resolved.values.get("host.limits");
+    return hostLimits === undefined ? false : hostLimits.value !== false;
+  } catch {
+    return false;
+  }
+}
+
 /** Remove the root where the run ends, for any cause, and unset the exports. */
 export function cleanupRunTempRoot(
   root: string | null,

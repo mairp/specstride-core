@@ -1,0 +1,18 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { makeRunHostSlots } from "/root/specstride-core/packages/cli/src/engine/host-slots.ts";
+const home = mkdtempSync(join(tmpdir(), "seam-home-"));
+const slots = makeRunHostSlots({ home, workdir: process.cwd(), env: { SPECSTRIDE_HOST_CHECKS_CONCURRENT: "1" }, limitsOn: true });
+console.log("store", slots.store === null ? "NULL" : "ok", "bounds", JSON.stringify(slots.bounds));
+const log: string[] = [];
+const first = await slots.take("checks", (a) => log.push("A:" + a.verdict + ":" + (a.reason ?? "")));
+console.log("first", first === null ? "null" : "release");
+const second = slots.take("checks", (a) => log.push("B:" + a.verdict + ":" + (a.reason ?? "")));
+await new Promise((r) => setTimeout(r, 400));
+console.log("mid", log);
+await (first ?? async () => {})();
+const res = await Promise.race([second, new Promise<null>((r) => setTimeout(() => r(null), 4000))]);
+console.log("second", res === null ? "TIMEOUT/null" : "acquired");
+console.log("log", log);
+process.exit(0);

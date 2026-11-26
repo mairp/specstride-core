@@ -306,6 +306,11 @@ export async function carryOutTheTailOfTheOpenGroup(input: {
   /** `--reset-counts` (F100-FR-045): zeroes the counters THIS start writes. */
   readonly resetCounts?: boolean | undefined;
   readonly drive: TheTailOfTheResumeDrive;
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check on the resume tail. Left out, unbounded.
+   */
+  readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
 }): Promise<TheTailOfAnOpenGroup> {
   const { open, drive } = input;
   const startedAtMs = Date.now();
@@ -714,6 +719,7 @@ export async function carryOutTheTailOfTheOpenGroup(input: {
     let merge: TheMergeCheck | undefined;
     if (stopped === undefined) {
       merge = await theMergeCheckOfTheGroup({
+        ...(input.takeChecksSlot === undefined ? {} : { takeChecksSlot: input.takeChecksSlot }),
         store,
         writer: ledger.writer,
         runner: drive.runner,

@@ -629,7 +629,28 @@ export async function theMergeCheckOfTheGroup(input: {
   readonly baseResultOfTheInnerSet?:
     | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
     | undefined;
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host: taken before
+   * `merge_check_started` is written and released after the outcome stands,
+   * so a merge check of one start never overlaps a gate or merge check of
+   * another on this host. Absent, or answering `null` (`host.limits` off,
+   * store unreadable): the merge check runs unbounded, exactly as before
+   * this seam existed.
+   */
+  readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
 }): Promise<TheMergeCheck> {
+  const releaseChecksSlot = input.takeChecksSlot === undefined ? null : await input.takeChecksSlot();
+  try {
+    return await theMergeCheckOfTheGroupHeld(input);
+  } finally {
+    if (releaseChecksSlot !== null) await releaseChecksSlot();
+  }
+}
+
+/** The merge check itself, under whatever slot the wrapper holds. */
+async function theMergeCheckOfTheGroupHeld(
+  input: Parameters<typeof theMergeCheckOfTheGroup>[0],
+): Promise<TheMergeCheck> {
   const appliedPathCount = input.appliedPathCountOfTheGroup?.();
   if (appliedPathCount === 0) {
     const fingerprintBefore = await input.store.snapshot(input.workspace);

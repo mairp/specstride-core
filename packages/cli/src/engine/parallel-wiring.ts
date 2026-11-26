@@ -632,6 +632,12 @@ export type ParallelWiringInput = {
    */
   readonly hostSlots?: (HostSlotPort | null) | undefined;
   /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed to the
+   * group's merge check so two starts of this host never run check sets
+   * over each other. Left out, the merge check runs unbounded.
+   */
+  readonly takeChecksSlotOfTheRun?: (() => Promise<(() => Promise<void>) | null>) | undefined;
+  /**
    * The quota hold of the proposer's harness account, or `null` where
    * none is held (F154-FR-041). Default: none.
    */
@@ -1309,6 +1315,9 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
           : { stopRequestPath: input.stopRequestPath, runTokenHash: input.runTokenHash }),
         emit: (event) => input.emit(event.type, event.data),
         say: input.say,
+        ...(input.takeChecksSlotOfTheRun === undefined
+          ? {}
+          : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
       });
     }
     workedHere.push(...current.tasks);

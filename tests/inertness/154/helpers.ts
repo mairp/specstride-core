@@ -68,8 +68,12 @@ export type InertnessFixture = {
   readonly control: string;
   /** Run the engine once with every switch of spec 154 off and return its exit code. */
   readonly run: () => Promise<number>;
-  /** Every event of the run's control plane, in file order. */
-  readonly events: () => readonly { type: string; data: Record<string, unknown> };
+  /** Every event of the run's control plane, in file order (with its `at`). */
+  readonly events: () => readonly {
+    type: string;
+    at?: string;
+    data: Record<string, unknown>;
+  };
   /** The stub's own trace of the calls it answered, in call order. */
   readonly prompts: () => readonly {
     role: string;
