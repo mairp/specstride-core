@@ -121,6 +121,15 @@ used for a serial unit; refusals, kills and failed merge checks never reach a cr
 no worker tree exists when a critic-class call starts. Two channels are **narrowed and not
 closed**, and you should know about both before you switch the option on.
 
+This stays true under every behaviour the newer concurrency option (feature 154) adds. The two
+channels remain **narrowed and not closed** in all three of its modes — **groups as units**
+(`loop.parallel.groupUnits`), **phases side by side** (`loop.phases.parallel`, one validation
+queue), and **speculation** (`loop.speculate`, work past an open verdict). None of the three
+closes either channel: a phase tree and a speculative tree have opaque paths and the sweep
+before a critic-class call holds, but the audit is still a text search (§4.1) and the evidence a
+proposer writes in a tree is still its own words (§4.2). If a critic inferring parallel work is
+unacceptable under any of the three modes, do not switch that mode on.
+
 ### 4.1 The path-leak audit is a text search (F142-FR-056)
 
 Before integration, every added or changed object of a delta is searched for the real path of the

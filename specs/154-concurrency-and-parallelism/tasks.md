@@ -426,19 +426,19 @@ Success criteria:
 **Goal**: every channel of R29v that a new behaviour re-opens or widens has its test on this feature's fixtures.
 **Checkpoint**: the tests of T151 to T163 are green over `tests/fixtures/154/`.
 
-- [ ] T151 [G8] Write `tests/parallel/154/vocabulary-154.test.ts`: the vocabulary test of F142-FR-066 over every fixture with every switch on, against the serial run as baseline: 0 new words in any critic prompt (V-01; F154-FR-068).
-- [ ] T152 [G8] Write `tests/parallel/154/path-leak-154.test.ts`: the path-leak audit of F142-FR-056 over a phase tree and a speculative tree: 0 hits (V-02, V-09; F154-FR-069).
-- [ ] T153 [G8] Write `tests/parallel/154/checks-at-once-154.test.ts`: N acceptance checks at once follow F148-FR-011 to -017, and a speculative unit's checks share no temporary directory, port or exclusive resource with the gate (V-04; F154-FR-070).
-- [ ] T154 [G8] Write `tests/parallel/154/hardened-git-154.test.ts`: the landing rebase runs with no system or global configuration, no hooks and no filters (PU-81; F154-FR-071).
-- [ ] T155 [G8] Write `tests/parallel/154/scratch-154.test.ts`: every temporary file of a run, a worker and a stage sits under the run's temporary root or the stage workspace; 0 files elsewhere after the run (V-08; F154-FR-072, -043).
-- [ ] T156 [G8] Write `tests/parallel/154/ticks-154.test.ts`: ticks of a later phase are written only at its approval, and a set-aside unit writes none (V-11; F154-FR-073).
-- [ ] T157 [G8] Write `tests/parallel/154/stop-154.test.ts`: a stop in the middle of a wide stage group, a phase queue or a speculative unit leaves each to its resume state and lands nothing (V-12, V-19; F154-FR-074, -079).
-- [ ] T158 [G8] Write `tests/parallel/154/caps-154.test.ts`: the attempt time cap and the hard ceilings count every worker of every group of the attempt, and across runs the per-account bound holds (V-15, V-17; F154-FR-076).
-- [ ] T159 [G8] Write `tests/parallel/154/no-cycle-for-a-wait-154.test.ts`: a wait for a slot charges no cycle and the `[LOOP]` line gains no field (V-16; F154-FR-077).
-- [ ] T160 [G8] Write `tests/parallel/154/harness-error-154.test.ts`: a harness error in any worker of any group, including a group-check worker, switches the layer off for the phase attempt (V-18; F154-FR-078).
-- [ ] T161 [G8] Write `tests/parallel/154/breach-invariants-154.test.ts`: the five breach invariants of F142-FR-071 hold over every fixture with every switch on (F154-FR-018 TRI-1).
-- [ ] T162 [G8] In `docs/options/parallel-units.md` §4 state that the two channels stay "narrowed and not closed" for groups as units, phases side by side and speculation (F154-FR-081).
-- [ ] T163 [G8] Write `tests/inertness/154/closed-sets-154.test.ts`: over every fixture with every switch on, the sets of exit codes, stop reasons and run states are subsets of those with them off (F154-SC-001, F154-FR-002).
+- [x] T151 [G8] Write `tests/parallel/154/vocabulary-154.test.ts`: the vocabulary test of F142-FR-066 over every fixture with every switch on, against the serial run as baseline: 0 new words in any critic prompt (V-01; F154-FR-068).
+- [x] T152 [G8] Write `tests/parallel/154/path-leak-154.test.ts`: the path-leak audit of F142-FR-056 over a phase tree and a speculative tree: 0 hits (V-02, V-09; F154-FR-069).
+- [x] T153 [G8] Write `tests/parallel/154/checks-at-once-154.test.ts`: N acceptance checks at once follow F148-FR-011 to -017, and a speculative unit's checks share no temporary directory, port or exclusive resource with the gate (V-04; F154-FR-070).
+- [x] T154 [G8] Write `tests/parallel/154/hardened-git-154.test.ts`: the landing rebase runs with no system or global configuration, no hooks and no filters (PU-81; F154-FR-071).
+- [x] T155 [G8] Write `tests/parallel/154/scratch-154.test.ts`: every temporary file of a run, a worker and a stage sits under the run's temporary root or the stage workspace; 0 files elsewhere after the run (V-08; F154-FR-072, -043).
+- [x] T156 [G8] Write `tests/parallel/154/ticks-154.test.ts`: ticks of a later phase are written only at its approval, and a set-aside unit writes none (V-11; F154-FR-073).
+- [x] T157 [G8] Write `tests/parallel/154/stop-154.test.ts`: a stop in the middle of a wide stage group, a phase queue or a speculative unit leaves each to its resume state and lands nothing (V-12, V-19; F154-FR-074, -079).
+- [x] T158 [G8] Write `tests/parallel/154/caps-154.test.ts`: the attempt time cap and the hard ceilings count every worker of every group of the attempt, and across runs the per-account bound holds (V-15, V-17; F154-FR-076).
+- [x] T159 [G8] Write `tests/parallel/154/no-cycle-for-a-wait-154.test.ts`: a wait for a slot charges no cycle and the `[LOOP]` line gains no field (V-16; F154-FR-077).
+- [x] T160 [G8] Write `tests/parallel/154/harness-error-154.test.ts`: a harness error in any worker of any group, including a group-check worker, switches the layer off for the phase attempt (V-18; F154-FR-078).
+- [x] T161 [G8] Write `tests/parallel/154/breach-invariants-154.test.ts`: the five breach invariants of F142-FR-071 hold over every fixture with every switch on (F154-FR-018 TRI-1).
+- [x] T162 [G8] In `docs/options/parallel-units.md` §4 state that the two channels stay "narrowed and not closed" for groups as units, phases side by side and speculation (F154-FR-081).
+- [x] T163 [G8] Write `tests/inertness/154/closed-sets-154.test.ts`: over every fixture with every switch on, the sets of exit codes, stop reasons and run states are subsets of those with them off (F154-SC-001, F154-FR-002).
 
 ## Phase 18: Polish — fixtures, trials, register rows
 
