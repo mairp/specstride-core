@@ -26,7 +26,7 @@ import {
   type DirectoryAcquireResult,
   type DirectoryLock,
 } from "../lock/directory-lock.ts";
-import { probeLock, type ProbeDependencies } from "../lock/probe.ts";
+import { type ProbeDependencies } from "../lock/probe.ts";
 import type { LockPlace } from "../lock/paths.ts";
 import { buildOwnerRecord, type BuiltOwnerRecord } from "../lock/owner-record.ts";
 import type { Lease } from "@specstride/contracts/records/lease";

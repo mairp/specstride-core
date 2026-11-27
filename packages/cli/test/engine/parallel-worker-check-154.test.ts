@@ -33,7 +33,6 @@ import test from "node:test";
 import type { CheckRunner, ManifestEntry } from "@specstride/contracts/ep/check-runner";
 import type { RegistryAccess, RegistryEntry } from "../../../core/src/pass-supervision/ports.ts";
 import { releaseTheWriter } from "../../../core/src/parallel/integrate.ts";
-import { readAppendedRecords } from "../../../core/src/parallel/queue.ts";
 import type { ParallelPlan } from "../../../layer-parallel/src/index.ts";
 import { writeWorkerGuardScript } from "../../src/engine/worker-supervisor.ts";
 import { startTimeOf } from "@specstride/kernel";

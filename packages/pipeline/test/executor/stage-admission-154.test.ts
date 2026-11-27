@@ -9,7 +9,6 @@ import assert from "node:assert/strict";
 
 import { STAGE_ADMISSION_TABLE } from "../../src/executor/tables.ts";
 import { admitStage, type StageAdmissionDecision } from "../../src/executor/stage-admission.ts";
-import type { Stage, StageGroup } from "../../src/executor/types.ts";
 
 /** A minimal stage: id and dependencies only; admission reads nothing else. */
 function stageOf(id: string, dependencies: string[] = []): Stage {
@@ -79,8 +78,10 @@ test("every decision carries the rule id of the pinned table, deterministically"
   const first: StageAdmissionDecision = admitStage(b, WIDTH_2, groupsOf([a]), [a, b]);
   const second: StageAdmissionDecision = admitStage(b, WIDTH_2, groupsOf([a]), [a, b]);
   assert.deepEqual(first, second);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const ids = Object.values((STAGE_ADMISSION_TABLE as any).rows as Record<any, any[]>)
     .flat()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
     .map((row: any) => row.ruleId);
   assert.ok(ids.includes(first.ruleId), "the rule id must be a row of the table");
 });

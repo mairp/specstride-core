@@ -53,7 +53,7 @@ const writeWorkerCheck = (
   runId: string,
   phase: number,
   groupId: string,
-  result: string,
+  _result: string,
 ): string =>
   join(stateDir, "features", SLUG, "runs", runId, "parallel", `phase${phase}`, "groups", groupId);
 

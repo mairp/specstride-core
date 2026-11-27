@@ -12,7 +12,6 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  TABLE_FILES_154,
   INDEPENDENCE_TABLE,
   REPEAT_TABLE,
   MERGE_CHECK_OUTCOME_TABLE,
@@ -27,7 +26,9 @@ const SPEC_TABLES = join(
 );
 
 /** The rows of a `specstride.table/1` file, keyed by its point id. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 function rowsOf(table: unknown): any[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const rows = (table as any).rows as Record<string, any[]>;
   return Object.values(rows).flat();
 }
@@ -49,8 +50,10 @@ for (const [name, table, expectedIds] of TABLES) {
   test(`${name}: the constant holds the same object and the table shape`, () => {
     const parsed = JSON.parse(readFileSync(join(SPEC_TABLES, name), "utf8"));
     assert.deepEqual(table, parsed);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
     assert.equal((parsed as any).schema, "specstride.table/1");
     // The rows are keyed by the table's point id, not a flat array.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
     const points = (parsed as any).rows as Record<string, any[]>;
     assert.ok(Object.values(points).every((rows) => Array.isArray(rows)));
   });

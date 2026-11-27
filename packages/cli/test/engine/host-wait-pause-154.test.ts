@@ -23,10 +23,6 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
-import { fixture154 } from "../../../../tests/inertness/154/helpers.ts";
-
-type Event = { type: string; at?: string; data: Record<string, unknown> };
-
 /** The pause record of the run, wherever the control plane holds it. */
 function pauseRecordOf(home: string): Record<string, unknown> | null {
   const roots = [

@@ -217,7 +217,7 @@ if (prompt === "" || prompt.startsWith("--")) {
   process.exit(0);
 }
 const worker = process.env.SPECSTRIDE_WORKER_TOKEN !== undefined;
-const checkpoint = /writing the file (\\S+?\\.checkpoint\\.json) with the exact content \\{"task\\":\\\"(T\\d+)\\\"\\}/.exec(prompt);
+const checkpoint = /writing the file (\\S+?\\.checkpoint\\.json) with the exact content \\{"task\\":\\"(T\\d+)\\"\\}/.exec(prompt);
 const writeCheckpoint = () => {
   if (checkpoint === null) return;
   fs.mkdirSync(path.dirname(checkpoint[1]), { recursive: true });

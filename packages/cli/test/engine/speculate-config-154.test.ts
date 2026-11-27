@@ -27,7 +27,7 @@ function fixtureWithUserFile(userFile?: string): { readonly home: string; readon
 
 const ENV: NodeJS.ProcessEnv = { PATH: process.env.PATH ?? "" };
 
-function cleanup(home: string, dir: string): void {
+function cleanup(home: string, _dir: string): void {
   rmSync(join(home, ".."), { recursive: true, force: true });
 }
 

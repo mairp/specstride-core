@@ -54,7 +54,6 @@ import {
   SPECULATION_SET_ASIDE_EVENT,
   ledgerCountsOf,
   promptCarriesNoVerdictWord,
-  setAsidePathOf,
   speculativePromptAppendix,
   speculationCoordinatorOf,
   type SpeculationAdmissionData,

@@ -167,6 +167,7 @@ export function admitStage(
     declarationSignals(allStages, declaration),
   );
   const rows = Object.values(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
     (STAGE_ADMISSION_TABLE as any).rows as Record<string, TableRow[]>,
   ).flat();
   for (const row of rows) {

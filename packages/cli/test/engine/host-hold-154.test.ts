@@ -14,22 +14,11 @@
  *    hold's reset and the hold record still stands afterwards.
  */
 import assert from "node:assert/strict";
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
+import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
 import { fixture154 } from "../../../../tests/inertness/154/helpers.ts";
-
-type Event = { type: string; at?: string; data: Record<string, unknown> };
 
 /** The holds directory the engine binds (T109): `userStateRoot/holds`. */
 function holdsRootOf(home: string): string {

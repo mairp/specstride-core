@@ -39,8 +39,9 @@ const DOCUMENTED_EXCEPTIONS: Record<string, string[]> = {
   // `tainted`, `unchecked`.
   "worker-check.schema.json": ["failed"],
 };
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 function schemasOf(): Map<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const map = new Map<string, any>();
   for (const name of FILENAMES) {
     map.set(name, JSON.parse(readFileSync(join(SCHEMA_DIR, name), "utf8")));
@@ -49,6 +50,7 @@ function schemasOf(): Map<string, any> {
 }
 
 /** Every string enum and const value declared anywhere in a schema. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 function enumAndConstValues(schema: any, acc: Set<string> = new Set()): Set<string> {
   if (Array.isArray(schema)) {
     for (const item of schema) enumAndConstValues(item, acc);
@@ -65,6 +67,7 @@ function enumAndConstValues(schema: any, acc: Set<string> = new Set()): Set<stri
 }
 
 /** Every property name declared anywhere in a schema. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 function propertyNames(schema: any, acc: Set<string> = new Set()): Set<string> {
   if (Array.isArray(schema)) {
     for (const item of schema) propertyNames(item, acc);

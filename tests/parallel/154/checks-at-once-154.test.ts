@@ -480,7 +480,7 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
     const gatePortRelease = await gateSlots.take(`resources/check_port`, () => {});
     const unitPortRelease = await unitSlots.take(`resources/check_port`, () => {});
     const lockSlots: number[] = [];
-    const portSlots: number[] = [];
+    const _portSlots: number[] = [];
     // The slot numbers were already observed through the `checks` takes
     // above; here the DISTINCTNESS is read from the holds themselves: with a
     // bound of 2, both runs can hold the resource at once only from

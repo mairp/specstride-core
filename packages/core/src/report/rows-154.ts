@@ -9,6 +9,7 @@
 import schema from "@specstride/contracts/schemas/154/report-rows-154.schema.json" with { type: "json" };
 
 /** The id of the record, `const` of the schema. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 export const REPORT_ROWS_154_SCHEMA: "specstride.report-rows-154/1" = (schema as any).properties
   .schema.const;
 

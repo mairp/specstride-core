@@ -27,10 +27,12 @@ test("stage-admission-table.json: the bytes are pinned against the specification
 test("stage-admission-table.json: the constant holds the same object", () => {
   const parsed = JSON.parse(readFileSync(join(SPEC_TABLES, "stage-admission-table.json"), "utf8"));
   assert.deepEqual(STAGE_ADMISSION_TABLE, parsed);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   assert.equal((parsed as any).schema, "specstride.table/1");
 });
 
 test("stage-admission-table.json: SG-1 to SG-4 are rows", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const rows = Object.values((STAGE_ADMISSION_TABLE as any).rows as Record<string, any[]>).flat();
   const ids = rows.map((row) => row.ruleId);
   for (const id of ["SG-1", "SG-2", "SG-3", "SG-4"]) {
@@ -53,11 +55,14 @@ test("landing-table.json: the bytes are pinned against the specification", () =>
 test("landing-table.json: the constant holds the same object", () => {
   const parsed = JSON.parse(readFileSync(join(SPEC_TABLES, "landing-table.json"), "utf8"));
   assert.deepEqual(LANDING_TABLE, parsed);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   assert.equal((parsed as any).schema, "specstride.table/1");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   assert.equal((parsed as any).id, "pipeline.landing");
 });
 
 test("landing-table.json: LD-1 to LD-4 are rows", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const rows = Object.values((LANDING_TABLE as any).rows as Record<string, any[]>).flat();
   const ids = rows.map((row) => row.ruleId);
   for (const id of ["LD-1", "LD-2", "LD-3", "LD-4"]) {

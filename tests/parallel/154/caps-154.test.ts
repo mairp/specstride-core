@@ -209,7 +209,7 @@ test("G8 T158: the hard ceilings bind over the TOTAL of every worker of every gr
     const overDemand = four.slice(2).map((who) => ({ who, taken: takeCapacity(who) }));
     await new Promise((done) => setTimeout(done, 250));
     for (const { who, taken } of overDemand) {
-      let acquired = false;
+      const _acquired = false;
       const probe = await Promise.race([
         taken.then((release) => {
           acquired = release !== null;

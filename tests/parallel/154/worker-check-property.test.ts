@@ -119,8 +119,8 @@ function registryAccessOf(path: string): RegistryAccess {
 }
 
 /** The plan of the phase: TWO groups of one task each, disjoint paths. */
-function planOfTwoGroups(fixture: Fixture): ParallelPlan {
-  const scopeOf = (taskId: string) => ({
+function planOfTwoGroups(_fixture: Fixture): ParallelPlan {
+  const scopeOf = (_taskId: string) => ({
     prefixes: ["src"],
     source: "task-text" as const,
   });
@@ -216,7 +216,7 @@ const at = path.join(treePath, target);
 fs.writeFileSync(at, fs.readFileSync(at, "utf8") + addition);
 `;
 
-function stubStartDoor(fixture: Fixture): {
+function stubStartDoor(_fixture: Fixture): {
   readonly start: (worker: { outboxPath: string; taskId: string; tree: string }) => Promise<{
     workerId: string;
     pid: number;

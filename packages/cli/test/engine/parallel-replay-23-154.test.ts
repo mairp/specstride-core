@@ -216,7 +216,7 @@ test("the replay with a CHANGED fingerprint is admitted (RP-2, changed)", async 
       say: (line) => said.push(line),
       repeatVerdictOf: (group) => repeatVerdictOf(group, earlierFailures, () => false),
     });
-    const wiring = parallelWiringOfTheAttempt(input);
+    const _wiring = parallelWiringOfTheAttempt(input);
     // RP-2 admits: the group runs (the run itself fails on the no-edit door —
     // the checkpoint-only door ends the workers without any path applied —
     // but the point here is the ADMISSION, not the run).

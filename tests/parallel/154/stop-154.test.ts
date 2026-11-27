@@ -50,13 +50,11 @@ import { spawnSync } from "node:child_process";
 import {
   readLandingRecord,
   landingRecordPath,
-  runLandingForStage,
   type LandingApprovalsPort,
   type LandingChecksPort,
   type LandingGitPort,
   type LandingKillpoint,
   type LandingRunInput,
-  type LandingRunOutcome,
 } from "../../../packages/pipeline/src/executor/landing-run.ts";
 import { runWideGroupLandings } from "../../../packages/pipeline/src/executor/stage-loop.ts";
 import type { WorktreePort } from "../../../packages/pipeline/src/executor/stage-workspace.ts";
@@ -208,7 +206,7 @@ function endOfGroup(
 test("G8 T157: a stop in a wide stage group lands nothing and a clean resume reaches the unstop end (V-12, V-19; F154-FR-074, -079)", async (t) => {
   // The stop hits INSIDE the landing of stage A, the group's first stage:
   // the loop is interrupted mid-execution, before any merge can be applied.
-  const stopAtFirstStage = (_stage: string, point: LandingKillpoint): boolean =>
+  const stopAtFirstStage = (stage: string, point: LandingKillpoint): boolean =>
     point === "after-rebase";
   // The stop hits INSIDE the landing of stage B, the group's middle stage:
   // stage A's landing is whole (it landed before the stop, not because of

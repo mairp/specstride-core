@@ -18,7 +18,6 @@
  *    stay on the main line, and the NEXT group of the plan still starts.
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";

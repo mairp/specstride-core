@@ -29,7 +29,7 @@ const ROWS_154 = [
   { key: "loop.phases.parallel", default: "off" },
   { key: "loop.speculate", default: "off" },
 ] as const;
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 const switches = (profileData as any).switches as any[];
 
 test("T009: the nine rows of spec 154 exist in the parity profile", () => {
@@ -69,12 +69,14 @@ test("T010: every row names its output fields", () => {
 
 test("T010: the proposed closed-set members are not members yet", () => {
   const literals = new Set<string>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   for (const set of (closedSets as any).closedSets as any[]) {
     for (const literal of set.literals ?? []) literals.add(literal);
   }
   // `repeat` is shared with set 263 (a verb of the proposer stub), a different
   // closed set from set 61; the proposal concerns set 61 and the new sets.
   const SET_263 = 263;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   for (const set of (closedSets as any).closedSets as any[]) {
     if (set.number === SET_263) continue;
     for (const literal of set.literals ?? []) {
@@ -91,6 +93,7 @@ test("T010: the pinned copy is the byte-for-byte data of the profile file", () =
   // The profile is data generated from the annex; this pins that the nine
   // rows live in the file this package ships, not in a test-only copy.
   const raw = JSON.parse(readFileSync(join(HERE, "../data/parity-profile.json"), "utf8"));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const owned = (raw.switches as any[]).filter((row) => row.owner === "154");
   assert.equal(owned.length, ROWS_154.length);
 });

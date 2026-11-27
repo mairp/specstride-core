@@ -12,7 +12,6 @@ import assert from "node:assert/strict";
 
 import {
   DELTA_REFUSAL_REASONS,
-  PROPOSED_DELTA_REFUSAL_REASON_154,
   isADeltaRefusalReason,
   deltaRefusalReasonsOf,
   isADeltaRefusalReasonOf,

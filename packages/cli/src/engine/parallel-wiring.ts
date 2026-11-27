@@ -60,7 +60,6 @@ import { scopesAreDisjoint } from "../../../layer-parallel/src/scope.ts";
 import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
 import type { WriteScope } from "../../../layer-parallel/src/types.ts";
 import type { RegistryAccess } from "../../../core/src/pass-supervision/ports.ts";
-import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
 import type { TickOutcome } from "../../../core/src/parallel/integrate.ts";
 import {
   admissionEvent,
@@ -826,8 +825,8 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
     runId: input.runId,
   });
 
-  let startedOrdinals: number[] = [];
-  let cancelledOrdinals: number[] = [];
+  const startedOrdinals: number[] = [];
+  const cancelledOrdinals: number[] = [];
   let layerOffAttempt = false;
   let layerOffRun = false;
   let handoff = "";

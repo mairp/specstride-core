@@ -155,7 +155,6 @@ import {
   parallelLoopLineField,
   parallelWiringOfTheAttempt,
   theEmptyRunTotals,
-  totalsAfterTheGroup,
 } from "./parallel-wiring.ts";
 import { writeWorkerGuardScript } from "./worker-supervisor.ts";
 import { dshCapabilities } from "../../../adapter-dsh/src/descriptor/index.ts";
@@ -163,7 +162,7 @@ import { RUN_REFUSED_EXIT } from "../commands/launch-roles.ts";
 import type { CapabilityProvenance, ContainmentLevel } from "@specstride/contracts/ep/harness";
 // F154-FR-021…-024 (T021) — the group gate of one admission, wired through
 // its seam; the engine passes the same gate the layer computes, unstubbed.
-import { groupGate, type HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
+import { type HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
 import {
   afterApprovedPhase,
   compatibilityFeedOf,
@@ -175,7 +174,7 @@ import { phaseShapesOfSpec } from "../learn.ts";
 import { pathsNamedByTheTextOfATask } from "../../../layer-parallel/src/scope.ts";
 // F154-FR-025 (T021) — the count of failed groups, read from the closed
 // groups of the phase attempt, never from a constant.
-import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+import { type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
 // F154-FR-043 (T024) — the temporary root of the run: made, exported and
 // removed through the small helper module next to this file.
 import {

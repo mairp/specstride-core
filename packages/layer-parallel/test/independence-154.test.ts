@@ -80,7 +80,7 @@ test("PG-2 — a declared dependsOn of the later group makes the pair dependent"
 });
 
 test("PG-2 — the declaration decides over an otherwise independent pair", () => {
-  const [earlier, later] = pairOf();
+  const [_earlier, _later] = pairOf();
   // The marker rule would hold (PG-1), and an independentWith is declared
   // the other way: the dependsOn of the later group wins, PG-2 first.
   const marked = [

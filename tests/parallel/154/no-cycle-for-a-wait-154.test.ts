@@ -38,11 +38,8 @@ import { parallelLoopLineField } from "../../../packages/cli/src/engine/parallel
  * state sequence (annex X §X.6, the thirteen kinds).
  * ------------------------------------------------------------------ */
 
-let seq = 0;
-
 /** A record of the parallel namespace with the envelope fields a count reads. */
 function record(kind: string, extra: Partial<CountedRecord> = {}): CountedRecord {
-  seq += 1;
   return {
     ns: "parallel",
     kind,

@@ -24,6 +24,7 @@ const ROWS: readonly {
   ruleId: string;
   when?: { op: string; signal: keyof TrialSignals; value: boolean };
   choice: "pass" | "fail";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 }[] = Object.values((TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>).flat();
 
 /**

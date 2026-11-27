@@ -43,6 +43,7 @@ test("T012 the proposed reason stands beside `harness`, outside the closed set",
 test("T012 the unreadable slot store is not a reason of this layer (it is SL-5)", () => {
   const layerStrings = readFileSync(join(HERE, "../src/preconditions.ts"), "utf8");
   assert.ok(!layerStrings.includes("slot-unreadable"), "no layer fallback names the slot store");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const rows = Object.values((SLOT_ADMISSION_TABLE as any).rows as Record<string, any[]>).flat();
   const sl5 = rows.find((row) => row.ruleId === "SL-5");
   assert.ok(sl5 !== undefined, "SL-5 exists in the host-limits table");

@@ -28,7 +28,6 @@ import type {
   PlannedGroup,
   SerialTask,
   CandidateTask,
-  FallbackReason,
 } from "../../../layer-parallel/src/types.ts";
 
 /** The lines of the plan, in the order they are printed. */
@@ -214,7 +213,7 @@ export async function planDryRun(input: {
  *  - **read from the stored plan**: the composition root injects the record
  *    the engine stored under `run:<runId>:parallel-plan`
  *    (`specstride.parallel-plan/1`, feature 100 annex D §D.3) and
- *    `readStoredParallelPlan` takes it as it stands;
+ *    `readStoredParallelPlan` takes it stands;
  *  - **derived by the same pure function**: where nothing was stored, the
  *    pure derivation `deriveParallelPlan` computes the plan over the stages
  *    of the launch contract with the rules annex D §D.3 states — groups of

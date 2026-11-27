@@ -125,7 +125,7 @@ test("a derived draft without a stageGroups declaration still validates", () => 
     const result = validateContract({ file, root: repo, allowDraft: true });
     assert.equal(result.exitCode, 0, `${result.stdout}${result.stderr}`);
   } finally {
-    repo && existsSync(repo) && execFileSync("rm", ["-rf", repo]);
+    if (repo !== undefined && existsSync(repo)) execFileSync("rm", ["-rf", repo]);
   }
 });
 

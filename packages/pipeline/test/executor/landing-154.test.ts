@@ -177,7 +177,7 @@ function approvalsPort(
     async noteRewriteAfterFastForward(_workspace, home) {
       this.calls.push(home);
       return {
-        commits: Object.entries(commits).map(([stage, commit]) => {
+        commits: Object.entries(commits).map(([_stage, commit]) => {
           const standing = approvalCommitStanding(home, commit);
           return {
             commit,

@@ -117,7 +117,7 @@ async function benchOf(): Promise<Bench> {
 }
 
 /** One worker of the bench, as integration receives it (all integrated). */
-function workerOf(bench: Bench, workerId: string): WorkerForIntegration {
+function _workerOf(bench: Bench, workerId: string): WorkerForIntegration {
   const worker = bench.workers.find((one) => one.workerId === workerId);
   assert.ok(worker !== undefined, `no worker ${workerId}`);
   const outcome: DerivedOutcome = {

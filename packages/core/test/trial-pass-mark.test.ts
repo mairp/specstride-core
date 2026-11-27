@@ -15,6 +15,7 @@ const SIGNALS = ["noBreachInvariantFails", "everyRuleTestPasses", "closedSetsAre
 type Signals = Record<(typeof SIGNALS)[number], boolean>;
 
 test("TRI-pass exists in the table beside TRI-1…TRI-3", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   const rows = Object.values((TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>).flat();
   const ids = rows.map((row) => row.ruleId);
   assert.deepEqual(ids, ["TRI-1", "TRI-2", "TRI-3", "TRI-pass"]);

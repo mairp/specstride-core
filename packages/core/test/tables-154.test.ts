@@ -25,7 +25,9 @@ const SPEC_TABLES = join(
 );
 
 /** The rows of a `specstride.table/1` file, keyed by its point id. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
 function rowsOf(table: unknown): any[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
   return Object.values((table as any).rows as Record<string, any[]>).flat();
 }
 
@@ -47,6 +49,7 @@ for (const [name, table, expectedIds] of TABLES) {
   test(`${name}: the constant holds the same object and the table shape`, () => {
     const parsed = JSON.parse(readFileSync(join(SPEC_TABLES, name), "utf8"));
     assert.deepEqual(table, parsed);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the parity rows of spec 154 are read as written
     assert.equal((parsed as any).schema, "specstride.table/1");
   });
 

@@ -9,7 +9,6 @@
 // root is a fallback, never an error (F154-FR-004): the run carries on with
 // a `null` root. Internal to the CLI; nothing is exported publicly.
 import { realpathSync } from "node:fs";
-import { homedir } from "node:os";
 import { loadConfigFiles, resolveConfiguration } from "@specstride/config";
 import { makeTempRoot, removeTempRoot } from "../../../runtime/src/limits/temp-root.ts";
 
