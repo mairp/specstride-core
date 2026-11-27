@@ -1,6 +1,6 @@
 /**
  * T004 — the four rule tables of spec 154 in this layer (F154-FR-003):
- * the bytes of every file of `data/` named by `TABLE_FILES_154` are pinned
+ * the bytes of every file of `data-154/` named by `TABLE_FILES_154` are pinned
  * against `specs/154-concurrency-and-parallelism/contracts/rule-tables/`,
  * and every rule id of plan.md "Rule-id sets fixed by this plan" is a row of
  * its table (PG-0 to PG-3, RP-1, RP-2, MG-1 to MG-3, WC-1 to WC-4).
@@ -41,7 +41,7 @@ const TABLES: Array<[string, unknown, string[]]> = [
 
 for (const [name, table, expectedIds] of TABLES) {
   test(`${name}: the bytes are pinned against the specification's rule table`, () => {
-    const copied = readFileSync(join(HERE, "../data", name), "utf8");
+    const copied = readFileSync(join(HERE, "../data-154", name), "utf8");
     const spec = readFileSync(join(SPEC_TABLES, name), "utf8");
     assert.equal(copied, spec, `${name} must be the byte-identical copy`);
   });

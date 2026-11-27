@@ -10,7 +10,10 @@
         "everyRuleTestPasses": "boolean",
         "closedSetsAreSubsets": "boolean"
       },
-      "choices": ["pass", "fail"]
+      "choices": [
+        "pass",
+        "fail"
+      ]
     }
   },
   "rows": {

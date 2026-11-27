@@ -12,7 +12,12 @@
         "ownerLive": "boolean",
         "foreignOrUnknown": "boolean"
       },
-      "choices": ["take", "reclaim", "wait", "unbounded"]
+      "choices": [
+        "take",
+        "reclaim",
+        "wait",
+        "unbounded"
+      ]
     }
   },
   "rows": {

@@ -3,7 +3,7 @@
  * PG-0 to PG-3; CQ-154-02 C with (iii)).
  *
  * WHAT THIS MODULE IS. A pure decision over `INDEPENDENCE_TABLE`
- * (`data/independence-table.json`, the byte-identical copy of spec 154's
+ * (`data-154/independence-table.json`, the byte-identical copy of spec 154's
  * contract): two groups of one phase are worked AT ONCE only when a recorded
  * rule finds them independent, and otherwise one after the other with the
  * admission check `dependency` and its detail recorded. The rules, in table

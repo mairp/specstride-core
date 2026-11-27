@@ -2,7 +2,7 @@
  * T060 — the no-repeat verdict of one group (F154-FR-026; rule set RP).
  *
  * WHAT THIS MODULE IS. A pure decision over `REPEAT_TABLE`
- * (`data/repeat-table.json`, the byte-identical copy of spec 154's contract):
+ * (`data-154/repeat-table.json`, the byte-identical copy of spec 154's contract):
  * a group whose task set failed in an earlier attempt of the same phase is
  * **refused** while the fingerprint of its named paths is unchanged against
  * that attempt (RP-1), and **admitted** once a named path changed or where no

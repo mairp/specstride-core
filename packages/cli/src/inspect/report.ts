@@ -158,8 +158,11 @@ export function rows154Lines(
   const speculation = speculationRowsOf(events);
   if (speculation.started !== NOT_IN_EVENTS) {
     lines.push(`speculation units started: ${speculation.started}`);
-    if (Object.keys(speculation.refusalsByReason).length > 0)
-      lines.push(`speculation units by refusal: ${terseCounts(speculation.refusalsByReason)}`);
+    // The reason counts are a record only when the events hold them; the
+    // string is the not-in-the-events mark, printed as it is above.
+    const refusals = speculation.refusalsByReason;
+    if (typeof refusals === "object" && Object.keys(refusals).length > 0)
+      lines.push(`speculation units by refusal: ${terseCounts(refusals)}`);
     lines.push(`speculation units integrated: ${speculation.integrated}`);
     lines.push(`speculation units set aside: ${speculation.setAside}`);
     if (typeof speculation.setAsideCost !== "string") {

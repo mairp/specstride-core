@@ -19,10 +19,10 @@
  * - `WORKER_CHECK_TABLE` — WC-1 to WC-4, the acceptance check of a group run
  *   in the worker tree (F154-FR-034…-036; CQ-154-04 A).
  */
-import independenceTable from "../data/independence-table.json" with { type: "json" };
-import repeatTable from "../data/repeat-table.json" with { type: "json" };
-import mergeCheckOutcomeTable from "../data/merge-check-outcome-table.json" with { type: "json" };
-import workerCheckTable from "../data/worker-check-table.json" with { type: "json" };
+import independenceTable from "../data-154/independence-table.json" with { type: "json" };
+import repeatTable from "../data-154/repeat-table.json" with { type: "json" };
+import mergeCheckOutcomeTable from "../data-154/merge-check-outcome-table.json" with { type: "json" };
+import workerCheckTable from "../data-154/worker-check-table.json" with { type: "json" };
 
 /** The table files of spec 154 this package owns, as `DATA_FILES` above. */
 export const TABLE_FILES_154 = [

@@ -160,3 +160,10 @@ tests/fixtures/
 packages/cli/test/fixtures/commit-gate/*/stub-claude
 # Fixture data of feature 152 the tests copy and assert against byte for byte.
 packages/core/test/fixtures/152/
+
+# The rule tables of spec 154, copied byte for byte from
+# specs/154-concurrency-and-parallelism/contracts/rule-tables/ and pinned by
+# the data tests of their packages (T004, T007, T008 of its tasks.md):
+packages/core/data/
+packages/pipeline/data/
+packages/layer-parallel/data-154/

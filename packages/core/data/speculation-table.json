@@ -11,7 +11,14 @@
         "depthBelowBound": "boolean",
         "sweepConfirmed": "boolean"
       },
-      "choices": ["start", "skip-rate", "skip-depth", "skip-sweep", "integrate", "set-aside"]
+      "choices": [
+        "start",
+        "skip-rate",
+        "skip-depth",
+        "skip-sweep",
+        "integrate",
+        "set-aside"
+      ]
     }
   },
   "rows": {
