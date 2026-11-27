@@ -78,10 +78,10 @@ const SOUND_ROW: CatalogueDataRow = Object.freeze({
 });
 
 describe("CT-110-108 — every key has a class, a snapshot class, an owner and a default of its own type (F110-FR-010)", () => {
-  it("reads the whole catalogue: 279 keys, every one with all seven columns of §K.1", () => {
-    assert.equal(CATALOGUE.length, 279);
-    assert.equal(CATALOGUE_SIZE, 279);
-    assert.equal(new Set(CATALOGUE_KEYS).size, 279, "every spelling is unique");
+  it("reads the whole catalogue: 282 keys, every one with all seven columns of §K.1", () => {
+    assert.equal(CATALOGUE.length, 282);
+    assert.equal(CATALOGUE_SIZE, 282);
+    assert.equal(new Set(CATALOGUE_KEYS).size, 282, "every spelling is unique");
   });
 
   it("the shipped catalogue data equals the contract of T004", () => {
@@ -170,7 +170,7 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
       kinds.set(entry.type.kind, (kinds.get(entry.type.kind) ?? 0) + 1);
     assert.equal(
       [...kinds.values()].reduce((a, b) => a + b, 0),
-      279,
+      282,
       "every key has a type the reader could read",
     );
   });
@@ -414,6 +414,20 @@ const NOT_A_CONFIGURATION_KEY: Readonly<Record<string, string>> = Object.freeze(
     "the id of the doctor check that reports a tampered event file (F111-FR-021), not a configuration key",
   "derive.stageTimeoutSec":
     "the stage timeout of the derive contract supplied through the environment (`SPECSTRIDE_DERIVE_STAGE_TIMEOUT_SEC`, F107-FR-025) and resolved outside the catalogue read path, not a configuration key",
+  "host.checks.concurrent":
+    "a host bound of feature 154 (F154-FR-039…-047) that arrives as the environment variable `SPECSTRIDE_HOST_CHECKS_CONCURRENT` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.sessions.<account>":
+    "a host bound of feature 154 that arrives as the environment variable `SPECSTRIDE_HOST_SESSIONS_<ACCOUNT>` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.resources.<name>.capacity":
+    "a host bound of feature 154 that arrives as the environment variable `SPECSTRIDE_HOST_RESOURCES_<NAME>` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.slot.admission":
+    "an event type of the run grammar of feature 154 (one event per take of a host slot, CQ-154-09), folded by the signal table, not a configuration key",
+  "pipeline.landing":
+    "the decision point of the landing table (`LANDING_POINT`, `packages/core/src/landing/landing-rule.ts`, F154-FR-050), a name of a pure table, not a configuration key",
+  "pipeline.stage.admission":
+    "an event type of the pipeline run grammar of feature 154 (one event per stage admission decision, `packages/pipeline/src/executor/graph.ts`), not a configuration key",
+  "loop.speculation":
+    "the decision point of the speculation table (`SPECULATION_POINT`, `packages/core/src/speculation/speculation-rule.ts`, F154-FR-062), a name of a pure table, not a configuration key",
 });
 
 /** Every source file of every package of the workspace. */

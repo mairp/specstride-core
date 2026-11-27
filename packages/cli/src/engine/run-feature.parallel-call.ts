@@ -16,6 +16,7 @@ import type { GroupIndependenceDeclaration } from "../../../layer-parallel/src/i
 import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
 import { quotaObservationOfTheWindows } from "./parallel-launch.ts";
 import type { PhaseTreeCoordinator } from "./phase-trees.ts";
+import type { SpeculationCoordinator } from "./speculation.ts";
 import { windows as quotaWindowsModule } from "@specstride/policy/quota";
 import {
   totalsAfterTheGroup,
@@ -47,6 +48,12 @@ export type TheParallelCallContext = {
    * dependencies and its queue port and nothing else.
    */
   readonly phaseTrees?: PhaseTreeCoordinator | null | undefined;
+  /**
+   * T145 (F154-FR-061…-067) — the coordinator of the speculative unit
+   * (`speculation.ts`), `null` when `loop.speculate` is off or under
+   * `parity`; the wiring reads only its gate-start verdict.
+   */
+  readonly speculation?: SpeculationCoordinator | null | undefined;
   readonly taskTextAtLaunch: string;
   readonly implementerOfTheRun: string | null | undefined;
   readonly model: string;
@@ -299,10 +306,15 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     // exist); with the switch off, no queue exists and validation stays on
     // the workspace.
     validationQueue: ctx.phaseTrees?.validationQueue ?? null,
-    // F154-FR-062, -066, -067 — with `loop.speculate` off, no speculative
-    // unit starts, for no recorded reason (the switch itself is the reason
-    // the unit does not exist).
-    speculationVerdictAt: () => ({ start: false }),
+    // F154-FR-062, -066, -067 — with `loop.speculate` off (or under
+    // parity) the coordinator is `null` and no speculative unit starts,
+    // for no recorded reason. With it ON (T145) the coordinator's gate
+    // start decides, emits the one admission event, and materializes the
+    // tree from the frozen snapshot on SP-1.
+    speculationVerdictAt: () =>
+      ctx.speculation !== null && ctx.speculation !== undefined
+        ? ctx.speculation.verdictAtTheGate(ctx.phase)
+        : { start: false },
     onClosed: (closed, counts) => {
       // F154-FR-025 (T021) — the closed group enters the ledger of the
       // attempt, which the next wiring of this attempt reads.

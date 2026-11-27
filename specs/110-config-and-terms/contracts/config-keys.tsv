@@ -97,6 +97,9 @@ host.limits	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	150
 pipeline.stageGroups	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	151
 loop.phases.parallel	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	152
 loop.speculate	on, off	off	off	N off (snap p)	154	154	confirmed	F E P U	153
+loop.speculate.depth	whole number, at least 1	1	not used	N lo (snap t)	154	154	confirmed	F E P U	153
+loop.speculate.window	whole number, at least 1	20	not used	N lo (snap t)	154	154	confirmed	F E P U	153
+loop.speculate.minRate	percent, 1 to 100	50	not used	N lo (snap t)	154	154	confirmed	F E P U	153
 loop.parallel.workers	whole number, 1 to the value of loop.parallel.workersMax	2	not used	N lo (snap t)	142	142	confirmed	F E P U	21
 loop.parallel.workersMax	whole number, at least 1	4	not used	W; P may lower (snap p)	142	100 (ruling P5)	confirmed	F E U; P lowers	130
 loop.parallel.quota_headroom	percent, 1 to 100	70	not used	N lo (snap t)	142	142	confirmed	F E P U	22

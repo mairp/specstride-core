@@ -1960,6 +1960,27 @@
       "confirmed_or_corrected": "confirmed",
       "value_under_parity_override": "",
       "note": ""
+    },
+    {
+      "key": "loop.speculate.depth",
+      "proposed_by": "154",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": ""
+    },
+    {
+      "key": "loop.speculate.window",
+      "proposed_by": "154",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": ""
+    },
+    {
+      "key": "loop.speculate.minRate",
+      "proposed_by": "154",
+      "confirmed_or_corrected": "confirmed",
+      "value_under_parity_override": "",
+      "note": ""
     }
   ]
 }

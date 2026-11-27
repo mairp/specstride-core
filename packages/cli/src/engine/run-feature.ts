@@ -198,6 +198,11 @@ import { readHold, writeHold } from "../../../runtime/src/limits/hold-record.ts"
 import { userStateRoot } from "@specstride/contracts/ids/roots";
 // F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
 import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
+import { speculationCoordinatorOf, SPECULATION_INTEGRATED_EVENT } from "./speculation.ts";
+import {
+  integrateGroup,
+  type WorkerForIntegration,
+} from "../../../core/src/parallel/integrate.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
 import {
   clearPins,
@@ -2498,6 +2503,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       /* a failed write is counted and ignored by the projection (F144-FR-008) */
     }
   };
+
+  // T145 (feature 154, US7; F154-FR-061…-067) — the coordinator of the
+  // SPECULATIVE unit, wired AFTER `emit` and `events` exist (the admission
+  // event and the ledger counts go through them). With `loop.speculate`
+  // OFF — the default, and forced off under `parity` — the coordinator is
+  // NULL and the run is exactly what it was before US7: no tree, no
+  // admission event, no record (F154-FR-001, -002).
+  const speculation = speculationCoordinatorOf({
+    on: loopConfig.speculate.on,
+    depth: loopConfig.speculate.depth,
+    window: loopConfig.speculate.window,
+    minRatePerCent: loopConfig.speculate.minRatePerCent,
+    feature: slug,
+    runId,
+    controlRoot,
+    workspace: workdir,
+    taskListPath: relative(workdir, tasksPath),
+    eventsPath: events,
+    emit,
+  });
 
   /* --- the closers the next writer writes (T111; F111-FR-004) -------- *
    *
@@ -5127,6 +5152,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               taskListPath: relative(workdir, tasksPath),
               // T136 — the coordinator of the phase trees and the queue.
               phaseTrees,
+              // T145 (F154-FR-061…-067) — the coordinator of the speculative
+              // unit; `null` with `loop.speculate` off or under `parity`.
+              speculation,
               taskTextAtLaunch: tasksText,
               implementerOfTheRun,
               model,
@@ -6298,6 +6326,19 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // into it, captured where the call is assembled and spent after the reply.
     let criticPromptOfTheCall = "";
     let criticNonceOfTheCall = "";
+
+    // T145 (F154-FR-061, -062, -066, -067) — THE GATE-START DECISION. At the
+    // gate of phase n, BEFORE any critic-class call is scheduled, the pure
+    // table decides whether phase n+1 is worked ahead in a tree of its own,
+    // branched from the FROZEN SNAPSHOT of this phase's evidence; the
+    // workspace itself does not change (F154-FR-061). One
+    // `loop.speculation.admission` event records the decision with its
+    // reason (`rate`, `depth`, `sweep`) and the metrics (F154-FR-003, -066,
+    // -067). With `loop.speculate` off nothing runs and nothing is emitted.
+    const speculationVerdict = speculation !== null
+      ? await speculation.verdictAtTheGate(phase)
+      : { start: false as const };
+    void speculationVerdict;
 
     const outcome = await runPhaseGate(
       {
@@ -7536,6 +7577,52 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       // the head of the queue moves past it. With the switch off this is
       // nothing.
       phaseTrees?.approved(phase);
+      // T147 (F154-FR-063, -065) — the verdict of phase n approved: the
+      // speculative unit of phase n+1 INTEGRATES LIKE A GROUP (SP-5) —
+      // through `integrateGroup` of core (`integrate.ts`), the SAME entry
+      // point a group uses, called HERE, before phase n+1's own gate, so no
+      // validation of the next gate sees a stale workspace. The coordinator
+      // stops at producing the integration inputs; the composition and the
+      // application (the store's `apply`, the one operation that may write
+      // the workspace) belong to `integrateGroup`. On the integrated result
+      // ONE `loop.speculation.integrated` event goes out with the recorded
+      // rule id, and no counter moves. The grain is the phase; no group
+      // approval exists.
+      if (speculation !== null) {
+        const speculativeInputs = await speculation.integrationInputsOf(phase);
+        if (speculativeInputs !== null) {
+          const speculativeWorkers: readonly WorkerForIntegration[] = [
+            {
+              workerId: speculativeInputs.workerId,
+              task: `phase ${String(speculativeInputs.unitPhase)}`,
+              finalTreeId: speculativeInputs.finalTreeId,
+              paths: speculativeInputs.paths,
+              outcome: {
+                workerId: speculativeInputs.workerId,
+                outcome: "integrated",
+                chargesItsTask: false,
+                taskReturnsToTheMainLine: false,
+              },
+            },
+          ];
+          const speculativeIntegration = await integrateGroup(
+            speculation.integrationPortsOf(),
+            {
+              baseTreeId: speculativeInputs.baseTreeId,
+              workspace: workdir,
+              workers: speculativeWorkers,
+            },
+          );
+          if (speculativeIntegration.integrated) {
+            emit(SPECULATION_INTEGRATED_EVENT, {
+              phase: speculativeInputs.phase,
+              unitPhase: speculativeInputs.unitPhase,
+              ruleId: speculativeInputs.ruleId,
+            });
+          }
+          await speculation.releaseIntegrated();
+        }
+      }
       // T075 — the change set the approval commit would hold, computed at the
       // top of the approved branch, BEFORE any record of the approval is
       // written, so the commit gate can run in front of it (F152-FR-001).
@@ -8088,6 +8175,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       if (phaseTrees !== null && phaseTrees.candidates.includes(phase)) {
         phaseTrees.rejected(phase);
       }
+      // T147 (F154-FR-064, -065) — the verdict REJECTED: the speculative
+      // unit started at this phase's gate is SET ASIDE (SP-6) — its tree is
+      // discarded, NO outer counter and NO count moves, and its cost lands
+      // in the `specstride.set-aside/1` record (F154-FR-002).
+      if (speculation !== null) await speculation.resolveOnRejection(phase);
       return "gate-failed" as const;
     }
     // T356 — F153-FR-024: a candidate the pre-critic scan held back ends the
@@ -8095,6 +8187,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // approval commit; the order after a rejection re-enters the loop through
     // it, and the end cause table gives it `rejected` (EC-4).
     if (outcome.outcome === "commit-blocked") return "commit-blocked" as const;
+    // T147 (F154-FR-064) — everything that reaches this line is a judged
+    // verdict that is NOT an approval (`malformed`, or rejected): the
+    // speculative unit started at this phase's gate is SET ASIDE (SP-6) —
+    // its tree is discarded, NO outer counter and NO count moves, and its
+    // cost lands in the `specstride.set-aside/1` record (F154-FR-002).
+    if (speculation !== null) await speculation.resolveOnRejection(phase);
     return outcome.verdict === "MALFORMED" ? ("malformed" as const) : ("rejected" as const);
   };
 

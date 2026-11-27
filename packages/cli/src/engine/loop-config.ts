@@ -22,6 +22,7 @@ import {
   UNITS_KEY,
   WORKERS_KEY,
   WORKERS_MAX_KEY,
+  speculateKeysInForce,
   type AllowDetectConfiguration,
   type UnitsConfiguration,
   type WorkerCountConfiguration,
@@ -29,6 +30,11 @@ import {
 import { MAX_BYTES_DEFAULT } from "../../../core/src/carry/handoff.ts";
 import { REJECT_LIMIT_DEFAULT } from "../../../core/src/gate/limits.ts";
 import { NO_PROGRESS_STRUCTURED_KEY } from "../../../core/src/pass-loop/accounting.ts";
+import {
+  SPECULATE_DEPTH_DEFAULT,
+  SPECULATE_MIN_RATE_DEFAULT,
+  SPECULATE_WINDOW_DEFAULT,
+} from "../../../core/src/speculation/speculation-rule.ts";
 import { REQUEST_DEFAULTS } from "../../../core/src/pass-loop/request.ts";
 
 /** The key of the pass handoff switch (feature 153, row 8 of annex E §E.2). */
@@ -196,6 +202,13 @@ export type LoopConfiguration = {
    * time in phase order (F154-FR-057..-059).
    */
   readonly phasesParallel: boolean;
+  /**
+   * `loop.speculate` and its three keys (feature 154, US7; row 153 of annex
+   * X §X.7; CQ-154-18 A), OFF by default and OFF under `parity`. With it on,
+   * a speculative unit may start past an open verdict only above the
+   * measured approval rate (F154-FR-061, -062, -066).
+   */
+  readonly speculate: SpeculateConfiguration;
   /**
    * `loop.parallel.groupCheck` (feature 154, row 149 of annex X §X.7;
    * CQ-154-04 A), OFF by default and OFF under `parity`. With it on, the
@@ -487,6 +500,71 @@ export const LOOP_PARALLEL_GROUP_CHECK_KEY = "loop.parallel.groupCheck";
  */
 export const LOOP_PHASES_PARALLEL_KEY = "loop.phases.parallel";
 
+/**
+ * The key of the work-past-an-open-verdict switch (feature 154, US7; row 153
+ * of annex X §X.7; CQ-154-08, -18): OFF by default and OFF under the `parity`
+ * profile. With it on, a speculative unit may start in a tree of its own
+ * while the gate and the critic judge (F154-FR-061), only above the measured
+ * approval rate (F154-FR-066).
+ */
+export const LOOP_SPECULATE_KEY = "loop.speculate";
+/** The key of the depth bound (F154-FR-062; default 1, CQ-154-18 A). */
+export const LOOP_SPECULATE_DEPTH_KEY = "loop.speculate.depth";
+/** The key of the window the rate reads over, in attempts (F154-FR-066; default 20). */
+export const LOOP_SPECULATE_WINDOW_KEY = "loop.speculate.window";
+/** The key of the rate threshold, in per cent (F154-FR-066; default 50). */
+export const LOOP_SPECULATE_MIN_RATE_KEY = "loop.speculate.minRate";
+
+/** The speculation keys in force, as the composition root reads them (T143). */
+export type SpeculateConfiguration = {
+  /** `loop.speculate` (off by default, off under `parity`, F154-FR-001). */
+  readonly on: boolean;
+  /** `loop.speculate.depth` (default 1, CQ-154-18 A). */
+  readonly depth: number;
+  /** `loop.speculate.window`, in attempts (default 20, CQ-154-18 A). */
+  readonly window: number;
+  /** `loop.speculate.minRate`, in per cent (default 50, CQ-154-18 A). */
+  readonly minRatePerCent: number;
+};
+
+/**
+ * The speculation configuration of a run (T143): the READ of the three keys
+ * lives IN THE LAYER (`speculateKeysInForce` of `layer-parallel/register.ts`,
+ * over the core's exported defaults), so the layer owns it and the
+ * composition root only wires it (F154-FR-003). The rule of the speculation
+ * table (SP-1…SP-6) is the same under any values (CQ-154-18 A).
+ */
+function speculateConfigurationOf(resolved: ResolvedConfiguration): SpeculateConfiguration {
+  const valueOf = (key: string): unknown => resolved.values.get(key)?.value;
+  const keys = speculateKeysInForce(
+    {
+      depth: valueOf(LOOP_SPECULATE_DEPTH_KEY),
+      window: valueOf(LOOP_SPECULATE_WINDOW_KEY),
+      minRate: valueOf(LOOP_SPECULATE_MIN_RATE_KEY),
+    },
+    // The DEFAULTS are the core rule module's exported ones — the literals
+    // live once, in core (CQ-154-18 A) — handed to the layer's read, which
+    // owns it (T143).
+    {
+      depth: SPECULATE_DEPTH_DEFAULT,
+      window: SPECULATE_WINDOW_DEFAULT,
+      minRatePerCent: SPECULATE_MIN_RATE_DEFAULT,
+    },
+  );
+  return Object.freeze({
+    // Off by default and OFF under the `parity` profile whatever a source
+    // holds (F154-FR-001; row 153 of annex X §X.7): under parity no
+    // speculative unit ever starts, exactly as before US7.
+    on:
+      resolved.profile !== "parity" &&
+      switchIsOn(valueOf(LOOP_SPECULATE_KEY)) &&
+      valueOf(LOOP_SPECULATE_KEY) !== undefined,
+    depth: keys.depth,
+    window: keys.window,
+    minRatePerCent: keys.minRatePerCent,
+  });
+}
+
 /** The default of the red-gate budget (CQ-153-05, budget A). */
 export const RED_GATE_LIMIT_DEFAULT = 3;
 
@@ -649,6 +727,12 @@ export function loopConfigurationOf(input: {
     // US6 (F154-FR-001, -002).
     phasesParallel:
       resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_PHASES_PARALLEL_KEY).value),
+    // Row 153 of annex X §X.7 (feature 154, US7; CQ-154-18 A): OFF by
+    // default and OFF under the `parity` profile whatever a source holds —
+    // under parity no speculative unit ever starts (F154-FR-001, -002). At
+    // the defaults (depth 1, window 20, 50 %) the switch starts nothing on
+    // the measured runs either (F154-SC-013), by design.
+    speculate: speculateConfigurationOf(resolved),
     // Row 144 of annex X §X.7 (F153-FR-036): on by default and OFF under the
     // `parity` profile whatever a source holds — under parity the
     // compatibility projection drops the new types (CQ-153-09 A, answered

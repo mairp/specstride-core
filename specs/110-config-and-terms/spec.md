@@ -175,6 +175,9 @@ Values of `roles.proposer.timeoutSec` and the other numeric defaults are those o
 | `pipeline.stageGroups` | on, off | off | F E P U | N `off` | p | 154. Row 151; off. CQ-154-05 A; amends F123-FR-019 and F107 |
 | `loop.phases.parallel` | on, off | off | F E P U | N `off` | p | 154. Row 152; off. CQ-154-07 A; the dependency field of the canonical model |
 | `loop.speculate` | on, off | off | F E P U | N `off` | p | 154. Row 153; off. CQ-154-08 A and CQ-154-18 A: depth 1, window 20 attempts, threshold 50 % |
+| `loop.speculate.depth` | whole number, at least 1 | 1 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
+| `loop.speculate.window` | whole number, at least 1 | 20 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
+| `loop.speculate.minRate` | percent, 1 to 100 | 50 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
 | `loop.parallel.workers` | whole number, 1 to the value of `loop.parallel.workersMax` | 2 | F E P U | N `lo` | t | 142. Row 21; not used. A value above `loop.parallel.workersMax` is a configuration error |
 | `loop.parallel.workersMax` | whole number, at least 1 | 4 | F E U; P lowers | W; P may lower | p | 142. Row 130; not used. The project file may lower it and never raise it (F110-FR-019) |
 | `loop.parallel.quota_headroom` | percent, 1 to 100 | 70 | F E P U | N `lo` | t | 142. Row 22; not used |

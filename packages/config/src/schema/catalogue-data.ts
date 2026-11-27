@@ -38,7 +38,7 @@ export interface CatalogueDataRow {
 }
 
 /** The number of keys the catalogue holds (T004). */
-export const CATALOGUE_SIZE = 279;
+export const CATALOGUE_SIZE = 282;
 
 /** Every row of the catalogue, in the order of §K.3 to §K.6b. */
 export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
@@ -1212,6 +1212,42 @@ export const CATALOGUE_DATA: readonly CatalogueDataRow[] = Object.freeze([
     default: "off",
     valueUnderParity: "off",
     trustClass: "N off (snap p)",
+    ownerFeature: "154",
+    proposedBy: "154",
+    confirmedOrCorrected: "confirmed",
+    layers: "F E P U",
+    profileRow: "153",
+  },
+  {
+    key: "loop.speculate.depth",
+    typeAndRange: "whole number, at least 1",
+    default: "1",
+    valueUnderParity: "not used",
+    trustClass: "N lo (snap t)",
+    ownerFeature: "154",
+    proposedBy: "154",
+    confirmedOrCorrected: "confirmed",
+    layers: "F E P U",
+    profileRow: "153",
+  },
+  {
+    key: "loop.speculate.window",
+    typeAndRange: "whole number, at least 1",
+    default: "20",
+    valueUnderParity: "not used",
+    trustClass: "N lo (snap t)",
+    ownerFeature: "154",
+    proposedBy: "154",
+    confirmedOrCorrected: "confirmed",
+    layers: "F E P U",
+    profileRow: "153",
+  },
+  {
+    key: "loop.speculate.minRate",
+    typeAndRange: "percent, 1 to 100",
+    default: "50",
+    valueUnderParity: "not used",
+    trustClass: "N lo (snap t)",
     ownerFeature: "154",
     proposedBy: "154",
     confirmedOrCorrected: "confirmed",

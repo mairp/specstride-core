@@ -25,6 +25,7 @@ import {
   groupSummaryOf,
   reportRows154Of,
   reportRowsOf,
+  speculationRowsOf,
   type Report,
   type ReportEvent,
   type ReportRow,
@@ -148,6 +149,24 @@ export function rows154Lines(
     for (const [groupId, check] of workerChecks) {
       if (check.result !== "failed" && check.result !== "tainted") continue;
       lines.push(`group-check: groupId=${groupId} result=${check.result}`);
+    }
+  }
+  // T148 (F154-FR-064, -066) — the speculation lines, from the same events:
+  // the starts, the refusals by their closed-set reason, the integrations,
+  // the set-asides and their cost. With `loop.speculate` off (no admission
+  // event at all) nothing is printed (F154-FR-001).
+  const speculation = speculationRowsOf(events);
+  if (speculation.started !== NOT_IN_EVENTS) {
+    lines.push(`speculation units started: ${speculation.started}`);
+    if (Object.keys(speculation.refusalsByReason).length > 0)
+      lines.push(`speculation units by refusal: ${terseCounts(speculation.refusalsByReason)}`);
+    lines.push(`speculation units integrated: ${speculation.integrated}`);
+    lines.push(`speculation units set aside: ${speculation.setAside}`);
+    if (typeof speculation.setAsideCost !== "string") {
+      const cost = speculation.setAsideCost;
+      lines.push(
+        `speculation set-aside cost: tokens=${cost.tokens} wallTimeMs=${cost.wallTimeMs} cycles=${cost.cycles}`,
+      );
     }
   }
   return lines;

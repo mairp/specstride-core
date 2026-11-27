@@ -132,6 +132,38 @@ export function announcementOf(passedOver: CriticOfTheOrder, used: CriticOfTheOr
   );
 }
 
+/* ================================================================== *
+ * 3. F154-FR-067, -075 (T146) — the amended F142-FR-070 (CQ-154-08 A).
+ * ================================================================== */
+
+/**
+ * The amended F142-FR-070 (T-h): no worker tree THAT THE CRITIC COULD READ
+ * exists when a critic-class call starts. A speculative (or phase) tree may
+ * stand through the call only where the critic reads nothing — it has no
+ * tools, which the harness's initial record shows (Principle IX) — or where
+ * the adapter's read denial of the worker root is confirmed. Under the other
+ * answer of CQ-154-08 no speculative unit starts before the critic call has
+ * returned, which the composition root enforces by not starting one.
+ */
+export const SPECULATIVE_TREE_AT_A_CRITIC_CLASS_CALL =
+  "no tree that the critic could read" as const;
+
+/**
+ * True where a tree found standing after the sweep is one the critic CANNOT
+ * read (F154-FR-067): either there is no leftover tree at all, or the critic
+ * has no tools (IX — the harness's initial record shows it), or the read
+ * denial of the worker root is confirmed. A tree the critic could read is
+ * one the sweep finds outside a confirmed denial (T-h).
+ */
+export function sweepConfirmsNoReadableTree(input: {
+  readonly criticHasNoTools: boolean;
+  readonly readDenialConfirmed: boolean;
+  readonly leftoverTrees: readonly string[];
+}): boolean {
+  if (input.leftoverTrees.length === 0) return true;
+  return input.criticHasNoTools || input.readDenialConfirmed;
+}
+
 /**
  * Run the two acts before a critic-class call and decide which critic is called
  * (T089, F142-FR-070).

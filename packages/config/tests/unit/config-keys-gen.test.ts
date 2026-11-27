@@ -45,16 +45,16 @@ const fileKeys = committed
   .slice(1)
   .map((l) => l.split("\t")[0]);
 
-test("T004: the file holds exactly those 279 keys of §K.3 to §K.6b, and each once", () => {
+test("T004: the file holds exactly those 282 keys of §K.3 to §K.6b, and each once", () => {
   const tableKeys = parseSpecTables(specText).map((r) => r.key);
   const excluded = new Set<string>(EXCLUDED_KEYS);
   const specKeys = tableKeys.filter((k) => !excluded.has(k));
   assert.equal(new Set(tableKeys).size, tableKeys.length, "no key is written twice in the spec");
   assert.equal(new Set(fileKeys).size, fileKeys.length, "no key is written twice in the file");
   assert.deepEqual(fileKeys, specKeys, "same keys, same order");
-  // T004's acceptance fixes the count: "the file holds exactly those 279 keys".
-  assert.equal(CATALOGUE_KEY_COUNT, 279);
-  assert.equal(fileKeys.length, 279, "the catalogue holds exactly 279 keys");
+  // T004's acceptance fixes the count: "the file holds exactly those 282 keys".
+  assert.equal(CATALOGUE_KEY_COUNT, 282);
+  assert.equal(fileKeys.length, 282, "the catalogue holds exactly 282 keys");
   assert.equal(specKeys.length, CATALOGUE_KEY_COUNT);
 });
 

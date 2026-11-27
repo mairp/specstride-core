@@ -661,7 +661,9 @@ export type ParallelWiringInput = {
    * Whether a speculative unit starts at this gate (F154-FR-062, -066,
    * -067). Default: none starts.
    */
-  readonly speculationVerdictAt?: (() => SpeculationVerdict) | undefined;
+  readonly speculationVerdictAt?:
+    | (() => SpeculationVerdict | Promise<SpeculationVerdict>)
+    | undefined;
   /* The carry-out. */
   readonly emit: (type: string, data: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;

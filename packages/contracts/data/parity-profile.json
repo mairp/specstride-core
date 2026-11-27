@@ -2251,9 +2251,12 @@
       "switch": "Work past an open verdict (F154-FR-061…-067)",
       "key": "loop.speculate",
       "keys": [
-        "loop.speculate"
+        "loop.speculate",
+        "loop.speculate.depth",
+        "loop.speculate.window",
+        "loop.speculate.minRate"
       ],
-      "keyNote": "`loop.speculate` — CQ-154-08 A and CQ-154-18 A: depth 1, window 20 attempts, threshold 50 %. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "keyNote": "`loop.speculate` (with `loop.speculate.depth`, `loop.speculate.window` and `loop.speculate.minRate`, which stand at profile row 153; under `parity` the depth, the window and the rate are not used) — CQ-154-08 A and CQ-154-18 A: depth 1, window 20 attempts, threshold 50 %. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
       "default": "off",
       "parity": "off",
       "owner": "154",

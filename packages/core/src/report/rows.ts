@@ -733,5 +733,73 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
   // Dropped events (T134): the gap the stream itself reports (F111-FR-019).
   rows.push({ row: "events dropped", value: sumOf(events, "event.dropped", "count") });
 
+  // The speculation rows (T148; F154-FR-064, -066), from the events only.
+  const speculation = speculationRowsOf(events);
+  rows.push({ row: "speculation units started", value: speculation.started });
+  rows.push({ row: "speculation units by refusal", value: speculation.refusalsByReason });
+  rows.push({ row: "speculation units integrated", value: speculation.integrated });
+  rows.push({ row: "speculation units set aside", value: speculation.setAside });
+  rows.push({ row: "speculation set-aside cost", value: speculation.setAsideCost });
+
   return { schema: "specstride.report-rows/1", runId, rows };
+}
+
+/**
+ * T148 — THE SPECULATION ROWS (feature 154, US7; F154-FR-064, -066): a PURE
+ * projection from the events, like every other row. The starts are the
+ * `loop.speculation.admission` events whose decision is `start`, the
+ * refusals are the `skip` decisions grouped by their closed-set reason
+ * (`rate`, `depth`, `sweep`), the integrations are the
+ * `loop.speculation.integrated` events, and the set-asides and their cost
+ * come from the `loop.speculation.set-aside` events (the cost is the
+ * record's {tokens, wallTimeMs, cycles}, never an estimate — F154-FR-008,
+ * F154-FR-064). Where no admission event exists at all the marks are the
+ * NOT_IN_EVENTS marking, never zeros: with `loop.speculate` off nothing
+ * ran (F154-FR-001).
+ */
+export function speculationRowsOf(events: readonly ReportEvent[]): {
+  readonly started: string | number;
+  readonly refusalsByReason: string | Record<string, number>;
+  readonly integrated: string | number;
+  readonly setAside: string | number;
+  readonly setAsideCost: string | Record<string, number>;
+} {
+  const admissions = events.filter((event) => event.type === "loop.speculation.admission");
+  if (admissions.length === 0) {
+    return {
+      started: NOT_IN_EVENTS,
+      refusalsByReason: NOT_IN_EVENTS,
+      integrated: NOT_IN_EVENTS,
+      setAside: NOT_IN_EVENTS,
+      setAsideCost: NOT_IN_EVENTS,
+    };
+  }
+  const refusalsByReason: Record<string, number> = {};
+  let started = 0;
+  for (const event of admissions) {
+    const data = event.data as Record<string, unknown>;
+    if (data["decision"] === "start") started += 1;
+    else {
+      const reason = str(data["reason"]);
+      if (reason !== "null") refusalsByReason[reason] = (refusalsByReason[reason] ?? 0) + 1;
+    }
+  }
+  const cost: Record<string, number> = { tokens: 0, wallTimeMs: 0, cycles: 0 };
+  let setAside = 0;
+  for (const event of events) {
+    if (event.type !== "loop.speculation.set-aside") continue;
+    setAside += 1;
+    const data = event.data as Record<string, unknown>;
+    for (const member of ["tokens", "wallTimeMs", "cycles"] as const) {
+      const value = num(data[member]);
+      if (value !== null) cost[member] += value;
+    }
+  }
+  return {
+    started,
+    refusalsByReason,
+    integrated: events.filter((event) => event.type === "loop.speculation.integrated").length,
+    setAside,
+    setAsideCost: setAside === 0 ? NOT_IN_EVENTS : cost,
+  };
 }

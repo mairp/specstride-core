@@ -762,3 +762,124 @@ export function hostLimitsInForce(input: {
   const on = input.userConfiguration?.limits === "on";
   return Object.freeze({ on, bounds: Object.freeze({ ...bounds }), refusals: Object.freeze(refusals) });
 }
+
+/* ================================================================== *
+ * 8. THE SPECULATION KEYS OF THE LAYER (feature 154, US7 — T143;
+ *    CQ-154-18 A; F154-FR-062, -066).
+ * ================================================================== */
+
+/**
+ * T143 — the layer reads the three speculation keys `loop.speculate.depth`,
+ * `loop.speculate.window` and `loop.speculate.minRate`, with the defaults
+ * 1, 20 and 50 that the core's rule module exports
+ * (`SPECULATE_DEPTH_DEFAULT`, `SPECULATE_WINDOW_DEFAULT`,
+ * `SPECULATE_MIN_RATE_DEFAULT`) — the layer, not the composition root's
+ * loop configuration, owns the read. The RULE of the speculation table
+ * (SP-1…SP-6) is the same under any values (CQ-154-18 A): this is a
+ * reading, never a change of behaviour.
+ */
+
+/** The key of the depth bound (F154-FR-062; default 1, CQ-154-18 A). */
+export const SPECULATE_DEPTH_KEY = "loop.speculate.depth" as const;
+/** The key of the window the rate reads over, in attempts (F154-FR-066; default 20). */
+export const SPECULATE_WINDOW_KEY = "loop.speculate.window" as const;
+/** The key of the rate threshold, in per cent (F154-FR-066; default 50). */
+export const SPECULATE_MIN_RATE_KEY = "loop.speculate.minRate" as const;
+
+/** The keys of the layer's speculation reading, surfaced as the others are. */
+export const SPECULATE_KEYS = Object.freeze([
+  SPECULATE_DEPTH_KEY,
+  SPECULATE_WINDOW_KEY,
+  SPECULATE_MIN_RATE_KEY,
+] as const);
+
+/** The raw values the configuration held for the three speculation keys. */
+export type SpeculateKeysRaw = {
+  readonly depth?: unknown;
+  readonly window?: unknown;
+  readonly minRate?: unknown;
+};
+
+/**
+ * The defaults of the three keys, handed in by the caller. The literals live
+ * ONCE, in the core's rule module (`SPECULATE_DEPTH_DEFAULT`,
+ * `SPECULATE_WINDOW_DEFAULT` and `SPECULATE_MIN_RATE_DEFAULT` of
+ * `@specstride/core/src/speculation/speculation-rule.ts`, all CQ-154-18 A);
+ * the composition root passes them here, because the package rule PU-06
+ * pins this package's module graph to `contracts` and `kernel` and a
+ * duplicate literal is the one thing the reading must not hold.
+ */
+export type SpeculateDefaults = {
+  readonly depth: number;
+  readonly window: number;
+  readonly minRatePerCent: number;
+};
+
+/** The speculation keys in force, as the layer reads them (T143). */
+export type SpeculateKeysInForce = {
+  /** `loop.speculate.depth` (default 1, CQ-154-18 A). */
+  readonly depth: number;
+  /** `loop.speculate.window`, in attempts (default 20, CQ-154-18 A). */
+  readonly window: number;
+  /** `loop.speculate.minRate`, in per cent (default 50, CQ-154-18 A). */
+  readonly minRatePerCent: number;
+};
+
+/**
+ * The default of one whole-number speculation key, refusing a foreign value
+ * (F154-FR-004): a foreign value falls back to the default with the reason
+ * on record, never an error that stops a run.
+ */
+function speculateNumberOr(value: unknown, fallback: number, key: string, maximum?: number): number {
+  if (value === undefined) return fallback;
+  const number = Number(value);
+  const inRange =
+    Number.isSafeInteger(number) && number >= 1 && (maximum === undefined || number <= maximum);
+  if (!inRange) {
+    console.warn(
+      `configuration: ${key} must be a whole number` +
+        (maximum === undefined ? " of at least 1" : ` from 1 to ${maximum}`) +
+        ` — falling back to the default ${fallback} (F154-FR-004)`,
+    );
+    return fallback;
+  }
+  return number;
+}
+
+/**
+ * T143 — the speculation keys in force, read HERE, in the layer (F154-FR-062,
+ * -066; CQ-154-18 A): `defaults` carries the core's exported defaults, a
+ * foreign value falls back to its default (F154-FR-004), and the rule of the
+ * table is the same under any values.
+ */
+export function speculateKeysInForce(
+  raw: SpeculateKeysRaw,
+  defaults: SpeculateDefaults,
+): SpeculateKeysInForce {
+  return Object.freeze({
+    depth: speculateNumberOr(raw.depth, defaults.depth, SPECULATE_DEPTH_KEY),
+    window: speculateNumberOr(raw.window, defaults.window, SPECULATE_WINDOW_KEY),
+    minRatePerCent: speculateNumberOr(
+      raw.minRate,
+      defaults.minRatePerCent,
+      SPECULATE_MIN_RATE_KEY,
+      100,
+    ),
+  });
+}
+
+/**
+ * The run-record fields of the speculation keys, surfaced the way the other
+ * loop-layer keys are (`runRecordFields` above): one field per key, written
+ * whatever the value is, so a reader of the run record can always tell which
+ * way the key stood.
+ */
+export function speculateRecordFields(
+  keys: SpeculateKeysInForce,
+): Readonly<Record<string, string>> {
+  return Object.freeze({
+    [SPECULATE_DEPTH_KEY]: String(keys.depth),
+    [SPECULATE_WINDOW_KEY]: String(keys.window),
+    [SPECULATE_MIN_RATE_KEY]: String(keys.minRatePerCent),
+  });
+}

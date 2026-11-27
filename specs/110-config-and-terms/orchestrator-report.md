@@ -28,7 +28,7 @@ A switch of the schema is a key whose cell "Under `parity`" is not `as default` 
 
 ## Part A.3 — the keys this catalogue spells for every other feature
 
-The catalogue holds 279 keys and names 42 owner features. The spelling, the type, the class and the layers of every key are decided here (§K.9); the meaning of a key belongs to its owner. A feature that reads a key not in its row below is reading a key no catalogue carries (F110-FR-009).
+The catalogue holds 282 keys and names 42 owner features. The spelling, the type, the class and the layers of every key are decided here (§K.9); the meaning of a key belongs to its owner. A feature that reads a key not in its row below is reading a key no catalogue carries (F110-FR-009).
 
 | Owner feature | Keys | Spellings |
 | --- | --- | --- |
@@ -73,9 +73,9 @@ The catalogue holds 279 keys and names 42 owner features. The spelling, the type
 | 149 | 2 | `attempt.tier_bump`, `attempt.tier_bump_after` |
 | 152 | 1 | `commit.backpressure` |
 | 153 | 11 | `commit.gate.beforeCritic`, `commit.scan.inPass`, `critic.evidence.perTask`, `events.commitGateTiming`, `loop.micro.closingCheck.skipWhenEqualToGate`, `loop.taskGroups`, `verification.gate.reuse`, `verification.inner.scoped`, `verification.redGate.limit`, `verification.redGate.ownBudget`, `verification.timeLimit.enforce` |
-| 154 | 8 | `host.limits`, `loop.parallel.groupCheck`, `loop.parallel.groupUnits`, `loop.parallel.mergeBaseline`, `loop.parallel.noRepeat`, `loop.phases.parallel`, `loop.speculate`, `pipeline.stageGroups` |
+| 154 | 11 | `host.limits`, `loop.parallel.groupCheck`, `loop.parallel.groupUnits`, `loop.parallel.mergeBaseline`, `loop.parallel.noRepeat`, `loop.phases.parallel`, `loop.speculate`, `loop.speculate.depth`, `loop.speculate.minRate`, `loop.speculate.window`, `pipeline.stageGroups` |
 
-Four keys of §K.6 are **not** in the catalogue and belong to feature 107's own contract: `derive.stageTimeoutSec`, `verification.scopes.<commandId>.reads`, `verification.scopes.<commandId>.writes`, `verification.scopes.<commandId>.sideEffects`. T004's acceptance fixes the count at 279; the difference is the register rows W-ORC-01 to W-ORC-03 (R-110-02 below).
+Four keys of §K.6 are **not** in the catalogue and belong to feature 107's own contract: `derive.stageTimeoutSec`, `verification.scopes.<commandId>.reads`, `verification.scopes.<commandId>.writes`, `verification.scopes.<commandId>.sideEffects`. T004's acceptance fixes the count at 282; the difference is the register rows W-ORC-01 to W-ORC-03 (R-110-02 below).
 
 ## Part A.4 — the spellings other features must correct in their own specifications
 
