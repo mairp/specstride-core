@@ -49,6 +49,7 @@ import type { CheckRunner, ManifestEntry } from "@specstride/contracts/ep/check-
 import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 import type { RepeatVerdict } from "../../../layer-parallel/src/repeat.ts";
 import {
+  DEPENDENCY_CHECK,
   independenceOf,
   SCOPES_DISJOINT_REQUIRED,
   type GroupIndependenceDeclaration,
@@ -757,7 +758,23 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
     const unitA = groupUnitOf(earlier);
     const unitB = groupUnitOf(later);
     if (unitA === null || unitB === null) return { atOnce: false, verdict: null };
-    const verdict = independenceOf(unitA, unitB, declarationOf());
+    /* F154-FR-004 — a dependency declaration that cannot be read is a
+     * fallback to serial with the reason recorded, never an error that
+     * stops the run: the pair is judged DEPENDENT, so the groups run one
+     * after the other under the check `dependency` (PG-0) and the read
+     * failure travels in the recorded detail and the `[LOOP]` line. */
+    let verdict: IndependenceVerdict;
+    try {
+      verdict = independenceOf(unitA, unitB, declarationOf());
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      verdict = {
+        check: DEPENDENCY_CHECK,
+        independent: false,
+        ruleId: "PG-0",
+        detail: `the dependency declaration could not be read (${reason}) — the groups run one after the other (F154-FR-004)`,
+      };
+    }
     const atOnce =
       verdict.independent &&
       (SCOPES_DISJOINT_REQUIRED ? scopesAreDisjoint([unitA.writeScope, unitB.writeScope]) : true);

@@ -1043,3 +1043,7 @@ that matches nothing fails the suite.
 
 Count: 119 rows, DV-001 to DV-119 (DV-092 to DV-113 were written in Stage B for the features, DV-092 to DV-094 for feature 100; DV-114 to DV-117 were written after the cross-feature review; DV-118 and DV-119 after the analyze run of feature 104 (CQ-045); DV-074 to DV-078 were added after R15, R15v and R27; DV-079 to DV-091 record owner rulings of 2026-09-29). DV-019 and DV-070 record that no divergence exists.
 
+### 6.9 Drift
+
+Drift, not a delta: `register-map.json` runs to DV-122 and the register to DV-120, so the owner reconciles before assigning ids (row 25 of `closed-set-deltas.md`).
+

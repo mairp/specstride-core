@@ -213,6 +213,17 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     groupUnitsOn: ctx.groupUnitsOn === true,
     groupDeclarationOf: (): GroupIndependenceDeclaration => {
       if (ctx.groupUnitsOn !== true) return {};
+      /* F154-FR-004 — THE TEST FAULT (`SPECSTRIDE_FAULT_DEPENDENCY_LINE=1`):
+       * an UNREADABLE dependency line, as a malformed specstride comment
+       * raises (`SpecstrideLineError`), only where a test set the variable.
+       * The wiring reads the declaration behind a guard, so the pair
+       * degrades to serial with the reason recorded, never an error that
+       * stops the run. No production path reads this variable. */
+      if (process.env.SPECSTRIDE_FAULT_DEPENDENCY_LINE === "1") {
+        throw new Error(
+          "the specstride comment line is malformed (line 4, column 31): the dependency declaration could not be read",
+        );
+      }
       const dependsOn: Record<string, readonly string[]> = {};
       const independentWith: Record<string, readonly string[]> = {};
       for (const group of ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []) {

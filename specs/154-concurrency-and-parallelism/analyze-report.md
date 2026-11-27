@@ -84,3 +84,23 @@ None open. II, III and XVIII: no deviation (A1, A2, A3 resolved by design). The 
 | C1 to C4 | MEDIUM/LOW | A parser without a file; an unrecorded baseline; a bare `doctor.ts`; an overwritten report | `adapters/speckit-tasks.ts`; a baseline-recording task in Phase 1; the path; a dated section |
 
 Coverage after resolution: 81 of 81 requirements and 14 of 14 success criteria have a task; 0 critical, 0 high open.
+
+## Third run (2026-11-27, phase 18 — polish, after T172)
+
+`speckit-analyze` re-run over `spec.md`, `plan.md` and `tasks.md` at the end of
+phase 18 (the last artefact change is the new guard test
+`packages/cli/test/engine/quickstart-154.test.ts`, which names no requirement
+and changes no artefact). The mechanical passes, re-run in this pass:
+
+| Check | Result |
+|---|---|
+| Task coverage: every F154-FR-001…-081 and F154-SC-001…-014 cited by a task | 95 of 95 cited; 0 uncovered |
+| Task count and ids | 172 tasks, ids T1…T172, none duplicated |
+| Placeholders (TODO, TKTK, `???`, `<placeholder>`) over the three artefacts | 0 |
+| The nine switch names identical across `spec.md`, `plan.md`, `data-model.md` | 9 of 9 |
+| Critical / high open | 0 / 0 |
+
+The 27 resolved findings of the first two runs (rows E1…E13 and F2-1, C1…C4 of
+2026-11-25) stand unchanged above. One drift stays recorded, not fixed: the
+`Drift` line of `docs/ecosystem/consolidation.md` §6.9 (register-map.json to
+DV-122, register to DV-120), for the owner to reconcile before assigning ids.
