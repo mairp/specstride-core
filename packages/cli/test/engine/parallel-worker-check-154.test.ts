@@ -567,10 +567,10 @@ test("(e) a group with no resolvable check is unchecked and goes on", async () =
     assert.equal(record.exitCode, undefined);
     assert.equal(record.durationMs, undefined);
     // The group merged as it would have without the switch.
-    assert.ok(readFileSync(join(fixture.workspace, "src", "a.ts"), "utf8").includes("2-a was here"));
     assert.ok(
-      readFileSync(join(fixture.workspace, TASK_LIST), "utf8").includes("- [x] 2-a "),
+      readFileSync(join(fixture.workspace, "src", "a.ts"), "utf8").includes("2-a was here"),
     );
+    assert.ok(readFileSync(join(fixture.workspace, TASK_LIST), "utf8").includes("- [x] 2-a "));
   } finally {
     releaseTheWriter(`${RUN_ID}:ledger`);
     fixture.cleanup();

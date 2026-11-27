@@ -32,14 +32,7 @@ import { fixture154 } from "../../inertness/154/helpers.ts";
  * names the adapter descriptor for the fake-binary test), so the engine
  * fixture below drives the six task fixtures only.
  */
-const FIXTURE_DIRS = [
-  "plan",
-  "groups",
-  "slots",
-  "stages",
-  "phases",
-  "spec",
-] as const;
+const FIXTURE_DIRS = ["plan", "groups", "slots", "stages", "phases", "spec"] as const;
 
 type Event = { type: string; at?: string; data: Record<string, unknown> };
 
@@ -169,7 +162,9 @@ async function guardOneFixture(dir: string): Promise<void> {
     // and one full-gate execution per attempt the run made.
     const gates = events.filter((event) => event.type === "verification.started");
     const attempts = new Set(
-      events.filter((event) => event.type === "attempt.started").map((event) => String(event.data.attempt)),
+      events
+        .filter((event) => event.type === "attempt.started")
+        .map((event) => String(event.data.attempt)),
     );
     assert.equal(
       gates.length,
@@ -178,8 +173,12 @@ async function guardOneFixture(dir: string): Promise<void> {
     );
     // The full gate before the critic, on the same tree (F154-FR-006): the
     // first critic of the run starts after the last full gate has ended.
-    const lastGateEnd = Math.max(...events.filter((e) => e.type === "verification.ended").map(atOf));
-    const firstCriticStart = Math.min(...events.filter((e) => e.type === "critic.started").map(atOf));
+    const lastGateEnd = Math.max(
+      ...events.filter((e) => e.type === "verification.ended").map(atOf),
+    );
+    const firstCriticStart = Math.min(
+      ...events.filter((e) => e.type === "critic.started").map(atOf),
+    );
     assert.ok(
       firstCriticStart >= lastGateEnd,
       `${dir}: the critic started before the gate had ended`,
@@ -196,17 +195,18 @@ test("T088 every Phase 1 fixture: merge check, gate and critic run one at a time
 });
 
 test("T088 the recorded baseline of main: the same one-validator invariant holds", () => {
-  const file = join(
-    import.meta.dirname,
-    "../../fixtures/154/parity-baseline/events-00.json",
-  );
+  const file = join(import.meta.dirname, "../../fixtures/154/parity-baseline/events-00.json");
   const recorded = JSON.parse(readFileSync(file, "utf8")) as { lines: string[] };
-  const events = recorded.lines.map(
-    (line) => JSON.parse(line) as Event,
-  );
+  const events = recorded.lines.map((line) => JSON.parse(line) as Event);
   const intervals = validatorIntervals(events);
-  assert.ok(intervals.some((interval) => interval.kind === "gate"), "the baseline holds a gate interval");
-  assert.ok(intervals.some((interval) => interval.kind === "critic"), "the baseline holds a critic interval");
+  assert.ok(
+    intervals.some((interval) => interval.kind === "gate"),
+    "the baseline holds a gate interval",
+  );
+  assert.ok(
+    intervals.some((interval) => interval.kind === "critic"),
+    "the baseline holds a critic interval",
+  );
   assertOneAtATime(intervals, "parity-baseline");
   const lastGateEnd = Math.max(
     ...intervals.filter((interval) => interval.kind === "gate").map((gate) => gate.end),
@@ -214,5 +214,8 @@ test("T088 the recorded baseline of main: the same one-validator invariant holds
   const firstCriticStart = Math.min(
     ...intervals.filter((interval) => interval.kind === "critic").map((c) => c.start),
   );
-  assert.ok(firstCriticStart >= lastGateEnd, "the baseline critic started before the gate had ended");
+  assert.ok(
+    firstCriticStart >= lastGateEnd,
+    "the baseline critic started before the gate had ended",
+  );
 });

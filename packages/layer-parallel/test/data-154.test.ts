@@ -35,11 +35,7 @@ function rowsOf(table: unknown): any[] {
 const TABLES: Array<[string, unknown, string[]]> = [
   ["independence-table.json", INDEPENDENCE_TABLE, ["PG-0", "PG-1", "PG-2", "PG-3"]],
   ["repeat-table.json", REPEAT_TABLE, ["RP-1", "RP-2"]],
-  [
-    "merge-check-outcome-table.json",
-    MERGE_CHECK_OUTCOME_TABLE,
-    ["MG-1", "MG-2", "MG-3"],
-  ],
+  ["merge-check-outcome-table.json", MERGE_CHECK_OUTCOME_TABLE, ["MG-1", "MG-2", "MG-3"]],
   ["worker-check-table.json", WORKER_CHECK_TABLE, ["WC-1", "WC-2", "WC-3", "WC-4"]],
 ];
 

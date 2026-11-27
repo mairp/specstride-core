@@ -41,11 +41,7 @@
  */
 import { INDEPENDENCE_TABLE } from "./tables.ts";
 import { MARKER } from "./admission.ts";
-import {
-  pathsNamedByTheTextOfATask,
-  pathIsInsideScope,
-  scopesAreDisjoint,
-} from "./scope.ts";
+import { pathsNamedByTheTextOfATask, pathIsInsideScope, scopesAreDisjoint } from "./scope.ts";
 import type { PlannedGroup, WriteScope } from "./types.ts";
 
 /** The id of the table this verdict reads (T003; F154-FR-003). */
@@ -116,9 +112,7 @@ function isMarked(text: string): boolean {
 /** True where a task of the later group names a path in the earlier scope. */
 function theLaterNamesAPathOfTheEarlier(earlier: GroupUnit, later: GroupUnit): boolean {
   return later.taskTexts.some((text) =>
-    pathsNamedByTheTextOfATask(text).some((path) =>
-      pathIsInsideScope(path, earlier.writeScope),
-    ),
+    pathsNamedByTheTextOfATask(text).some((path) => pathIsInsideScope(path, earlier.writeScope)),
   );
 }
 
@@ -143,9 +137,7 @@ function signalsOf(
       earlier.taskTexts.length > 0 &&
       later.taskTexts.length > 0,
     laterNamesEarlierPath: theLaterNamesAPathOfTheEarlier(earlier, later),
-    dependsOnDeclared: declaredOf(declaration.dependsOn, later.groupId).includes(
-      earlier.groupId,
-    ),
+    dependsOnDeclared: declaredOf(declaration.dependsOn, later.groupId).includes(earlier.groupId),
     independentWithDeclared:
       declaredOf(declaration.independentWith, earlier.groupId).includes(later.groupId) ||
       declaredOf(declaration.independentWith, later.groupId).includes(earlier.groupId),

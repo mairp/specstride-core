@@ -24,7 +24,10 @@ import { join } from "node:path";
 import test from "node:test";
 
 import type { CheckRunner } from "../../../packages/contracts/src/ep/check-runner.ts";
-import type { RegistryAccess, RegistryEntry } from "../../../packages/core/src/pass-supervision/ports.ts";
+import type {
+  RegistryAccess,
+  RegistryEntry,
+} from "../../../packages/core/src/pass-supervision/ports.ts";
 import { releaseTheWriter } from "../../../packages/core/src/parallel/integrate.ts";
 import type { ParallelPlan } from "../../../packages/layer-parallel/src/index.ts";
 import { writeWorkerGuardScript } from "../../../packages/cli/src/engine/worker-supervisor.ts";
@@ -334,11 +337,7 @@ function inputOf(
 const checkOf = (ms: number, code: number): GroupAcceptanceCheck => ({
   kind: "declared",
   id: `verify-property-${String(code)}`,
-  argv: [
-    process.execPath,
-    "-e",
-    `setTimeout(()=>{},${String(ms)});process.exit(${String(code)})`,
-  ],
+  argv: [process.execPath, "-e", `setTimeout(()=>{},${String(ms)});process.exit(${String(code)})`],
   timeLimitMs: 20_000,
 });
 
@@ -358,7 +357,13 @@ function fingerprintOf(workspace: string): string {
   return createHash("sha256").update(out.sort().join("\n")).digest("hex");
 }
 
-async function runOne(fixture: Fixture, runId: string, groupOrdinal: 1 | 2, delayMs: number, exitCode: number) {
+async function runOne(
+  fixture: Fixture,
+  runId: string,
+  groupOrdinal: 1 | 2,
+  delayMs: number,
+  exitCode: number,
+) {
   const attempt = await runTheGroupOfTheAttempt(
     inputOf(fixture, runId, groupOrdinal, checkOf(delayMs, exitCode)),
   );
@@ -381,8 +386,34 @@ for (const scenario of [
       if (!passing.ok) return;
       assert.equal(failing.ok, true, failing.ok ? "" : failing.message);
       if (!failing.ok) return;
-      console.error("DBG-PASS", passing.outcome, JSON.stringify(passing.audit.refused), JSON.stringify(passing.barrier.perWorker), JSON.stringify(passing.integration?.integrated), JSON.stringify(passing.integration));
-      try { console.error("DBG-REC", readFileSync(join(fixture.controlRoot, "features", SLUG, "runs", RUN_PASS, "parallel", "phase2", "groups", "g-2-1", "worker-check.json"), "utf8")); } catch {}
+      console.error(
+        "DBG-PASS",
+        passing.outcome,
+        JSON.stringify(passing.audit.refused),
+        JSON.stringify(passing.barrier.perWorker),
+        JSON.stringify(passing.integration?.integrated),
+        JSON.stringify(passing.integration),
+      );
+      try {
+        console.error(
+          "DBG-REC",
+          readFileSync(
+            join(
+              fixture.controlRoot,
+              "features",
+              SLUG,
+              "runs",
+              RUN_PASS,
+              "parallel",
+              "phase2",
+              "groups",
+              "g-2-1",
+              "worker-check.json",
+            ),
+            "utf8",
+          ),
+        );
+      } catch {}
       assert.equal(passing.outcome, "kept");
       assert.equal(passing.groupId, "g-2-1");
       assert.equal(failing.outcome, "failed");
@@ -424,4 +455,3 @@ for (const scenario of [
     }
   });
 }
-

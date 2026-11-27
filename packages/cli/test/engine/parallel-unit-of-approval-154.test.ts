@@ -85,7 +85,13 @@ function benchOf(): Bench {
   mkdirSync(join(controlRoot, "runs", RUN_ID), { recursive: true });
   const guardScriptPath = join(root, "worker-guard.mjs");
   writeWorkerGuardScript(guardScriptPath);
-  return { root, workspace, controlRoot, home, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+  return {
+    root,
+    workspace,
+    controlRoot,
+    home,
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+  };
 }
 
 function registryAccessOf(path: string): RegistryAccess {
@@ -306,7 +312,10 @@ test("a parallel group that keeps its work adds no commit and no approval", asyn
       .filter((line) => line.trim() !== "")
       .map((line) => (JSON.parse(line) as { kind?: string }).kind);
     for (const kind of kinds) {
-      assert.ok(!/approv|commit/i.test(String(kind)), `no approval or commit kind, saw ${String(kind)}`);
+      assert.ok(
+        !/approv|commit/i.test(String(kind)),
+        `no approval or commit kind, saw ${String(kind)}`,
+      );
     }
     // The closed vocabulary of F142-FR-066 has no approval and no commit kind
     // for a parallel group to use even if it wanted to.

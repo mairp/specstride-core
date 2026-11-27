@@ -163,10 +163,7 @@ import { RUN_REFUSED_EXIT } from "../commands/launch-roles.ts";
 import type { CapabilityProvenance, ContainmentLevel } from "@specstride/contracts/ep/harness";
 // F154-FR-021…-024 (T021) — the group gate of one admission, wired through
 // its seam; the engine passes the same gate the layer computes, unstubbed.
-import {
-  groupGate,
-  type HarnessRegistryEntry,
-} from "../../../layer-parallel/src/index.ts";
+import { groupGate, type HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
 import {
   afterApprovedPhase,
   compatibilityFeedOf,
@@ -199,10 +196,7 @@ import { userStateRoot } from "@specstride/contracts/ids/roots";
 // F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
 import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
 import { speculationCoordinatorOf, SPECULATION_INTEGRATED_EVENT } from "./speculation.ts";
-import {
-  integrateGroup,
-  type WorkerForIntegration,
-} from "../../../core/src/parallel/integrate.ts";
+import { integrateGroup, type WorkerForIntegration } from "../../../core/src/parallel/integrate.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
 import {
   clearPins,
@@ -2327,13 +2321,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // (F154-FR-001, -002).
   const phaseTrees = coordinatorOf({
     on: loopConfig.phasesParallel,
-    declarations: phases.map(
-      (one): PhaseDeclaration => ({
-        phase: one.number,
-        dependsOn: one.dependsOn ?? [],
-        ...(one.writeScope === undefined ? {} : { writeScope: one.writeScope }),
-      }),
-    ),
+    declarations: phases.map((one): PhaseDeclaration => ({
+      phase: one.number,
+      dependsOn: one.dependsOn ?? [],
+      ...(one.writeScope === undefined ? {} : { writeScope: one.writeScope }),
+    })),
     feature: slug,
     runId,
     controlRoot,
@@ -2977,15 +2969,16 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
   // the unit and nothing of this reaches the layer.
   const groupCandidatesOfThePhases = loopConfig.parallelGroupUnits
     ? Object.freeze(
-        frozenTaskGroupsOfTheLaunchRecord(controlRoot).reduce<
-          Record<number, readonly TaskGroup[]>
-        >((map, group) => {
-          map[group.phase] = [
-            ...(map[group.phase] ?? []),
-            withResolvedCheckExecutableOf(group, searchPathAtLaunch),
-          ];
-          return map;
-        }, {}),
+        frozenTaskGroupsOfTheLaunchRecord(controlRoot).reduce<Record<number, readonly TaskGroup[]>>(
+          (map, group) => {
+            map[group.phase] = [
+              ...(map[group.phase] ?? []),
+              withResolvedCheckExecutableOf(group, searchPathAtLaunch),
+            ];
+            return map;
+          },
+          {},
+        ),
       )
     : undefined;
   const parallelLaunch = launchTheParallelLayer({
@@ -3021,9 +3014,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     planPath: parallelPlanPath,
     store: write,
     emit: (type, data) => emit(type, data),
-    ...(groupCandidatesOfThePhases !== undefined
-      ? { groupCandidatesOfThePhases }
-      : {}),
+    ...(groupCandidatesOfThePhases !== undefined ? { groupCandidatesOfThePhases } : {}),
   });
   if (isParallelConfigurationError(parallelLaunch)) {
     // A configured worker count over its ceiling is an error of the launch,
@@ -3282,7 +3273,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         const pausedMs = Math.max(0, Date.now() - sinceMs);
         try {
           quotaResume.resume(
-            { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+            {
+              clock: slotPauseClock,
+              fileWriter: slotPauseFileWriter,
+              eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+            },
             {
               record: paused,
               recordPath: slotPauseRecordPath,
@@ -3303,7 +3298,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       const pausedMs = Math.max(0, Date.now() - sinceMs);
       try {
         quotaResume.resume(
-          { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+          {
+            clock: slotPauseClock,
+            fileWriter: slotPauseFileWriter,
+            eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+          },
           {
             record: paused,
             recordPath: slotPauseRecordPath,
@@ -3377,7 +3376,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         const pausedMs = Math.max(0, Date.now() - sinceMs);
         try {
           quotaResume.resume(
-            { clock: slotPauseClock, fileWriter: slotPauseFileWriter, eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) } },
+            {
+              clock: slotPauseClock,
+              fileWriter: slotPauseFileWriter,
+              eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+            },
             {
               record: paused,
               recordPath: slotPauseRecordPath,
@@ -5739,7 +5742,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // bound allows. Where nothing is gated, the release is `null` and the
     // pass runs unbounded, exactly as before the seam existed.
     const accountOfTheRun = (
-      process.env.SPECSTRIDE_HOST_ACCOUNT === undefined || process.env.SPECSTRIDE_HOST_ACCOUNT === ""
+      process.env.SPECSTRIDE_HOST_ACCOUNT === undefined ||
+      process.env.SPECSTRIDE_HOST_ACCOUNT === ""
         ? "default"
         : process.env.SPECSTRIDE_HOST_ACCOUNT
     ).toLowerCase();
@@ -6335,9 +6339,8 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // `loop.speculation.admission` event records the decision with its
     // reason (`rate`, `depth`, `sweep`) and the metrics (F154-FR-003, -066,
     // -067). With `loop.speculate` off nothing runs and nothing is emitted.
-    const speculationVerdict = speculation !== null
-      ? await speculation.verdictAtTheGate(phase)
-      : { start: false as const };
+    const speculationVerdict =
+      speculation !== null ? await speculation.verdictAtTheGate(phase) : { start: false as const };
     void speculationVerdict;
 
     const outcome = await runPhaseGate(
@@ -7069,7 +7072,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                               account: accountOfTheRun ?? "default",
                               holdOwner: { pid: process.pid, runId },
                               classification: {
-                                quotaClass: window.quotaClass === "quota_window" ? "quota_window" : (window.quotaClass as "quota_window"),
+                                quotaClass:
+                                  window.quotaClass === "quota_window"
+                                    ? "quota_window"
+                                    : (window.quotaClass as "quota_window"),
                                 confidence: "text",
                                 resetsAt:
                                   window.resetsAt === null
@@ -7130,12 +7136,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                                       ? null
                                       : new Date(window.resetsAt).toISOString(),
                                   probeIndex: 0,
-                                  ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                                  ceilingAt: new Date(
+                                    Date.now() + 24 * 60 * 60 * 1000,
+                                  ).toISOString(),
                                 },
                                 recordPath: slotPauseRecordPath,
                                 resumedBy: "resume-time",
                                 pausedMs: window.waitMs,
-                                pausedTime: { attemptPausedMs: window.waitMs, runPausedMs: window.waitMs },
+                                pausedTime: {
+                                  attemptPausedMs: window.waitMs,
+                                  runPausedMs: window.waitMs,
+                                },
                               },
                               { open: true },
                             );
@@ -7605,14 +7616,11 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               },
             },
           ];
-          const speculativeIntegration = await integrateGroup(
-            speculation.integrationPortsOf(),
-            {
-              baseTreeId: speculativeInputs.baseTreeId,
-              workspace: workdir,
-              workers: speculativeWorkers,
-            },
-          );
+          const speculativeIntegration = await integrateGroup(speculation.integrationPortsOf(), {
+            baseTreeId: speculativeInputs.baseTreeId,
+            workspace: workdir,
+            workers: speculativeWorkers,
+          });
           if (speculativeIntegration.integrated) {
             emit(SPECULATION_INTEGRATED_EVENT, {
               phase: speculativeInputs.phase,

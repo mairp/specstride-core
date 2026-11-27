@@ -21,7 +21,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
@@ -148,7 +156,9 @@ function gitPort(): LandingGitPort & { rebases: number; merges: number } {
 }
 
 /** The checks port: the gate of each stage, through the stub. */
-function checksPort(green: Readonly<Record<string, boolean>>): LandingChecksPort & { calls: string[] } {
+function checksPort(
+  green: Readonly<Record<string, boolean>>,
+): LandingChecksPort & { calls: string[] } {
   return {
     calls: [],
     async runGate(_workspace, stage) {

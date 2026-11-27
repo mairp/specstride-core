@@ -137,7 +137,8 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
      * ---------------------------------------------------------- */
     // F154-FR-020 — every group of the stored plan for this phase, in plan
     // order; today the wiring still reads only the first.
-    groupsOfThePhase: () => ctx.plan?.phases.find((entry) => entry.phase === ctx.phase)?.groups ?? [],
+    groupsOfThePhase: () =>
+      ctx.plan?.phases.find((entry) => entry.phase === ctx.phase)?.groups ?? [],
     // F154-FR-021…-024, -033 — the group gate of one admission, the same
     // pure table the layer computes; no stub.
     groupGateOfTheAttempt: (inputs) => groupGate(inputs),
@@ -195,17 +196,15 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     // frozen groups of the phase ARE the candidates, one worker per group.
     groupCandidatesOfThePhase: () =>
       ctx.groupUnitsOn === true
-        ? (ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []).map(
-            (group): FrozenTaskGroupShape => ({
-              groupId: group.groupId,
-              phase: group.phase,
-              taskIds: [...group.taskIds],
-              writeScope: {
-                prefixes: [...group.writeScope.prefixes],
-                ...(group.writeScope.caseFolded === true ? { caseFolded: true } : {}),
-              },
-            }),
-          )
+        ? (ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []).map((group): FrozenTaskGroupShape => ({
+            groupId: group.groupId,
+            phase: group.phase,
+            taskIds: [...group.taskIds],
+            writeScope: {
+              prefixes: [...group.writeScope.prefixes],
+              ...(group.writeScope.caseFolded === true ? { caseFolded: true } : {}),
+            },
+          }))
         : [],
     // F154-FR-032 (T076) — the declarations the frozen record carries per
     // group (`dependsOn`, `independentWith`), as the independence decision
@@ -259,9 +258,7 @@ export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiri
     taskListPath: ctx.taskListPath,
     taskTextAtLaunch: ctx.taskTextAtLaunch,
     taskTextOf: (taskId) =>
-      ctx.phases
-        .flatMap((held) => held.tasks)
-        .find((task) => task.id === taskId)?.text ?? taskId,
+      ctx.phases.flatMap((held) => held.tasks).find((task) => task.id === taskId)?.text ?? taskId,
     // The parallel worker carries a NAMED model only; the bare `dsh` alias
     // selects the harness alone, so the worker takes the run's default
     // model, as `modelsThatProducedPasses` does.

@@ -32,7 +32,16 @@
  *     node --experimental-strip-types --test packages/cli/test/engine/speculation-154.test.ts
  */
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -80,7 +89,8 @@ function fingerprintOf(dir: string): string {
       const full = join(path, name);
       const next = rel === "" ? name : `${rel}/${name}`;
       if (statSync(full).isDirectory()) walk(full, next);
-      else hash.update(`${next}:${createHash("sha256").update(readFileSync(full)).digest("hex")}\n`);
+      else
+        hash.update(`${next}:${createHash("sha256").update(readFileSync(full)).digest("hex")}\n`);
     }
   };
   walk(dir, "");
@@ -304,7 +314,10 @@ test("T144: SP-5 — an approval integrates the unit like a group into the works
     });
     assert.equal(integration.integrated, true);
     await harness.coordinator.releaseIntegrated();
-    assert.equal(readFileSync(join(harness.workspace, "specs", "worked.md"), "utf8"), "worked ahead\n");
+    assert.equal(
+      readFileSync(join(harness.workspace, "specs", "worked.md"), "utf8"),
+      "worked ahead\n",
+    );
     assert.equal(harness.coordinator.depthInForce(), 0);
     const events = harness.events.filter((one) => one.type === SPECULATION_INTEGRATED_EVENT);
     assert.equal(events.length, 0);
@@ -368,7 +381,10 @@ test("T144: the ledger reads the last `window` closers of the events file, and a
 
 test("T144: no speculative prompt carries a word of the open verdict (F154-FR-080)", () => {
   assert.equal(promptCarriesNoVerdictWord(speculativePromptAppendix()), true);
-  assert.equal(promptCarriesNoVerdictWord("The gate rejected phase 1; the verdict is open."), false);
+  assert.equal(
+    promptCarriesNoVerdictWord("The gate rejected phase 1; the verdict is open."),
+    false,
+  );
   assert.equal(promptCarriesNoVerdictWord("approved by the critic"), false);
 });
 

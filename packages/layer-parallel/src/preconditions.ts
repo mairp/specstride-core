@@ -625,9 +625,7 @@ export function fallbackOfThePreconditions(inputs: PreconditionInputs = {}): Fal
  * unreadable slot store: that fallback is SL-5 of the host-limits table in
  * `@specstride/core` (`host.limits`), not a reason of this layer.
  */
-export const PROPOSED_FALLBACK_REASONS_154 = Object.freeze([
-  "dependency-unreadable",
-] as const);
+export const PROPOSED_FALLBACK_REASONS_154 = Object.freeze(["dependency-unreadable"] as const);
 
 /**
  * The reason to print for a value that is no member of row 60: the unknown

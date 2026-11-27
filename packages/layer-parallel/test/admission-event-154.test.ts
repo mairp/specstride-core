@@ -73,7 +73,11 @@ test("the admission events of a group of three tasks are one per task, never sha
 test("the admission event of one group carries its verdicts, its reason and its admission", () => {
   const checks: readonly AdmissionVerdict[] = Object.freeze([
     { check: "resource", passed: true, detail: "no exclusive resource" },
-    { check: "headroom", passed: false, detail: "cycles: 0 cycle(s) remain and a group of 1 task(s) charges 1" },
+    {
+      check: "headroom",
+      passed: false,
+      detail: "cycles: 0 cycle(s) remain and a group of 1 task(s) charges 1",
+    },
   ]);
   const event = groupAdmissionEvent({
     groupId: "g-2-1",
@@ -136,8 +140,14 @@ test("groupGateVerdicts carries the verdict of every group-level check, in row 6
     verdicts.map((verdict) => verdict.check),
     ["resource", "headroom", "headroom", "check", "links", "jobs"],
   );
-  assert.equal(verdicts.every((verdict) => verdict.passed), true);
-  assert.equal(verdicts.every((verdict) => verdict.detail.length > 0), true);
+  assert.equal(
+    verdicts.every((verdict) => verdict.passed),
+    true,
+  );
+  assert.equal(
+    verdicts.every((verdict) => verdict.detail.length > 0),
+    true,
+  );
 });
 
 test("the first failed verdict of groupGateVerdicts is the reason groupGate refuses with", () => {

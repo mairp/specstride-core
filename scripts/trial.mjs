@@ -49,10 +49,7 @@ import process from "node:process";
 import { runFeature } from "../packages/cli/src/engine/run-feature.ts";
 import { workspaceIdOfWorkspace } from "../packages/cli/src/engine/workspace-control-root.ts";
 import { passMarkOf } from "../packages/core/src/trial/pass-mark.ts";
-import {
-  groupSummaryOf,
-  reportRows154Of,
-} from "../packages/core/src/report/rows.ts";
+import { groupSummaryOf, reportRows154Of } from "../packages/core/src/report/rows.ts";
 import {
   appliedWithoutPassingTheAudits,
   keptWhileAWorkerProcessLived,
@@ -61,10 +58,7 @@ import { STOP_REASONS } from "@specstride/contracts/codes/stop-reasons";
 import { RUN_STATES } from "@specstride/contracts/state/run-state";
 
 const REPO = new URL("..", import.meta.url).pathname;
-const RECORDED_153 = join(
-  REPO,
-  "packages/cli/test/fixtures/loop-speed/recorded-153/expected.json",
-);
+const RECORDED_153 = join(REPO, "packages/cli/test/fixtures/loop-speed/recorded-153/expected.json");
 
 /** The environment alias of a key, as `derivedEnvironmentName` spells it. */
 function environmentAliasOf(key) {
@@ -81,7 +75,12 @@ function environmentAliasOf(key) {
 }
 
 function parseArgs(argv) {
-  const args = { switch: "loop.parallel.units", fixtures: null, seed: "154-trial-seed-1", out: null };
+  const args = {
+    switch: "loop.parallel.units",
+    fixtures: null,
+    seed: "154-trial-seed-1",
+    out: null,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--switch") args.switch = argv[++index];
@@ -186,16 +185,10 @@ function fixtureOf(tasksPath) {
 
   const readEvents = () => {
     const control = join(home, ".specstride", "workspaces", workspaceIdOfWorkspace(work));
-    const roots = [
-      control,
-      join(home, ".local", "state", "specstride", "workspaces", "001-one"),
-    ];
+    const roots = [control, join(home, ".local", "state", "specstride", "workspaces", "001-one")];
     const all = [];
     for (const base of roots) {
-      for (const runs of [
-        join(base, "runs"),
-        join(base, "features", "001-one", "runs"),
-      ]) {
+      for (const runs of [join(base, "runs"), join(base, "features", "001-one", "runs")]) {
         for (const run of existsSync(runs) ? readdirSync(runs).sort() : []) {
           const file = join(runs, run, "events.jsonl");
           if (!existsSync(file)) continue;
@@ -340,14 +333,26 @@ function runRuleTests(repo) {
   ];
   const citedBy = {
     "packages/core/test/tables-154.test.ts": [
-      "LD-1", "LD-2", "LD-3", "LD-4",
-      "PQ-1", "PQ-2", "PQ-3",
-      "SL-1", "SL-2", "SL-3", "SL-4", "SL-5",
-      "SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6",
+      "LD-1",
+      "LD-2",
+      "LD-3",
+      "LD-4",
+      "PQ-1",
+      "PQ-2",
+      "PQ-3",
+      "SL-1",
+      "SL-2",
+      "SL-3",
+      "SL-4",
+      "SL-5",
+      "SP-1",
+      "SP-2",
+      "SP-3",
+      "SP-4",
+      "SP-5",
+      "SP-6",
     ],
-    "packages/core/test/slot-admission-154.test.ts": [
-      "SL-1", "SL-2", "SL-3", "SL-4", "SL-5",
-    ],
+    "packages/core/test/slot-admission-154.test.ts": ["SL-1", "SL-2", "SL-3", "SL-4", "SL-5"],
   };
   const results = [];
   let everyPassed = true;
@@ -383,10 +388,9 @@ function firstCaseOf() {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const fixturesPath = args.fixtures ?? join(
-    REPO,
-    "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json",
-  );
+  const fixturesPath =
+    args.fixtures ??
+    join(REPO, "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json");
   currentSwitch = args.switch;
   beforeSwitchAlias = environmentAliasOf(args.switch);
 
@@ -429,10 +433,14 @@ async function main() {
       exits.on.push(exitOn);
       rows.on = addRows(rows.on, rowsOf(onEvents));
       eventsOn.push(...onEvents);
-      for (const value of vocabularyOf(eventsOff, "reason", STOP_REASONS)) vocab.off.stopReasons.add(value);
-      for (const value of vocabularyOf(onEvents, "reason", STOP_REASONS)) vocab.on.stopReasons.add(value);
-      for (const value of vocabularyOf(eventsOff, "state", RUN_STATES)) vocab.off.runStates.add(value);
-      for (const value of vocabularyOf(onEvents, "state", RUN_STATES)) vocab.on.runStates.add(value);
+      for (const value of vocabularyOf(eventsOff, "reason", STOP_REASONS))
+        vocab.off.stopReasons.add(value);
+      for (const value of vocabularyOf(onEvents, "reason", STOP_REASONS))
+        vocab.on.stopReasons.add(value);
+      for (const value of vocabularyOf(eventsOff, "state", RUN_STATES))
+        vocab.off.runStates.add(value);
+      for (const value of vocabularyOf(onEvents, "state", RUN_STATES))
+        vocab.on.runStates.add(value);
     } finally {
       fixture.restore();
     }
@@ -460,16 +468,24 @@ async function main() {
     runStatesAreSubset: subset(runStatesOn, runStatesOff),
   };
   const closedSetsAreSubsets =
-    closedSets.exitCodesAreSubset && closedSets.stopReasonsAreSubset && closedSets.runStatesAreSubset;
+    closedSets.exitCodesAreSubset &&
+    closedSets.stopReasonsAreSubset &&
+    closedSets.runStatesAreSubset;
 
   // The pass mark, from the pure table.
-  const mark = passMarkOf({ noBreachInvariantFails, everyRuleTestPasses: ruleTests.everyPassed, closedSetsAreSubsets });
+  const mark = passMarkOf({
+    noBreachInvariantFails,
+    everyRuleTestPasses: ruleTests.everyPassed,
+    closedSetsAreSubsets,
+  });
 
   // The record.
   const record = {
     schema: "specstride.trial/1",
     switch: args.switch,
-    fixtureSet: fixtureFile.fixtures ? `${fixtureFile.fixtures.length} fixtures of ${fixtureFile.feature}` : fixturesPath,
+    fixtureSet: fixtureFile.fixtures
+      ? `${fixtureFile.fixtures.length} fixtures of ${fixtureFile.feature}`
+      : fixturesPath,
     firstCase: firstCaseOf(),
     arms: [
       { switchValue: false, seed: args.seed, rowsWithoutPassMark: rows.off },
@@ -491,7 +507,8 @@ async function main() {
     rowsWithoutPassMark: mark.choice === "pass" ? rows.on : rows.off,
   };
 
-  const outDir = args.out === null ? join(REPO, "specs/154-concurrency-and-parallelism/trials") : args.out;
+  const outDir =
+    args.out === null ? join(REPO, "specs/154-concurrency-and-parallelism/trials") : args.out;
   mkdirSync(outDir, { recursive: true });
   const outFile = join(outDir, `${args.switch}.json`);
   writeFileSync(outFile, `${JSON.stringify(record, null, 2)}\n`);

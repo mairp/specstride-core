@@ -209,9 +209,9 @@ test("a pair declared dependsOn runs one after the other, one dependency event (
 
 test("the fixture of the groups: three tasks, the switch off, and the planned units of its groups", () => {
   const tasks = readFileSync(join(FIXTURE_DIR, "tasks.md"), "utf8");
-  const launch = JSON.parse(
-    readFileSync(join(FIXTURE_DIR, "launch.json"), "utf8"),
-  ) as { configuration: Record<string, boolean> };
+  const launch = JSON.parse(readFileSync(join(FIXTURE_DIR, "launch.json"), "utf8")) as {
+    configuration: Record<string, boolean>;
+  };
   /* The fixture's phase carries the three tasks the frozen record groups. */
   const taskIds = [...tasks.matchAll(/^- \[ \] (T\d+)/gm)].map((one) => one[1] as string);
   assert.deepEqual(taskIds, ["T001", "T002", "T003"]);

@@ -164,8 +164,7 @@ test("the replay of the phase 4 trial: the unchanged retry of g-23-1 is refused 
       // The seam the composition root wires: the REAL layer verdict over the
       // ledger's failed groups, with the fingerprint seam answering
       // "unchanged".
-      repeatVerdictOf: (group) =>
-        repeatVerdictOf(group, earlierFailures, () => true),
+      repeatVerdictOf: (group) => repeatVerdictOf(group, earlierFailures, () => true),
     });
     const wiring = parallelWiringOfTheAttempt(input);
     // The group was refused: the boundary starts no run.
@@ -179,7 +178,12 @@ test("the replay of the phase 4 trial: the unchanged retry of g-23-1 is refused 
     assert.equal(verdict.passed, false);
     assert.equal(verdict.ruleId, "RP-1");
     assert.match(verdict.detail, /unchanged/);
-    assert.ok(isTheSameTaskSetFailedEarlier({ groupId: "g-23-1", phase: 23, tasks: ["T002", "T003"] }, earlierFailures));
+    assert.ok(
+      isTheSameTaskSetFailedEarlier(
+        { groupId: "g-23-1", phase: 23, tasks: ["T002", "T003"] },
+        earlierFailures,
+      ),
+    );
     // The engine says why, with the repeat rule's detail.
     assert.ok(
       said.some((line) => line.includes("not admitted") && line.includes("repeat")),

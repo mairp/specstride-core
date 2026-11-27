@@ -76,10 +76,7 @@ const FIXTURES: readonly { readonly name: string; readonly note?: string }[] = O
 
 /** The task list of one fixture of `tests/fixtures/154/`, read off disk. */
 function tasksOfFixture(name: string): string {
-  return readFileSync(
-    join(import.meta.dirname, "../../fixtures/154", name, "tasks.md"),
-    "utf8",
-  );
+  return readFileSync(join(import.meta.dirname, "../../fixtures/154", name, "tasks.md"), "utf8");
 }
 
 /**
@@ -242,9 +239,7 @@ async function runFixturePair(name: string): Promise<void> {
     assert.equal(onExit, 0, `${name}: the switches-on run did not exit 0`);
     const onPrompts = on.criticPrompts();
     assert.ok(onPrompts.length > 0, `${name}: the switches-on run recorded no critic prompt`);
-    const newWords = [...vocabularyOf(onPrompts)].filter(
-      (word) => !baselineVocabulary.has(word),
-    );
+    const newWords = [...vocabularyOf(onPrompts)].filter((word) => !baselineVocabulary.has(word));
     assert.deepEqual(
       newWords,
       [],

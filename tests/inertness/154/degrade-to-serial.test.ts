@@ -326,7 +326,14 @@ function fixture154(extraEnv: Readonly<Record<string, string>>): Fixture {
 test("T166: a broken slot store answers unbounded with its reason recorded and the run carries on (exit 0)", async () => {
   const fixture = fixture154({ SPECSTRIDE_HOST_CHECKS_CONCURRENT: "1" });
   try {
-    const stateRoot = join(process.env.HOME as string, ".local", "state", "specstride", "user", "slots");
+    const stateRoot = join(
+      process.env.HOME as string,
+      ".local",
+      "state",
+      "specstride",
+      "user",
+      "slots",
+    );
     mkdirSync(stateRoot, { recursive: true });
     writeFileSync(join(stateRoot, "checks"), "a file where the bound directory must be\n");
 
@@ -388,7 +395,9 @@ test("T166: an unreadable dependency line degrades the pair to serial with the r
     const dependency = of("parallel.admission").filter(
       (one) =>
         one.data["ruleId"] === "PG-0" &&
-        JSON.stringify(one.data["verdicts"]).includes("the dependency declaration could not be read"),
+        JSON.stringify(one.data["verdicts"]).includes(
+          "the dependency declaration could not be read",
+        ),
     );
     assert.ok(
       dependency.length > 0,
@@ -407,8 +416,9 @@ test("T166: an unreadable dependency line degrades the pair to serial with the r
     // THE GROUPS RAN ONE AFTER THE OTHER: no pair admission (admitted at
     // once) stands beside the degrade.
     assert.equal(
-      of("parallel.admission").filter((one) => one.data["admitted"] === true && one.data["pairWith"] !== undefined)
-        .length,
+      of("parallel.admission").filter(
+        (one) => one.data["admitted"] === true && one.data["pairWith"] !== undefined,
+      ).length,
       0,
       "a pair was admitted at once beside an unreadable declaration",
     );
@@ -514,7 +524,9 @@ function gitPort(): LandingGitPort {
 }
 
 /** The checks port: the gate of each stage, through the stub. */
-function checksPort(green: Readonly<Record<string, boolean>>): LandingChecksPort & { calls: string[] } {
+function checksPort(
+  green: Readonly<Record<string, boolean>>,
+): LandingChecksPort & { calls: string[] } {
   return {
     calls: [],
     async runGate(_workspace, stage) {
@@ -596,7 +608,11 @@ test("T166: a failed landing parks its stage alone with the recorded reason and 
     assert.equal(headOf(home), commitA);
     assert.equal(readFileSync(join(home, "shared.txt"), "utf8"), "line: by-A\n");
     assert.notEqual(headOf(home), base);
-    assert.equal(existsSync(join(root, "stage-workspaces", "p-t166", "B")), false, "B's workspace stands");
+    assert.equal(
+      existsSync(join(root, "stage-workspaces", "p-t166", "B")),
+      false,
+      "B's workspace stands",
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

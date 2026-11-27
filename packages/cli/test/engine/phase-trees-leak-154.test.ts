@@ -8,7 +8,15 @@
  * of F142-FR-056 (no hit of worker-root, tree-store, control-plane, token).
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -120,13 +128,19 @@ test("the tree paths are opaque and the phase-2 critic input holds nothing of ph
 
     // THE OPAQUE PATH: not under the workspace, not under the control plane,
     // and naming nothing of the phase — no number, no slug, no `phase-`.
-    for (const [phase, entry] of [[2, two], [3, three]] as const) {
+    for (const [phase, entry] of [
+      [2, two],
+      [3, three],
+    ] as const) {
       assert.ok(!entry.treePath.startsWith(ws.dir), `phase ${phase}'s tree is under the workspace`);
       assert.ok(
         !entry.treePath.startsWith(controlRoot),
         `phase ${phase}'s tree is under the control plane`,
       );
-      assert.ok(!entry.treePath.includes("154-phases"), `phase ${phase}'s tree path names the slug`);
+      assert.ok(
+        !entry.treePath.includes("154-phases"),
+        `phase ${phase}'s tree path names the slug`,
+      );
       assert.ok(
         !/phase-?\d/i.test(entry.treePath),
         `phase ${phase}'s tree path names the phase: ${entry.treePath}`,
@@ -138,11 +152,17 @@ test("the tree paths are opaque and the phase-2 critic input holds nothing of ph
     // per phase, in phase order).
     const log = readFileSync(ws.promptLog, "utf8");
     const criticPrompts = log.split("---8<---\n").filter((one) => one.startsWith("CRITIC\n"));
-    assert.ok(criticPrompts.length >= 3, `only ${criticPrompts.length} critic prompts were recorded`);
+    assert.ok(
+      criticPrompts.length >= 3,
+      `only ${criticPrompts.length} critic prompts were recorded`,
+    );
     const phaseTwoCritic = criticPrompts[1];
 
     // NOTHING OF PHASE 3'S TREE: not its path, not its worker root.
-    assert.ok(!phaseTwoCritic.includes(three.treePath), "the phase-2 critic saw phase 3's tree path");
+    assert.ok(
+      !phaseTwoCritic.includes(three.treePath),
+      "the phase-2 critic saw phase 3's tree path",
+    );
     assert.ok(
       !phaseTwoCritic.includes(dirname(three.treePath)),
       "the phase-2 critic saw phase 3's worker root",

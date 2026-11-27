@@ -393,9 +393,7 @@ export function repairsChargedByTheGroupCheckRefusal(
   taskIds: readonly string[],
 ): readonly GroupCheckRepairCharge[] {
   return Object.freeze(
-    taskIds.map((taskId) =>
-      Object.freeze({ groupId, taskId, repairs: 1 as const }),
-    ),
+    taskIds.map((taskId) => Object.freeze({ groupId, taskId, repairs: 1 as const })),
   );
 }
 

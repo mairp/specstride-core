@@ -18,22 +18,14 @@ import { tmpdir } from "node:os";
 
 const REPO = join(import.meta.dirname, "../../../..");
 const SCRIPT = join(REPO, "scripts/trial.mjs");
-const FIXTURES = join(
-  REPO,
-  "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json",
-);
+const FIXTURES = join(REPO, "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json");
 
 test("T043 the trial writes a record whose pass mark is stated, with no saving", () => {
   const out = mkdtempSync(join(tmpdir(), "specstride-trial-test-154-"));
   try {
     const outcome = spawnSync(
       "node",
-      [
-        SCRIPT,
-        "--switch", "loop.parallel.units",
-        "--fixtures", FIXTURES,
-        "--out", out,
-      ],
+      [SCRIPT, "--switch", "loop.parallel.units", "--fixtures", FIXTURES, "--out", out],
       { cwd: REPO, encoding: "utf8", timeout: 10 * 60 * 1000 },
     );
     assert.equal(outcome.status, 0, `the trial exits 0:\n${outcome.stdout}\n${outcome.stderr}`);

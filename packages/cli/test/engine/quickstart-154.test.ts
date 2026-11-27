@@ -96,9 +96,7 @@ function sectionsOf(doc: string): Section[] {
 
 /** The scenario sections: a fixture tag, or the trial-and-parity section. */
 function scenarioSections(all: Section[]): Section[] {
-  return all.filter(
-    (s) => /FX-154-[A-Z]+/.test(s.title) || /trial/i.test(s.title),
-  );
+  return all.filter((s) => /FX-154-[A-Z]+/.test(s.title) || /trial/i.test(s.title));
 }
 
 /** The `FX-154-…` ids of a section, in order. */
@@ -270,10 +268,7 @@ for (const section of scenarioSections(sectionsOf(readFileSync(DOC, "utf8")))) {
         existsSync(join(TRIALS_DIR, `${name}.json`)),
         `${section.title}: no trial record for ${name} under trials/`,
       );
-      assert.ok(
-        verified.includes(name),
-        `${section.title}: ${name} has no row in verified.md`,
-      );
+      assert.ok(verified.includes(name), `${section.title}: ${name} has no row in verified.md`);
     }
 
     // 6. Expectations: the section states them, and its stable literals
@@ -282,7 +277,8 @@ for (const section of scenarioSections(sectionsOf(readFileSync(DOC, "utf8")))) {
       /Expected:/.test(body),
       `${section.title}: no "Expected:" step — the scenario states no expectation`,
     );
-    const key = EXPECTED_LITERALS[section.title.split(" ")[0]] ?? EXPECTED_LITERALS[section.title] ?? [];
+    const key =
+      EXPECTED_LITERALS[section.title.split(" ")[0]] ?? EXPECTED_LITERALS[section.title] ?? [];
     for (const literal of key) {
       const where = inCorpus(literal);
       assert.ok(
@@ -310,9 +306,7 @@ test("the P2 door command runs live and passes (F154-SC-014)", () => {
     timeout: 120_000,
     // The runner marks its children with NODE_TEST_CONTEXT; a grandchild that
     // inherits it believes it is already inside a run and starts no file.
-    env: Object.fromEntries(
-      Object.entries(process.env).filter(([k]) => k !== "NODE_TEST_CONTEXT"),
-    ),
+    env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== "NODE_TEST_CONTEXT")),
   });
   const passed = /^# pass \d+/m.test(run.stdout) && !/^# fail [1-9]/m.test(run.stdout);
   assert.ok(

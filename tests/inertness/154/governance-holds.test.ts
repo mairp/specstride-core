@@ -44,14 +44,7 @@ const SWITCHES_ON: readonly string[] = Object.freeze([
 ]);
 
 /** The fixture directories Phase 1 (T011) wrote under `tests/fixtures/154/`. */
-const FIXTURE_DIRS = [
-  "plan",
-  "groups",
-  "slots",
-  "stages",
-  "phases",
-  "spec",
-] as const;
+const FIXTURE_DIRS = ["plan", "groups", "slots", "stages", "phases", "spec"] as const;
 
 test("T164 with every switch on: one fresh-session critic per phase, a nonce-bound verdict, one signed approval, one commit", async () => {
   for (const dir of FIXTURE_DIRS) {
@@ -119,13 +112,19 @@ test("T164 with every switch on: one fresh-session critic per phase, a nonce-bou
         assert.match(String(record.schema), /approval/, `${dir}: ${file} is an approval record`);
         const phaseCritic = critics[index]!;
         const phaseNonce = /VERDICT ([0-9a-f]{16}): APPROVED/.exec(phaseCritic.prompt)?.[1];
-        assert.ok(phaseNonce !== undefined, `${dir}: ${file} — the phase's gate prompt minted a nonce`);
+        assert.ok(
+          phaseNonce !== undefined,
+          `${dir}: ${file} — the phase's gate prompt minted a nonce`,
+        );
         assert.equal(
           record.nonceHash,
           nonceHashOf(phaseNonce),
           `${dir}: ${file}'s nonceHash binds the record to its verdict's nonce`,
         );
-        assert.ok(typeof record.sig === "string" && record.sig.length > 0, `${dir}: ${file} is signed`);
+        assert.ok(
+          typeof record.sig === "string" && record.sig.length > 0,
+          `${dir}: ${file} is signed`,
+        );
       }
 
       // — ONE commit per approved phase in the workspace's history.

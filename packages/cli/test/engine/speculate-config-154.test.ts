@@ -46,7 +46,7 @@ test("with no source the switch is off and the keys hold the defaults (CQ-154-18
 
 test("a user file holds the key values (the switch stays at its default)", () => {
   const { home, dir } = fixtureWithUserFile(
-    "schema: 1\n\"loop.speculate.depth\": 2\n\"loop.speculate.window\": 40\n\"loop.speculate.minRate\": 25\n",
+    'schema: 1\n"loop.speculate.depth": 2\n"loop.speculate.window": 40\n"loop.speculate.minRate": 25\n',
   );
   try {
     // The switch itself: no source held it here, and it stays off — it turns
@@ -86,7 +86,7 @@ test("under the parity profile the switch is off whatever a source holds (F154-F
 
 test("a foreign key value falls back to its default, never an error (F154-FR-004)", () => {
   const { home, dir } = fixtureWithUserFile(
-    "schema: 1\nloop:\n  speculate: true\n\"loop.speculate.depth\": 0\n",
+    'schema: 1\nloop:\n  speculate: true\n"loop.speculate.depth": 0\n',
   );
   try {
     const loop = loopConfigurationOf({ home, workdir: dir, environment: ENV });

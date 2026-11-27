@@ -120,7 +120,9 @@ function exitCodes(): number[] {
 }
 
 test("T001: the directory holds exactly the 11 schemas of the contract (F154-FR-007)", () => {
-  const files = readdirSync(SCHEMA_DIR).filter((name) => name.endsWith(".json")).sort();
+  const files = readdirSync(SCHEMA_DIR)
+    .filter((name) => name.endsWith(".json"))
+    .sort();
   assert.deepEqual(files, [...FILENAMES].sort());
 });
 

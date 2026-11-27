@@ -25,17 +25,13 @@ test("stage-admission-table.json: the bytes are pinned against the specification
 });
 
 test("stage-admission-table.json: the constant holds the same object", () => {
-  const parsed = JSON.parse(
-    readFileSync(join(SPEC_TABLES, "stage-admission-table.json"), "utf8"),
-  );
+  const parsed = JSON.parse(readFileSync(join(SPEC_TABLES, "stage-admission-table.json"), "utf8"));
   assert.deepEqual(STAGE_ADMISSION_TABLE, parsed);
   assert.equal((parsed as any).schema, "specstride.table/1");
 });
 
 test("stage-admission-table.json: SG-1 to SG-4 are rows", () => {
-  const rows = Object.values(
-    (STAGE_ADMISSION_TABLE as any).rows as Record<string, any[]>,
-  ).flat();
+  const rows = Object.values((STAGE_ADMISSION_TABLE as any).rows as Record<string, any[]>).flat();
   const ids = rows.map((row) => row.ruleId);
   for (const id of ["SG-1", "SG-2", "SG-3", "SG-4"]) {
     assert.ok(ids.includes(id), `${id} must be a row`);

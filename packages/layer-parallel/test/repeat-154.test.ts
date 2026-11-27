@@ -102,11 +102,7 @@ test("an earlier failure of another task set never refuses this group", () => {
 });
 
 test("the verdict matches the group by its id where the record names no tasks", () => {
-  const verdict = repeatVerdictOf(
-    groupOfPhase23(),
-    [{ groupId: "g-23-1", phase: 23 }],
-    () => true,
-  );
+  const verdict = repeatVerdictOf(groupOfPhase23(), [{ groupId: "g-23-1", phase: 23 }], () => true);
   assert.equal(verdict.passed, false);
   assert.equal(verdict.ruleId, "RP-1");
 });

@@ -100,8 +100,7 @@ export function baselineComparisonOf(
   mergeCheckResult: MergeCheckResultForBaseline,
   baseResult: BaseResultOfTheInnerSet,
 ): BaselineComparison {
-  const rows =
-    MERGE_CHECK_OUTCOME_TABLE.rows["parallel.merge-check-outcome"] ?? [];
+  const rows = MERGE_CHECK_OUTCOME_TABLE.rows["parallel.merge-check-outcome"] ?? [];
   const ruleIdOf = (id: string) => rows.find((row) => row.ruleId === id)?.choice;
   // MG-1 — the empty application.
   if (mergeCheckResult.appliedPathCount === 0) {
@@ -117,8 +116,7 @@ export function baselineComparisonOf(
     const failing = mergeCheckResult.commands.filter((command) => command.exitCode !== 0);
     const onBase = new Map(baseResult.commands.map((command) => [command.id, command.exitCode]));
     const allOnBaseWithSameSignature =
-      failing.length > 0 &&
-      failing.every((command) => onBase.get(command.id) === command.exitCode);
+      failing.length > 0 && failing.every((command) => onBase.get(command.id) === command.exitCode);
     if (allOnBaseWithSameSignature) {
       const choice = ruleIdOf("MG-2") ?? "no-charge";
       return Object.freeze({

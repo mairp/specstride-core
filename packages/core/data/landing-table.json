@@ -11,11 +11,7 @@
         "rebaseClean": "boolean",
         "gateGreen": "boolean"
       },
-      "choices": [
-        "rebase",
-        "fast-forward",
-        "park"
-      ]
+      "choices": ["rebase", "fast-forward", "park"]
     }
   },
   "rows": {

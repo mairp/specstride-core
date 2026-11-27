@@ -153,13 +153,19 @@ test("G8 T152: the phase trees are opaque and the phase-2 critic prompt audits t
     // THE OPAQUE PATH: not under the workspace, not under the control
     // plane, and naming nothing of the phase — no number, no slug, no
     // `phase-` (F154-FR-069).
-    for (const [phase, entry] of [[2, two], [3, three]] as const) {
+    for (const [phase, entry] of [
+      [2, two],
+      [3, three],
+    ] as const) {
       assert.ok(!entry.treePath.startsWith(ws.dir), `phase ${phase}'s tree is under the workspace`);
       assert.ok(
         !entry.treePath.startsWith(controlRoot),
         `phase ${phase}'s tree is under the control plane`,
       );
-      assert.ok(!entry.treePath.includes("154-phases"), `phase ${phase}'s tree path names the slug`);
+      assert.ok(
+        !entry.treePath.includes("154-phases"),
+        `phase ${phase}'s tree path names the slug`,
+      );
       assert.ok(
         !/phase-?\d/i.test(entry.treePath),
         `phase ${phase}'s tree path names the phase: ${entry.treePath}`,
@@ -173,7 +179,10 @@ test("G8 T152: the phase trees are opaque and the phase-2 critic prompt audits t
     // against phase 3's own places. ZERO hits each (V-02, V-09).
     const log = readFileSync(ws.promptLog, "utf8");
     const criticPrompts = log.split("---8<---\n").filter((one) => one.startsWith("CRITIC\n"));
-    assert.ok(criticPrompts.length >= 3, `only ${criticPrompts.length} critic prompts were recorded`);
+    assert.ok(
+      criticPrompts.length >= 3,
+      `only ${criticPrompts.length} critic prompts were recorded`,
+    );
 
     for (const [phase, promptIndex, entry] of [
       [2, 1, three],
@@ -185,7 +194,13 @@ test("G8 T152: the phase trees are opaque and the phase-2 critic prompt audits t
           workerId: `phase-${phase}`,
           treeId: entry.treeId,
           source: THE_AUDITS_READ,
-          paths: [{ path: `critic-prompt-phase-${phase}`, kind: "added", text: criticPrompts[promptIndex] }],
+          paths: [
+            {
+              path: `critic-prompt-phase-${phase}`,
+              kind: "added",
+              text: criticPrompts[promptIndex],
+            },
+          ],
         },
         {
           workerRoot: places.workerRoot,
@@ -235,11 +250,14 @@ function speculationHarnessOf(): {
     spawnSync("git", ["-C", work, ...argv]);
   }
   mkdirSync(eventsPath.slice(0, eventsPath.lastIndexOf("/")), { recursive: true });
-  writeFileSync(eventsPath, `${JSON.stringify({
-    type: "attempt.ended",
-    at: 1,
-    data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
-  })}\n`);
+  writeFileSync(
+    eventsPath,
+    `${JSON.stringify({
+      type: "attempt.ended",
+      at: 1,
+      data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
+    })}\n`,
+  );
   const seen: { type: string; data: Record<string, unknown> }[] = [];
   const coordinator = speculationCoordinatorOf({
     on: true,

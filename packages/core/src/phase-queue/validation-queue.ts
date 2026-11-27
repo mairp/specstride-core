@@ -84,16 +84,11 @@ export function dependenciesDeclaredOf(entry: QueueEntryLike): boolean {
 }
 
 /** The signals of the table, from one entry and one observation. */
-function signalsOf(
-  entry: QueueEntryLike,
-  observation: QueueObservation,
-): Record<string, unknown> {
+function signalsOf(entry: QueueEntryLike, observation: QueueObservation): Record<string, unknown> {
   const effective = effectiveDependenciesOf(entry);
   return {
     dependenciesDeclared: dependenciesDeclaredOf(entry),
-    everyDependencyApproved: effective.every((dependency) =>
-      observation.approved.has(dependency),
-    ),
+    everyDependencyApproved: effective.every((dependency) => observation.approved.has(dependency)),
     aDependencyRejected: effective.some((dependency) => observation.rejected.has(dependency)),
   };
 }
@@ -149,9 +144,6 @@ export function headOf(
  * calls it before it opens a phase's validation, and the rule id travels
  * into the run's record.
  */
-export function admit(
-  entry: QueueEntryLike,
-  observation: QueueObservation,
-): QueueVerdict {
+export function admit(entry: QueueEntryLike, observation: QueueObservation): QueueVerdict {
   return admissionOf(entry, observation);
 }

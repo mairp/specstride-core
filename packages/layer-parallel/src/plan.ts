@@ -320,9 +320,7 @@ export type PlanAtLaunchInput = {
    * `tasksNotPlacedExactlyOnce` still holds over the phase: every task is
    * either in one candidate group or serial.
    */
-  readonly groupCandidatesOfThePhases?: Readonly<
-    Record<number, readonly FrozenTaskGroupShape[]>
-  >;
+  readonly groupCandidatesOfThePhases?: Readonly<Record<number, readonly FrozenTaskGroupShape[]>>;
 };
 
 /**
@@ -343,13 +341,12 @@ function phasePlanOfTheCandidates(
     ...phasePlan.serial.filter((one) => !placed.has(one.id)),
     ...phasePlan.tasks
       .filter((one) => !placed.has(one.id))
-      .map(
-        (one): SerialTask => ({
-          id: one.id,
-          reason: ALONE_IN_ITS_RUN,
-          detail: "loop.parallel.groupUnits on: the task is no member of a frozen task group (F154-FR-031)",
-        }),
-      ),
+      .map((one): SerialTask => ({
+        id: one.id,
+        reason: ALONE_IN_ITS_RUN,
+        detail:
+          "loop.parallel.groupUnits on: the task is no member of a frozen task group (F154-FR-031)",
+      })),
   ];
   return Object.freeze({ ...phasePlan, groups, serial });
 }

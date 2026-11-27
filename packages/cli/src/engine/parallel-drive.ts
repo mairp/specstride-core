@@ -627,8 +627,7 @@ export async function theMergeCheckOfTheGroup(input: {
   readonly baseSnapshotFingerprint?: string | undefined;
   /** The base-result seam (F154-FR-028), where the composition root wires it. */
   readonly baseResultOfTheInnerSet?:
-    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
-    | undefined;
+    ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null) | undefined;
   /**
    * T095 (F154-FR-039) — the `checks` slot of the host: taken before
    * `merge_check_started` is written and released after the outcome stands,
@@ -639,7 +638,8 @@ export async function theMergeCheckOfTheGroup(input: {
    */
   readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
 }): Promise<TheMergeCheck> {
-  const releaseChecksSlot = input.takeChecksSlot === undefined ? null : await input.takeChecksSlot();
+  const releaseChecksSlot =
+    input.takeChecksSlot === undefined ? null : await input.takeChecksSlot();
   try {
     return await theMergeCheckOfTheGroupHeld(input);
   } finally {

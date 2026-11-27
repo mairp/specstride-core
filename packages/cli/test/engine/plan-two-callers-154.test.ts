@@ -17,10 +17,7 @@ import { doctorHandler } from "../../src/engine/handlers.ts";
 import { planDryRun, type DryRunLine } from "../../../pipeline/src/entry/dry-run.ts";
 import { planAtLaunch } from "../../../layer-parallel/src/plan.ts";
 import { scopesOf } from "../../../layer-parallel/src/index.ts";
-import type {
-  AdmissionInputs,
-  TaskAsReadAtLaunch,
-} from "../../../layer-parallel/src/index.ts";
+import type { AdmissionInputs, TaskAsReadAtLaunch } from "../../../layer-parallel/src/index.ts";
 import type { Stage } from "../../../pipeline/src/executor/types.ts";
 import type { EvaluationContext } from "../../../pipeline/src/kinds/registry.ts";
 
@@ -103,7 +100,9 @@ const dryRunPlanLines = async (input: {
   const texts = plan.lines
     .filter((line: DryRunLine) => line.label === "[PLAN]")
     .map((line: DryRunLine) => line.text);
-  const start = texts.findIndex((text) => /^(parallel plan:|plan the option would produce)/.test(text));
+  const start = texts.findIndex((text) =>
+    /^(parallel plan:|plan the option would produce)/.test(text),
+  );
   return start === -1 ? [] : texts.slice(start);
 };
 

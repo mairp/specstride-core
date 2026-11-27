@@ -66,19 +66,34 @@ test("SP-4 — the sweep unconfirmed: skip with the reason sweep", () => {
 
 test("the guards fire in the table's order: a low rate wins over an unconfirmed sweep", () => {
   // Rate and sweep both fail: SP-2 stands before SP-4 in the pinned order.
-  const decision = speculationVerdictOf({ ratePerCent: 0, depth: 1, sweepConfirmed: false, verdict: "open" });
+  const decision = speculationVerdictOf({
+    ratePerCent: 0,
+    depth: 1,
+    sweepConfirmed: false,
+    verdict: "open",
+  });
   assert.equal(decision.ruleId, "SP-2");
 });
 
 test("SP-5 — an approved verdict integrates, whatever the guards would say", () => {
   // The unit started when the rate held; the rate may have fallen since.
-  const decision = speculationVerdictOf({ ratePerCent: 0, depth: 5, sweepConfirmed: false, verdict: "approved" });
+  const decision = speculationVerdictOf({
+    ratePerCent: 0,
+    depth: 5,
+    sweepConfirmed: false,
+    verdict: "approved",
+  });
   assert.equal(decision.choice, "integrate");
   assert.equal(decision.ruleId, "SP-5");
 });
 
 test("SP-6 — a rejected verdict sets the unit aside", () => {
-  const decision = speculationVerdictOf({ ratePerCent: 100, depth: 0, sweepConfirmed: true, verdict: "rejected" });
+  const decision = speculationVerdictOf({
+    ratePerCent: 100,
+    depth: 0,
+    sweepConfirmed: true,
+    verdict: "rejected",
+  });
   assert.equal(decision.choice, "set-aside");
   assert.equal(decision.ruleId, "SP-6");
   assert.equal(refusalReasonOf(decision), undefined);

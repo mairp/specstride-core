@@ -12,10 +12,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { planAtLaunch, printThePlan, expectedSavingStatement } from "../../../packages/layer-parallel/src/plan.ts";
+import {
+  planAtLaunch,
+  printThePlan,
+  expectedSavingStatement,
+} from "../../../packages/layer-parallel/src/plan.ts";
 import { ALONE } from "../../../packages/layer-parallel/src/admission.ts";
 import { scopesOf } from "../../../packages/layer-parallel/src/index.ts";
-import type { AdmissionInputs, TaskAsReadAtLaunch } from "../../../packages/layer-parallel/src/index.ts";
+import type {
+  AdmissionInputs,
+  TaskAsReadAtLaunch,
+} from "../../../packages/layer-parallel/src/index.ts";
 
 /* The tasks of FX-154-PLAN (tests/fixtures/154/plan/tasks.md). */
 const TASKS: readonly TaskAsReadAtLaunch[] = Object.freeze([

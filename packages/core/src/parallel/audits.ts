@@ -89,9 +89,7 @@ export const PROPOSED_DELTA_REFUSAL_REASON_154 = "group-check" as const;
  * The refusal reasons in force: the eight of row 63, plus `group-check`
  * while `loop.parallel.groupCheck` reads on.
  */
-export function deltaRefusalReasonsOf(
-  switchIsOn: (name: string) => boolean,
-): readonly string[] {
+export function deltaRefusalReasonsOf(switchIsOn: (name: string) => boolean): readonly string[] {
   return switchIsOn("loop.parallel.groupCheck")
     ? Object.freeze([...DELTA_REFUSAL_REASONS, PROPOSED_DELTA_REFUSAL_REASON_154])
     : DELTA_REFUSAL_REASONS;

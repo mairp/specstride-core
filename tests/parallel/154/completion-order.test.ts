@@ -174,7 +174,10 @@ test("every permutation of worker completion composes and applies to the same by
       const paths = await bench.store.apply(baseTreeId, composed.treeId, workspace);
       // The applied tree: every edit exactly once, the bytes of the whole
       // workspace, and the store's own identity of the tree.
-      assert.deepEqual([...paths].sort(), TASKS.map((task) => task.path));
+      assert.deepEqual(
+        [...paths].sort(),
+        TASKS.map((task) => task.path),
+      );
       const treeId = await bench.store.snapshot(workspace);
       applied.push({
         treeId,

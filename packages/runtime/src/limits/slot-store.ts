@@ -64,7 +64,12 @@ export type SlotProbe = {
 
 /** What `probe(bound)` answers: the slots, or the reading that failed. */
 export type SlotStoreProbe =
-  | { readonly readable: true; readonly bound: string; readonly width: number; readonly probes: readonly SlotProbe[] }
+  | {
+      readonly readable: true;
+      readonly bound: string;
+      readonly width: number;
+      readonly probes: readonly SlotProbe[];
+    }
   | { readonly readable: false; readonly bound: string; readonly reason: string };
 
 /** The verdict of one admission attempt (F154-FR-039). */
@@ -198,7 +203,9 @@ export function createSlotStore(options: SlotStoreOptions): HostSlots {
       place,
       runtimeDirectory: options.runtimeDirectory,
       ...(options.now === undefined ? {} : { now: options.now }),
-      ...(options.probeDependencies === undefined ? {} : { probeDependencies: options.probeDependencies }),
+      ...(options.probeDependencies === undefined
+        ? {}
+        : { probeDependencies: options.probeDependencies }),
     });
     locks.set(key, lock);
     return lock;
@@ -290,7 +297,11 @@ export function createSlotStore(options: SlotStoreOptions): HostSlots {
       });
     },
 
-    async reclaim(bound: string, slot: number, input?: SlotAcquireInput): Promise<SlotAcquireResult> {
+    async reclaim(
+      bound: string,
+      slot: number,
+      input?: SlotAcquireInput,
+    ): Promise<SlotAcquireResult> {
       const width = widthOf(bound);
       if (width === undefined || slot < 0 || slot >= width) {
         return Object.freeze({
@@ -416,7 +427,12 @@ export function createSlotStore(options: SlotStoreOptions): HostSlots {
     async admit(bound: string): Promise<SlotAdmission> {
       const width = widthOf(bound);
       if (width === undefined) {
-        return slotAdmissionOf(bound, 0, null, `no bound is configured under the rule \`${bound}\``);
+        return slotAdmissionOf(
+          bound,
+          0,
+          null,
+          `no bound is configured under the rule \`${bound}\``,
+        );
       }
       const probed = await this.probe(bound);
       if (!probed.readable) return slotAdmissionOf(bound, width, null, probed.reason);

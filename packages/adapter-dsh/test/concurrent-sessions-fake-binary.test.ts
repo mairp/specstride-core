@@ -21,7 +21,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -73,10 +82,7 @@ function stage() {
   );
   writeFileSync(join(home, "skills", "review", "SKILL.md"), "the review skill\n");
   writeFileSync(join(home, "sessions", "kept.json"), '{"id":"kept"}\n');
-  writeFileSync(
-    join(binDir, "dsh"),
-    `#!/bin/sh\nexec "${process.execPath}" "${FAKE_DSH}" "$@"\n`,
-  );
+  writeFileSync(join(binDir, "dsh"), `#!/bin/sh\nexec "${process.execPath}" "${FAKE_DSH}" "$@"\n`);
   chmodSync(join(binDir, "dsh"), 0o755);
   const trees: string[] = [];
   const outs: string[] = [];
@@ -97,8 +103,7 @@ function stage() {
     env: { PATH: binDir, HOME: root, DSH_HOME: home, FAKE_DSH_RECORD_DIR: record },
     /** The configuration source: the home, and a model reference for the overlay. */
     config: {
-      get: (key: string) =>
-        key === "roles.proposer.model" ? "zai/glm-5.3-flash" : undefined,
+      get: (key: string) => (key === "roles.proposer.model" ? "zai/glm-5.3-flash" : undefined),
     },
     dispose: () => rmSync(root, { recursive: true, force: true }),
   };

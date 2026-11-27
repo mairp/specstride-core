@@ -49,21 +49,10 @@ import test from "node:test";
 
 import { workspaceIdOfWorkspace } from "../../../packages/cli/src/engine/workspace-control-root.ts";
 import { runFeature } from "../../../packages/cli/src/engine/run-feature.ts";
-import {
-  BREACH_CONDITIONS,
-  CHECKS,
-  breaches,
-} from "../../../packages/core/src/parallel/breach.ts";
+import { BREACH_CONDITIONS, CHECKS, breaches } from "../../../packages/core/src/parallel/breach.ts";
 
 /** The fixture directories of T011 under `tests/fixtures/154/`, minus `door`. */
-const FIXTURE_DIRS = [
-  "plan",
-  "groups",
-  "slots",
-  "stages",
-  "phases",
-  "spec",
-] as const;
+const FIXTURE_DIRS = ["plan", "groups", "slots", "stages", "phases", "spec"] as const;
 
 /** The environment names of the four switches of spec 154, all set to `on`. */
 const SWITCH_VARS = [
@@ -163,17 +152,11 @@ function fixture154(fixtureDir: string): {
     // The plain run keeps its control plane under `HOME/.specstride`; under
     // the `parity` profile the engine lays the state out where the as-is
     // engine did, so both roots are read (as `helpers.ts` does).
-    const roots = [
-      control,
-      join(home, ".local", "state", "specstride", "workspaces", "001-one"),
-    ];
+    const roots = [control, join(home, ".local", "state", "specstride", "workspaces", "001-one")];
     const all: Event[] = [];
     for (const base of roots) {
       const runDirs: string[] = [];
-      for (const runs of [
-        join(base, "runs"),
-        join(base, "features", "001-one", "runs"),
-      ]) {
+      for (const runs of [join(base, "runs"), join(base, "features", "001-one", "runs")]) {
         for (const run of existsSync(runs) ? readdirSync(runs).sort() : []) {
           runDirs.push(join(runs, run));
         }
@@ -233,11 +216,7 @@ async function breachInvariantsOverFixture(fixtureDir: string): Promise<void> {
     const breachKinded = events
       .map((event) => event.type ?? event.kind ?? "")
       .filter((type) => type.toLowerCase().includes("breach"));
-    assert.deepEqual(
-      breachKinded,
-      [],
-      `${fixtureDir}: the event file holds a breach-kind event`,
-    );
+    assert.deepEqual(breachKinded, [], `${fixtureDir}: the event file holds a breach-kind event`);
   } finally {
     f.restore();
   }

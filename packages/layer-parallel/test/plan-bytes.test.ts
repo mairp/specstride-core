@@ -14,7 +14,10 @@ import assert from "node:assert/strict";
 
 import { planAtLaunch, printThePlan } from "../../../packages/layer-parallel/src/plan.ts";
 import { scopesOf } from "../../../packages/layer-parallel/src/index.ts";
-import type { AdmissionInputs, TaskAsReadAtLaunch } from "../../../packages/layer-parallel/src/index.ts";
+import type {
+  AdmissionInputs,
+  TaskAsReadAtLaunch,
+} from "../../../packages/layer-parallel/src/index.ts";
 
 /* The tasks of FX-154-PLAN (tests/fixtures/154/plan/tasks.md). */
 const TASKS: readonly TaskAsReadAtLaunch[] = Object.freeze([
@@ -65,21 +68,9 @@ test("plan-bytes: 100 derivations give one plan hash and one printed text (F154-
     terseTexts.add(printThePlan(plan, ON, "doctor").join("\n"));
   }
 
-  assert.equal(
-    hashes.size,
-    1,
-    `all ${RUNS} derivations give the same plan hash`,
-  );
-  assert.equal(
-    verboseTexts.size,
-    1,
-    `all ${RUNS} prints are the same bytes, whatever the printer`,
-  );
-  assert.equal(
-    terseTexts.size,
-    1,
-    `all ${RUNS} doctor prints are the same bytes as each other`,
-  );
+  assert.equal(hashes.size, 1, `all ${RUNS} derivations give the same plan hash`);
+  assert.equal(verboseTexts.size, 1, `all ${RUNS} prints are the same bytes, whatever the printer`);
+  assert.equal(terseTexts.size, 1, `all ${RUNS} doctor prints are the same bytes as each other`);
   // The doctor and the dry run print the same bytes for the same plan: the
   // header carries no printer token (feature 154, T030).
   const [verboseText] = verboseTexts;

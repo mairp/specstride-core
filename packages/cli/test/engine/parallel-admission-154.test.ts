@@ -8,10 +8,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  groupGate,
-  type ParallelPlan,
-} from "../../../layer-parallel/src/index.ts";
+import { groupGate, type ParallelPlan } from "../../../layer-parallel/src/index.ts";
 import {
   parallelWiringOfTheAttempt,
   type ParallelWiringInput,
@@ -76,8 +73,12 @@ test("every admission decision emits one event per task and one per group, refus
     assert.equal(said.filter((line) => line.includes("is not admitted")).length, 3);
     // The admission events: one per task (3) and one per group (3), no more.
     const admissions = events.filter((event) => event.type === "parallel.admission");
-    const ofTasks = admissions.filter((event) => (event.data as AdmissionData).taskId !== undefined);
-    const ofGroups = admissions.filter((event) => (event.data as AdmissionData).groupId !== undefined);
+    const ofTasks = admissions.filter(
+      (event) => (event.data as AdmissionData).taskId !== undefined,
+    );
+    const ofGroups = admissions.filter(
+      (event) => (event.data as AdmissionData).groupId !== undefined,
+    );
     assert.equal(ofTasks.length, 3);
     assert.equal(ofGroups.length, 3);
     assert.deepEqual(
@@ -120,8 +121,7 @@ test("an admitted group emits the same events with every check passed", async ()
     await wiring.startIfTheBoundaryIsClean();
     const ofGroups = events.filter(
       (event) =>
-        event.type === "parallel.admission" &&
-        (event.data as AdmissionData).groupId === "g-2-1",
+        event.type === "parallel.admission" && (event.data as AdmissionData).groupId === "g-2-1",
     );
     assert.equal(ofGroups.length, 1);
     const data = ofGroups[0]?.data as AdmissionData;

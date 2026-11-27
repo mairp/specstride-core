@@ -104,9 +104,7 @@ test("the launch inputs feed the observed utilisation where the launch was hande
     "- [ ] T003 [P] the packer in src/c/",
     "",
   ].join("\n");
-  const inputOf = (
-    windows: quotaWindows.LimitWindowState | undefined,
-  ): ParallelLaunchInput => ({
+  const inputOf = (windows: quotaWindows.LimitWindowState | undefined): ParallelLaunchInput => ({
     runId: "r-quota-154",
     units: { userConfiguration: "on" },
     workers: { userConfiguration: { workers: 3 } },

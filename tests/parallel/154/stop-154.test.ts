@@ -82,10 +82,7 @@ import { treesOfTheWorkerRoot } from "../../../packages/tree-store/src/index.ts"
 /* ------------------------------------------------------------------ */
 
 /** Fake ports over in-memory state: home holds landed stages in order. */
-function fakeWorld(input: {
-  conflict?: readonly string[];
-  red?: readonly string[];
-}): {
+function fakeWorld(input: { conflict?: readonly string[]; red?: readonly string[] }): {
   makeInput(over?: Partial<LandingRunInput>): LandingRunInput;
   home: () => readonly string[];
   git: LandingGitPort;
@@ -194,14 +191,25 @@ function worktreeOf(): WorktreePort {
 function endOfGroup(
   result: Awaited<ReturnType<typeof runWideGroupLandings>>,
   home: readonly string[],
-): { landed: readonly string[]; parked: readonly string[]; exitCode: number; home: readonly string[] } {
-  return { landed: [...result.landed], parked: [...result.parked], exitCode: result.exitCode, home: [...home] };
+): {
+  landed: readonly string[];
+  parked: readonly string[];
+  exitCode: number;
+  home: readonly string[];
+} {
+  return {
+    landed: [...result.landed],
+    parked: [...result.parked],
+    exitCode: result.exitCode,
+    home: [...home],
+  };
 }
 
 test("G8 T157: a stop in a wide stage group lands nothing and a clean resume reaches the unstop end (V-12, V-19; F154-FR-074, -079)", async (t) => {
   // The stop hits INSIDE the landing of stage A, the group's first stage:
   // the loop is interrupted mid-execution, before any merge can be applied.
-  const stopAtFirstStage = (_stage: string, point: LandingKillpoint): boolean => point === "after-rebase";
+  const stopAtFirstStage = (_stage: string, point: LandingKillpoint): boolean =>
+    point === "after-rebase";
   // The stop hits INSIDE the landing of stage B, the group's middle stage:
   // stage A's landing is whole (it landed before the stop, not because of
   // it), stage B's is interrupted, stage C was never reached.
@@ -548,11 +556,14 @@ function speculationHarnessOf(): {
     spawnSync("git", ["-C", work, ...argv]);
   }
   mkdirSync(eventsPath.slice(0, eventsPath.lastIndexOf("/")), { recursive: true });
-  writeFileSync(eventsPath, `${JSON.stringify({
-    type: "attempt.ended",
-    at: 1,
-    data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
-  })}\n`);
+  writeFileSync(
+    eventsPath,
+    `${JSON.stringify({
+      type: "attempt.ended",
+      at: 1,
+      data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
+    })}\n`,
+  );
   const seen: { type: string; data: Record<string, unknown> }[] = [];
   const coordinator = speculationCoordinatorOf({
     on: true,

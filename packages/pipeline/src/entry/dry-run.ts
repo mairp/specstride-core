@@ -340,16 +340,14 @@ export function deriveParallelPlan(input: {
     }
   }
   const tasks: readonly CandidateTask[] = Object.freeze(
-    ids.map(
-      (id): CandidateTask => ({
-        id,
-        // The derivation at the dry run computes no admission and reads no
-        // scope source: the empty scope and no verdicts are the derived
-        // values (the layer's own derivation fills them at launch).
-        scope: Object.freeze({ prefixes: Object.freeze([]), source: "consumer" }),
-        checks: Object.freeze([]),
-      }),
-    ),
+    ids.map((id): CandidateTask => ({
+      id,
+      // The derivation at the dry run computes no admission and reads no
+      // scope source: the empty scope and no verdicts are the derived
+      // values (the layer's own derivation fills them at launch).
+      scope: Object.freeze({ prefixes: Object.freeze([]), source: "consumer" }),
+      checks: Object.freeze([]),
+    })),
   );
   const phase = Object.freeze({
     phase: 1,

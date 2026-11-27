@@ -119,8 +119,11 @@ test("resilience — an incomplete or unreadable record reads as no fast-forward
 test("purity — the same observation gives the same decision", () => {
   const a = landingDecisionOf(HALF_LANDED, false, true);
   const b = landingDecisionOf(HALF_LANDED, false, true);
-  assert.deepEqual({ choice: a.choice, ruleId: a.ruleId }, {
-    choice: b.choice,
-    ruleId: b.ruleId,
-  });
+  assert.deepEqual(
+    { choice: a.choice, ruleId: a.ruleId },
+    {
+      choice: b.choice,
+      ruleId: b.ruleId,
+    },
+  );
 });

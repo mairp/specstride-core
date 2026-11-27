@@ -196,7 +196,9 @@ fs.appendFileSync(${JSON.stringify(observationLog)}, JSON.stringify({
 function eventsOf(controlRoot: string): { readonly lines: Record<string, unknown>[] } {
   const runsDir = join(controlRoot, "runs");
   assert.ok(existsSync(runsDir), "the run wrote no runs directory");
-  const entries = readdirSync(runsDir).filter((name) => existsSync(join(runsDir, name, "events.jsonl")));
+  const entries = readdirSync(runsDir).filter((name) =>
+    existsSync(join(runsDir, name, "events.jsonl")),
+  );
   assert.equal(entries.length, 1, `expected one run, saw ${entries.length}`);
   const lines = readFileSync(join(runsDir, entries[0], "events.jsonl"), "utf8")
     .split("\n")
@@ -206,9 +208,14 @@ function eventsOf(controlRoot: string): { readonly lines: Record<string, unknown
 }
 
 /** The first index of the event `type` whose `data.phase` is `phase`. */
-function indexOfEvent(lines: readonly Record<string, unknown>[], type: string, phase: number): number {
+function indexOfEvent(
+  lines: readonly Record<string, unknown>[],
+  type: string,
+  phase: number,
+): number {
   const index = lines.findIndex(
-    (one) => one.type === type && (one.data as Record<string, unknown> | undefined)?.phase === phase,
+    (one) =>
+      one.type === type && (one.data as Record<string, unknown> | undefined)?.phase === phase,
   );
   assert.ok(index >= 0, `no ${type} event for phase ${phase} on the events file`);
   return index;
@@ -327,11 +334,14 @@ function speculationHarnessOf(): {
     spawnSync("git", ["-C", work, ...argv]);
   }
   mkdirSync(eventsPath.slice(0, eventsPath.lastIndexOf("/")), { recursive: true });
-  writeFileSync(eventsPath, `${JSON.stringify({
-    type: "attempt.ended",
-    at: 1,
-    data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
-  })}\n`);
+  writeFileSync(
+    eventsPath,
+    `${JSON.stringify({
+      type: "attempt.ended",
+      at: 1,
+      data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
+    })}\n`,
+  );
   const seen: { type: string; data: Record<string, unknown> }[] = [];
   const coordinator = speculationCoordinatorOf({
     on: true,
@@ -404,7 +414,11 @@ test("G8 T156: a set-aside speculative unit writes no tick at all (V-11, F154-FR
     // no-tick claim).
     const workspaceTasksPath = join(harness.workspace, "specs", "154-spec", "tasks.md");
     const workspaceBefore = readFileSync(workspaceTasksPath, "utf8");
-    assert.equal(/- \[x\]/.test(workspaceBefore), false, "the workspace task list was already ticked before the unit");
+    assert.equal(
+      /- \[x\]/.test(workspaceBefore),
+      false,
+      "the workspace task list was already ticked before the unit",
+    );
 
     // THE SET-ASIDE: the unit is discarded at no counter.
     assert.equal(await coordinator.resolveOnRejection(1), true, "the unit was not set aside");
@@ -417,9 +431,17 @@ test("G8 T156: a set-aside speculative unit writes no tick at all (V-11, F154-FR
       workspaceBefore,
       "the workspace's task list changed with the set-aside unit",
     );
-    assert.equal(/- \[x\]/.test(readFileSync(workspaceTasksPath, "utf8")), false, "a tick landed in the workspace");
+    assert.equal(
+      /- \[x\]/.test(readFileSync(workspaceTasksPath, "utf8")),
+      false,
+      "a tick landed in the workspace",
+    );
     assert.equal(existsSync(treePath), false, "the discarded tree was not removed");
-    assert.equal(existsSync(treeTasksPath), false, "the tree's ticked task list survived the discard");
+    assert.equal(
+      existsSync(treeTasksPath),
+      false,
+      "the tree's ticked task list survived the discard",
+    );
 
     // NO EVENT OF THE DISCARDED UNIT RECORDS A TICK OR AN APPROVAL: the
     // run's events file gained no line at all — no attempt kind, no run
@@ -449,14 +471,21 @@ test("G8 T156: a set-aside speculative unit writes no tick at all (V-11, F154-FR
       [SPECULATION_ADMISSION_EVENT, SPECULATION_SET_ASIDE_EVENT],
       "the discarded unit's stream holds more than admission and set-aside",
     );
-    assert.ok(!stream.some((one) => one.type === SPECULATION_INTEGRATED_EVENT), "an integration was recorded");
+    assert.ok(
+      !stream.some((one) => one.type === SPECULATION_INTEGRATED_EVENT),
+      "an integration was recorded",
+    );
 
     // THE RECORD EXISTS (F154-FR-064) yet records NO tick: the schema
     // carries no attempt kind, no stop reason, no exit code, no run state,
     // and not a word about a tick anywhere in its text.
     const recordText = harness.setAsideTextOf(2);
     const record = JSON.parse(recordText) as Parameters<typeof recordCarriesNoKindOrStopReason>[0];
-    assert.equal(recordCarriesNoKindOrStopReason(record), true, "the set-aside record carries a kind or a stop reason");
+    assert.equal(
+      recordCarriesNoKindOrStopReason(record),
+      true,
+      "the set-aside record carries a kind or a stop reason",
+    );
     assert.equal(record.schema, "specstride.set-aside/1", "the record is not a set-aside record");
     assert.equal(record.unitPhase, 2, "the record does not name the worked-ahead phase");
     assert.ok(!/tick/i.test(recordText), "the set-aside record mentions a tick");

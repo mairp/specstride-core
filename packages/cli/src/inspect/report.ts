@@ -214,10 +214,10 @@ export function workerCheckResultsOf(
             groupId?: unknown;
           };
           if (typeof parsed.result !== "string") continue;
-          results.set(
-            typeof parsed.groupId === "string" ? parsed.groupId : groupDir.name,
-            { result: parsed.result, phase },
-          );
+          results.set(typeof parsed.groupId === "string" ? parsed.groupId : groupDir.name, {
+            result: parsed.result,
+            phase,
+          });
         } catch {
           // A torn record contributes nothing; the report stays read only.
         }

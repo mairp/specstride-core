@@ -16,7 +16,15 @@
  *   its root is gone too — the removal at the run's single exit path.
  */
 import assert from "node:assert/strict";
-import { existsSync, chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +38,10 @@ import { pinEngineEnv } from "./helpers/fixture.ts";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 /** The task list OF THE FIXTURE (T022): three tasks, one phase. */
-const FIXTURE_TASKS = readFileSync(join(HERE, "../../../../tests/fixtures/154/groups/tasks.md"), "utf8");
+const FIXTURE_TASKS = readFileSync(
+  join(HERE, "../../../../tests/fixtures/154/groups/tasks.md"),
+  "utf8",
+);
 
 /** The stub `claude` of the run-feature tests: an honest phase is approved. */
 const STUB = `#!/usr/bin/env node
@@ -158,10 +169,7 @@ test("a stop ends the run `stop_flag` and its temporary root is removed", async 
     writeFileSync(join(inbox, "stop.request"), "");
     const run = await runWithCapturedRoot(ws.dir);
     assert.equal(run.exit, 6, `the stopped run ended ${String(run.exit)}, not stop_flag`);
-    assert.ok(
-      run.said.includes("stop requested"),
-      "the run did not say the stop it honoured",
-    );
+    assert.ok(run.said.includes("stop requested"), "the run did not say the stop it honoured");
     assert.ok(run.tempRoot !== null, "the stopped run named no temporary root");
     assert.equal(existsSync(run.tempRoot), false, "the stopped run's root survived the run");
   } finally {

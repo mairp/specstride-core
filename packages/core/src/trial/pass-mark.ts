@@ -24,9 +24,7 @@ const ROWS: readonly {
   ruleId: string;
   when?: { op: string; signal: keyof TrialSignals; value: boolean };
   choice: "pass" | "fail";
-}[] = Object.values(
-  (TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>,
-).flat();
+}[] = Object.values((TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>).flat();
 
 /**
  * The pass mark of a trial: the first row whose `when` holds chooses its

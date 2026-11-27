@@ -61,7 +61,13 @@ export { duplicateAndContiguityFindings, finding };
 export const FORMAT = "speckit-tasks" as const;
 
 /** The requirements this module carries out. */
-export const REQUIREMENTS = ["F104-FR-012", "F104-FR-014", "F104-FR-015", "F104-FR-017", "F154-FR-056"] as const;
+export const REQUIREMENTS = [
+  "F104-FR-012",
+  "F104-FR-014",
+  "F104-FR-015",
+  "F104-FR-017",
+  "F154-FR-056",
+] as const;
 
 /** The records of the baseline it is measured against. */
 export const BEHAVIOUR_ROWS = Object.freeze([
@@ -392,7 +398,10 @@ export function parseDependencyLine(line: string, lineNumber: number): Dependenc
       // `scope` — one or more path prefixes, whitespace separated, in order.
       while (p < content.length && /\s/.test(content[p] as string)) p += 1;
       const restStart = p;
-      const prefixes = content.slice(p).split(/\s+/).filter((one) => one !== "");
+      const prefixes = content
+        .slice(p)
+        .split(/\s+/)
+        .filter((one) => one !== "");
       if (prefixes.length === 0) {
         throw new SpecstrideLineError(
           "`scope` needs at least one path prefix",

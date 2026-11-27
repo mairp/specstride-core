@@ -139,7 +139,11 @@ test("F154-FR-015 the counts over groups, workers, refusals and concurrent check
     line("parallel.group.ended", 1, { groupId: "g-1", outcome: "repair" }),
     line("parallel.group.ended", 2, { groupId: "g-2", outcome: "integrated" }),
     line("parallel.worker.ended", 3, { workerId: "w-1", outcome: "integrated" }),
-    line("parallel.worker.ended", 4, { workerId: "w-2", outcome: "refused", reason: "group-check" }),
+    line("parallel.worker.ended", 4, {
+      workerId: "w-2",
+      outcome: "refused",
+      reason: "group-check",
+    }),
     line("check.ended", 5, { checkId: "c1", durationMs: 7000, concurrent: true }),
     line("check.ended", 6, { checkId: "c2", durationMs: 1000, concurrent: false }),
   ]);

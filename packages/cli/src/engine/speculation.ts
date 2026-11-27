@@ -136,11 +136,29 @@ export function promptCarriesNoVerdictWord(prompt: string): boolean {
 }
 
 /** What one speculative unit costs (F154-FR-064). */
-export type SpeculationCost = { readonly tokens: number; readonly wallTimeMs: number; readonly cycles: number };
+export type SpeculationCost = {
+  readonly tokens: number;
+  readonly wallTimeMs: number;
+  readonly cycles: number;
+};
 
 /** The path of the set-aside record of one unit, under the control plane. */
-export function setAsidePathOf(controlRoot: string, feature: string, runId: string, unitPhase: number): string {
-  return join(controlRoot, "features", feature, "runs", runId, "speculation", `phase${String(unitPhase)}`, "set-aside.json");
+export function setAsidePathOf(
+  controlRoot: string,
+  feature: string,
+  runId: string,
+  unitPhase: number,
+): string {
+  return join(
+    controlRoot,
+    "features",
+    feature,
+    "runs",
+    runId,
+    "speculation",
+    `phase${String(unitPhase)}`,
+    "set-aside.json",
+  );
 }
 
 /** The coordinator's inputs, as the composition root holds them. */
@@ -313,7 +331,10 @@ export function speculationCoordinatorOf(
     // calls `apply`). THE OPAQUE PATH (F154-FR-069): the tree's directory
     // names nothing of the phase.
     const baseTreeId = await store.snapshot(input.workspace);
-    const name = createHash("sha256").update(`${input.runId}:spec:${String(phase + 1)}`).digest("hex").slice(0, 16);
+    const name = createHash("sha256")
+      .update(`${input.runId}:spec:${String(phase + 1)}`)
+      .digest("hex")
+      .slice(0, 16);
     const tree = await store.materialize(baseTreeId, name);
     units.push({
       phase,
@@ -331,7 +352,9 @@ export function speculationCoordinatorOf(
   // after the application landed (the same order a group's close keeps).
   const pendingRelease: WorkerTree[] = [];
 
-  const integrationInputsOf = async (phase: number): Promise<SpeculationIntegrationInputs | null> => {
+  const integrationInputsOf = async (
+    phase: number,
+  ): Promise<SpeculationIntegrationInputs | null> => {
     const index = units.findIndex((one) => one.phase === phase);
     if (index < 0) return null;
     const [current] = units.splice(index, 1);

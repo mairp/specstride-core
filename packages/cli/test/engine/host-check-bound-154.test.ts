@@ -99,10 +99,15 @@ test("two engine processes under one checks bound never overlap their gate windo
     // The merged streams, ordered by their `at`: no gate window opened while
     // another was open — the slot serialised the two runs' gate executions.
     const gates = events
-      .filter((event) => event.type === "verification.started" || event.type === "verification.ended")
+      .filter(
+        (event) => event.type === "verification.started" || event.type === "verification.ended",
+      )
       .map((event) => ({ type: event.type, at: Date.parse(event.at ?? "") }));
     assert.ok(gates.length >= 2, "fewer than two gate windows were recorded");
-    assert.ok(gates.every((gate) => !Number.isNaN(gate.at)), "a gate event carried no `at`");
+    assert.ok(
+      gates.every((gate) => !Number.isNaN(gate.at)),
+      "a gate event carried no `at`",
+    );
     let open: number | null = null;
     for (const gate of gates.sort((a, b) => a.at - b.at)) {
       if (gate.type === "verification.started") {
@@ -152,7 +157,10 @@ test("the checks seam waits while one slot is held and proceeds when it frees", 
     ]);
     assert.ok(release !== null, "the second take never acquired after the release");
     assert.ok(admissions.includes("take"), "no `take` admission was recorded");
-    assert.ok(admissions.includes("wait"), "no `wait` admission was recorded while the slot was held");
+    assert.ok(
+      admissions.includes("wait"),
+      "no `wait` admission was recorded while the slot was held",
+    );
     await release;
   } finally {
     rmSync(slotsHome, { recursive: true, force: true });

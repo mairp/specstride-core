@@ -144,19 +144,13 @@ export function fixture154(): InertnessFixture {
     // The plain run keeps its control plane under `HOME/.specstride`;
     // under the `parity` profile the engine lays the state out where the
     // as-is engine did (`state.dir` of annex X §X.7), so both are read.
-    const roots = [
-      control,
-      join(home, ".local", "state", "specstride", "workspaces", "001-one"),
-    ];
+    const roots = [control, join(home, ".local", "state", "specstride", "workspaces", "001-one")];
     const all: { type: string; data: Record<string, unknown> }[] = [];
     for (const base of roots) {
       const runDirs: string[] = [];
       // The plain layout nests runs under `runs/` of the workspace; the
       // parity layout nests them under `features/<feature>/runs/` as well.
-      for (const runs of [
-        join(base, "runs"),
-        join(base, "features", "001-one", "runs"),
-      ]) {
+      for (const runs of [join(base, "runs"), join(base, "features", "001-one", "runs")]) {
         for (const run of existsSync(runs) ? readdirSync(runs).sort() : []) {
           runDirs.push(join(runs, run));
         }
@@ -219,9 +213,7 @@ export const FORBIDDEN_EVENT_PREFIXES = [
 ] as const;
 
 export function forbiddenTypes(types: readonly string[]): readonly string[] {
-  return types.filter((type) =>
-    FORBIDDEN_EVENT_PREFIXES.some((prefix) => type.startsWith(prefix)),
-  );
+  return types.filter((type) => FORBIDDEN_EVENT_PREFIXES.some((prefix) => type.startsWith(prefix)));
 }
 
 /** The user-level roots the slot and hold records live under (F154-FR-044). */

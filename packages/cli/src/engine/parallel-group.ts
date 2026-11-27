@@ -478,8 +478,7 @@ export async function runTheGroupWorkers(input: {
    * wiring); the callback it hands in answers for that.
    */
   readonly chargeCyclesOfTheAdmittedTasks?:
-    | ((workerId: string, taskId: string) => void)
-    | undefined;
+    ((workerId: string, taskId: string) => void) | undefined;
   /**
    * THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request `inbox:stop` is
    * read at the boundaries the wait below already runs, never by a watcher
@@ -768,11 +767,11 @@ export async function closeTheGroup(input: {
       },
       snapshot: (directory) => input.store.snapshot(directory),
       fingerprint: (directory) => input.store.snapshot(directory),
-       record: (kind, data) => input.record(kind, data),
-       emitEvent: (event) => input.emitEvent(event),
-     },
-     { workers, workspace: input.workspace },
-   );
+      record: (kind, data) => input.record(kind, data),
+      emitEvent: (event) => input.emitEvent(event),
+    },
+    { workers, workspace: input.workspace },
+  );
   // F154-FR-034/-035 (T080) — THE ACCEPTANCE CHECK IN THE WORKER TREE. After
   // the barrier (every process ended, every final snapshot taken and
   // recorded), the group's acceptance check runs in the worker tree, its
@@ -955,8 +954,7 @@ export async function theWorkerCheckOfTheGroup(input: {
     };
   } else {
     const timeLimitMs =
-      typeof input.acceptanceCheck.timeLimitMs === "number" &&
-      input.acceptanceCheck.timeLimitMs > 0
+      typeof input.acceptanceCheck.timeLimitMs === "number" && input.acceptanceCheck.timeLimitMs > 0
         ? input.acceptanceCheck.timeLimitMs
         : 300_000;
     for (const row of input.barrier.perWorker) {

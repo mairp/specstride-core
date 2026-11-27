@@ -14,7 +14,15 @@
  *    hold's reset and the hold record still stands afterwards.
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -36,7 +44,8 @@ function holdOf(home: string, account: string): Record<string, unknown> | null {
 }
 
 /** A stub that answers the FIRST critic call with a quota window, then judges. */
-function quotaThenVerdictStub(): string {  return `#!/usr/bin/env node
+function quotaThenVerdictStub(): string {
+  return `#!/usr/bin/env node
 const fs = require("node:fs"), path = require("node:path");
 const argv = process.argv.slice(2);
 const prompt = fs.readFileSync(0, "utf8");
@@ -128,117 +137,163 @@ function installStub(stubSource: string): void {
   chmodSync(stub, 0o755);
 }
 
-test("a critic quota window writes the hold of the account once, with the signalled reset", { timeout: 120_000 }, async () => {
-  const fixture = fixture154();
-  process.env.SPECSTRIDE_HOST_LIMITS = "on";
-  // The quota-then-verdict critic goes where the fixture's stub stands.
-  installStub(quotaThenVerdictStub());
-  try {
-    const code = await fixture.run();
-    assert.equal(code, 0, `the run did not complete: ${fixture.eventTypes().join(",")}`);
-    const events = fixture.events();
-    const signals = events.filter((event) => event.type === "quota.signal");
-    assert.ok(signals.length >= 1, "no quota.signal opened the window");
-    const resetsAt = signals[0]?.data["resetsAt"];
-    assert.ok(typeof resetsAt === "string" && resetsAt !== "", "quota.signal names no reset");
-    // The hold of the account, written ONCE, with that reset.
-    const hold = holdOf(process.env.HOME ?? "", "default");
-    assert.ok(hold !== null, "no hold was written for the account");
-    assert.equal(hold?.["resetAt"], resetsAt, "the hold's reset differs from the signalled reset");
-    assert.equal(hold?.["schema"], "specstride.host-hold/1", "the hold record names no schema");
-    // The window paused the run and the run resumed exactly once.
-    assert.equal(events.filter((event) => event.type === "run.paused").length, 1, "the pause opened more than once");
-    assert.equal(events.filter((event) => event.type === "run.resumed").length, 1, "the resume happened more than once");
-    // The critic was called again after the window and its verdict stood.
-    const calls = Number(readFileSync(join(process.env.HOME ?? "", "prompts.jsonl.calls"), "utf8"));
-    assert.equal(calls, 2, "the critic was not called again after the window");
-    assert.equal(fixture.prompts().filter((p) => p.role === "critic").length, 2, "the critic prompt count differs");
-  } finally {
-    fixture.restore();
-  }
-});
+test(
+  "a critic quota window writes the hold of the account once, with the signalled reset",
+  { timeout: 120_000 },
+  async () => {
+    const fixture = fixture154();
+    process.env.SPECSTRIDE_HOST_LIMITS = "on";
+    // The quota-then-verdict critic goes where the fixture's stub stands.
+    installStub(quotaThenVerdictStub());
+    try {
+      const code = await fixture.run();
+      assert.equal(code, 0, `the run did not complete: ${fixture.eventTypes().join(",")}`);
+      const events = fixture.events();
+      const signals = events.filter((event) => event.type === "quota.signal");
+      assert.ok(signals.length >= 1, "no quota.signal opened the window");
+      const resetsAt = signals[0]?.data["resetsAt"];
+      assert.ok(typeof resetsAt === "string" && resetsAt !== "", "quota.signal names no reset");
+      // The hold of the account, written ONCE, with that reset.
+      const hold = holdOf(process.env.HOME ?? "", "default");
+      assert.ok(hold !== null, "no hold was written for the account");
+      assert.equal(
+        hold?.["resetAt"],
+        resetsAt,
+        "the hold's reset differs from the signalled reset",
+      );
+      assert.equal(hold?.["schema"], "specstride.host-hold/1", "the hold record names no schema");
+      // The window paused the run and the run resumed exactly once.
+      assert.equal(
+        events.filter((event) => event.type === "run.paused").length,
+        1,
+        "the pause opened more than once",
+      );
+      assert.equal(
+        events.filter((event) => event.type === "run.resumed").length,
+        1,
+        "the resume happened more than once",
+      );
+      // The critic was called again after the window and its verdict stood.
+      const calls = Number(
+        readFileSync(join(process.env.HOME ?? "", "prompts.jsonl.calls"), "utf8"),
+      );
+      assert.equal(calls, 2, "the critic was not called again after the window");
+      assert.equal(
+        fixture.prompts().filter((p) => p.role === "critic").length,
+        2,
+        "the critic prompt count differs",
+      );
+    } finally {
+      fixture.restore();
+    }
+  },
+);
 
-test("a hold that still blocks waits the next run of the same account through the pause", { timeout: 120_000 }, async () => {
-  const { writeHold, readHold } = await import("../../../../packages/runtime/src/limits/hold-record.ts");
-  const { userStateRoot } = await import("@specstride/contracts/ids/roots");
-  const fixture = fixture154();
-  process.env.SPECSTRIDE_HOST_LIMITS = "on";
-  installStub(plainStubWithAt());
-  const home = process.env.HOME ?? "";
-  const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
-  const resetAt = new Date(Date.now() + 1_500).toISOString();
-  // A hold from a PREVIOUS process of the same account (this pid stands for
-  // it; scenario 3 covers the dead writer).
-  writeHold(root, "default", resetAt, { pid: process.pid, runId: "run-previous" });
-  try {
-    const code = await fixture.run();
-    assert.equal(code, 0, "the run did not complete once the hold's reset passed");
-    const events = fixture.events();
-    const paused = events.filter((event) => event.type === "run.paused");
-    assert.equal(paused.length, 1, "the hold wait did not open exactly one pause");
-    assert.equal(
-      (paused[0]?.data["resetsAt"] as string | undefined) ?? null,
-      resetAt,
-      "the hold wait's pause names a different reset",
-    );
-    const resumed = events.filter((event) => event.type === "run.resumed");
-    assert.equal(resumed.length, 1, "the resume happened more than once");
-    assert.ok(
-      typeof resumed[0]?.data["pausedMs"] === "number" && (resumed[0].data["pausedMs"] as number) > 0,
-      "run.resumed carries no paused milliseconds",
-    );
-    // No model was asked while the hold blocked: the FIRST prompt of the run
-    // came at or after the hold's reset.
-    const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
-    assert.ok(prompts.length >= 1, "the run asked no model at all");
-    assert.ok(prompts[0]?.role === "proposer", "the first prompt is not the proposer's");
-    const firstAt = prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
-    assert.ok(
-      !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
-      `the first prompt preceded the hold's reset: ${String(prompts[0]?.["at"])} < ${resetAt}`,
-    );
-    // The pause record is gone and the hold stands.
-    assert.equal(events.filter((event) => event.type === "quota.signal").length, 1, "the hold wait signalled more than once");
-    assert.ok(readHold(root, "default") !== null, "the hold record vanished during the wait");
-  } finally {
-    fixture.restore();
-    rmSync(join(holdsRootOf(home)), { recursive: true, force: true });
-  }
-});
+test(
+  "a hold that still blocks waits the next run of the same account through the pause",
+  { timeout: 120_000 },
+  async () => {
+    const { writeHold, readHold } =
+      await import("../../../../packages/runtime/src/limits/hold-record.ts");
+    const { userStateRoot } = await import("@specstride/contracts/ids/roots");
+    const fixture = fixture154();
+    process.env.SPECSTRIDE_HOST_LIMITS = "on";
+    installStub(plainStubWithAt());
+    const home = process.env.HOME ?? "";
+    const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
+    const resetAt = new Date(Date.now() + 1_500).toISOString();
+    // A hold from a PREVIOUS process of the same account (this pid stands for
+    // it; scenario 3 covers the dead writer).
+    writeHold(root, "default", resetAt, { pid: process.pid, runId: "run-previous" });
+    try {
+      const code = await fixture.run();
+      assert.equal(code, 0, "the run did not complete once the hold's reset passed");
+      const events = fixture.events();
+      const paused = events.filter((event) => event.type === "run.paused");
+      assert.equal(paused.length, 1, "the hold wait did not open exactly one pause");
+      assert.equal(
+        (paused[0]?.data["resetsAt"] as string | undefined) ?? null,
+        resetAt,
+        "the hold wait's pause names a different reset",
+      );
+      const resumed = events.filter((event) => event.type === "run.resumed");
+      assert.equal(resumed.length, 1, "the resume happened more than once");
+      assert.ok(
+        typeof resumed[0]?.data["pausedMs"] === "number" &&
+          (resumed[0].data["pausedMs"] as number) > 0,
+        "run.resumed carries no paused milliseconds",
+      );
+      // No model was asked while the hold blocked: the FIRST prompt of the run
+      // came at or after the hold's reset.
+      const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
+      assert.ok(prompts.length >= 1, "the run asked no model at all");
+      assert.ok(prompts[0]?.role === "proposer", "the first prompt is not the proposer's");
+      const firstAt =
+        prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
+      assert.ok(
+        !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
+        `the first prompt preceded the hold's reset: ${String(prompts[0]?.["at"])} < ${resetAt}`,
+      );
+      // The pause record is gone and the hold stands.
+      assert.equal(
+        events.filter((event) => event.type === "quota.signal").length,
+        1,
+        "the hold wait signalled more than once",
+      );
+      assert.ok(readHold(root, "default") !== null, "the hold record vanished during the wait");
+    } finally {
+      fixture.restore();
+      rmSync(join(holdsRootOf(home)), { recursive: true, force: true });
+    }
+  },
+);
 
-test("a hold whose writer died is not reclaimed early; the wait ends at the hold's reset", { timeout: 120_000 }, async () => {
-  const { spawn } = await import("node:child_process");
-  const { writeHold, readHold } = await import("../../../../packages/runtime/src/limits/hold-record.ts");
-  const { userStateRoot } = await import("@specstride/contracts/ids/roots");
-  const fixture = fixture154();
-  process.env.SPECSTRIDE_HOST_LIMITS = "on";
-  installStub(plainStubWithAt());
-  const home = process.env.HOME ?? "";
-  const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
-  const resetAt = new Date(Date.now() + 1_500).toISOString();
-  // The dead writer: a process that exits at once, leaving its pid behind.
-  const dead = spawnSync2(spawn);
-  writeHold(root, "default", resetAt, { pid: dead, runId: "run-dead-writer" });
-  try {
-    const code = await fixture.run();
-    assert.equal(code, 0, "the run did not complete once the hold's reset passed");
-    const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
-    const firstAt = prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
-    assert.ok(
-      !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
-      `the dead writer's hold was cleared before its reset: first prompt at ${String(prompts[0]?.["at"])}, reset at ${resetAt}`,
-    );
-    // The hold record still stands after the run: expiry, never an early
-    // reclaim, let the run through.
-    const hold = readHold(root, "default");
-    assert.ok(hold !== null, "the dead writer's hold record was removed");
-    assert.equal(new Date(hold?.["resetAt"] as string).toISOString(), resetAt, "the hold record changed");
-    assert.ok(Date.parse(new Date().toISOString()) >= Date.parse(resetAt), "the run ended before the hold's reset");
-  } finally {
-    fixture.restore();
-    rmSync(join(holdsRootOf(home)), { recursive: true, force: true });
-  }
-});
+test(
+  "a hold whose writer died is not reclaimed early; the wait ends at the hold's reset",
+  { timeout: 120_000 },
+  async () => {
+    const { spawn } = await import("node:child_process");
+    const { writeHold, readHold } =
+      await import("../../../../packages/runtime/src/limits/hold-record.ts");
+    const { userStateRoot } = await import("@specstride/contracts/ids/roots");
+    const fixture = fixture154();
+    process.env.SPECSTRIDE_HOST_LIMITS = "on";
+    installStub(plainStubWithAt());
+    const home = process.env.HOME ?? "";
+    const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
+    const resetAt = new Date(Date.now() + 1_500).toISOString();
+    // The dead writer: a process that exits at once, leaving its pid behind.
+    const dead = spawnSync2(spawn);
+    writeHold(root, "default", resetAt, { pid: dead, runId: "run-dead-writer" });
+    try {
+      const code = await fixture.run();
+      assert.equal(code, 0, "the run did not complete once the hold's reset passed");
+      const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
+      const firstAt =
+        prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
+      assert.ok(
+        !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
+        `the dead writer's hold was cleared before its reset: first prompt at ${String(prompts[0]?.["at"])}, reset at ${resetAt}`,
+      );
+      // The hold record still stands after the run: expiry, never an early
+      // reclaim, let the run through.
+      const hold = readHold(root, "default");
+      assert.ok(hold !== null, "the dead writer's hold record was removed");
+      assert.equal(
+        new Date(hold?.["resetAt"] as string).toISOString(),
+        resetAt,
+        "the hold record changed",
+      );
+      assert.ok(
+        Date.parse(new Date().toISOString()) >= Date.parse(resetAt),
+        "the run ended before the hold's reset",
+      );
+    } finally {
+      fixture.restore();
+      rmSync(join(holdsRootOf(home)), { recursive: true, force: true });
+    }
+  },
+);
 
 /** A pid of a process that has already exited. */
 function spawnSync2(spawn: typeof import("node:child_process").spawn): number {

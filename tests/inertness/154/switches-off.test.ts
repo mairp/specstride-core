@@ -8,11 +8,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  fixture154,
-  forbiddenTypes,
-  slotAndHoldFiles,
-} from "./helpers.ts";
+import { fixture154, forbiddenTypes, slotAndHoldFiles } from "./helpers.ts";
 
 test("T014 with every switch off, no event or file of spec 154 exists", async () => {
   const f = fixture154();

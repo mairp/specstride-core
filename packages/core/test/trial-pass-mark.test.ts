@@ -10,31 +10,30 @@ import assert from "node:assert/strict";
 import { TRIAL_PASS_MARK_TABLE } from "../src/trial/tables.ts";
 import { passMarkOf } from "../src/trial/pass-mark.ts";
 
-const SIGNALS = [
-  "noBreachInvariantFails",
-  "everyRuleTestPasses",
-  "closedSetsAreSubsets",
-] as const;
+const SIGNALS = ["noBreachInvariantFails", "everyRuleTestPasses", "closedSetsAreSubsets"] as const;
 
 type Signals = Record<(typeof SIGNALS)[number], boolean>;
 
 test("TRI-pass exists in the table beside TRI-1…TRI-3", () => {
-  const rows = Object.values((TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>)
-    .flat();
+  const rows = Object.values((TRIAL_PASS_MARK_TABLE as any).rows as Record<string, any[]>).flat();
   const ids = rows.map((row) => row.ruleId);
   assert.deepEqual(ids, ["TRI-1", "TRI-2", "TRI-3", "TRI-pass"]);
 });
 
 for (const failing of SIGNALS) {
   test(`TRI: ${failing} false fails the trial alone, naming the rule`, () => {
-    const signals = Object.fromEntries(
-      SIGNALS.map((signal) => [signal, true]),
-    ) as Signals;
+    const signals = Object.fromEntries(SIGNALS.map((signal) => [signal, true])) as Signals;
     signals[failing] = false;
     const mark = passMarkOf(signals);
     assert.equal(mark.choice, "fail");
-    assert.equal(mark.ruleId, failing === "noBreachInvariantFails" ? "TRI-1"
-      : failing === "everyRuleTestPasses" ? "TRI-2" : "TRI-3");
+    assert.equal(
+      mark.ruleId,
+      failing === "noBreachInvariantFails"
+        ? "TRI-1"
+        : failing === "everyRuleTestPasses"
+          ? "TRI-2"
+          : "TRI-3",
+    );
   });
 }
 

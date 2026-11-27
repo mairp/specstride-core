@@ -8,10 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { STAGE_ADMISSION_TABLE } from "../../src/executor/tables.ts";
-import {
-  admitStage,
-  type StageAdmissionDecision,
-} from "../../src/executor/stage-admission.ts";
+import { admitStage, type StageAdmissionDecision } from "../../src/executor/stage-admission.ts";
 import type { Stage, StageGroup } from "../../src/executor/types.ts";
 
 /** A minimal stage: id and dependencies only; admission reads nothing else. */
@@ -27,9 +24,7 @@ function stageOf(id: string, dependencies: string[] = []): Stage {
 
 const WIDTH_2 = { width: 2, never_together: [] };
 
-function groupsOf(
-  ...stages: Stage[][]
-): { index: number; stages: Stage[] }[] {
+function groupsOf(...stages: Stage[][]): { index: number; stages: Stage[] }[] {
   return stages.map((stages, index) => ({ index, stages }));
 }
 

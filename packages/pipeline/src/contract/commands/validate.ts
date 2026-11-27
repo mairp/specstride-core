@@ -144,9 +144,7 @@ export function validateContract(
         stderr: "",
       };
     }
-    const lines = stageGroupProblems.map(
-      (one) => `${one.path}: ${one.message}`,
-    );
+    const lines = stageGroupProblems.map((one) => `${one.path}: ${one.message}`);
     return {
       exitCode: exitOf(VALIDATE_EXIT_CODES, 20),
       stdout: "",
@@ -339,17 +337,14 @@ export function stageGroupsRefusals(record: unknown): readonly StageGroupsRefusa
       }
     }
   }
-  const stageGroups = (record as { configuration?: { stageGroups?: unknown } })
-    .configuration?.stageGroups;
-  const neverTogether = (stageGroups as { never_together?: unknown } | undefined)
-    ?.never_together;
+  const stageGroups = (record as { configuration?: { stageGroups?: unknown } }).configuration
+    ?.stageGroups;
+  const neverTogether = (stageGroups as { never_together?: unknown } | undefined)?.never_together;
   if (Array.isArray(neverTogether)) {
     for (const [pairIndex, pair] of neverTogether.entries()) {
       const ids = (pair as { stages?: unknown }).stages;
       if (!Array.isArray(ids)) continue;
-      const unknown = ids.filter(
-        (one) => typeof one === "string" && !known.has(one),
-      );
+      const unknown = ids.filter((one) => typeof one === "string" && !known.has(one));
       if (unknown.length > 0) {
         problems.push({
           path: `/configuration/stageGroups/never_together/${pairIndex}`,

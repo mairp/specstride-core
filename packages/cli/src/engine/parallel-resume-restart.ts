@@ -715,7 +715,9 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
       controlRoot: input.controlRoot,
       ...(input.resetCounts === true ? { resetCounts: true } : {}),
       drive: drive.tail,
-      ...(input.takeChecksSlotOfTheRun === undefined ? {} : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
+      ...(input.takeChecksSlotOfTheRun === undefined
+        ? {}
+        : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
     });
     if (!tail.carried) {
       return refused(

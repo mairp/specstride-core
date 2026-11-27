@@ -40,10 +40,7 @@ import {
 import { ownerRecordOfTheLock } from "../run-control/lock-owner-entry.ts";
 // Feature 154, T032 — the ONE renderer of the parallel plan (F154-SC-002),
 // and the observation the parallel doctor probes `parallel.plan` with.
-import {
-  printThePlan,
-  UNITS_FORCED_ON,
-} from "../../../layer-parallel/src/plan.ts";
+import { printThePlan, UNITS_FORCED_ON } from "../../../layer-parallel/src/plan.ts";
 import { planObservation } from "../../../layer-parallel/src/doctor.ts";
 import type { UnitsConfiguration, ParallelPlan } from "../../../layer-parallel/src/index.ts";
 import { theLiveRunOfTheEngineRecords } from "../run-control/live-run-evidence.ts";

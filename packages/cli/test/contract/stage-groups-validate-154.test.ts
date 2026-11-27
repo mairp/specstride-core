@@ -10,7 +10,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -76,9 +83,7 @@ const FIXTURE_STAGES = [
     depends_on: [],
     cwd: ".",
     preconditions: [],
-    postconditions: [
-      { check: "file_exists", timing: "stage", params: { path: "README.md" } },
-    ],
+    postconditions: [{ check: "file_exists", timing: "stage", params: { path: "README.md" } }],
     evidence: [],
   },
   {
@@ -87,9 +92,7 @@ const FIXTURE_STAGES = [
     depends_on: ["A"],
     cwd: ".",
     preconditions: [],
-    postconditions: [
-      { check: "file_exists", timing: "stage", params: { path: "README.md" } },
-    ],
+    postconditions: [{ check: "file_exists", timing: "stage", params: { path: "README.md" } }],
     evidence: [],
   },
 ];
@@ -185,10 +188,7 @@ test("a never_together pair naming an unknown stage is refused with exit 20", ()
     assert.equal(result.exitCode, 20);
     assert.match(result.stderr, /never_together/);
     assert.match(result.stderr, /ghost-stage/);
-    assert.ok(
-      result.stderr.includes(ids[0]!),
-      "the reason names the offending pair",
-    );
+    assert.ok(result.stderr.includes(ids[0]!), "the reason names the offending pair");
     assert.equal(inventoryOf(repo).join("\n"), before);
   } finally {
     execFileSync("rm", ["-rf", repo]);

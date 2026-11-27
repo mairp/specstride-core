@@ -46,12 +46,7 @@ export type SpeculationVerdict = "open" | "approved" | "rejected";
 
 /** The choices of the speculation table. */
 export type SpeculationChoice =
-  | "start"
-  | "skip-rate"
-  | "skip-depth"
-  | "skip-sweep"
-  | "integrate"
-  | "set-aside";
+  "start" | "skip-rate" | "skip-depth" | "skip-sweep" | "integrate" | "set-aside";
 
 /** The decision of the speculation table, with the rule id that decided it. */
 export type SpeculationDecision = {
@@ -87,7 +82,9 @@ export type SpeculationObservation = {
 /** The signals of the table, from one observation. */
 function signalsOf(observation: SpeculationObservation): Record<string, unknown> {
   const minRate =
-    observation.minRatePerCent === undefined ? SPECULATE_MIN_RATE_DEFAULT : observation.minRatePerCent;
+    observation.minRatePerCent === undefined
+      ? SPECULATE_MIN_RATE_DEFAULT
+      : observation.minRatePerCent;
   const maxDepth =
     observation.maxDepth === undefined ? SPECULATE_DEPTH_DEFAULT : observation.maxDepth;
   return {
@@ -103,9 +100,7 @@ function signalsOf(observation: SpeculationObservation): Record<string, unknown>
  * the fallthrough row. Rows fire in the table's order, so a verdict
  * (`approved`/`rejected`) decides before any admission guard is read.
  */
-export function speculationVerdictOf(
-  observation: SpeculationObservation,
-): SpeculationDecision {
+export function speculationVerdictOf(observation: SpeculationObservation): SpeculationDecision {
   const decision = evaluateTable(
     SPECULATION_TABLE as unknown as LoadedTable,
     SPECULATION_POINT,
@@ -144,10 +139,7 @@ export function refusalReasonOf(
  * no measured rate, and SP-2 refuses. The caller reads the counts from the
  * ledger; this is the arithmetic, not the reading.
  */
-export function approvalRateOverWindowOf(
-  approvals: number,
-  attemptsStarted: number,
-): number {
+export function approvalRateOverWindowOf(approvals: number, attemptsStarted: number): number {
   if (!Number.isFinite(approvals) || !Number.isFinite(attemptsStarted) || attemptsStarted <= 0) {
     return 0;
   }

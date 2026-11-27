@@ -28,12 +28,7 @@ function scopeOf(prefixes: string[]): GroupUnit["writeScope"] {
 }
 
 /** One group unit: groupId, plan group, scope, task texts. */
-function unitOf(
-  groupId: string,
-  tasks: string[],
-  prefixes: string[],
-  texts?: string[],
-): GroupUnit {
+function unitOf(groupId: string, tasks: string[], prefixes: string[], texts?: string[]): GroupUnit {
   const group = plannedGroupOf({
     groupId,
     phase: 2,
@@ -44,9 +39,7 @@ function unitOf(
     groupId,
     group,
     writeScope: scopeOf(prefixes),
-    taskTexts: Object.freeze(
-      texts ?? tasks.map((task) => `do the work of ${task}`),
-    ),
+    taskTexts: Object.freeze(texts ?? tasks.map((task) => `do the work of ${task}`)),
   };
 }
 
@@ -135,10 +128,12 @@ test("PG-0 — the later group naming a path in the earlier scope makes the pair
     unitOf("g-2-1", ["T001", "T002"], ["src/a"], ["[P] work in src/a", "[P] more of src/a"]),
     // The later group's text names src/a/shared.ts, a path inside the
     // earlier group's write scope.
-    unitOf("g-2-2", ["T003", "T004"], ["src/b"], [
-      "[P] work in src/b",
-      "[P] read src/a/shared.ts and write src/b/out.ts",
-    ]),
+    unitOf(
+      "g-2-2",
+      ["T003", "T004"],
+      ["src/b"],
+      ["[P] work in src/b", "[P] read src/a/shared.ts and write src/b/out.ts"],
+    ),
   ];
   const verdict = independenceOf(marked[0] as GroupUnit, marked[1] as GroupUnit, NO_DECLARATION);
   assert.deepEqual(

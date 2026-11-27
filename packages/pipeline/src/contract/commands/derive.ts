@@ -131,10 +131,13 @@ export type DeriveArgs = {
    * marker rule, never F142-FR-009's scope disjointness.
    */
   readonly taskGroupDeclarations?: Readonly<
-    Record<string, {
-      readonly dependsOn?: readonly string[];
-      readonly independentWith?: readonly string[];
-    }>
+    Record<
+      string,
+      {
+        readonly dependsOn?: readonly string[];
+        readonly independentWith?: readonly string[];
+      }
+    >
   >;
 };
 
@@ -180,9 +183,7 @@ function tasksOfFeature(root: string, featureDir: string): readonly ModelTask[] 
           ? {}
           : {
               phaseDependsOn: phase.dependsOn ?? [],
-              ...(phase.writeScope === undefined
-                ? {}
-                : { phaseWriteScope: phase.writeScope }),
+              ...(phase.writeScope === undefined ? {} : { phaseWriteScope: phase.writeScope }),
             }),
       });
     }

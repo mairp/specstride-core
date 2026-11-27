@@ -64,9 +64,7 @@ test("one resource holder blocks the next and frees it on release", async () => 
     );
     assert.ok(first !== null, "the first resource take did not acquire");
     let secondAcquired = false;
-    const second = slots.take("resources/keys", (admission) =>
-      admissions.push(admission.verdict),
-    );
+    const second = slots.take("resources/keys", (admission) => admissions.push(admission.verdict));
     const probe = await Promise.race([
       second.then((release) => {
         secondAcquired = release !== null;
@@ -97,14 +95,10 @@ test("one resource holder blocks the next and frees it on release", async () => 
 });
 
 test("a resource declared in configuration becomes a slot bound of that width", async () => {
-  const { hostBoundRuleOf, hostBoundsOfASource } = await import(
-    "../../../../packages/layer-parallel/src/register.ts"
-  );
+  const { hostBoundRuleOf, hostBoundsOfASource } =
+    await import("../../../../packages/layer-parallel/src/register.ts");
   assert.equal(hostBoundRuleOf("host.resources.keys.capacity"), "resources/keys");
-  const { bounds, refusals } = hostBoundsOfASource(
-    { "host.resources.keys.capacity": 1 },
-    "user",
-  );
+  const { bounds, refusals } = hostBoundsOfASource({ "host.resources.keys.capacity": 1 }, "user");
   assert.deepEqual(refusals, [], "the declared capacity was refused");
   assert.equal(bounds["resources/keys"], 1, "the capacity did not become a bound of width 1");
 });
@@ -129,8 +123,7 @@ test("an engine run with a resource bound records admissions for the resource ru
     const events = eventsUnderHome(home);
     assert.ok(
       events.some(
-        (event) =>
-          event.type === "host.slot.admission" && event.data.rule === "resources/keys",
+        (event) => event.type === "host.slot.admission" && event.data.rule === "resources/keys",
       ),
       "no `host.slot.admission` event for the rule `resources/keys` was recorded",
     );

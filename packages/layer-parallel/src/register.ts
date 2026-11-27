@@ -749,7 +749,11 @@ export function hostLimitsInForce(input: {
     bounds[rule] = width;
   }
   if (input.profile === PARITY_PROFILE) {
-    return Object.freeze({ on: false, bounds: Object.freeze({}), refusals: Object.freeze(refusals) });
+    return Object.freeze({
+      on: false,
+      bounds: Object.freeze({}),
+      refusals: Object.freeze(refusals),
+    });
   }
   const projectTurnsItOff = input.projectConfiguration?.limits === "off";
   if (projectTurnsItOff) {
@@ -760,7 +764,11 @@ export function hostLimitsInForce(input: {
   // The switch in force is the USER's: a project's `off` is refused above
   // and cannot turn the limits off, and it cannot turn them on either.
   const on = input.userConfiguration?.limits === "on";
-  return Object.freeze({ on, bounds: Object.freeze({ ...bounds }), refusals: Object.freeze(refusals) });
+  return Object.freeze({
+    on,
+    bounds: Object.freeze({ ...bounds }),
+    refusals: Object.freeze(refusals),
+  });
 }
 
 /* ================================================================== *
@@ -830,7 +838,12 @@ export type SpeculateKeysInForce = {
  * (F154-FR-004): a foreign value falls back to the default with the reason
  * on record, never an error that stops a run.
  */
-function speculateNumberOr(value: unknown, fallback: number, key: string, maximum?: number): number {
+function speculateNumberOr(
+  value: unknown,
+  fallback: number,
+  key: string,
+  maximum?: number,
+): number {
   if (value === undefined) return fallback;
   const number = Number(value);
   const inRange =

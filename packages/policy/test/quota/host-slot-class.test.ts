@@ -34,8 +34,14 @@ test("T102: the annex holds nine classes and `host_slot` is not one of them", ()
 
 test("T102: `host_slot` joins the classes in force only while `host.limits` is on", () => {
   // Off — the default, and `parity`: exactly the annex.
-  assert.deepEqual(quotaClassesOf(() => false), [...CLASSES]);
-  assert.deepEqual(quotaClassesOf((name) => name === "other.switch"), [...CLASSES]);
+  assert.deepEqual(
+    quotaClassesOf(() => false),
+    [...CLASSES],
+  );
+  assert.deepEqual(
+    quotaClassesOf((name) => name === "other.switch"),
+    [...CLASSES],
+  );
   // On: the ten classes, `host_slot` at the end.
   const on = quotaClassesOf((name) => name === "host.limits");
   assert.equal(on.length, 10);
@@ -72,6 +78,9 @@ test("T102: the `host_slot` row of §Q.1 pauses and spends nothing, only while t
   assert.equal(row.retryable, true);
   assert.equal(row.blockedReason, null);
   // Off: no row, so no caller can act on the class (F154-FR-001).
-  assert.equal(actionRowHostSlotOf(() => false), null);
+  assert.equal(
+    actionRowHostSlotOf(() => false),
+    null,
+  );
   assert.equal(ACTION_ROW_HOST_SLOT_154.spends, "no");
 });

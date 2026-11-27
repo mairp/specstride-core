@@ -61,9 +61,16 @@ function roots(): { userStateRoot: string; workspace: string; runtime: string; t
 }
 
 /** The owner record of the lock of one slot, read off the disk. */
-function ownerOf(roots: { userStateRoot: string }, bound: string, slot: number): Record<string, unknown> {
+function ownerOf(
+  roots: { userStateRoot: string },
+  bound: string,
+  slot: number,
+): Record<string, unknown> {
   return JSON.parse(
-    readFileSync(join(slotControlRootOf(roots.userStateRoot, bound, slot), "lock", OWNER_RECORD_FILE), "utf8"),
+    readFileSync(
+      join(slotControlRootOf(roots.userStateRoot, bound, slot), "lock", OWNER_RECORD_FILE),
+      "utf8",
+    ),
   ) as Record<string, unknown>;
 }
 
@@ -81,7 +88,11 @@ test("a dead owner's slot is reclaimed by one atomic rename, tombstone kept", as
     // the probe reads `stale-owner-dead` through rows P5/P6 — a record of
     // another boot counts as dead whatever process now has its pid
     // (F122-FR-013).
-    const recordPath = join(slotControlRootOf(r.userStateRoot, "checks", taken.slot), "lock", OWNER_RECORD_FILE);
+    const recordPath = join(
+      slotControlRootOf(r.userStateRoot, "checks", taken.slot),
+      "lock",
+      OWNER_RECORD_FILE,
+    );
     writeFileSync(
       recordPath,
       JSON.stringify({ ...ownerOf(r, "checks", taken.slot), bootId: "boot-that-is-gone" }),
@@ -153,7 +164,11 @@ test("held-foreign and unknown count as held: admit waits, reclaim refuses", asy
     const taken = await a.acquire("checks", { runId: "run-a", launchId: "launch-a" });
     assert.equal(taken.acquired, true);
     if (!taken.acquired) return;
-    const recordPath = join(slotControlRootOf(r.userStateRoot, "checks", 0), "lock", OWNER_RECORD_FILE);
+    const recordPath = join(
+      slotControlRootOf(r.userStateRoot, "checks", 0),
+      "lock",
+      OWNER_RECORD_FILE,
+    );
     const record = JSON.parse(readFileSync(recordPath, "utf8")) as Record<string, unknown>;
 
     // held-foreign: the record names ANOTHER host (row P3).

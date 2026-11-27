@@ -19,10 +19,15 @@ import process from "node:process";
 
 import { fixture154, forbiddenTypes, slotAndHoldFiles } from "./helpers.ts";
 
-const BASELINE_FILE = join(import.meta.dirname, "../../fixtures/154/parity-baseline/events-00.json");
+const BASELINE_FILE = join(
+  import.meta.dirname,
+  "../../fixtures/154/parity-baseline/events-00.json",
+);
 
 /** The baseline event file: the raw `events.jsonl` lines of the recorded run. */
-const BASELINE: { readonly lines: readonly string[] } = JSON.parse(readFileSync(BASELINE_FILE, "utf8"));
+const BASELINE: { readonly lines: readonly string[] } = JSON.parse(
+  readFileSync(BASELINE_FILE, "utf8"),
+);
 
 /**
  * The run-varying fields of an `events.jsonl` line, each replaced by a fixed
@@ -54,7 +59,9 @@ function eventFiles(home: string): readonly string[] {
   const out: string[] = [];
   const walk = (dir: string): void => {
     if (!existsSync(dir)) return;
-    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+      a.name < b.name ? -1 : 1,
+    )) {
       const path = join(dir, entry.name);
       if (entry.isDirectory()) walk(path);
       else if (entry.name === "events.jsonl") out.push(readFileSync(path, "utf8"));

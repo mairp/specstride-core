@@ -44,10 +44,7 @@ function seededWorkspace(pauseRecord: Record<string, unknown>): Place {
     }),
   );
   writeFileSync(join(runDir, "pause.record"), JSON.stringify(pauseRecord));
-  writeFileSync(
-    join(control, "current.json"),
-    JSON.stringify({ runId: RUN, feature: SLUG }),
-  );
+  writeFileSync(join(control, "current.json"), JSON.stringify({ runId: RUN, feature: SLUG }));
   // A lock the probe cannot judge (no required field): the liveness reads
   // `unknown` and the run is not `dead`, so the display is the state itself.
   mkdirSync(join(control, "lock"), { recursive: true });
@@ -59,7 +56,10 @@ function seededWorkspace(pauseRecord: Record<string, unknown>): Place {
   };
 }
 
-function runStatus(place: Place, args: readonly string[] = []): { code: number | null; out: string } {
+function runStatus(
+  place: Place,
+  args: readonly string[] = [],
+): { code: number | null; out: string } {
   const r = spawnSync(process.execPath, [BIN, "status", ...args], {
     cwd: place.root,
     encoding: "utf8",
@@ -100,8 +100,14 @@ test("a host_slot pause prints as paused-quota (host_slot) through the pure seam
 test("a quota_window pause and a classless pause print paused-quota as before", async () => {
   const { displayWithPauseClass } = await import("../../src/status/status.ts");
   // The pauses feature 127 wrote keep their compatibility output.
-  assert.equal(displayWithPauseClass("paused-quota", pauseRecordOf("quota_window")), "paused-quota");
-  assert.equal(displayWithPauseClass("paused-quota", pauseRecordOf("provider_other")), "paused-quota");
+  assert.equal(
+    displayWithPauseClass("paused-quota", pauseRecordOf("quota_window")),
+    "paused-quota",
+  );
+  assert.equal(
+    displayWithPauseClass("paused-quota", pauseRecordOf("provider_other")),
+    "paused-quota",
+  );
   assert.equal(displayWithPauseClass("paused-quota", pauseRecordOf(null)), "paused-quota");
   assert.equal(displayWithPauseClass("paused-quota", null), "paused-quota");
 });

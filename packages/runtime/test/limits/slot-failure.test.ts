@@ -67,10 +67,17 @@ test("a holder that dies is reclaimed by a contender", async () => {
     assert.equal(taken.acquired, true);
     if (!taken.acquired) return;
     // The boot of the holder is gone: the probe reads stale-owner-dead.
-    const recordPath = join(slotControlRootOf(r.userStateRoot, "checks", 0), "lock", OWNER_RECORD_FILE);
+    const recordPath = join(
+      slotControlRootOf(r.userStateRoot, "checks", 0),
+      "lock",
+      OWNER_RECORD_FILE,
+    );
     writeFileSync(
       recordPath,
-      JSON.stringify({ ...JSON.parse(readFileSync(recordPath, "utf8") as string), bootId: "boot-gone" }),
+      JSON.stringify({
+        ...JSON.parse(readFileSync(recordPath, "utf8") as string),
+        bootId: "boot-gone",
+      }),
     );
     const admission = await a.admit("checks");
     assert.deepEqual(
@@ -123,10 +130,17 @@ test("a home seen by two hosts answers held-foreign and counts as held", async (
     if (!taken.acquired) return;
     // Another host reads the same home: its record names a host that is
     // not the reader's (row P3).
-    const recordPath = join(slotControlRootOf(r.userStateRoot, "checks", 0), "lock", OWNER_RECORD_FILE);
+    const recordPath = join(
+      slotControlRootOf(r.userStateRoot, "checks", 0),
+      "lock",
+      OWNER_RECORD_FILE,
+    );
     writeFileSync(
       recordPath,
-      JSON.stringify({ ...JSON.parse(readFileSync(recordPath, "utf8") as string), hostName: "other-host.test" }),
+      JSON.stringify({
+        ...JSON.parse(readFileSync(recordPath, "utf8") as string),
+        hostName: "other-host.test",
+      }),
     );
     const probe = await a.probe("checks");
     assert.equal(probe.readable, true);
@@ -150,7 +164,10 @@ test("an unreadable store answers unbounded and never throws", async () => {
     const a = storeOf(r);
     const acquired = await a.acquire("checks", { runId: "run-a" });
     assert.deepEqual(
-      { acquired: acquired.acquired, verdict: acquired.acquired ? acquired.verdict : acquired.verdict },
+      {
+        acquired: acquired.acquired,
+        verdict: acquired.acquired ? acquired.verdict : acquired.verdict,
+      },
       { acquired: false, verdict: "unbounded" },
     );
     if (acquired.acquired) return;

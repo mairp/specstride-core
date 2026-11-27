@@ -109,10 +109,7 @@ export type LandingRunOutcome = {
 
 /** The killpoints the tests use (T124): where a kill leaves a resume state. */
 export type LandingKillpoint =
-  | "after-rebase"
-  | "after-gate"
-  | "after-fast-forward"
-  | "before-record";
+  "after-rebase" | "after-gate" | "after-fast-forward" | "before-record";
 
 /** Where the landing record of one stage is written, under the control root. */
 export function landingRecordPath(
@@ -125,7 +122,11 @@ export function landingRecordPath(
 
 /** Write the record atomically: sorted keys, indent 2, newline. */
 export function writeLandingRecord(controlRoot: string, record: LandingRecord): void {
-  atomicWrite(landingRecordPath(controlRoot, record.pipelineRunId, record.stage), `${JSON.stringify(record, sortedKeys, 2)}\n`, { createDirectory: true });
+  atomicWrite(
+    landingRecordPath(controlRoot, record.pipelineRunId, record.stage),
+    `${JSON.stringify(record, sortedKeys, 2)}\n`,
+    { createDirectory: true },
+  );
 }
 
 /** Read the record back; absent or unreadable content reads as null (LD-4). */
@@ -247,7 +248,13 @@ export async function runLandingForStage(input: LandingRunInput): Promise<Landin
     record.parkedReason = "rebase-conflict";
     kill("before-record");
     writeLandingRecord(input.controlRoot, record);
-    return { landed: false, parked: true, exitCode: PARKED_STAGE_EXIT_CODE, record, ruleId: decision.ruleId };
+    return {
+      landed: false,
+      parked: true,
+      exitCode: PARKED_STAGE_EXIT_CODE,
+      record,
+      ruleId: decision.ruleId,
+    };
   }
 
   // 3) The full gate of the stage on the rebased tree (F154-FR-051).
@@ -262,7 +269,13 @@ export async function runLandingForStage(input: LandingRunInput): Promise<Landin
     record.parkedReason = "gate-red";
     kill("before-record");
     writeLandingRecord(input.controlRoot, record);
-    return { landed: false, parked: true, exitCode: PARKED_STAGE_EXIT_CODE, record, ruleId: decision.ruleId };
+    return {
+      landed: false,
+      parked: true,
+      exitCode: PARKED_STAGE_EXIT_CODE,
+      record,
+      ruleId: decision.ruleId,
+    };
   }
 
   // 4) LD-1: fast-forward home, and nothing else (F154-FR-050).

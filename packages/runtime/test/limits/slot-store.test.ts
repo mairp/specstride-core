@@ -60,7 +60,11 @@ test("the store makes N lock directories per bound and takes a free slot", async
       launchId: "launch-a",
       launchNonce: "nonce-a",
     });
-    assert.equal(result.acquired, true, `the acquire did not take a slot: ${JSON.stringify(result)}`);
+    assert.equal(
+      result.acquired,
+      true,
+      `the acquire did not take a slot: ${JSON.stringify(result)}`,
+    );
     if (!result.acquired) return; // narrowed for the type checker
     assert.ok(result.slot === 0 || result.slot === 1, `slot ${result.slot} is outside 0..1`);
     assert.equal(result.verdict, "take");
@@ -74,10 +78,16 @@ test("the store makes N lock directories per bound and takes a free slot", async
     assert.ok(existsSync(lockDirectory), `the lock directory ${lockDirectory} does not exist`);
 
     // The owner record of the taken slot, as `ownerRecordFor` wrote it.
-    const record = JSON.parse(readFileSync(join(lockDirectory, OWNER_RECORD_FILE), "utf8")) as Record<string, unknown>;
+    const record = JSON.parse(
+      readFileSync(join(lockDirectory, OWNER_RECORD_FILE), "utf8"),
+    ) as Record<string, unknown>;
     assert.equal(record.pid, process.pid, "the owner record does not name this process");
     assert.equal(record.runId, "run-a");
-    assert.equal(typeof record[ENDPOINT_FIELD], "string", "the record carries no liveness endpoint");
+    assert.equal(
+      typeof record[ENDPOINT_FIELD],
+      "string",
+      "the record carries no liveness endpoint",
+    );
     assert.equal(typeof record[ACQUIRED_AT_FIELD], "string", "the record carries no acquired time");
   } finally {
     env.tidy();
@@ -97,7 +107,11 @@ test("a probe answers held-live for the taken slot and free for the others", asy
     assert.equal(probe.probes.length, 3, "one status per slot");
     for (const slot of probe.probes) {
       if (slot.slot === result.slot) {
-        assert.equal(slot.status, "held-live", `slot ${slot.slot} is ${slot.status}, not held-live`);
+        assert.equal(
+          slot.status,
+          "held-live",
+          `slot ${slot.slot} is ${slot.status}, not held-live`,
+        );
       } else {
         assert.equal(slot.status, "free", `slot ${slot.slot} is ${slot.status}, not free`);
       }
@@ -132,7 +146,10 @@ test("release frees the held slot and is idempotent", async () => {
     assert.equal(probe.readable, true);
     if (!probe.readable) return;
     assert.equal(probe.probes[result.slot].status, "free", "the released slot is not free");
-    await assert.doesNotReject(() => env.store.release("checks"), "a second release must be silence");
+    await assert.doesNotReject(
+      () => env.store.release("checks"),
+      "a second release must be silence",
+    );
   } finally {
     env.tidy();
   }
@@ -166,7 +183,10 @@ test("slotAdmissionOf decides take, reclaim and wait over the probes", () => {
     { slot: 1, status: "free" as const, row: "P1" },
   ];
   assert.deepEqual(
-    { verdict: slotAdmissionOf("checks", 2, probes).verdict, slot: slotAdmissionOf("checks", 2, probes).slot },
+    {
+      verdict: slotAdmissionOf("checks", 2, probes).verdict,
+      slot: slotAdmissionOf("checks", 2, probes).slot,
+    },
     { verdict: "take", slot: 1 },
   );
   const stale = [
@@ -174,7 +194,10 @@ test("slotAdmissionOf decides take, reclaim and wait over the probes", () => {
     { slot: 1, status: "held-foreign" as const, row: "P3" },
   ];
   assert.deepEqual(
-    { verdict: slotAdmissionOf("checks", 2, stale).verdict, slot: slotAdmissionOf("checks", 2, stale).slot },
+    {
+      verdict: slotAdmissionOf("checks", 2, stale).verdict,
+      slot: slotAdmissionOf("checks", 2, stale).slot,
+    },
     { verdict: "reclaim", slot: 0 },
   );
   const held = [
@@ -194,11 +217,14 @@ test("admit decides over the live probes of the store", async () => {
   try {
     mkdirSync(env.slots, { recursive: true });
     const before = await env.store.admit("checks");
-    assert.deepEqual({ verdict: before.verdict, slot: before.slot, bound: before.bound }, {
-      verdict: "take",
-      slot: 0,
-      bound: 1,
-    });
+    assert.deepEqual(
+      { verdict: before.verdict, slot: before.slot, bound: before.bound },
+      {
+        verdict: "take",
+        slot: 0,
+        bound: 1,
+      },
+    );
     assert.equal(before.rule, "checks");
     const result = await env.store.acquire("checks");
     assert.equal(result.acquired, true);

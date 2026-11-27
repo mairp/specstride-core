@@ -46,15 +46,7 @@ const directories = readdirSync(FIXTURES, { withFileTypes: true })
   .sort();
 
 test("T013 every fixture of T011 is present", () => {
-  assert.deepEqual(directories, [
-    "door",
-    "groups",
-    "phases",
-    "plan",
-    "slots",
-    "spec",
-    "stages",
-  ]);
+  assert.deepEqual(directories, ["door", "groups", "phases", "plan", "slots", "spec", "stages"]);
 });
 
 for (const name of directories) {
@@ -81,11 +73,7 @@ for (const name of directories) {
       },
     );
     assert.equal(plan.fallback, "classic");
-    assert.equal(
-      groupsInThePlan(plan),
-      0,
-      `${name}: no group with the switches off`,
-    );
+    assert.equal(groupsInThePlan(plan), 0, `${name}: no group with the switches off`);
     for (const phase of plan.phases) {
       assert.equal(phase.groups.length, 0);
     }
@@ -104,15 +92,16 @@ test("T018 the proposed admission checks stay outside row 61 with the switches o
     assert.equal(isAdmissionCheck(entry.check), false, entry.check);
   }
   // With every switch off the checks in force are exactly row 61.
-  assert.deepEqual(admissionChecksOf(() => false), [...ADMISSION_CHECKS]);
+  assert.deepEqual(
+    admissionChecksOf(() => false),
+    [...ADMISSION_CHECKS],
+  );
   // A switch on adds only its own check, and only behind its switch.
-  assert.deepEqual(
-    admissionChecksOf((name) => name === "loop.parallel.noRepeat").slice(-1),
-    ["repeat"],
-  );
-  assert.deepEqual(
-    admissionChecksOf((name) => name === "loop.parallel.groupUnits").slice(-1),
-    ["dependency"],
-  );
+  assert.deepEqual(admissionChecksOf((name) => name === "loop.parallel.noRepeat").slice(-1), [
+    "repeat",
+  ]);
+  assert.deepEqual(admissionChecksOf((name) => name === "loop.parallel.groupUnits").slice(-1), [
+    "dependency",
+  ]);
   assert.equal(admissionChecksOf(() => false).length, 8);
 });

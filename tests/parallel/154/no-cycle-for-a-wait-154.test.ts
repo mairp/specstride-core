@@ -60,7 +60,12 @@ const SLOT_WAIT_EVENTS: readonly CountedRecord[] = Object.freeze([
     attemptId: "attempt-1",
     data: { rule: "sessions/account", verdict: "queued", slotVerdict: "wait" },
   },
-  { ns: "policy", kind: "run.resumed", attemptId: "attempt-1", data: { resumedBy: "probe-succeeded" } },
+  {
+    ns: "policy",
+    kind: "run.resumed",
+    attemptId: "attempt-1",
+    data: { resumedBy: "probe-succeeded" },
+  },
 ]);
 
 /**
@@ -71,23 +76,75 @@ const SLOT_WAIT_EVENTS: readonly CountedRecord[] = Object.freeze([
  */
 function ledgerWhereAWorkerWaitsForASlot(): readonly CountedRecord[] {
   return [
-    record("group_planned", { groupId: "g1", data: { groupId: "g1", tasks: ["t1"], planHash: "h" } }),
+    record("group_planned", {
+      groupId: "g1",
+      data: { groupId: "g1", tasks: ["t1"], planHash: "h" },
+    }),
     record("group_started", { groupId: "g1", data: { baseTree: "b", workspaceFingerprint: "f0" } }),
-    record("worker_started", { groupId: "g1", workerId: "w1", data: { task: "t1", passId: "p1", passOrdinal: [1, 1, 0], treeFingerprint: "f1", pid: 1, startTime: 0 } }),
-    record("worker_ended", { groupId: "g1", workerId: "w1", data: { endCause: "done", treeId: "t", treeFingerprint: "f2", usage: "unknown" } }),
+    record("worker_started", {
+      groupId: "g1",
+      workerId: "w1",
+      data: {
+        task: "t1",
+        passId: "p1",
+        passOrdinal: [1, 1, 0],
+        treeFingerprint: "f1",
+        pid: 1,
+        startTime: 0,
+      },
+    }),
+    record("worker_ended", {
+      groupId: "g1",
+      workerId: "w1",
+      data: { endCause: "done", treeId: "t", treeFingerprint: "f2", usage: "unknown" },
+    }),
     // THE WAIT: worker w2 holds no slot yet; the pause opens and closes.
     ...SLOT_WAIT_EVENTS,
-    record("worker_started", { groupId: "g1", workerId: "w2", data: { task: "t1", passId: "p2", passOrdinal: [1, 2, 0], treeFingerprint: "f3", pid: 2, startTime: 5 } }),
-    record("worker_ended", { groupId: "g1", workerId: "w2", data: { endCause: "done", treeId: "t", treeFingerprint: "f4", usage: "unknown" } }),
-    record("group_barrier", { groupId: "g1", data: { workspaceFingerprint: "f5", workerFingerprints: { w1: "f2", w2: "f4" } } }),
+    record("worker_started", {
+      groupId: "g1",
+      workerId: "w2",
+      data: {
+        task: "t1",
+        passId: "p2",
+        passOrdinal: [1, 2, 0],
+        treeFingerprint: "f3",
+        pid: 2,
+        startTime: 5,
+      },
+    }),
+    record("worker_ended", {
+      groupId: "g1",
+      workerId: "w2",
+      data: { endCause: "done", treeId: "t", treeFingerprint: "f4", usage: "unknown" },
+    }),
+    record("group_barrier", {
+      groupId: "g1",
+      data: { workspaceFingerprint: "f5", workerFingerprints: { w1: "f2", w2: "f4" } },
+    }),
     record("audit_done", { groupId: "g1", data: { audits: { w1: "accepted", w2: "accepted" } } }),
-    record("merge_done", { groupId: "g1", data: { composedTreeId: "c", acceptedWorkers: ["w1", "w2"] } }),
+    record("merge_done", {
+      groupId: "g1",
+      data: { composedTreeId: "c", acceptedWorkers: ["w1", "w2"] },
+    }),
     record("apply_started", { groupId: "g1", data: { paths: [] } }),
     record("applied", { groupId: "g1", data: { workspaceFingerprint: "f6" } }),
     record("ticks_applied", { groupId: "g1", data: { taskIds: ["t1"] } }),
-    record("merge_check_started", { groupId: "g1", data: { fingerprint: "f6", checkManifestHash: "m" } }),
-    record("merge_check_finished", { groupId: "g1", data: { fingerprint: "f6", results: [], conditions: [] } }),
-    record("group_closed", { groupId: "g1", data: { outcome: "closed", workerOutcomes: { w1: "accepted", w2: "accepted" }, treesRemoved: [] } }),
+    record("merge_check_started", {
+      groupId: "g1",
+      data: { fingerprint: "f6", checkManifestHash: "m" },
+    }),
+    record("merge_check_finished", {
+      groupId: "g1",
+      data: { fingerprint: "f6", results: [], conditions: [] },
+    }),
+    record("group_closed", {
+      groupId: "g1",
+      data: {
+        outcome: "closed",
+        workerOutcomes: { w1: "accepted", w2: "accepted" },
+        treesRemoved: [],
+      },
+    }),
   ];
 }
 
@@ -95,7 +152,10 @@ function ledgerWhereAWorkerWaitsForASlot(): readonly CountedRecord[] {
 function ledgerWithOneInterruptionOfTheGroup(): readonly CountedRecord[] {
   return [
     ...ledgerWhereAWorkerWaitsForASlot(),
-    record("merge_check_started", { groupId: "g1", data: { fingerprint: "f6", checkManifestHash: "m" } }),
+    record("merge_check_started", {
+      groupId: "g1",
+      data: { fingerprint: "f6", checkManifestHash: "m" },
+    }),
   ];
 }
 
@@ -105,7 +165,9 @@ test("G8 T159 — a worker that waits for a slot is charged NO cycle (F154-FR-07
     const waitLedger = ledgerWhereAWorkerWaitsForASlot();
 
     // The slot-wait pair of F154-FR-045 is present in what the run saw.
-    const waits = waitLedger.filter((r) => r.kind === "host.slot.admission" && r.data?.["slotVerdict"] === "wait");
+    const waits = waitLedger.filter(
+      (r) => r.kind === "host.slot.admission" && r.data?.["slotVerdict"] === "wait",
+    );
     assert.equal(waits.length, 1, "the fixture must carry one slot wait");
 
     // IR-50 (a): a cycle is spent from the second interruption on — so a
@@ -133,8 +195,9 @@ test("G8 T159 — a worker that waits for a slot is charged NO cycle (F154-FR-07
       );
     }
     assert.equal(
-      ofTheLayer.filter((r) => String(r.kind).startsWith("run.") || r.kind === "host.slot.admission")
-        .length,
+      ofTheLayer.filter(
+        (r) => String(r.kind).startsWith("run.") || r.kind === "host.slot.admission",
+      ).length,
       0,
       "no slot-wait event of F154-FR-045 is a record of the layer",
     );

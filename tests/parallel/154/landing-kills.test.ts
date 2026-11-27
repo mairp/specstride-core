@@ -61,10 +61,7 @@ function endOf(outcome: LandingRunOutcome, home: readonly string[]): End {
 }
 
 /** Fake ports over in-memory state: home holds landed stages in order. */
-function fakeWorld(input: {
-  conflict?: readonly string[];
-  red?: readonly string[];
-}): {
+function fakeWorld(input: { conflict?: readonly string[]; red?: readonly string[] }): {
   makeInput(over?: Partial<LandingRunInput>): LandingRunInput;
   home: () => readonly string[];
   git: LandingGitPort & { rebaseCount: number };
@@ -253,7 +250,12 @@ test("a kill inside the glue leaves the workspace running and nothing landed", a
           { id: "A", kind: "specstride", dependencies: [], preconditions: [], postconditions: [] },
           { id: "B", kind: "specstride", dependencies: [], preconditions: [], postconditions: [] },
         ] satisfies Stage[],
-        ports: { worktree, git: world.git, checks: world.makeInput().ports.checks, approvals: world.makeInput().ports.approvals },
+        ports: {
+          worktree,
+          git: world.git,
+          checks: world.makeInput().ports.checks,
+          approvals: world.makeInput().ports.approvals,
+        },
         now: () => new Date("2026-11-25T00:00:00Z"),
         killpoint: (_stage, point) => {
           if (point === "after-rebase") throw new Error("stop");

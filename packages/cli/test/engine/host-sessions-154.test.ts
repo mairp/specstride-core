@@ -72,9 +72,7 @@ test("three takes under a sessions bound of two hold two and the third waits", a
     assert.ok(first !== null, "the first session take did not acquire");
     assert.ok(second !== null, "the second session take did not acquire");
     let thirdAcquired = false;
-    const third = slots.take("sessions/default", (admission) =>
-      admissions.push(admission.verdict),
-    );
+    const third = slots.take("sessions/default", (admission) => admissions.push(admission.verdict));
     const probe = await Promise.race([
       third.then((release) => {
         thirdAcquired = release !== null;
@@ -119,8 +117,7 @@ test("an engine run with a sessions bound records admissions for the account rul
     const events = eventsUnderHome(home);
     assert.ok(
       events.some(
-        (event) =>
-          event.type === "host.slot.admission" && event.data.rule === "sessions/default",
+        (event) => event.type === "host.slot.admission" && event.data.rule === "sessions/default",
       ),
       "no `host.slot.admission` event for the rule `sessions/default` was recorded",
     );

@@ -473,15 +473,24 @@ export async function runWideGroupLandings(
       stage: stage.id,
       ports: { git: input.ports.git, checks: input.ports.checks, approvals: input.ports.approvals },
       now: input.now,
-      killpoint: input.killpoint !== undefined ? (point) => input.killpoint?.(stage.id, point) : undefined,
+      killpoint:
+        input.killpoint !== undefined ? (point) => input.killpoint?.(stage.id, point) : undefined,
     });
     // The terminal state of the workspace, with its landing record, then the
     // removal (T118: nothing under a running stage is removed).
-    const marked = markStageWorkspace(input.controlRoot, record, outcome.parked ? "parked" : "landed", {
-      landingRecord: landingRecordPath(input.controlRoot, input.pipelineRunId, stage.id),
+    const marked = markStageWorkspace(
+      input.controlRoot,
+      record,
+      outcome.parked ? "parked" : "landed",
+      {
+        landingRecord: landingRecordPath(input.controlRoot, input.pipelineRunId, stage.id),
+        now: input.now,
+      },
+    );
+    await removeStageWorkspace(input.controlRoot, marked, {
+      port: input.ports.worktree,
       now: input.now,
     });
-    await removeStageWorkspace(input.controlRoot, marked, { port: input.ports.worktree, now: input.now });
     if (outcome.parked) parked.push(stage.id);
     else landed.push(stage.id);
     out.push({

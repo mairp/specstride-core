@@ -585,8 +585,7 @@ export type ParallelWiringInput = {
    * the composition root answers with a row 61 verdict, an `AdmissionVerdict`.
    */
   readonly repeatVerdictOf?:
-    | ((group: PlannedGroup) => AdmissionVerdict | RepeatVerdict)
-    | undefined;
+    ((group: PlannedGroup) => AdmissionVerdict | RepeatVerdict) | undefined;
   /**
    * The number of paths the group's application changed (F154-FR-027).
    * Default: not read.
@@ -597,15 +596,13 @@ export type ParallelWiringInput = {
    * base snapshot's (F154-FR-028). Default: no base result.
    */
   readonly baseResultOfTheInnerSet?:
-    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
-    | undefined;
+    ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null) | undefined;
   /**
    * The group's acceptance check run in its worker tree (F154-FR-034,
    * -035). Default: the check runs on the workspace, as today.
    */
   readonly acceptanceCheckOfTheGroup?:
-    | ((worker: PreparedWorker) => Promise<WorkerCheckVerdict>)
-    | undefined;
+    ((worker: PreparedWorker) => Promise<WorkerCheckVerdict>) | undefined;
   /**
    * The phase's frozen task groups, as candidates of the planner
    * (F154-FR-031). Default: none, the `[P]` tasks stay the unit.
@@ -663,8 +660,7 @@ export type ParallelWiringInput = {
    * -067). Default: none starts.
    */
   readonly speculationVerdictAt?:
-    | (() => SpeculationVerdict | Promise<SpeculationVerdict>)
-    | undefined;
+    (() => SpeculationVerdict | Promise<SpeculationVerdict>) | undefined;
   /* The carry-out. */
   readonly emit: (type: string, data: Readonly<Record<string, unknown>>) => void;
   readonly say: (line: string) => void;
@@ -715,11 +711,12 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
   const groups: readonly PlannedGroup[] =
     plan === null
       ? Object.freeze([])
-      : (input.groupsOfThePhase !== undefined
-          ? input.groupsOfThePhase()
-          : theGroupsOfThePhase(plan, input.phase));
+      : input.groupsOfThePhase !== undefined
+        ? input.groupsOfThePhase()
+        : theGroupsOfThePhase(plan, input.phase);
   const group = groups[0];
-  const before = plan === null || group === undefined ? [] : tasksBeforeTheGroup(plan, input.phase, group);
+  const before =
+    plan === null || group === undefined ? [] : tasksBeforeTheGroup(plan, input.phase, group);
 
   /* F154-FR-031, -032 (T076) — the groups of the phase AS UNITS. Where
    * `loop.parallel.groupUnits` is on, a group the planner took from the
@@ -943,7 +940,8 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
     reservedBlock: () => {
       const waiting = groups.find(
         (candidate) =>
-          !startedOrdinals.includes(candidate.ordinal) && !cancelledOrdinals.includes(candidate.ordinal),
+          !startedOrdinals.includes(candidate.ordinal) &&
+          !cancelledOrdinals.includes(candidate.ordinal),
       );
       return waiting === undefined || layerOffAttempt || layerOffRun
         ? ""
@@ -1321,8 +1319,10 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
         // through so an application of 0 paths runs no merge check.
         ...(input.appliedPathCountOf === undefined
           ? {}
-          : { appliedPathCountOfTheGroup: (): number | undefined =>
-                input.appliedPathCountOf?.(current) }),
+          : {
+              appliedPathCountOfTheGroup: (): number | undefined =>
+                input.appliedPathCountOf?.(current),
+            }),
         // T066 (F154-FR-028) — the base-result seam, handed through so the
         // merge baseline comparison reads the base the group started from.
         ...(input.baseResultOfTheInnerSet === undefined
@@ -1364,9 +1364,10 @@ export function parallelWiringOfTheAttempt(input: ParallelWiringInput): TheParal
     input.onClosed(closed, counts);
     /* F154-FR-022 — the transient rate limits THIS group ended with count
      * for the groups that follow it in the attempt (F142-FR-019). */
-    const transient = input.transientRateLimitsOfTheGroup !== undefined
-      ? input.transientRateLimitsOfTheGroup(current)
-      : 0;
+    const transient =
+      input.transientRateLimitsOfTheGroup !== undefined
+        ? input.transientRateLimitsOfTheGroup(current)
+        : 0;
     if (transient >= TRANSIENT_RATE_LIMITS_THAT_HALVE) {
       groupsWithTwoTransientRateLimits += 1;
     }

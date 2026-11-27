@@ -66,9 +66,7 @@ import type {
 import type { BarrierResult } from "../../../core/src/parallel/barrier.ts";
 import { passOrdinalOf } from "../../../core/src/parallel/group-executor.ts";
 import type { IntegrationResult, TickOutcome } from "../../../core/src/parallel/integrate.ts";
-import {
-  releaseTheWriterOfTheGroup,
-} from "../../../core/src/parallel/integrate.ts";
+import { releaseTheWriterOfTheGroup } from "../../../core/src/parallel/integrate.ts";
 import { releaseTheLedgerQueueOf } from "./parallel-drive.ts";
 import { initStore, treeStore, type StorePlaces } from "../../../tree-store/src/index.ts";
 import {
@@ -309,8 +307,7 @@ export async function runTheGroupOfTheAttempt(input: {
    * existed.
    */
   readonly chargeCyclesOfTheAdmittedTasks?:
-    | ((workerId: string, taskId: string) => void)
-    | undefined;
+    ((workerId: string, taskId: string) => void) | undefined;
   /**
    * T062/T063 (F154-FR-027) — the paths the group's application changed, as
    * the composition root's seam reads them. Default: the paths the
@@ -325,8 +322,7 @@ export async function runTheGroupOfTheAttempt(input: {
    * merge baseline comparison reads the result the base was red on.
    */
   readonly baseResultOfTheInnerSet?:
-    | ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null)
-    | undefined;
+    ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null) | undefined;
   /**
    * F154-FR-034/-035 (T080, T081) — the group's acceptance check run in its
    * worker tree under `loop.parallel.groupCheck`. Left out or `on: false`,
@@ -334,8 +330,7 @@ export async function runTheGroupOfTheAttempt(input: {
    * unchanged (T078), and under `parity` the switch reads off.
    */
   readonly workerCheck?:
-    | { readonly on: boolean; readonly acceptanceCheck: GroupAcceptanceCheck }
-    | undefined;
+    { readonly on: boolean; readonly acceptanceCheck: GroupAcceptanceCheck } | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
   const startedAtMs = Date.now();
@@ -775,10 +770,7 @@ export async function runTheGroupOfTheAttempt(input: {
     } else if (merge.outcome.directive === "repair") {
       outcome = "repair";
       directive = "repair";
-    } else if (
-      merge.outcome.directive === "not-run" ||
-      merge.outcome.directive === "no-charge"
-    ) {
+    } else if (merge.outcome.directive === "not-run" || merge.outcome.directive === "no-charge") {
       // T062/T063 and T066 (F154-FR-027, -028; rules MG-1, MG-2): the unit is
       // neither kept nor repaired nor failed. No repair is charged (the
       // outcome's `repairsCharged` is empty), the group is NOT counted as a

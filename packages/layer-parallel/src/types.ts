@@ -120,8 +120,9 @@ export const PROPOSED_ADMISSION_CHECKS_154 = Object.freeze([
 export function admissionChecksOf(
   switchIsOn: (name: string) => boolean,
 ): readonly AdmissionCheck[] {
-  const extra = PROPOSED_ADMISSION_CHECKS_154.filter((entry) => switchIsOn(entry.switch))
-    .map((entry) => entry.check as AdmissionCheck);
+  const extra = PROPOSED_ADMISSION_CHECKS_154.filter((entry) => switchIsOn(entry.switch)).map(
+    (entry) => entry.check as AdmissionCheck,
+  );
   return extra.length === 0 ? ADMISSION_CHECKS : [...ADMISSION_CHECKS, ...extra];
 }
 

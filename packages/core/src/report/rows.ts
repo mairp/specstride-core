@@ -137,11 +137,7 @@ export function median(values: readonly number[]): number | null {
  * category that started earliest, ties resolved in the fixed order pass,
  * check, gate/critic.
  */
-import {
-  type GroupReportRow,
-  type ReportRows154,
-  type ShareOrMissing,
-} from "./rows-154.ts";
+import { type GroupReportRow, type ReportRows154, type ShareOrMissing } from "./rows-154.ts";
 
 /** The 154 marking of a row the events cannot hold (F154-FR-012). */
 export const NOT_IN_EVENTS_154 = "not in the events" as const;
@@ -235,9 +231,10 @@ function unionLengthMs(intervals: readonly TaggedInterval[]): number {
 }
 
 /** Elementary slices: every boundary, credited to the covering category that started earliest. */
-function assignedSlices(
-  events: readonly ReportEvent[],
-): { windowMs: number; perKind: Record<TaggedInterval["kind"], number> } {
+function assignedSlices(events: readonly ReportEvent[]): {
+  windowMs: number;
+  perKind: Record<TaggedInterval["kind"], number>;
+} {
   const intervals = timedIntervalsOf(events);
   const windowStart = Math.min(...events.map((event) => event.at));
   const windowEnd = Math.max(...events.map((event) => event.at));
@@ -358,7 +355,7 @@ export function groupRowsOf(events: readonly ReportEvent[]): readonly GroupRepor
       const id = str(event.data.groupId);
       const open = started.get(id);
       rows.push({
-        phase: open?.phase ?? (num(event.data.phase) ?? 0),
+        phase: open?.phase ?? num(event.data.phase) ?? 0,
         outcome: str(event.data.outcome),
         appliedPathCount: applied.get(id) ?? 0,
         mergeCheckResult:

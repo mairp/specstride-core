@@ -395,7 +395,9 @@ export async function carryOutTheResumeOfTheOpenGroup(input: {
       controlRoot: input.controlRoot,
       ...(input.resetCounts === true ? { resetCounts: true } : {}),
       drive: input.drive,
-      ...(input.takeChecksSlotOfTheRun === undefined ? {} : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
+      ...(input.takeChecksSlotOfTheRun === undefined
+        ? {}
+        : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
     });
   }
   // A state of the eight this slice does not carry out yet: nothing is

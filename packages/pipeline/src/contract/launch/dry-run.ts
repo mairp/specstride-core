@@ -370,7 +370,9 @@ export async function dryRun(input: DryRunInput): Promise<DryRunOutcome> {
       workers: input.workersMax,
     });
     if (input.parallelUnits === true) {
-      lines.push(...printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: input.verbose === true }));
+      lines.push(
+        ...printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: input.verbose === true }),
+      );
     } else {
       lines.push("plan the option would produce");
       lines.push(...printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: true }));

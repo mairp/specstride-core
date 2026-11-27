@@ -49,10 +49,7 @@ import { join } from "node:path";
 import process from "node:process";
 
 import { runLandingForStage } from "../../../packages/pipeline/src/executor/landing-run.ts";
-import {
-  runGit,
-  type GitResult,
-} from "../../../packages/tree-store/src/git.ts";
+import { runGit, type GitResult } from "../../../packages/tree-store/src/git.ts";
 
 /* ------------------------------------------------------------------ *
  * The real git binary, resolved BEFORE the PATH override exists.
@@ -224,7 +221,10 @@ test("G8 T154: the landing rebase runs every git invocation hardened (PU-81, F15
     // A HOSTILE HOOK planted where git looks by default: if hooks were not
     // disabled, the rebase would run it and leave the sentinel behind.
     const hooks = join(repo, ".git", "hooks");
-    writeFileSync(join(hooks, "pre-rebase"), `#!/bin/sh\ntouch ${join(root, "HOOK-RAN")}\nexit 1\n`);
+    writeFileSync(
+      join(hooks, "pre-rebase"),
+      `#!/bin/sh\ntouch ${join(root, "HOOK-RAN")}\nexit 1\n`,
+    );
     chmodSync(join(hooks, "pre-rebase"), 0o755);
 
     /* -- the landing: a real rebase through the real git port ---------- */
@@ -296,7 +296,11 @@ test("G8 T154: the landing rebase runs every git invocation hardened (PU-81, F15
       // The global configuration is removed twice over: the home of the
       // process is a directory that does not exist.
       assert.equal(entry.env["HOME"], "/nonexistent/specstride-tree-store", `${label}: HOME`);
-      assert.equal(entry.env["XDG_CONFIG_HOME"], "/nonexistent/specstride-tree-store/xdg", `${label}: XDG_CONFIG_HOME`);
+      assert.equal(
+        entry.env["XDG_CONFIG_HOME"],
+        "/nonexistent/specstride-tree-store/xdg",
+        `${label}: XDG_CONFIG_HOME`,
+      );
 
       // Hooks off, and no attributes file outside a tree can name a filter.
       const pairs = configPairsOf(entry.argv);
@@ -308,7 +312,11 @@ test("G8 T154: the landing rebase runs every git invocation hardened (PU-81, F15
       // No filter anywhere: no `-c` pair, no environment variable.
       for (const pair of pairs) {
         assert.equal(pair.startsWith("filter."), false, `${label}: filter config ${pair}`);
-        assert.equal(pair.startsWith("core.attributesFile=") && pair !== "core.attributesFile=/dev/null", false, `${label}: attributes file`);
+        assert.equal(
+          pair.startsWith("core.attributesFile=") && pair !== "core.attributesFile=/dev/null",
+          false,
+          `${label}: attributes file`,
+        );
       }
       for (const key of Object.keys(entry.env)) {
         assert.equal(key.startsWith("GIT_CONFIG_KEY_"), false, `${label}: ${key}`);

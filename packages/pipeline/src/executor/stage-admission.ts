@@ -71,10 +71,7 @@ export type StageGroupSoFar = {
 function declarationSignals(
   stages: readonly Stage[],
   declaration: StageGroupDeclaration,
-): Pick<
-  StageAdmissionSignals,
-  "cycle" | "unknownStage" | "neverTogetherAcrossGroups"
-> {
+): Pick<StageAdmissionSignals, "cycle" | "unknownStage" | "neverTogetherAcrossGroups"> {
   const known = new Set(stages.map((stage) => stage.id));
   const unknownStage = stages.some((stage) =>
     stage.dependencies.some((dependency) => !known.has(dependency)),
@@ -117,15 +114,19 @@ function signalsOf(
   const current = groupsSoFar[groupsSoFar.length - 1];
   const memberIds = new Set(current?.stages.map((member) => member.id) ?? []);
   const neverTogetherWithAMember = declaration.never_together.some(
-    (pair) =>
-      pair.stages.includes(stage.id) && pair.stages.some((id) => memberIds.has(id)),
+    (pair) => pair.stages.includes(stage.id) && pair.stages.some((id) => memberIds.has(id)),
   );
   const placed = new Set(groupsSoFar.flatMap((group) => group.stages.map((m) => m.id)));
   const dependenciesInEarlierOrSameGroup = stage.dependencies.every(
     (dependency) => placed.has(dependency) || memberIds.has(dependency),
   );
   const groupAtWidth = (current?.stages.length ?? 0) >= declaration.width;
-  return { ...declarationLevel, neverTogetherWithAMember, dependenciesInEarlierOrSameGroup, groupAtWidth };
+  return {
+    ...declarationLevel,
+    neverTogetherWithAMember,
+    dependenciesInEarlierOrSameGroup,
+    groupAtWidth,
+  };
 }
 
 /** Evaluate one row's `when` over the signals (an `and` of `equal` leaves). */

@@ -712,15 +712,13 @@ export function loopConfigurationOf(input: {
     // parity a unit stays a checkpoint claim and the check `dependency`
     // travels nowhere (F154-FR-002).
     parallelGroupUnits:
-      resolved.profile !== "parity" &&
-      switchIsOn(valueOf(LOOP_PARALLEL_GROUP_UNITS_KEY).value),
+      resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_PARALLEL_GROUP_UNITS_KEY).value),
     // Row 149 of annex X §X.7 (feature 154; CQ-154-04 A): OFF by default and
     // OFF under the `parity` profile whatever a source holds — under parity
     // the group's acceptance check stays on the workspace with the fixed
     // 300 s (R-C19), exactly as feature 153 ran it.
     parallelGroupCheck:
-      resolved.profile !== "parity" &&
-      switchIsOn(valueOf(LOOP_PARALLEL_GROUP_CHECK_KEY).value),
+      resolved.profile !== "parity" && switchIsOn(valueOf(LOOP_PARALLEL_GROUP_CHECK_KEY).value),
     // Row 150 of annex X §X.7 (feature 154, US6; CQ-154-12): OFF by default
     // and OFF under the `parity` profile whatever a source holds — under
     // parity every phase runs alone on the workspace, exactly as before

@@ -20,7 +20,11 @@
  * existed (F154-FR-004 — an unreadable store never errors, it answers
  * `unbounded` and the caller proceeds without the bound).
  */
-import { createSlotStore, type HostSlots, type SlotAdmission } from "../../../runtime/src/limits/slot-store.ts";
+import {
+  createSlotStore,
+  type HostSlots,
+  type SlotAdmission,
+} from "../../../runtime/src/limits/slot-store.ts";
 import { userStateRoot } from "@specstride/contracts/ids/roots";
 
 /** A release of a taken slot; `null` where nothing was gated. */
@@ -29,16 +33,21 @@ export type HostSlotRelease = (() => Promise<void>) | null;
 /** The predicate-read bounds of one engine start, keyed by slot rule. */
 export type HostBoundsOfTheStart = Readonly<Record<string, number>>;
 
-const BOUND_PATTERN =
-  /^SPECSTRIDE_HOST_(CHECKS_CONCURRENT|(?:SESSIONS|RESOURCES)_([A-Z0-9_]+))$/;
+const BOUND_PATTERN = /^SPECSTRIDE_HOST_(CHECKS_CONCURRENT|(?:SESSIONS|RESOURCES)_([A-Z0-9_]+))$/;
 
 /** The slot rule an environment variable names, and its value. */
-function boundOfTheVariable(name: string, value: string): { rule: string; width: number } | { refusal: string } {
+function boundOfTheVariable(
+  name: string,
+  value: string,
+): { rule: string; width: number } | { refusal: string } {
   const match = BOUND_PATTERN.exec(name);
-  if (match === null) return { refusal: `the environment variable \`${name}\` names no host bound` };
+  if (match === null)
+    return { refusal: `the environment variable \`${name}\` names no host bound` };
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    return { refusal: `the host bound \`${name}=${value}\` is not a positive integer: it is refused` };
+    return {
+      refusal: `the host bound \`${name}=${value}\` is not a positive integer: it is refused`,
+    };
   }
   const [kind, rest] = [match[1]!, match[2] ?? ""];
   const rule =
@@ -51,9 +60,10 @@ function boundOfTheVariable(name: string, value: string): { rule: string; width:
 }
 
 /** The bounds of one start's environment, with the refusals of the bad values. */
-export function hostBoundsFromEnvironment(
-  env: Readonly<Record<string, string | undefined>>,
-): { bounds: HostBoundsOfTheStart; refusals: readonly string[] } {
+export function hostBoundsFromEnvironment(env: Readonly<Record<string, string | undefined>>): {
+  bounds: HostBoundsOfTheStart;
+  refusals: readonly string[];
+} {
   const bounds: Record<string, number> = {};
   const refusals: string[] = [];
   for (const [name, value] of Object.entries(env)) {
@@ -80,7 +90,10 @@ export type RunHostSlots = {
    * while the bound is full; answers the release, or `null` where the run
    * proceeds without the bound (limits off, store unreadable).
    */
-  readonly take: (bound: string, emit: (admission: SlotAdmission) => void) => Promise<HostSlotRelease>;
+  readonly take: (
+    bound: string,
+    emit: (admission: SlotAdmission) => void,
+  ) => Promise<HostSlotRelease>;
 };
 
 /** How long one wait between admission polls lasts, before the jitter. */
@@ -129,7 +142,10 @@ export function makeRunHostSlots(input: {
   if (store === null) {
     return Object.freeze({ store: null, bounds, refusals, take: async () => null });
   }
-  const take = async (bound: string, emit: (admission: SlotAdmission) => void): Promise<HostSlotRelease> => {
+  const take = async (
+    bound: string,
+    emit: (admission: SlotAdmission) => void,
+  ): Promise<HostSlotRelease> => {
     for (;;) {
       const admission = await store!.admit(bound);
       if (admission.verdict === "unbounded") {
@@ -160,7 +176,9 @@ export function makeRunHostSlots(input: {
       // `wait` — a pause with jitter, never a busy spin, and the admission
       // event says so (F154-FR-039).
       emit(admission);
-      await new Promise((resolve) => setTimeout(resolve, WAIT_MS + Math.floor(Math.random() * JITTER_MS)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, WAIT_MS + Math.floor(Math.random() * JITTER_MS)),
+      );
     }
   };
   return Object.freeze({ store, bounds, refusals, take });

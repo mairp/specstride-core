@@ -26,8 +26,13 @@ test("the declared bound keys map to their slot rules", () => {
 
 test("a project that lowers a bound is accepted", () => {
   const inForce = hostLimitsInForce({
-    userConfiguration: { limits: "on", bounds: { "host.checks.concurrent": 4, "host.resources.cache.capacity": 2 } },
-    projectConfiguration: { bounds: { "host.checks.concurrent": 2, "host.resources.cache.capacity": 1 } },
+    userConfiguration: {
+      limits: "on",
+      bounds: { "host.checks.concurrent": 4, "host.resources.cache.capacity": 2 },
+    },
+    projectConfiguration: {
+      bounds: { "host.checks.concurrent": 2, "host.resources.cache.capacity": 1 },
+    },
   });
   assert.deepEqual(inForce.on, true);
   assert.deepEqual(inForce.bounds, { checks: 2, "resources/cache": 1 });

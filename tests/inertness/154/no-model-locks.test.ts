@@ -47,14 +47,7 @@ const SWITCHES_ON: readonly string[] = Object.freeze([
 ]);
 
 /** The fixture directories Phase 1 (T011) wrote under `tests/fixtures/154/`. */
-const FIXTURE_DIRS = [
-  "plan",
-  "groups",
-  "slots",
-  "stages",
-  "phases",
-  "spec",
-] as const;
+const FIXTURE_DIRS = ["plan", "groups", "slots", "stages", "phases", "spec"] as const;
 
 /**
  * What no prompt may ask a model to do (F154-FR-005). Each row is a
@@ -63,9 +56,18 @@ const FIXTURE_DIRS = [
 const FORBIDDEN_DELEGATIONS: readonly { readonly name: string; readonly re: RegExp }[] =
   Object.freeze([
     { name: "take a lock", re: /\b(take|acquire|grab|hold)\b[^.\n]{0,40}\b(lock|slot)\b/i },
-    { name: "release a lock", re: /\b(release|free|give up|let go of)\b[^.\n]{0,40}\b(lock|slot|hold)\b/i },
-    { name: "wait on a hold", re: /\b(wait (for|until)\b[^.\n]{0,40}\b(hold|reset|quota window)\b)/i },
-    { name: "merge content", re: /\b(merge|rebase|fast-forward)\b[^.\n]{0,60}\b(branch|content|work|tree|change)\b/i },
+    {
+      name: "release a lock",
+      re: /\b(release|free|give up|let go of)\b[^.\n]{0,40}\b(lock|slot|hold)\b/i,
+    },
+    {
+      name: "wait on a hold",
+      re: /\b(wait (for|until)\b[^.\n]{0,40}\b(hold|reset|quota window)\b)/i,
+    },
+    {
+      name: "merge content",
+      re: /\b(merge|rebase|fast-forward)\b[^.\n]{0,60}\b(branch|content|work|tree|change)\b/i,
+    },
     { name: "resolve a conflict", re: /\bresolve\b[^.\n]{0,40}\bconflict/i },
     { name: "judge independence", re: /\b(independent|independence)\b[^.\n]{0,80}\?/i },
     { name: "decide a wait", re: /\bshould (we|the run|it)\b[^.\n]{0,40}\b(wait|proceed)\b/i },

@@ -37,7 +37,10 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { makeRunHostSlots } from "../../../packages/cli/src/engine/host-slots.ts";
-import { startWorkerWatchdog, workerSignalSender } from "../../../packages/cli/src/engine/worker-supervisor.ts";
+import {
+  startWorkerWatchdog,
+  workerSignalSender,
+} from "../../../packages/cli/src/engine/worker-supervisor.ts";
 import type { SlotAdmission } from "../../../packages/runtime/src/limits/slot-store.ts";
 import { OWNER_RECORD_FILE } from "../../../packages/runtime/src/lock/paths.ts";
 
@@ -116,7 +119,11 @@ test("G8 T158: the hard ceilings bind over the TOTAL of every worker of every gr
       `the three holders did not hold DISTINCT slots: ${String(heldSlots)}`,
     );
     for (const admission of holders.flatMap(({ who }) => admissions[`checks/${who.label}`]!)) {
-      assert.equal(admission.bound, 3, `the ceiling ${who_label(admission)} was not the TOTAL bound`);
+      assert.equal(
+        admission.bound,
+        3,
+        `the ceiling ${who_label(admission)} was not the TOTAL bound`,
+      );
     }
     // The three later workers of the attempt (the rest of group 1 and all of
     // group 2) wait while the earlier groups' workers hold.
@@ -132,10 +139,17 @@ test("G8 T158: the hard ceilings bind over the TOTAL of every worker of every gr
           }),
           new Promise((done) => setTimeout(() => done("pending"), 0)),
         ]);
-        assert.equal(probe, "pending", `${who.label} of a later group acquired past the TOTAL ceiling`);
+        assert.equal(
+          probe,
+          "pending",
+          `${who.label} of a later group acquired past the TOTAL ceiling`,
+        );
         const seen = admissions[`checks/${who.label}`] ?? [];
         assert.ok(
-          seen.some((a) => a.verdict === "wait" && a.bound === 3 && (a.reason ?? "").includes("all 3 slots")),
+          seen.some(
+            (a) =>
+              a.verdict === "wait" && a.bound === 3 && (a.reason ?? "").includes("all 3 slots"),
+          ),
           `${who.label} was never told the TOTAL ceiling was full: ${JSON.stringify(seen)}`,
         );
         return { who, taken, acquired };
@@ -155,7 +169,10 @@ test("G8 T158: the hard ceilings bind over the TOTAL of every worker of every gr
           taken,
           new Promise<null>((done) => setTimeout(() => done(null), 5_000)),
         ]);
-        assert.ok(release !== null, `${who.label} never acquired after the earlier groups released`);
+        assert.ok(
+          release !== null,
+          `${who.label} never acquired after the earlier groups released`,
+        );
         return { who, release };
       }),
     );
@@ -200,9 +217,15 @@ test("G8 T158: the hard ceilings bind over the TOTAL of every worker of every gr
         }),
         new Promise((done) => setTimeout(() => done("pending"), 0)),
       ]);
-      assert.equal(probe, "pending", `${who.label} acquired past the capacity class of the TOTAL attempt`);
+      assert.equal(
+        probe,
+        "pending",
+        `${who.label} acquired past the capacity class of the TOTAL attempt`,
+      );
       assert.ok(
-        (capacity[who.label] ?? []).some((a) => a.verdict === "wait" && (a.reason ?? "").includes("all 2 slots")),
+        (capacity[who.label] ?? []).some(
+          (a) => a.verdict === "wait" && (a.reason ?? "").includes("all 2 slots"),
+        ),
         `${who.label} was never told the capacity class was full`,
       );
     }

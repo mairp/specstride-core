@@ -26,34 +26,22 @@ import { level2SectionsOf } from "../src/model.ts";
  * ------------------------------------------------------------------ */
 
 test("a single dependency parses into numbers", () => {
-  const fields = parseDependencyLine(
-    "<!-- specstride: depends-on: [2] -->",
-    3,
-  );
+  const fields = parseDependencyLine("<!-- specstride: depends-on: [2] -->", 3);
   assert.deepEqual(fields, { dependsOn: [2] });
 });
 
 test("multiple dependencies keep their order, whitespace allowed", () => {
-  const fields = parseDependencyLine(
-    "<!-- specstride: depends-on: [ 2 , 5 ] -->",
-    4,
-  );
+  const fields = parseDependencyLine("<!-- specstride: depends-on: [ 2 , 5 ] -->", 4);
   assert.deepEqual(fields, { dependsOn: [2, 5] });
 });
 
 test("a scope with several prefixes keeps order and is slash-normalized", () => {
-  const fields = parseDependencyLine(
-    "<!-- specstride: scope: packages/a packages/b/ -->",
-    5,
-  );
+  const fields = parseDependencyLine("<!-- specstride: scope: packages/a packages/b/ -->", 5);
   assert.deepEqual(fields, { writeScope: ["packages/a/", "packages/b/"] });
 });
 
 test("an empty depends-on list is allowed and means none declared", () => {
-  const fields = parseDependencyLine(
-    "<!-- specstride: depends-on: [] scope: packages/a/ -->",
-    6,
-  );
+  const fields = parseDependencyLine("<!-- specstride: depends-on: [] scope: packages/a/ -->", 6);
   assert.deepEqual(fields, { dependsOn: [], writeScope: ["packages/a/"] });
 });
 
@@ -66,10 +54,7 @@ test("both tokens together parse into both fields", () => {
 });
 
 test("duplicate numbers are de-duplicated, first occurrence first", () => {
-  const fields = parseDependencyLine(
-    "<!-- specstride: depends-on: [2, 2, 5] -->",
-    8,
-  );
+  const fields = parseDependencyLine("<!-- specstride: depends-on: [2, 2, 5] -->", 8);
   assert.deepEqual(fields, { dependsOn: [2, 5] });
 });
 

@@ -9,7 +9,8 @@
 import schema from "@specstride/contracts/schemas/154/report-rows-154.schema.json" with { type: "json" };
 
 /** The id of the record, `const` of the schema. */
-export const REPORT_ROWS_154_SCHEMA: "specstride.report-rows-154/1" = (schema as any).properties.schema.const;
+export const REPORT_ROWS_154_SCHEMA: "specstride.report-rows-154/1" = (schema as any).properties
+  .schema.const;
 
 /** A share in per cent, or `"not in the events"` where the events lack it. */
 export type ShareOrMissing = number | "not in the events";

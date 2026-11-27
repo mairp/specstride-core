@@ -17,7 +17,15 @@
  * stays `wait` (PQ-2) until the repair is approved.
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -66,7 +74,10 @@ if (critic) {
 }
 `;
 
-function workspaceOfTheFixture(on: boolean): { readonly dir: string; readonly restore: () => void } {
+function workspaceOfTheFixture(on: boolean): {
+  readonly dir: string;
+  readonly restore: () => void;
+} {
   const dir = mkdtempSync(join(tmpdir(), "specstride-phase-trees-"));
   const bin = join(dir, "bin");
   const work = join(dir, "work");
@@ -223,33 +234,45 @@ test("T138 — a rejection keeps the phase at the head for repair, dependents he
     // The state the engine would hold when the rejection lands: phase 1
     // approved, phase 2 materialized, admitted and gated at attempt 1.
     mkdirSync(join(controlRoot, "phase-queue"), { recursive: true });
-    const seeded = (phase: number, status: string): string => JSON.stringify({
-      schema: PHASE_QUEUE_ENTRY_SCHEMA,
-      feature: "154-phases",
-      runId: "run-reject",
-      phase,
-      dependsOn: [1],
-      writeScope: [],
-      treeId: "snap",
-      treePath: "/opaque/one/tree",
-      attempt: 1,
-      gatedAttempt: 1,
-      status,
-    }, null, 2);
+    const seeded = (phase: number, status: string): string =>
+      JSON.stringify(
+        {
+          schema: PHASE_QUEUE_ENTRY_SCHEMA,
+          feature: "154-phases",
+          runId: "run-reject",
+          phase,
+          dependsOn: [1],
+          writeScope: [],
+          treeId: "snap",
+          treePath: "/opaque/one/tree",
+          attempt: 1,
+          gatedAttempt: 1,
+          status,
+        },
+        null,
+        2,
+      );
     writeFileSync(queueEntryPathOf(controlRoot, 1), `${seeded(1, "approved")}\n`);
-    writeFileSync(queueEntryPathOf(controlRoot, 2), `${JSON.stringify({
-      schema: PHASE_QUEUE_ENTRY_SCHEMA,
-      feature: "154-phases",
-      runId: "run-reject",
-      phase: 2,
-      dependsOn: [1],
-      writeScope: ["packages/a/"],
-      treeId: "snap",
-      treePath: "/opaque/one/tree",
-      attempt: 1,
-      gatedAttempt: 1,
-      status: "working",
-    }, null, 2)}\n`);
+    writeFileSync(
+      queueEntryPathOf(controlRoot, 2),
+      `${JSON.stringify(
+        {
+          schema: PHASE_QUEUE_ENTRY_SCHEMA,
+          feature: "154-phases",
+          runId: "run-reject",
+          phase: 2,
+          dependsOn: [1],
+          writeScope: ["packages/a/"],
+          treeId: "snap",
+          treePath: "/opaque/one/tree",
+          attempt: 1,
+          gatedAttempt: 1,
+          status: "working",
+        },
+        null,
+        2,
+      )}\n`,
+    );
     // THE REJECTION (T138): the attempt number on the entry advances and the
     // once-per-attempt guard opens for the repair.
     coordinator.rejected(2);

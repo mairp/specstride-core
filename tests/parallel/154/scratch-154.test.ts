@@ -259,7 +259,10 @@ function fixture154Parallel(): Fixture {
   const readEventTypes = (): string[] => {
     const control = join(home, ".specstride", "workspaces", workspaceIdOfWorkspace(work));
     const all: string[] = [];
-    for (const base of [control, join(home, ".local", "state", "specstride", "workspaces", "001-one")]) {
+    for (const base of [
+      control,
+      join(home, ".local", "state", "specstride", "workspaces", "001-one"),
+    ]) {
       for (const runs of [join(base, "runs"), join(base, "features", "001-one", "runs")]) {
         for (const run of existsSync(runs) ? readdirSync(runs).sort() : []) {
           const file = join(runs, run, "events.jsonl");
@@ -356,7 +359,10 @@ test("G8 T155: every temporary file of the run sits under the run's temporary ro
     const roots = new Set(exports.filter((one): one is string => one !== null));
     assert.ok(roots.size > 0, "the engine exported no temporary root to the stub");
     for (const root of roots) {
-      assert.ok(root.startsWith(tmpdir()), `the temporary root is outside the temporary area: ${root}`);
+      assert.ok(
+        root.startsWith(tmpdir()),
+        `the temporary root is outside the temporary area: ${root}`,
+      );
       assert.ok(
         /[/\\]specstride-run-/.test(root),
         `the temporary root lacks the run prefix: ${root}`,
@@ -373,7 +379,11 @@ test("G8 T155: every temporary file of the run sits under the run's temporary ro
     const leaked = newly.filter(
       (one) => one.startsWith("specstride-run-") || one.startsWith("specstride-t155-"),
     );
-    assert.deepEqual(leaked, [], `run-created files remain in the temporary area: ${leaked.join(", ")}`);
+    assert.deepEqual(
+      leaked,
+      [],
+      `run-created files remain in the temporary area: ${leaked.join(", ")}`,
+    );
 
     // THE ALLOWED ROOTS: the temporary HOME and the workspace hold no path
     // that names the run's temporary area — every temporary file the run
@@ -382,11 +392,19 @@ test("G8 T155: every temporary file of the run sits under the run's temporary ro
     const workFiles = walk(fixture.work);
     const inHome = homeFiles.filter((one) => one.includes("specstride-run-"));
     const inWork = workFiles.filter((one) => one.includes("specstride-run-"));
-    assert.deepEqual(inHome, [], `temporary-area files under the temporary HOME: ${inHome.join(", ")}`);
+    assert.deepEqual(
+      inHome,
+      [],
+      `temporary-area files under the temporary HOME: ${inHome.join(", ")}`,
+    );
     assert.deepEqual(inWork, [], `temporary-area files under the workspace: ${inWork.join(", ")}`);
 
     // NO SLOT OR HOLD RECORD under the temporary HOME (F154-FR-044).
-    assert.deepEqual(slotAndHoldFiles(fixture.home), [], "slot or hold files under the temporary HOME");
+    assert.deepEqual(
+      slotAndHoldFiles(fixture.home),
+      [],
+      "slot or hold files under the temporary HOME",
+    );
 
     // THE OUTSIDE MARKER: untouched — 0 files anywhere the run may not write.
     assert.deepEqual(walk(outside), [], "the run wrote into the outside marker directory");

@@ -27,10 +27,7 @@ import { fileURLToPath } from "node:url";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TRIAL = join(REPO, "scripts", "trial.mjs");
-const FIXTURES = join(
-  REPO,
-  "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json",
-);
+const FIXTURES = join(REPO, "specs/154-concurrency-and-parallelism/contracts/fixtures-154.json");
 const TRIALS_DIR = join(REPO, "specs/154-concurrency-and-parallelism/trials");
 
 /**
@@ -53,17 +50,15 @@ export const SWITCHES_154 = Object.freeze([
 let failed = 0;
 for (const name of SWITCHES_154) {
   process.stdout.write(`trial-all: switch ${name}\n`);
-  const run = spawnSync(
-    process.execPath,
-    [TRIAL, "--switch", name, "--fixtures", FIXTURES],
-    { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-  );
+  const run = spawnSync(process.execPath, [TRIAL, "--switch", name, "--fixtures", FIXTURES], {
+    cwd: REPO,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   if (run.stdout) process.stdout.write(run.stdout);
   if (run.stderr) process.stderr.write(run.stderr);
   const record = join(TRIALS_DIR, `${name}.json`);
-  const wrote = existsSync(record)
-    ? JSON.parse(readFileSync(record, "utf8"))
-    : null;
+  const wrote = existsSync(record) ? JSON.parse(readFileSync(record, "utf8")) : null;
   const pass = run.status === 0 && wrote?.pass === true && wrote?.switch === name;
   process.stdout.write(
     `trial-all: ${name} -> exit ${run.status}, record ${

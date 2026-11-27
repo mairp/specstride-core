@@ -66,73 +66,100 @@ if (role === "diagnostician") {
 `;
 }
 
-test("a run that waits for a hold asks no model, and models take and release no slot or hold", { timeout: 120_000 }, async () => {
-  const { writeHold, readHold } = await import("../../../../packages/runtime/src/limits/hold-record.ts");
-  const { userStateRoot } = await import("@specstride/contracts/ids/roots");
-  const fixture = fixture154();
-  process.env.SPECSTRIDE_HOST_LIMITS = "on";
-  // The stub logs the `at` of every call and EXITS if a prompt ever asks it
-  // about a slot or a hold.
-  const bin = (process.env.PATH ?? "").split(":")[0] ?? "";
-  const stub = join(bin, "claude");
-  rmSync(stub);
-  writeFileSync(stub, stubWithAt());
-  chmodSync(stub, 0o755);
-  const home = process.env.HOME ?? "";
-  const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
-  // The window is generous on purpose: under the load of the whole suite the
-  // engine takes longer to reach its first pass, and the point of the test is
-  // that the run WAITS while the hold stands — not that it races a clock.
-  const resetAt = new Date(Date.now() + 5_000).toISOString();
-  // The hold the TEST wrote, with the owner the TEST chose: if a model or a
-  // model-driven path released or rewrote it, the record at the end differs.
-  writeHold(root, "default", resetAt, { pid: 999_999, runId: "run-test-writer" });
-  const before = readHold(root, "default");
-  try {
-    const code = await fixture.run();
-    assert.equal(code, 0, `the run did not complete: ${fixture.eventTypes().join(",")}`);
-    // 1. NO model call during the wait: the first call of the run came at or
-    //    after the hold's reset (F154-FR-047).
-    const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
-    assert.ok(prompts.length >= 1, "the run asked no model at all");
-    const firstAt = prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
-    assert.ok(
-      !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
-      `a model was called during the wait: first call at ${String(prompts[0]?.["at"])}, reset at ${resetAt}`,
-    );
-    // 2. No prompt ever asked a model whether to wait: the stub would have
-    //    exited 3 and left a trace (F154-FR-047).
-    assert.equal(
-      fixture.prompts().some((p) => /host\.slot|hold record|should (we|the run) wait/i.test(p.prompt)),
-      false,
-      "a prompt asked the model about the wait",
-    );
-    // 3. The wait is the engine's pause, not a model's decision: exactly one
-    //    run.paused with the proposed class, one run.resumed (F154-FR-005).
-    const events = fixture.events();
-    const paused = events.filter((event) => event.type === "run.paused");
-    assert.equal(paused.length, 1, "the wait did not open exactly one pause");
-    assert.equal(paused[0]?.data["class"], "host_slot", "the pause does not carry the host_slot class");
-    assert.equal(events.filter((event) => event.type === "run.resumed").length, 1, "the resume happened more than once");
-    // 4. Models take and release no slot: the ONLY admission events of the
-    //    run name the engine's own rules; none carries a model's verdict.
-    for (const admission of events.filter((event) => event.type === "host.slot.admission")) {
-      const verdict = admission.data["verdict"];
+test(
+  "a run that waits for a hold asks no model, and models take and release no slot or hold",
+  { timeout: 120_000 },
+  async () => {
+    const { writeHold, readHold } =
+      await import("../../../../packages/runtime/src/limits/hold-record.ts");
+    const { userStateRoot } = await import("@specstride/contracts/ids/roots");
+    const fixture = fixture154();
+    process.env.SPECSTRIDE_HOST_LIMITS = "on";
+    // The stub logs the `at` of every call and EXITS if a prompt ever asks it
+    // about a slot or a hold.
+    const bin = (process.env.PATH ?? "").split(":")[0] ?? "";
+    const stub = join(bin, "claude");
+    rmSync(stub);
+    writeFileSync(stub, stubWithAt());
+    chmodSync(stub, 0o755);
+    const home = process.env.HOME ?? "";
+    const root = userStateRoot({ home, workspaceRealPath: fixture.work, workspaceId: "" });
+    // The window is generous on purpose: under the load of the whole suite the
+    // engine takes longer to reach its first pass, and the point of the test is
+    // that the run WAITS while the hold stands — not that it races a clock.
+    const resetAt = new Date(Date.now() + 5_000).toISOString();
+    // The hold the TEST wrote, with the owner the TEST chose: if a model or a
+    // model-driven path released or rewrote it, the record at the end differs.
+    writeHold(root, "default", resetAt, { pid: 999_999, runId: "run-test-writer" });
+    const before = readHold(root, "default");
+    try {
+      const code = await fixture.run();
+      assert.equal(code, 0, `the run did not complete: ${fixture.eventTypes().join(",")}`);
+      // 1. NO model call during the wait: the first call of the run came at or
+      //    after the hold's reset (F154-FR-047).
+      const prompts = fixture.prompts() as readonly { role: string; at?: string }[];
+      assert.ok(prompts.length >= 1, "the run asked no model at all");
+      const firstAt =
+        prompts[0]?.["at"] !== undefined ? Date.parse(String(prompts[0]["at"])) : Number.NaN;
       assert.ok(
-        verdict === "admitted" || verdict === "queued" || verdict === "rejected",
-        `an admission event carries a non-engine verdict: ${JSON.stringify(admission.data)}`,
+        !Number.isNaN(firstAt) && firstAt >= Date.parse(resetAt) - 250,
+        `a model was called during the wait: first call at ${String(prompts[0]?.["at"])}, reset at ${resetAt}`,
       );
+      // 2. No prompt ever asked a model whether to wait: the stub would have
+      //    exited 3 and left a trace (F154-FR-047).
+      assert.equal(
+        fixture
+          .prompts()
+          .some((p) => /host\.slot|hold record|should (we|the run) wait/i.test(p.prompt)),
+        false,
+        "a prompt asked the model about the wait",
+      );
+      // 3. The wait is the engine's pause, not a model's decision: exactly one
+      //    run.paused with the proposed class, one run.resumed (F154-FR-005).
+      const events = fixture.events();
+      const paused = events.filter((event) => event.type === "run.paused");
+      assert.equal(paused.length, 1, "the wait did not open exactly one pause");
+      assert.equal(
+        paused[0]?.data["class"],
+        "host_slot",
+        "the pause does not carry the host_slot class",
+      );
+      assert.equal(
+        events.filter((event) => event.type === "run.resumed").length,
+        1,
+        "the resume happened more than once",
+      );
+      // 4. Models take and release no slot: the ONLY admission events of the
+      //    run name the engine's own rules; none carries a model's verdict.
+      for (const admission of events.filter((event) => event.type === "host.slot.admission")) {
+        const verdict = admission.data["verdict"];
+        assert.ok(
+          verdict === "admitted" || verdict === "queued" || verdict === "rejected",
+          `an admission event carries a non-engine verdict: ${JSON.stringify(admission.data)}`,
+        );
+      }
+      // 5. Models release no hold: the record still stands, with the owner and
+      //    the reset the TEST wrote (an early release would delete or rewrite
+      //    it before the reset; the run waited, and the record survived it).
+      const after = readHold(root, "default");
+      assert.ok(after !== null, "the hold record was released during the run");
+      assert.equal(after?.["resetAt"], resetAt, "the hold's reset changed during the run");
+      assert.equal(
+        after?.["owner"] && (after.owner as Record<string, unknown>)["pid"],
+        999_999,
+        "the hold's owner changed during the run",
+      );
+      assert.equal(
+        after?.["resetAt"],
+        before?.["resetAt"],
+        "the hold record was rewritten during the run",
+      );
+    } finally {
+      fixture.restore();
+      rmSync(join(home, ".local", "state", "specstride", "user", "holds"), {
+        recursive: true,
+        force: true,
+      });
     }
-    // 5. Models release no hold: the record still stands, with the owner and
-    //    the reset the TEST wrote (an early release would delete or rewrite
-    //    it before the reset; the run waited, and the record survived it).
-    const after = readHold(root, "default");
-    assert.ok(after !== null, "the hold record was released during the run");
-    assert.equal(after?.["resetAt"], resetAt, "the hold's reset changed during the run");
-    assert.equal(after?.["owner"] && (after.owner as Record<string, unknown>)["pid"], 999_999, "the hold's owner changed during the run");
-    assert.equal(after?.["resetAt"], before?.["resetAt"], "the hold record was rewritten during the run");
-  } finally {
-    fixture.restore();
-    rmSync(join(home, ".local", "state", "specstride", "user", "holds"), { recursive: true, force: true });
-  }
-});
+  },
+);

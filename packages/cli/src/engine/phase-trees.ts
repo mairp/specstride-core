@@ -58,10 +58,7 @@ export type PhaseQueueEntry = {
 };
 
 /** True when no prefix of `a` contains any prefix of `b` and the reverse (F142-FR-009). */
-export function scopesAreDisjoint(
-  a: readonly string[],
-  b: readonly string[],
-): boolean {
+export function scopesAreDisjoint(a: readonly string[], b: readonly string[]): boolean {
   const contains = (scope: readonly string[], prefix: string): boolean =>
     scope.some((one) => one === prefix || one.startsWith(prefix) || prefix.startsWith(one));
   return !a.some((one) => contains(b, one)) && !b.some((one) => contains(a, one));
@@ -75,9 +72,7 @@ export function scopesAreDisjoint(
  * dependency between two candidates keeps BOTH out (the queue would hold one
  * behind the other, so no tree is worth materializing).
  */
-export function candidatePhasesOf(
-  declarations: readonly PhaseDeclaration[],
-): readonly number[] {
+export function candidatePhasesOf(declarations: readonly PhaseDeclaration[]): readonly number[] {
   const scoped = declarations.filter((one) => (one.writeScope ?? []).length > 0);
   const declared = (phase: number, on: number): boolean =>
     (declarations.find((one) => one.phase === phase)?.dependsOn ?? []).includes(on);
@@ -86,10 +81,11 @@ export function candidatePhasesOf(
   // ON stays in, since the queue will hold its dependent anyway.
   return scoped
     .filter((one) =>
-      scoped.every((other) =>
-        other.phase === one.phase ||
-        (scopesAreDisjoint(one.writeScope ?? [], other.writeScope ?? []) &&
-          !declared(one.phase, other.phase)),
+      scoped.every(
+        (other) =>
+          other.phase === one.phase ||
+          (scopesAreDisjoint(one.writeScope ?? [], other.writeScope ?? []) &&
+            !declared(one.phase, other.phase)),
       ),
     )
     .map((one) => one.phase)
@@ -176,10 +172,7 @@ export type PhaseTreeCoordinator = {
 };
 
 /** The declared dependencies of a phase, effective (PQ-3), from the declarations. */
-function effectiveOf(
-  declarations: readonly PhaseDeclaration[],
-  phase: number,
-): readonly number[] {
+function effectiveOf(declarations: readonly PhaseDeclaration[], phase: number): readonly number[] {
   const declared = declarations.find((one) => one.phase === phase)?.dependsOn ?? [];
   return effectiveDependenciesOf({ phase, dependsOn: declared });
 }
@@ -213,9 +206,7 @@ function approvedPhasesOf(
  * THE COORDINATOR. With `on` false, or with NO candidate phase, it answers
  * `null` and the run is exactly what it was before US6.
  */
-export function coordinatorOf(
-  input: PhaseTreeCoordinatorInput,
-): PhaseTreeCoordinator | null {
+export function coordinatorOf(input: PhaseTreeCoordinatorInput): PhaseTreeCoordinator | null {
   if (!input.on) return null;
   const candidates = candidatePhasesOf(input.declarations);
   if (candidates.length === 0) return null;
@@ -267,22 +258,25 @@ export function coordinatorOf(
         store
           .materialize(
             baseTreeId,
-            createHash("sha256").update(`${input.runId}:${String(one)}`).digest("hex").slice(0, 16),
+            createHash("sha256")
+              .update(`${input.runId}:${String(one)}`)
+              .digest("hex")
+              .slice(0, 16),
           )
           .then((tree) => {
-          writeQueueEntry(input.controlRoot, {
-            schema: PHASE_QUEUE_ENTRY_SCHEMA,
-            feature: input.feature,
-            runId: input.runId,
-            phase: one,
-            dependsOn: [...effectiveOf(input.declarations, one)],
-            writeScope: [...(input.declarations.find((d) => d.phase === one)?.writeScope ?? [])],
-            treeId: baseTreeId,
-            treePath: tree.path,
-            attempt: 1,
-            status: "waiting",
-          });
-          return tree;
+            writeQueueEntry(input.controlRoot, {
+              schema: PHASE_QUEUE_ENTRY_SCHEMA,
+              feature: input.feature,
+              runId: input.runId,
+              phase: one,
+              dependsOn: [...effectiveOf(input.declarations, one)],
+              writeScope: [...(input.declarations.find((d) => d.phase === one)?.writeScope ?? [])],
+              treeId: baseTreeId,
+              treePath: tree.path,
+              attempt: 1,
+              status: "waiting",
+            });
+            return tree;
           }),
       ),
     );
@@ -322,24 +316,28 @@ export function coordinatorOf(
     },
     head: () => {
       for (const phase of candidates) {
-        if (queueAdmits(
-          { phase, dependsOn: entryOf(phase)?.dependsOn },
-          observationOf(),
-        ).choice === "head") {
+        if (
+          queueAdmits({ phase, dependsOn: entryOf(phase)?.dependsOn }, observationOf()).choice ===
+          "head"
+        ) {
           // THE PERSISTED ENTRY is the head; a phase the run has not yet
           // materialized an entry for composes one on the spot.
-          return entryOf(phase) ?? {
-            schema: PHASE_QUEUE_ENTRY_SCHEMA,
-            feature: input.feature,
-            runId: input.runId,
-            phase,
-            dependsOn: [...effectiveOf(input.declarations, phase)],
-            writeScope: [...(input.declarations.find((d) => d.phase === phase)?.writeScope ?? [])],
-            treeId: "",
-            treePath: "",
-            attempt: 1,
-            status: "waiting",
-          };
+          return (
+            entryOf(phase) ?? {
+              schema: PHASE_QUEUE_ENTRY_SCHEMA,
+              feature: input.feature,
+              runId: input.runId,
+              phase,
+              dependsOn: [...effectiveOf(input.declarations, phase)],
+              writeScope: [
+                ...(input.declarations.find((d) => d.phase === phase)?.writeScope ?? []),
+              ],
+              treeId: "",
+              treePath: "",
+              attempt: 1,
+              status: "waiting",
+            }
+          );
         }
       }
       return undefined;

@@ -64,11 +64,14 @@ function rejectingHarnessOf(): {
     spawnSync("git", ["-C", work, ...argv]);
   }
   mkdirSync(eventsPath.slice(0, eventsPath.lastIndexOf("/")), { recursive: true });
-  writeFileSync(eventsPath, `${JSON.stringify({
-    type: "attempt.ended",
-    at: 1,
-    data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
-  })}\n`);
+  writeFileSync(
+    eventsPath,
+    `${JSON.stringify({
+      type: "attempt.ended",
+      at: 1,
+      data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
+    })}\n`,
+  );
   const seen: { type: string; data: Record<string, unknown> }[] = [];
   const coordinator = speculationCoordinatorOf({
     on: true,
@@ -90,7 +93,16 @@ function rejectingHarnessOf(): {
     coordinator,
     events: seen,
     controlRoot,
-    setAsidePath: join(controlRoot, "features", "154-concurrency-and-parallelism", "runs", "r154", "speculation", "phase2", "set-aside.json"),
+    setAsidePath: join(
+      controlRoot,
+      "features",
+      "154-concurrency-and-parallelism",
+      "runs",
+      "r154",
+      "speculation",
+      "phase2",
+      "set-aside.json",
+    ),
     restore: () => rmSync(base, { recursive: true, force: true }),
   };
 }
@@ -101,7 +113,10 @@ test("T150: a rejecting verdict writes the set-aside record with the cost and no
     assert.deepEqual(await harness.coordinator.verdictAtTheGate(1), { start: true });
     const setAside = await harness.coordinator.resolveOnRejection(1);
     assert.equal(setAside, true);
-    const record = JSON.parse(readFileSync(harness.setAsidePath, "utf8")) as Record<string, unknown>;
+    const record = JSON.parse(readFileSync(harness.setAsidePath, "utf8")) as Record<
+      string,
+      unknown
+    >;
     assert.equal(record["schema"], SET_ASIDE_SCHEMA);
     assert.equal(record["phase"], 1);
     assert.equal(record["unitPhase"], 2);
@@ -172,7 +187,11 @@ test("T150: the report's speculation rows are the pure projection of the set-asi
   const values = new Map(projection.rows.map((one) => [one.row, one.value]));
   assert.equal(values.get("speculation units started"), 1);
   assert.equal(values.get("speculation units set aside"), 1);
-  assert.deepEqual(values.get("speculation set-aside cost"), { tokens: 900, wallTimeMs: 1500, cycles: 3 });
+  assert.deepEqual(values.get("speculation set-aside cost"), {
+    tokens: 900,
+    wallTimeMs: 1500,
+    cycles: 3,
+  });
 });
 
 test("T150: the printed lines carry the set-aside cost (F154-FR-064)", () => {
@@ -220,9 +239,10 @@ test("T150: with `loop.speculate` off no row and no line exist (F154-FR-001)", (
   assert.equal(rows.setAside, NOT_IN_EVENTS);
   assert.equal(rows.setAsideCost, NOT_IN_EVENTS);
   assert.equal(
-    rows154Lines([{ type: "phase.started", at: 1, data: {} } as unknown as ReportEvent], "154-concurrency-and-parallelism").some(
-      (one) => one.startsWith("speculation"),
-    ),
+    rows154Lines(
+      [{ type: "phase.started", at: 1, data: {} } as unknown as ReportEvent],
+      "154-concurrency-and-parallelism",
+    ).some((one) => one.startsWith("speculation")),
     false,
   );
 });

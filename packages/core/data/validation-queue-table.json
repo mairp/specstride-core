@@ -10,10 +10,7 @@
         "everyDependencyApproved": "boolean",
         "aDependencyRejected": "boolean"
       },
-      "choices": [
-        "head",
-        "wait"
-      ]
+      "choices": ["head", "wait"]
     }
   },
   "rows": {

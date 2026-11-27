@@ -36,11 +36,7 @@ test("T009: the nine rows of spec 154 exist in the parity profile", () => {
   for (const expected of ROWS_154) {
     const rows = switches.filter((row) => (row.keys as string[]).includes(expected.key));
     const owned = rows.filter((row) => row.owner === "154");
-    assert.equal(
-      owned.length,
-      1,
-      `exactly one row of owner 154 must carry ${expected.key}`,
-    );
+    assert.equal(owned.length, 1, `exactly one row of owner 154 must carry ${expected.key}`);
     assert.equal(owned[0].default, expected.default);
     assert.deepEqual(owned[0].registerRows, []);
   }
@@ -50,8 +46,7 @@ test("T010: every row of spec 154 is off under `parity`", () => {
   for (const expected of ROWS_154) {
     const row = switches.find(
       (candidate) =>
-        candidate.owner === "154" &&
-        (candidate.keys as string[]).includes(expected.key),
+        candidate.owner === "154" && (candidate.keys as string[]).includes(expected.key),
     );
     assert.equal(row.parity, "off", `${expected.key} must be off under parity`);
   }
@@ -61,8 +56,7 @@ test("T010: every row names its output fields", () => {
   for (const expected of ROWS_154) {
     const row = switches.find(
       (candidate) =>
-        candidate.owner === "154" &&
-        (candidate.keys as string[]).includes(expected.key),
+        candidate.owner === "154" && (candidate.keys as string[]).includes(expected.key),
     );
     assert.equal(
       typeof row.outputFields154,
@@ -96,9 +90,7 @@ test("T010: the proposed closed-set members are not members yet", () => {
 test("T010: the pinned copy is the byte-for-byte data of the profile file", () => {
   // The profile is data generated from the annex; this pins that the nine
   // rows live in the file this package ships, not in a test-only copy.
-  const raw = JSON.parse(
-    readFileSync(join(HERE, "../data/parity-profile.json"), "utf8"),
-  );
+  const raw = JSON.parse(readFileSync(join(HERE, "../data/parity-profile.json"), "utf8"));
   const owned = (raw.switches as any[]).filter((row) => row.owner === "154");
   assert.equal(owned.length, ROWS_154.length);
 });

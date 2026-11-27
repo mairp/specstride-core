@@ -10,10 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { STAGE_ADMISSION_TABLE } from "../../src/executor/tables.ts";
-import {
-  declareStageGraph,
-  type StageAdmissionEvent,
-} from "../../src/executor/graph.ts";
+import { declareStageGraph, type StageAdmissionEvent } from "../../src/executor/graph.ts";
 import type { Stage } from "../../src/executor/types.ts";
 
 /** A minimal stage: id and dependencies only; the graph reads nothing else. */
@@ -58,10 +55,16 @@ test("width 2 with independent {A, B}: one wide group of two stages", () => {
     graph.groups[0]!.stages.map((stage) => stage.id),
     ["A", "B"],
   );
-  assert.deepEqual(graph.groups.map((group) => group.index), [0]);
+  assert.deepEqual(
+    graph.groups.map((group) => group.index),
+    [0],
+  );
   // One admission event per stage, each with a rule id of the pinned table.
   assert.equal(events.length, 2);
-  assert.deepEqual(events.map((one) => one.fields.stageId), ["A", "B"]);
+  assert.deepEqual(
+    events.map((one) => one.fields.stageId),
+    ["A", "B"],
+  );
   for (const event of events) {
     assert.equal(event.name, "pipeline.stage.admission");
     assert.ok(
@@ -88,7 +91,10 @@ test("never_together {A, B}: two groups, one per stage, in declared order", () =
     graph.groups.map((group) => group.stages.map((stage) => stage.id)),
     [["A"], ["B"]],
   );
-  assert.deepEqual(graph.groups.map((group) => group.index), [0, 1]);
+  assert.deepEqual(
+    graph.groups.map((group) => group.index),
+    [0, 1],
+  );
 });
 
 test("the switch off: the serial graph of today, one stage per group", () => {

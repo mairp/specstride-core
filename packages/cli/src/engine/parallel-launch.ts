@@ -46,9 +46,7 @@ import type { QuotaObservation } from "../../../layer-parallel/src/admission.ts"
 import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
 
 /** The frozen task groups of the launch record per phase number (F154-FR-031). */
-export type GroupCandidatesOfThePhases = Readonly<
-  Record<number, readonly FrozenTaskGroupShape[]>
->;
+export type GroupCandidatesOfThePhases = Readonly<Record<number, readonly FrozenTaskGroupShape[]>>;
 import type { SpecPhase } from "../../../spec-formats/src/model.ts";
 
 /** The hasher of the plan: the canonical record hasher of the kernel. */

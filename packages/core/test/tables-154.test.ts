@@ -30,18 +30,10 @@ function rowsOf(table: unknown): any[] {
 }
 
 const TABLES: Array<[string, unknown, string[]]> = [
-  [
-    "slot-admission-table.json",
-    SLOT_ADMISSION_TABLE,
-    ["SL-1", "SL-2", "SL-3", "SL-4", "SL-5"],
-  ],
+  ["slot-admission-table.json", SLOT_ADMISSION_TABLE, ["SL-1", "SL-2", "SL-3", "SL-4", "SL-5"]],
   ["landing-table.json", LANDING_TABLE, ["LD-1", "LD-2", "LD-3", "LD-4"]],
   ["validation-queue-table.json", VALIDATION_QUEUE_TABLE, ["PQ-1", "PQ-2", "PQ-3"]],
-  [
-    "speculation-table.json",
-    SPECULATION_TABLE,
-    ["SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6"],
-  ],
+  ["speculation-table.json", SPECULATION_TABLE, ["SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6"]],
   ["trial-pass-mark-table.json", TRIAL_PASS_MARK_TABLE, ["TRI-1", "TRI-2", "TRI-3"]],
 ];
 

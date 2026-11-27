@@ -83,15 +83,17 @@ test("a group whose remaining cycles do not cover its tasks is not admitted, and
     // The gate was handed the cycles verdict of the first group, and it
     // refuses: 0 remain, a group of 1 task charges 1.
     const verdict = verdictsAtTheGate[0] as
-      | { admissible: boolean; needed: number; detail: string }
-      | undefined;
+      { admissible: boolean; needed: number; detail: string } | undefined;
     assert.equal(verdict?.admissible, false);
     assert.equal(verdict?.needed, 1);
     assert.match(verdict?.detail ?? "", /0 cycle\(s\) remain and a group of 1 task\(s\) charges 1/);
     // Every group of the attempt is refused, the first with its ordinal.
     const refused = said.filter((line) => line.includes("is not admitted"));
     assert.equal(refused.length, 3);
-    assert.match(refused[0] ?? "", /group 1 is not admitted — headroom: cycles: 0 cycle\(s\) remain/);
+    assert.match(
+      refused[0] ?? "",
+      /group 1 is not admitted — headroom: cycles: 0 cycle\(s\) remain/,
+    );
     // No group started: no group-started line was said.
     assert.equal(
       said.filter((line) => line.includes("[LOOP] parallel group")).length,
@@ -140,7 +142,10 @@ test("each admitted task charges one cycle at its first start, once, and the nex
     // was refused with the reason `cycles` and never started.
     const refused = said.filter((line) => line.includes("is not admitted"));
     assert.equal(refused.length, 1);
-    assert.match(refused[0] ?? "", /group 3 is not admitted — headroom: cycles: 0 cycle\(s\) remain/);
+    assert.match(
+      refused[0] ?? "",
+      /group 3 is not admitted — headroom: cycles: 0 cycle\(s\) remain/,
+    );
     assert.equal(
       said.filter((line) => line.includes("[LOOP] parallel group") && line.includes("started"))
         .length,

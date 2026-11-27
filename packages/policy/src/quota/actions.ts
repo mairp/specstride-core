@@ -204,16 +204,15 @@ export const ACTION_ROW_HOST_SLOT_154: Omit<ClassAction, "quotaClass"> & {
   quotaClass: "host_slot";
 } = Object.freeze({
   quotaClass: "host_slot",
-    action: "pause-role",
-    countsAs: "neither",
-    spends: "no",
-    retryable: true,
-    blockedReason: null,
-    bound: null,
-    pastTheBound: null,
-    meaning:
-      "the run waits for a host slot or a hold (F154-FR-045): a pause, which spends nothing",
-  });
+  action: "pause-role",
+  countsAs: "neither",
+  spends: "no",
+  retryable: true,
+  blockedReason: null,
+  bound: null,
+  pastTheBound: null,
+  meaning: "the run waits for a host slot or a hold (F154-FR-045): a pause, which spends nothing",
+});
 
 /**
  * T103 — the row of `host_slot` where `host.limits` is on, or null where the

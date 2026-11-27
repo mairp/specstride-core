@@ -46,11 +46,13 @@ function planOfThreeGroups(serial: readonly string[] = []): ParallelPlan {
     phases: [
       {
         phase: 2,
-        groups: all.map((taskId, index) => ({
-          ordinal: index + 1,
-          phase: 2,
-          tasks: serial.includes(taskId) ? [] : [taskId],
-        })).filter((group) => group.tasks.length > 0),
+        groups: all
+          .map((taskId, index) => ({
+            ordinal: index + 1,
+            phase: 2,
+            tasks: serial.includes(taskId) ? [] : [taskId],
+          }))
+          .filter((group) => group.tasks.length > 0),
         tasks: all.map((id) => ({ id, scope, checks: [] })),
         serial: [...serial],
         ceiling: 3 - serial.length,
@@ -87,26 +89,26 @@ test("a phase with three groups starts all three, in plan order, each at its cle
     onClosed: (closed) => closedInOrder.push(closed.groupId),
   });
   try {
-  const wiring = parallelWiringOfTheAttempt({ ...input, say: (line) => said.push(line) });
-  // One start of the wiring carries the WHOLE plan, not one group.
-  assert.equal(await wiring.startIfTheBoundaryIsClean(), true);
-  // The groups closed in PLAN ORDER: g-2-1, then g-2-2, then g-2-3.
-  assert.deepEqual(closedInOrder, ["g-2-1", "g-2-2", "g-2-3"]);
-  // Each group started in order: the say lines record three starts, and
-  // never an unclean-boundary refusal.
-  const started = said.filter((line) => line.includes("of phase 2 started"));
-  assert.equal(started.length, 3);
-  assert.ok(
-    !said.some((line) => line.includes("the group does not start yet")),
-    `an unclean boundary in ${JSON.stringify(said)}`,
-  );
-  // Every task of the phase is ticked on the task list after its group.
-  const tasks = readFileSync(join(input.workspace, TASK_LIST), "utf8");
-  assert.match(tasks, /- \[x\] T001 /);
-  assert.match(tasks, /- \[x\] T002 /);
-  assert.match(tasks, /- \[x\] T003 /);
-  // The plan is worked out: no reserved block stands any more.
-  assert.equal(wiring.reservedBlock(), "");
+    const wiring = parallelWiringOfTheAttempt({ ...input, say: (line) => said.push(line) });
+    // One start of the wiring carries the WHOLE plan, not one group.
+    assert.equal(await wiring.startIfTheBoundaryIsClean(), true);
+    // The groups closed in PLAN ORDER: g-2-1, then g-2-2, then g-2-3.
+    assert.deepEqual(closedInOrder, ["g-2-1", "g-2-2", "g-2-3"]);
+    // Each group started in order: the say lines record three starts, and
+    // never an unclean-boundary refusal.
+    const started = said.filter((line) => line.includes("of phase 2 started"));
+    assert.equal(started.length, 3);
+    assert.ok(
+      !said.some((line) => line.includes("the group does not start yet")),
+      `an unclean boundary in ${JSON.stringify(said)}`,
+    );
+    // Every task of the phase is ticked on the task list after its group.
+    const tasks = readFileSync(join(input.workspace, TASK_LIST), "utf8");
+    assert.match(tasks, /- \[x\] T001 /);
+    assert.match(tasks, /- \[x\] T002 /);
+    assert.match(tasks, /- \[x\] T003 /);
+    // The plan is worked out: no reserved block stands any more.
+    assert.equal(wiring.reservedBlock(), "");
   } finally {
     cleanup();
   }
@@ -122,34 +124,34 @@ test("a group left with fewer than two tasks after a tick is cancelled, and the 
     onClosed: (closed) => closedIds.push(closed.groupId),
   });
   try {
-  writeFileSync(
-    join(input.workspace, TASK_LIST),
-    "## Phase 2: the wiring work\n- [ ] T001 the first task\n- [x] T002 the second task\n- [ ] T003 the third\n",
-  );
-  const wiring = parallelWiringOfTheAttempt({ ...input, say: (line) => said.push(line) });
-  assert.equal(await wiring.startIfTheBoundaryIsClean(), true);
-  // Group 1 ran; group 2 is cancelled (F154-FR-020, F142-FR-018) and group 3
-  // — the NEXT group of the plan — still starts at its own boundary.
-  assert.deepEqual(closedIds, ["g-2-1", "g-2-3"]);
-  assert.ok(
-    said.some((line) => line.includes("group 2 is cancelled")),
-    `no cancellation line in ${JSON.stringify(said)}`,
-  );
-  assert.ok(
-    said.some((line) => line.includes("fewer than 2")),
-    `no fewer-than-two line in ${JSON.stringify(said)}`,
-  );
-  // The cancelled group's task was never worked by a worker of the group:
-  // its tick stands (the pre-start one) but its tree got no worker write,
-  // while group 3's task is ticked by its own group's integration.
-  const tasks = readFileSync(join(input.workspace, TASK_LIST), "utf8");
-  assert.match(tasks, /- \[x\] T001 /);
-  assert.match(tasks, /- \[x\] T002 /); // the pre-start tick stands
-  assert.match(tasks, /- \[x\] T003 /);
-  assert.ok(
-    !readFileSync(join(input.workspace, "src", "002.ts"), "utf8").includes("T002 was here"),
-    "a worker of the cancelled group wrote the tree",
-  );
+    writeFileSync(
+      join(input.workspace, TASK_LIST),
+      "## Phase 2: the wiring work\n- [ ] T001 the first task\n- [x] T002 the second task\n- [ ] T003 the third\n",
+    );
+    const wiring = parallelWiringOfTheAttempt({ ...input, say: (line) => said.push(line) });
+    assert.equal(await wiring.startIfTheBoundaryIsClean(), true);
+    // Group 1 ran; group 2 is cancelled (F154-FR-020, F142-FR-018) and group 3
+    // — the NEXT group of the plan — still starts at its own boundary.
+    assert.deepEqual(closedIds, ["g-2-1", "g-2-3"]);
+    assert.ok(
+      said.some((line) => line.includes("group 2 is cancelled")),
+      `no cancellation line in ${JSON.stringify(said)}`,
+    );
+    assert.ok(
+      said.some((line) => line.includes("fewer than 2")),
+      `no fewer-than-two line in ${JSON.stringify(said)}`,
+    );
+    // The cancelled group's task was never worked by a worker of the group:
+    // its tick stands (the pre-start one) but its tree got no worker write,
+    // while group 3's task is ticked by its own group's integration.
+    const tasks = readFileSync(join(input.workspace, TASK_LIST), "utf8");
+    assert.match(tasks, /- \[x\] T001 /);
+    assert.match(tasks, /- \[x\] T002 /); // the pre-start tick stands
+    assert.match(tasks, /- \[x\] T003 /);
+    assert.ok(
+      !readFileSync(join(input.workspace, "src", "002.ts"), "utf8").includes("T002 was here"),
+      "a worker of the cancelled group wrote the tree",
+    );
   } finally {
     cleanup();
   }

@@ -57,7 +57,11 @@ export type WorktreePort = {
 };
 
 /** Where the record of one stage workspace is written, under the control root. */
-export function stageWorkspaceRecordPath(controlRoot: string, pipelineRunId: string, stage: string): string {
+export function stageWorkspaceRecordPath(
+  controlRoot: string,
+  pipelineRunId: string,
+  stage: string,
+): string {
   return join(controlRoot, "stage-workspaces", pipelineRunId, `${stage}.json`);
 }
 
@@ -67,7 +71,11 @@ export function stageWorkspaceDirOf(controlRoot: string, pipelineRunId: string):
 }
 
 /** The workspace path of one stage of one wide group (deterministic). */
-export function stageWorkspacePath(controlRoot: string, pipelineRunId: string, stage: string): string {
+export function stageWorkspacePath(
+  controlRoot: string,
+  pipelineRunId: string,
+  stage: string,
+): string {
   return join(stageWorkspaceDirOf(controlRoot, pipelineRunId), stage);
 }
 

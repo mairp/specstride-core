@@ -55,14 +55,7 @@ import { workspaceIdOfWorkspace } from "../../../packages/cli/src/engine/workspa
 import { runFeature } from "../../../packages/cli/src/engine/run-feature.ts";
 
 /** The fixture directories of T011 under `tests/fixtures/154/`, minus `door`. */
-const FIXTURE_DIRS = [
-  "plan",
-  "groups",
-  "slots",
-  "stages",
-  "phases",
-  "spec",
-] as const;
+const FIXTURE_DIRS = ["plan", "groups", "slots", "stages", "phases", "spec"] as const;
 
 /**
  * `door` is dropped from the loop (kept from `phases` and `groups` as the
@@ -118,7 +111,10 @@ if (role === "diagnostician") {
 }
 
 /** One closed-sets fixture: a working directory, a private `HOME`, the stub on `PATH`. */
-function fixture154(fixtureDir: string, switches: "off" | "on"): {
+function fixture154(
+  fixtureDir: string,
+  switches: "off" | "on",
+): {
   readonly run: () => Promise<number>;
   readonly events: () => readonly Event[];
   readonly restore: () => void;
@@ -174,17 +170,11 @@ function fixture154(fixtureDir: string, switches: "off" | "on"): {
     // The plain run keeps its control plane under `HOME/.specstride`; under
     // the `parity` profile the engine lays the state out where the as-is
     // engine did, so both roots are read (as `helpers.ts` does).
-    const roots = [
-      control,
-      join(home, ".local", "state", "specstride", "workspaces", "001-one"),
-    ];
+    const roots = [control, join(home, ".local", "state", "specstride", "workspaces", "001-one")];
     const all: Event[] = [];
     for (const base of roots) {
       const runDirs: string[] = [];
-      for (const runs of [
-        join(base, "runs"),
-        join(base, "features", "001-one", "runs"),
-      ]) {
+      for (const runs of [join(base, "runs"), join(base, "features", "001-one", "runs")]) {
         for (const run of existsSync(runs) ? readdirSync(runs).sort() : []) {
           runDirs.push(join(runs, run));
         }
@@ -295,13 +285,14 @@ function runStates(events: readonly Event[]): ReadonlySet<string> {
 }
 
 /** Subset assertion with the witness in the message. */
-function assertSubset(on: ReadonlySet<string>, baseline: ReadonlySet<string>, what: string, fixtureDir: string): void {
+function assertSubset(
+  on: ReadonlySet<string>,
+  baseline: ReadonlySet<string>,
+  what: string,
+  fixtureDir: string,
+): void {
   const added = [...on].filter((value) => !baseline.has(value));
-  assert.deepEqual(
-    added,
-    [],
-    `${fixtureDir}: the on-run added ${what}: ${JSON.stringify(added)}`,
-  );
+  assert.deepEqual(added, [], `${fixtureDir}: the on-run added ${what}: ${JSON.stringify(added)}`);
 }
 
 /** One fixture, both arms: the closed-set assertions of F154-SC-001. */

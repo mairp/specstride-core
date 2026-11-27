@@ -21,7 +21,15 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, lstatSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+  lstatSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -246,7 +254,15 @@ test("a refused group check leaks no refusal string, no worker tree, no manifest
       startDoor: async (worker) => {
         const child = spawn(
           process.execPath,
-          ["-e", STUB_SCRIPT, worker.outboxPath, worker.taskId, worker.tree, `src/a.ts`, "\n// x\n"],
+          [
+            "-e",
+            STUB_SCRIPT,
+            worker.outboxPath,
+            worker.taskId,
+            worker.tree,
+            `src/a.ts`,
+            "\n// x\n",
+          ],
           { detached: true, stdio: "ignore" },
         ) as ChildProcess & { pid: number };
         const pid = child.pid as number;
@@ -313,10 +329,7 @@ test("a refused group check leaks no refusal string, no worker tree, no manifest
     // 3. NO WORKER TREE PATH anywhere: neither the worker root nor any
     //    materialized tree of a worker reaches an event or the handoff.
     const workerRoot = join(fixture.home, ".specstride", "worker-roots", RUN_ID);
-    assert.ok(
-      !eventText.includes(workerRoot),
-      "the worker root must not reach the events",
-    );
+    assert.ok(!eventText.includes(workerRoot), "the worker root must not reach the events");
     const workersDir = join(fixture.controlRoot, "runs", RUN_ID, "workers");
     const handoffText = attempt.handoff;
     for (const name of exists(workersDir) ? readdirSync(workersDir) : []) {
@@ -360,7 +373,20 @@ test("a refused group check leaks no refusal string, no worker tree, no manifest
     walk(fixture.controlRoot);
     assert.deepEqual(
       holders.map((path) => path.slice(fixture.controlRoot.length)),
-      ["/" + join("features", SLUG, "runs", RUN_ID, "parallel", "phase2", "groups", "g-2-1", "worker-check.json")],
+      [
+        "/" +
+          join(
+            "features",
+            SLUG,
+            "runs",
+            RUN_ID,
+            "parallel",
+            "phase2",
+            "groups",
+            "g-2-1",
+            "worker-check.json",
+          ),
+      ],
       "only the worker-check record holds the schema, in the control plane",
     );
     // And the record stays OUT of the ledger file entirely.

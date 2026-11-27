@@ -28,7 +28,15 @@
  *     node --experimental-strip-types --test tests/parallel/154/checks-at-once-154.test.ts
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -43,8 +51,14 @@ import {
   isolationOfABatch,
   TEMPORARY_DIRECTORY_NAME,
 } from "../../../packages/check-runner/src/batch/isolation.ts";
-import { runABatch, orderByManifestPosition } from "../../../packages/check-runner/src/batch/run-batch.ts";
-import { statedAsPass, type RunnerResult } from "../../../packages/check-runner/src/result/result.ts";
+import {
+  runABatch,
+  orderByManifestPosition,
+} from "../../../packages/check-runner/src/batch/run-batch.ts";
+import {
+  statedAsPass,
+  type RunnerResult,
+} from "../../../packages/check-runner/src/result/result.ts";
 import {
   makeRunTempRoot,
   exportRunTempRoot,
@@ -99,11 +113,7 @@ function writeStubCheck(dir: string): string {
  * lets a command run beside another is carried by the MANIFEST alone —
  * `sideEffects: none` together with `reads: tree` — never by repository text.
  */
-function entryOf(
-  index: number,
-  stub: string,
-  sleepMs: number,
-): BatchEntry {
+function entryOf(index: number, stub: string, sleepMs: number): BatchEntry {
   return {
     id: `check-${index}`,
     kind: "command",
@@ -173,9 +183,17 @@ test("G8 T153 (a): N acceptance checks at once run without serialization, each i
     const context = { workingDirectory: work, temporaryRoot: join(base, "checks-tmp") };
     const isolations = isolationOfABatch(batch, context);
     const temporaryDirectories = new Set(isolations.map((one) => one.temporaryDirectory));
-    assert.equal(temporaryDirectories.size, N_CHECKS_AT_ONCE, "no two members share a temporary directory (F148-FR-013)");
+    assert.equal(
+      temporaryDirectories.size,
+      N_CHECKS_AT_ONCE,
+      "no two members share a temporary directory (F148-FR-013)",
+    );
     for (const one of isolations) {
-      assert.equal(one.workingDirectory, work, "the members of a batch run in the same tree (F148-FR-013)");
+      assert.equal(
+        one.workingDirectory,
+        work,
+        "the members of a batch run in the same tree (F148-FR-013)",
+      );
       assert.equal(
         one.environment[TEMPORARY_DIRECTORY_NAME],
         one.temporaryDirectory,
@@ -191,8 +209,16 @@ test("G8 T153 (a): N acceptance checks at once run without serialization, each i
     const logEntries = readLog(log);
     for (let index = 0; index < N_CHECKS_AT_ONCE; index += 1) {
       const id = `check-${index}`;
-      assert.equal(logEntries.filter((one) => one.id === id && one.e === "start").length, 1, `${id} started once`);
-      assert.equal(logEntries.filter((one) => one.id === id && one.e === "end").length, 1, `${id} ended once`);
+      assert.equal(
+        logEntries.filter((one) => one.id === id && one.e === "start").length,
+        1,
+        `${id} started once`,
+      );
+      assert.equal(
+        logEntries.filter((one) => one.id === id && one.e === "end").length,
+        1,
+        `${id} ended once`,
+      );
     }
     assert.equal(outcome.placed.length, N_CHECKS_AT_ONCE, "every result of the batch is stated");
     for (const placed of outcome.placed) {
@@ -220,7 +246,10 @@ test("G8 T153 (a): N acceptance checks at once run without serialization, each i
       outcome.placed.map((one) => one.checkId),
       orderByManifestPosition(outcome.placed).map((one) => one.checkId),
     );
-    assert.deepEqual(outcome.placed.map((one) => one.checkId), entries.map((one) => one.id));
+    assert.deepEqual(
+      outcome.placed.map((one) => one.checkId),
+      entries.map((one) => one.id),
+    );
     assert.deepEqual(
       [...outcome.completionOrder].sort(),
       [...entries.map((one) => one.id)].sort(),
@@ -310,7 +339,11 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
       parityProfile: false,
       env: {} as RunTempRootEnv,
     });
-    assert.equal(limitsOn, true, "host.limits is in force for this start, so roots and slots are real");
+    assert.equal(
+      limitsOn,
+      true,
+      "host.limits is in force for this start, so roots and slots are real",
+    );
 
     // The gate's run: its temporary root and its host slots.
     const gateEnv: Record<string, string | undefined> = {};
@@ -358,7 +391,11 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
     const unitName = "speculative-unit-1";
     assert.deepEqual(await coordinator!.verdictAtTheGate(1), { start: true });
     const admissions = unitEvents.filter((one) => one.type === SPECULATION_ADMISSION_EVENT);
-    assert.equal(admissions.length, 1, `the coordinator admits the ${unitName} through ${SPECULATION_POINT}`);
+    assert.equal(
+      admissions.length,
+      1,
+      `the coordinator admits the ${unitName} through ${SPECULATION_POINT}`,
+    );
     assert.equal(admissions[0]!.data["decision"], "start");
 
     // The speculative unit's run: its OWN temporary root and its OWN host
@@ -378,7 +415,11 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
 
     // F154-FR-070 — NO SHARED TEMPORARY DIRECTORY: two mkdtemp roots, and
     // the exports each run hands its checks never name the other's root.
-    assert.notEqual(gateRoot, unitRoot, "the gate and the speculative unit hold distinct temporary roots");
+    assert.notEqual(
+      gateRoot,
+      unitRoot,
+      "the gate and the speculative unit hold distinct temporary roots",
+    );
     assert.ok(basename(gateRoot!).startsWith("specstride-run-"));
     assert.ok(basename(unitRoot!).startsWith("specstride-run-"));
     assert.ok(existsSync(gateRoot!) && existsSync(unitRoot!));
@@ -386,8 +427,14 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
     assert.notEqual(gateEnv.SPECSTRIDE_WORKER_TMPDIR, unitEnv.SPECSTRIDE_WORKER_TMPDIR);
     assert.equal(gateEnv.TMPDIR, gateRoot);
     assert.equal(unitEnv.SPECSTRIDE_WORKER_TMPDIR, unitRoot);
-    assert.ok(said.some((line) => line.includes(gateRoot!)), "the gate's export is said");
-    assert.ok(unitSaid.some((line) => line.includes(unitRoot!)), "the unit's export is said");
+    assert.ok(
+      said.some((line) => line.includes(gateRoot!)),
+      "the gate's export is said",
+    );
+    assert.ok(
+      unitSaid.some((line) => line.includes(unitRoot!)),
+      "the unit's export is said",
+    );
 
     // The concurrent gate checks take their own check slots, and the
     // speculative unit's checks take theirs: ALL pairwise distinct.
@@ -397,7 +444,8 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
     // slot; a `wait` admission of the polling loop names none and is passed
     // over — the granted slots are what must be pairwise distinct.
     const slotOf = (admission: { verdict: string; slot?: number }): number | null =>
-      (admission.verdict === "take" || admission.verdict === "reclaim") && admission.slot !== undefined
+      (admission.verdict === "take" || admission.verdict === "reclaim") &&
+      admission.slot !== undefined
         ? admission.slot
         : null;
     for (let index = 0; index < N_CHECKS_AT_ONCE; index += 1) {
@@ -413,8 +461,16 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
       if (unitRelease) releases.push(unitRelease);
     }
     const allCheckSlots = [...gateCheckSlots, ...unitCheckSlots];
-    assert.equal(new Set(allCheckSlots).size, allCheckSlots.length, "no two acceptance checks share a check slot");
-    assert.equal(new Set(gateCheckSlots).size, N_CHECKS_AT_ONCE, "the gate's concurrent checks hold distinct slots");
+    assert.equal(
+      new Set(allCheckSlots).size,
+      allCheckSlots.length,
+      "no two acceptance checks share a check slot",
+    );
+    assert.equal(
+      new Set(gateCheckSlots).size,
+      N_CHECKS_AT_ONCE,
+      "the gate's concurrent checks hold distinct slots",
+    );
 
     // F154-FR-070 — NO SHARED EXCLUSIVE RESOURCE and NO SHARED PORT: the
     // exclusive resource of the gate and the port resource of the checks are
@@ -449,7 +505,11 @@ test("G8 T153 (b): a speculative unit's acceptance checks share no temporary dir
       }),
       new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), waitMs)),
     ]);
-    assert.equal(thirdRace, "timeout", "the bound of 2 is exhausted: a third taker waits, so gate and unit hold different slots");
+    assert.equal(
+      thirdRace,
+      "timeout",
+      "the bound of 2 is exhausted: a third taker waits, so gate and unit hold different slots",
+    );
     assert.equal(thirdWaited, true, "the wait, never a busy spin, is emitted (F154-FR-039)");
     if (gateLockRelease) releases.push(gateLockRelease);
     if (unitLockRelease) releases.push(unitLockRelease);

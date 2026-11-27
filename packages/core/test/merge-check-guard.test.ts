@@ -50,11 +50,14 @@ test("runMergeCheck refuses a request whose workspace is a worker tree", async (
       ...request,
       workspace: workerTree,
     };
-    await assert.rejects(() => runMergeCheck(insideWorkerTree), (error: unknown) => {
-      assert.ok(error instanceof Error);
-      assert.equal(error.message, CHECK_IN_A_WORKER_TREE);
-      return true;
-    });
+    await assert.rejects(
+      () => runMergeCheck(insideWorkerTree),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.message, CHECK_IN_A_WORKER_TREE);
+        return true;
+      },
+    );
     // And NO command ran: the refusal came before the first pin.
     assert.deepEqual(pinned, [], "the refused request pinned no command");
   } finally {
@@ -93,7 +96,12 @@ test("an empty inner set stays the unchecked case of F142-FR-060, outside the gu
   try {
     const workspace = join(root, "workspace");
     const done = await runMergeCheck(
-      requestOf({ root, workspace, workerTrees: [join(root, "worker-roots", "run", "w-1")], entries: [] }),
+      requestOf({
+        root,
+        workspace,
+        workerTrees: [join(root, "worker-roots", "run", "w-1")],
+        entries: [],
+      }),
     );
     assert.equal(done.unchecked, true);
     assert.deepEqual(done.commands, []);
@@ -115,10 +123,9 @@ function requestOf(input: {
   readonly entries?: readonly ManifestEntry[];
 }): MergeCheckRequest {
   pinned = [];
-  const entries: readonly ManifestEntry[] =
-    input.entries ?? [
-      { id: "the-probe", kind: "command", argv: ["/bin/true"], phase: 1, timeLimitMs: 30_000 },
-    ];
+  const entries: readonly ManifestEntry[] = input.entries ?? [
+    { id: "the-probe", kind: "command", argv: ["/bin/true"], phase: 1, timeLimitMs: 30_000 },
+  ];
   const runner: CheckRunner = {
     pin: async (entry) => {
       pinned.push(entry.id);

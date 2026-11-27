@@ -22,7 +22,17 @@
  * early: it blocks until its `resetAt` and only ceases to block after it
  * (F154-FR-041).
  */
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync, fsyncSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+  fsyncSync,
+} from "node:fs";
 import { join } from "node:path";
 import { buildOwnerRecord, type BuiltOwnerRecord } from "../lock/owner-record.ts";
 

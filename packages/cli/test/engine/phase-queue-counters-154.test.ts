@@ -11,7 +11,16 @@
  * for repair (PQ-2 keeps the dependent waiting).
  */
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,7 +133,12 @@ test("worked-at-once phases spend no outer counter; attempt numbers survive a re
     assert.equal(two.gatedAttempt, 1);
     assert.equal(three.gatedAttempt, 1);
     const attemptsOnDisk = readdirSync(phaseQueueDirectoryOf(controlRoot))
-      .map((one) => JSON.parse(readFileSync(join(phaseQueueDirectoryOf(controlRoot), one), "utf8")) as { attempt: number })
+      .map(
+        (one) =>
+          JSON.parse(readFileSync(join(phaseQueueDirectoryOf(controlRoot), one), "utf8")) as {
+            attempt: number;
+          },
+      )
       .map((one) => one.attempt);
     assert.deepEqual(attemptsOnDisk.sort(), [1, 1], "an outer counter leaked into the queue");
 
@@ -146,7 +160,11 @@ test("worked-at-once phases spend no outer counter; attempt numbers survive a re
     assert.ok(repaired !== undefined);
     assert.equal(repaired.attempt, 2, "the rejection did not advance the phase's own attempt");
     assert.equal(repaired.gatedAttempt, undefined);
-    assert.equal(readQueueEntry(controlRoot, 3)?.attempt, 1, "the rejection spent phase 3's attempt too");
+    assert.equal(
+      readQueueEntry(controlRoot, 3)?.attempt,
+      1,
+      "the rejection spent phase 3's attempt too",
+    );
 
     // THE RELAUNCH: a THIRD coordinator, fresh again, reads the SAME advanced
     // attempt, and the queue holds the rejected phase at the head (the

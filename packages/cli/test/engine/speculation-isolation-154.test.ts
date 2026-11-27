@@ -29,9 +29,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import {
-  sweepConfirmsNoReadableTree,
-} from "../../../core/src/parallel/before-critic.ts";
+import { sweepConfirmsNoReadableTree } from "../../../core/src/parallel/before-critic.ts";
 import {
   SPECULATION_ADMISSION_EVENT,
   promptCarriesNoVerdictWord,
@@ -71,11 +69,14 @@ function harnessOf(input?: {
     spawnSync("git", ["-C", work, ...argv]);
   }
   mkdirSync(eventsPath.slice(0, eventsPath.lastIndexOf("/")), { recursive: true });
-  writeFileSync(eventsPath, `${JSON.stringify({
-    type: "attempt.ended",
-    at: 1,
-    data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
-  })}\n`);
+  writeFileSync(
+    eventsPath,
+    `${JSON.stringify({
+      type: "attempt.ended",
+      at: 1,
+      data: { run: "r154", phase: 1, attempt: 1, endCause: "approved" },
+    })}\n`,
+  );
   const seen: { type: string; data: Record<string, unknown> }[] = [];
   const coordinator = speculationCoordinatorOf({
     on: true,
@@ -110,7 +111,11 @@ function harnessOf(input?: {
 test("T149: a tree stands through a critic-class call only where the critic cannot read it (T146, F154-FR-067)", () => {
   // No leftover tree: the sweep confirms, whatever the critic reads.
   assert.equal(
-    sweepConfirmsNoReadableTree({ criticHasNoTools: false, readDenialConfirmed: false, leftoverTrees: [] }),
+    sweepConfirmsNoReadableTree({
+      criticHasNoTools: false,
+      readDenialConfirmed: false,
+      leftoverTrees: [],
+    }),
     true,
   );
   // A tree AND a critic with no tools (IX): it may stand.
@@ -199,7 +204,7 @@ test("T149: a stop ends the speculative worker like a group worker (F154-FR-074)
     assert.equal(harness.coordinator.depthInForce(), 0);
     // A second stop is a no-op, and the workspace was never touched.
     await harness.coordinator.stopNow();
-    assert.equal(existsSync(join(harness.workspace, "spec.md"), ), true);
+    assert.equal(existsSync(join(harness.workspace, "spec.md")), true);
     const closers = harness.admissions();
     assert.equal(closers.length, 1);
   } finally {
