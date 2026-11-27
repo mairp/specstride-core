@@ -157,3 +157,32 @@ Read on `aafb367f` by four read-only code readers; every line number verified wi
 - The first fix of row 256 (`52cb20e5`) was incomplete: `closed-sets.test.ts` pins the constant
   against `packages/contracts/data/closed-sets.json`, a fourth home of the set, and CI refused it
   (PR #42). Fixed in `079093cf`.
+
+### The run (2026-11-25 19:17 to 2026-11-27 06:33 UTC, `launch-mwwi9xc3` then `launch-mwwptgmr`)
+
+- **Result**: 18 of 18 phases approved, 18 approval commits, `DIGEST exit=0 stop=none`. Proposer
+  `dsh:zai/glm-5.3-flash` at `reasoningEffort: max`; critic `dsh:compass-gpt5-high/gpt-5`; every
+  configurable ceiling off. Phase 18 wrote nine trial records under `trials/`, each `TRI-pass`
+  and each switch still off until ruled (`verified.md`).
+- **Attempts per phase**: 1:5, 2:8, 3:2, 4:3, 5:3, 6:2, 7:2, 8:2, 9:2, 10:3, 11:4, 12:2, 13:2,
+  14:3, 15:3, 16:5, 17:2, 18:4. The critic's UNMET set shrank on almost every attempt; the
+  rejections were on the merits, with two exceptions below.
+- **Bugs found by the run, each a merged PR**: row 256 lacked `commit-gate-rules` (#42); a quota
+  line from the critic was read as `MALFORMED` (#44); `specstride stop` bound its request to a
+  dead run's registry entry (#45).
+- **Lessons for whoever drives the next run**:
+  - Never commit inside a live phase. The critic judges the attempt's uncommitted change; a
+    commit made to "save" in-flight work hides it. The engine commits only at approval.
+  - The `mixture-of-loops` launcher's stage example assumes the as-is engine's `run` grammar
+    (`-s … --feature … --proposer …`); this product's `run` has another grammar, and its designed
+    start is `launch --mode run` from the validated contract.
+  - The critic route reads a very long prompt unreliably (a 158 KB probe did not answer in three
+    minutes). `critic.evidence.perTask` is on by default and bounds this; a phase whose change is
+    large still gets shallow verdicts late in the diff.
+  - A file committed in an earlier phase never appears in a later attempt's change. When the critic
+    needs to see one, the evidence must show it (`git ls-files` output was not enough; a README
+    added to the fixture directory was).
+  - The first sign of a stuck loop was the proposer's own evidence claiming work the critic could
+    not see; read the critic's UNMET lines against `git diff HEAD` before touching the run.
+  - `verification-undeclared` stays open: the gate ran the repository's `npm test` as it does for
+    153, and every phase's gate was green before its critic was called.
