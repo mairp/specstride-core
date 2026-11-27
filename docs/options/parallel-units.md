@@ -33,10 +33,14 @@ A worker count above `loop.parallel.workersMax` is a **configuration error at la
 silent clamp. Project configuration may narrow a scope or exclude a task; it may never add or
 widen one, and such a declaration is refused with a doctor line.
 
-Before you switch it on, run `specstride doctor`. It prints the plan the option would produce
-(groups per phase, the tasks left serial **with the reason**, the ceiling of the speed-up under
-equal task cost) and names the exclusive resources it cannot check. With the option off the doctor
-prints no plan at all.
+Before you switch it on, run `specstride doctor`. With the option **on**, both `specstride doctor`
+and `launch --dry-run` print the plan (the groups per phase, the ceiling of the speed-up under
+equal task cost, and the statement that it is a ceiling before any cost) — the same bytes from
+both, from the one renderer. With the option **off**, the plan is printed only behind the verbose
+flag, introduced by the one-line label `plan the option would produce`; under the `parity` profile
+nothing is printed at all. The serial list, with each task's reason, is printed only behind the
+verbose flag in all cases: by default the print is terse, with no serial lines. The doctor also
+names the exclusive resources it cannot check.
 
 ## 2. When it is worth switching on
 
@@ -116,6 +120,15 @@ scope and no sibling, count, index or group; the handoff names the integrated ta
 used for a serial unit; refusals, kills and failed merge checks never reach a critic-class call;
 no worker tree exists when a critic-class call starts. Two channels are **narrowed and not
 closed**, and you should know about both before you switch the option on.
+
+This stays true under every behaviour the newer concurrency option (feature 154) adds. The two
+channels remain **narrowed and not closed** in all three of its modes — **groups as units**
+(`loop.parallel.groupUnits`), **phases side by side** (`loop.phases.parallel`, one validation
+queue), and **speculation** (`loop.speculate`, work past an open verdict). None of the three
+closes either channel: a phase tree and a speculative tree have opaque paths and the sweep
+before a critic-class call holds, but the audit is still a text search (§4.1) and the evidence a
+proposer writes in a tree is still its own words (§4.2). If a critic inferring parallel work is
+unacceptable under any of the three modes, do not switch that mode on.
 
 ### 4.1 The path-leak audit is a text search (F142-FR-056)
 

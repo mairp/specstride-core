@@ -40,6 +40,8 @@ import type {
   ContainmentLevel,
   ManifestEntry,
 } from "@specstride/contracts/ep/check-runner";
+import { baselineComparisonOf } from "./merge-baseline.ts";
+import type { BaselineComparison, BaseResultOfTheInnerSet } from "./merge-baseline.ts";
 
 /* ================================================================== *
  * 1. What F142-FR-059 fixes about the merge check.
@@ -54,8 +56,23 @@ export const NO_COMMAND_IS_SKIPPED_AT_A_FAILURE = true as const;
 /** The merge check runs where the application put the work: the workspace. */
 export const RUNS_ON_THE_WORKSPACE = true as const;
 
-/** No check runs in a worker tree (F142-FR-059, PU-49). */
-export const NO_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
+/**
+ * F142-FR-059 AS AMENDED (F154-FR-034, T083) — the guard is NARROWED TO THE
+ * MERGE CHECK. The blanket "no check runs in a worker tree" no longer holds:
+ * the group's ACCEPTANCE check now runs in its worker tree (`parallel-group.ts`,
+ * the record `specstride.worker-check/1`). What still never runs in a worker
+ * tree is the merge check: every command of the inner set runs in the
+ * workspace, and a request whose workspace is a worker tree is refused before
+ * any command starts (`CHECK_IN_A_WORKER_TREE`, below). The three constants
+ * state the narrowed rule in its parts.
+ */
+export const NO_CHECK_RUNS_IN_A_WORKER_TREE = false as const;
+
+/** The merge check still never runs in a worker tree (F142-FR-059 as amended). */
+export const NO_MERGE_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
+
+/** The group's acceptance check is the check that now runs in a worker tree (F154-FR-034). */
+export const THE_ACCEPTANCE_CHECK_RUNS_IN_A_WORKER_TREE = true as const;
 
 /** Nothing is reverted, whatever the merge check says (F142-FR-061, PU-49). */
 export const NOTHING_IS_REVERTED = true as const;
@@ -214,6 +231,17 @@ export type KeptUnitOfWork = {
 /** One repair charged to one task of the unit (F142-FR-061, PU-50). */
 export type RepairCharge = { readonly taskId: string; readonly repairs: 1 };
 
+/**
+ * The unit of a merge check that did not run (MG-1, F154-FR-027): recorded,
+ * named by its tasks, and bound to **no** fingerprint, because nothing is
+ * kept — the same shape of absence the unchecked unit of F142-FR-060 carries.
+ */
+export type NotRunUnit = {
+  readonly unitId: string;
+  readonly tasks: readonly string[];
+  readonly treeHash: null;
+};
+
 /** The outcome of the merge check: the unit is kept, or it takes the repair path. */
 export type MergeCheckOutcome =
   | {
@@ -232,6 +260,39 @@ export type MergeCheckOutcome =
       /** The unit takes the repair path and is not kept (F142-FR-061). */
       readonly kept: false;
       /** Why the unit takes the repair path: a failure, or the condition it carried. */
+      readonly because: string;
+    }
+  | {
+      /**
+       * MG-1 (F154-FR-027) — the application changed 0 paths: no merge check
+       * ran, nothing is charged, the group is not failed, the unit is not
+       * kept. `theMergeCheckOfTheGroup` returns it before any command runs;
+       * this variant is also what the outcome answers where a caller asks it
+       * to decide over the empty-application signal directly.
+       */
+      readonly directive: "not-run";
+      readonly ruleId: "MG-1";
+      readonly unit: NotRunUnit;
+      readonly repairsCharged: readonly RepairCharge[];
+      readonly reverted: false;
+      readonly kept: false;
+      readonly because: string;
+    }
+  | {
+      /**
+       * MG-2 (F154-FR-028) — every failing command failed on the base result
+       * with the same failure signature (F115-FR-019): no repair is charged,
+       * the group is not failed, the unit is NOT kept, and the comparison is
+       * recorded with its rule id (the record `specstride.merge-baseline/1`).
+       */
+      readonly directive: "no-charge";
+      readonly ruleId: "MG-2";
+      readonly unit: KeptUnitOfWork;
+      readonly repairsCharged: readonly RepairCharge[];
+      readonly reverted: false;
+      readonly kept: false;
+      /** The comparison itself, carried for the record the engine writes. */
+      readonly baseline: BaselineComparison;
       readonly because: string;
     }
   | {
@@ -279,12 +340,30 @@ export function oneRepairPerTask(tasks: readonly string[]): readonly RepairCharg
  * the layer off for the phase attempt (F142-FR-060, T080). It is tested first,
  * because an unchecked run is neither a pass nor a failure of the inner set —
  * the inner set did not run.
+ *
+ * T066 (F154-FR-028) — where the caller hands the merge baseline's inputs in
+ * (the applied path count and the latest inner-set result whose tree
+ * fingerprint equals the group's base snapshot's), the comparison of
+ * `baselineComparisonOf` decides FIRST: MG-2 leaves the unit neither kept nor
+ * repaired nor failed, with no repair charged. MG-3 needs no code here — its
+ * choice is F142-FR-061, the behaviour below unchanged. Where the caller hands
+ * no baseline inputs, nothing of this runs: the outcome is exactly the one
+ * F142-FR-061 gave before this feature, and under answer B of CQ-154-17 that
+ * is the standing behaviour.
  */
 export function outcomeOfTheMergeCheck(input: {
   readonly run: MergeCheckRun;
   /** The tasks the integrated workers named, in the order of the group. */
   readonly tasks: readonly string[];
   readonly hash: (text: string) => string;
+  /** The paths the group's application changed (F154-FR-027), where read. */
+  readonly appliedPathCount?: number | undefined;
+  /**
+   * The latest inner-set result whose tree fingerprint equals the group's
+   * base snapshot's, where the seam read one (F154-FR-028). Absent: no
+   * comparison runs and F142-FR-061 applies unchanged.
+   */
+  readonly baseResult?: BaseResultOfTheInnerSet | undefined;
 }): MergeCheckOutcome {
   const unit: KeptUnitOfWork = Object.freeze({
     unitId: unitIdOfTheTasks(input.tasks, input.hash),
@@ -292,6 +371,31 @@ export function outcomeOfTheMergeCheck(input: {
     treeHash: input.run.fingerprintAfter,
   });
   if (input.run.unchecked) return uncheckedOutcome({ tasks: input.tasks, hash: input.hash });
+  if (input.baseResult !== undefined) {
+    const baseline = baselineComparisonOf(
+      {
+        appliedPathCount: input.appliedPathCount ?? 1,
+        mergeCheckFailed: !input.run.passed,
+        commands: input.run.commands,
+      },
+      input.baseResult,
+    );
+    if (baseline.ruleId === "MG-1") {
+      return notRunOutcomeOfTheMergeCheck({ tasks: input.tasks, hash: input.hash });
+    }
+    if (baseline.ruleId === "MG-2") {
+      return Object.freeze({
+        directive: "no-charge" as const,
+        ruleId: "MG-2" as const,
+        unit,
+        repairsCharged: Object.freeze([]),
+        reverted: false as const,
+        kept: false as const,
+        baseline,
+        because: baseline.detail,
+      });
+    }
+  }
   if (input.run.passed && input.run.condition === null) {
     return Object.freeze({
       directive: "keep" as const,
@@ -319,6 +423,35 @@ export function outcomeOfTheMergeCheck(input: {
 /* ================================================================== *
  * 4. The empty inner check set (T080, F142-FR-060, PU-79).
  * ================================================================== */
+
+/**
+ * T063 (F154-FR-027, rule MG-1) — the outcome of a merge check that did NOT
+ * run, because the group's application changed 0 paths: no check, no charge,
+ * no failed group, and the unit is not kept. The engine returns it before it
+ * runs any command of the inner set, so no `merge_check_started` or
+ * `merge_check_finished` record is written and no repair bookkeeping happens.
+ */
+export function notRunOutcomeOfTheMergeCheck(input: {
+  readonly tasks: readonly string[];
+  readonly hash: (text: string) => string;
+}): Extract<MergeCheckOutcome, { readonly directive: "not-run" }> {
+  return Object.freeze({
+    directive: "not-run" as const,
+    ruleId: "MG-1" as const,
+    unit: Object.freeze({
+      unitId: unitIdOfTheTasks(input.tasks, input.hash),
+      tasks: Object.freeze([...input.tasks]),
+      // Nothing is kept: the unit is bound to NO fingerprint (as the
+      // unchecked unit of F142-FR-060 is).
+      treeHash: null,
+    }),
+    repairsCharged: Object.freeze([]),
+    reverted: false as const,
+    kept: false as const,
+    because:
+      "the application changed 0 paths — no merge check runs, nothing is charged, the group is not failed (MG-1, F154-FR-027)",
+  });
+}
 
 /**
  * F142-FR-060 — the reason the layer is off for the phase attempt when the

@@ -703,6 +703,42 @@ export function admissionEvent(task: {
   });
 }
 
+/**
+ * T057 — the group's own admission (F154-FR-024, F142-FR-011): one
+ * `parallel.admission` event per **group**, beside the one per task, with the
+ * verdict of every check of the group's gate and its detail, so that a reader
+ * of the events tells which check refused the group without re-running the
+ * gate. The verdicts are carried as an ordered list (not keyed by check),
+ * because two of the group-level checks stand under `headroom`.
+ */
+export function groupAdmissionEvent(group: {
+  readonly groupId: string;
+  readonly ordinal: number;
+  readonly phase: number;
+  readonly admitted: boolean;
+  readonly checks: readonly AdmissionVerdict[];
+}): EventRequest {
+  return Object.freeze({
+    type: "parallel.admission" as const,
+    data: Object.freeze({
+      groupId: group.groupId,
+      ordinal: group.ordinal,
+      phase: group.phase,
+      admitted: group.admitted,
+      reason: group.checks.find((verdict) => !verdict.passed)?.check,
+      verdicts: Object.freeze(
+        group.checks.map((verdict) =>
+          Object.freeze({
+            check: verdict.check,
+            verdict: verdict.passed ? "passed" : "failed",
+            detail: verdict.detail,
+          }),
+        ),
+      ),
+    }),
+  });
+}
+
 /** T053 — the start of a group (F142-FR-025). */
 export function groupStartedEvent(group: {
   readonly groupId: string;

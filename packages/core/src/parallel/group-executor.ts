@@ -773,85 +773,102 @@ export async function startWorkers(
     readonly mintSessionId: (worker: PlannedWorker) => string;
     readonly profile?: ToolchainProfile | undefined;
     readonly processSpendingLimit?: number | undefined;
+    /**
+     * T097 (F154-FR-040) — the `sessions/<account>` slot of the host,
+     * INJECTED (the core holds no file system of its own): taken before the
+     * first worker session starts, released when the last slice of this
+     * call has been started. Answers `null` where nothing is gated
+     * (`host.limits` off, store unreadable) — the workers start unbounded.
+     */
+    readonly takeSessionSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
   },
 ): Promise<readonly StartedWorker[]> {
   const started: StartedWorker[] = [];
-  // F143-FR-010 — AT MOST `workers` AT A TIME, in the order of the tasks.
-  for (const slice of inSlicesOfAtMost(input.workers, input.workersAtATime)) {
-    for (const worker of slice) {
-      // T031 — its own workspace part: an empty outbox and a handoff.
-      const part = workspacePartOfAWorker({
-        worker,
-        slug: input.slug,
-        baseFingerprint: input.baseFingerprint,
-      });
-      await ports.writeWorkspacePart(worker, part);
+  // T097 — one slot for the worker sessions of THIS start call, held from
+  // the first session to the last slice started, whatever the outcome.
+  const releaseSessionSlot =
+    input.takeSessionSlot === undefined ? null : await input.takeSessionSlot();
+  try {
+    // F143-FR-010 — AT MOST `workers` AT A TIME, in the order of the tasks.
+    for (const slice of inSlicesOfAtMost(input.workers, input.workersAtATime)) {
+      for (const worker of slice) {
+        // T031 — its own workspace part: an empty outbox and a handoff.
+        const part = workspacePartOfAWorker({
+          worker,
+          slug: input.slug,
+          baseFingerprint: input.baseFingerprint,
+        });
+        await ports.writeWorkspacePart(worker, part);
 
-      // T032 — the environment: three things, and no index and no count.
-      const environment = environmentOfAWorker({
-        worker,
-        runToken: input.runToken,
-        profile: input.profile,
-      });
+        // T032 — the environment: three things, and no index and no count.
+        const environment = environmentOfAWorker({
+          worker,
+          runToken: input.runToken,
+          profile: input.profile,
+        });
 
-      // T033, T034 — one process, in a group of its own, fresh session, base
-      // tier, its tree as the write root, the strongest containment offered.
-      const handle = await ports.startPass({
-        promptReference: input.promptReference,
-        workingDirectory: worker.tree,
-        session: sessionOfAWorkerPass(input.mintSessionId(worker)),
-        model: input.proposer.model,
-        modelTierOrEffort: modelTierOfAWorkerPass(input.proposer),
-        containment: containmentOfAWorker(input.containmentCeiling),
-        writeRoot: writeRootOfAWorker(worker),
-        environmentAllowList: Object.keys(environment),
-        timeLimitMs: input.timeLimitMs,
-        transport: input.transport,
-        ...(input.processSpendingLimit === undefined
-          ? {}
-          : { processSpendingLimit: input.processSpendingLimit }),
-        environment,
-      });
+        // T033, T034 — one process, in a group of its own, fresh session, base
+        // tier, its tree as the write root, the strongest containment offered.
+        const handle = await ports.startPass({
+          promptReference: input.promptReference,
+          workingDirectory: worker.tree,
+          session: sessionOfAWorkerPass(input.mintSessionId(worker)),
+          model: input.proposer.model,
+          modelTierOrEffort: modelTierOfAWorkerPass(input.proposer),
+          containment: containmentOfAWorker(input.containmentCeiling),
+          writeRoot: writeRootOfAWorker(worker),
+          environmentAllowList: Object.keys(environment),
+          timeLimitMs: input.timeLimitMs,
+          transport: input.transport,
+          ...(input.processSpendingLimit === undefined
+            ? {}
+            : { processSpendingLimit: input.processSpendingLimit }),
+          environment,
+        });
 
-      const registration: WorkerRegistration = Object.freeze({
-        kind: KIND_OF_A_WORKER_PROCESS,
-        class: CLASS_OF_A_WORKER_PROCESS,
-        pid: handle.pid,
-        startTime: handle.startTime,
-        runToken: input.runToken,
-        workerId: worker.workerId,
-        processGroup: handle.processGroup,
-      });
-      await ports.register(registration);
-
-      const passOrdinal = passOrdinalOf({
-        groupOrdinal: input.groupOrdinal,
-        taskPosition: worker.taskPosition,
-        restartIndex: worker.restartsUsed ?? 0,
-      });
-      await ports.record("worker_started", {
-        workerId: worker.workerId,
-        task: worker.task,
-        passId: handle.sessionId,
-        passOrdinal: [...passOrdinal],
-        fingerprint: input.baseFingerprint,
-        pid: handle.pid,
-        startTime: handle.startTime,
-      });
-
-      started.push(
-        Object.freeze({
-          workerId: worker.workerId,
+        const registration: WorkerRegistration = Object.freeze({
+          kind: KIND_OF_A_WORKER_PROCESS,
+          class: CLASS_OF_A_WORKER_PROCESS,
           pid: handle.pid,
           startTime: handle.startTime,
+          runToken: input.runToken,
+          workerId: worker.workerId,
           processGroup: handle.processGroup,
-          sessionId: handle.sessionId,
-          registration,
-          environment,
-          passOrdinal,
-        }),
-      );
+        });
+        await ports.register(registration);
+
+        const passOrdinal = passOrdinalOf({
+          groupOrdinal: input.groupOrdinal,
+          taskPosition: worker.taskPosition,
+          restartIndex: worker.restartsUsed ?? 0,
+        });
+        await ports.record("worker_started", {
+          workerId: worker.workerId,
+          task: worker.task,
+          passId: handle.sessionId,
+          passOrdinal: [...passOrdinal],
+          fingerprint: input.baseFingerprint,
+          pid: handle.pid,
+          startTime: handle.startTime,
+        });
+
+        started.push(
+          Object.freeze({
+            workerId: worker.workerId,
+            pid: handle.pid,
+            startTime: handle.startTime,
+            processGroup: handle.processGroup,
+            sessionId: handle.sessionId,
+            registration,
+            environment,
+            passOrdinal,
+          }),
+        );
+      }
     }
+  } finally {
+    // T097 — the sessions slot is released whatever the slices did.
+    if (releaseSessionSlot !== null) await releaseSessionSlot();
   }
   return Object.freeze(started);
 }

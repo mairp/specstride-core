@@ -300,6 +300,11 @@ function theOutcomeOfTheFinishedCheck(records: readonly ResumeRecord[]): "closed
  * WRITTEN.
  */
 export async function carryOutTheResumeOfTheOpenGroup(input: {
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check on the resume tail. Left out, unbounded.
+   */
+  readonly takeChecksSlotOfTheRun?: (() => Promise<(() => Promise<void>) | null>) | undefined;
   readonly open: TheOpenParallelGroup;
   readonly controlRoot: string;
   /** `--reset-counts` (F100-FR-045): zeroes the counters THIS start writes. */
@@ -390,6 +395,9 @@ export async function carryOutTheResumeOfTheOpenGroup(input: {
       controlRoot: input.controlRoot,
       ...(input.resetCounts === true ? { resetCounts: true } : {}),
       drive: input.drive,
+      ...(input.takeChecksSlotOfTheRun === undefined
+        ? {}
+        : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
     });
   }
   // A state of the eight this slice does not carry out yet: nothing is

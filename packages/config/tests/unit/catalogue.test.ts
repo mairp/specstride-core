@@ -78,10 +78,10 @@ const SOUND_ROW: CatalogueDataRow = Object.freeze({
 });
 
 describe("CT-110-108 — every key has a class, a snapshot class, an owner and a default of its own type (F110-FR-010)", () => {
-  it("reads the whole catalogue: 271 keys, every one with all seven columns of §K.1", () => {
-    assert.equal(CATALOGUE.length, 271);
-    assert.equal(CATALOGUE_SIZE, 271);
-    assert.equal(new Set(CATALOGUE_KEYS).size, 271, "every spelling is unique");
+  it("reads the whole catalogue: 282 keys, every one with all seven columns of §K.1", () => {
+    assert.equal(CATALOGUE.length, 282);
+    assert.equal(CATALOGUE_SIZE, 282);
+    assert.equal(new Set(CATALOGUE_KEYS).size, 282, "every spelling is unique");
   });
 
   it("the shipped catalogue data equals the contract of T004", () => {
@@ -170,7 +170,7 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
       kinds.set(entry.type.kind, (kinds.get(entry.type.kind) ?? 0) + 1);
     assert.equal(
       [...kinds.values()].reduce((a, b) => a + b, 0),
-      271,
+      282,
       "every key has a type the reader could read",
     );
   });
@@ -240,6 +240,18 @@ describe("CT-110-108 — every key has a class, a snapshot class, an owner and a
  * one fails this test until it is either entered in the catalogue or named here.
  */
 const NOT_A_CONFIGURATION_KEY: Readonly<Record<string, string>> = Object.freeze({
+  "host.protocolRange":
+    "a field name of the doctor's environment check of feature 111 (the protocol range a sink serves), read as a record field, not a configuration key; the `host` namespace of spec 154 is `host.limits` and the keys under it (F154-FR-039…-047)",
+  "host.quota_observed":
+    "an event type of the run grammar (the quota observation of feature 127), folded by the signal table of feature 129, not a configuration key",
+  "pipeline.started":
+    "an event type of the pipeline run grammar (the stage child of feature 123), not a configuration key",
+  "pipeline.ended":
+    "an event type of the pipeline run grammar (the stage child of feature 123), not a configuration key",
+  "pipeline.root":
+    "a record kind of the pipeline control plane of feature 123, named in the run driver, not a configuration key",
+  "pipeline.terminal.tool.script":
+    "a conformance key of the EP-14 owner stubs of feature 100 (a fixture of the test kit), not a configuration key",
   "budget.run":
     "the prefix of a family of keys, named by the delegate rule of `phases.<N>.budget.*` (§K.4)",
   "budget.role.<role>":
@@ -402,6 +414,20 @@ const NOT_A_CONFIGURATION_KEY: Readonly<Record<string, string>> = Object.freeze(
     "the id of the doctor check that reports a tampered event file (F111-FR-021), not a configuration key",
   "derive.stageTimeoutSec":
     "the stage timeout of the derive contract supplied through the environment (`SPECSTRIDE_DERIVE_STAGE_TIMEOUT_SEC`, F107-FR-025) and resolved outside the catalogue read path, not a configuration key",
+  "host.checks.concurrent":
+    "a host bound of feature 154 (F154-FR-039…-047) that arrives as the environment variable `SPECSTRIDE_HOST_CHECKS_CONCURRENT` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.sessions.<account>":
+    "a host bound of feature 154 that arrives as the environment variable `SPECSTRIDE_HOST_SESSIONS_<ACCOUNT>` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.resources.<name>.capacity":
+    "a host bound of feature 154 that arrives as the environment variable `SPECSTRIDE_HOST_RESOURCES_<NAME>` of the start (`packages/cli/src/engine/host-slots.ts`), never a row of the catalogue",
+  "host.slot.admission":
+    "an event type of the run grammar of feature 154 (one event per take of a host slot, CQ-154-09), folded by the signal table, not a configuration key",
+  "pipeline.landing":
+    "the decision point of the landing table (`LANDING_POINT`, `packages/core/src/landing/landing-rule.ts`, F154-FR-050), a name of a pure table, not a configuration key",
+  "pipeline.stage.admission":
+    "an event type of the pipeline run grammar of feature 154 (one event per stage admission decision, `packages/pipeline/src/executor/graph.ts`), not a configuration key",
+  "loop.speculation":
+    "the decision point of the speculation table (`SPECULATION_POINT`, `packages/core/src/speculation/speculation-rule.ts`, F154-FR-062), a name of a pure table, not a configuration key",
 });
 
 /** Every source file of every package of the workspace. */

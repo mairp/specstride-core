@@ -464,10 +464,13 @@ test("T295 CT-153-42 a failure in a batch is run again alone", async () => {
       },
       {
         id: "verify-b",
-        // Writes its line FIRST, then fails while the lock is held — so two
-        // counter lines state two executions: the one beside verify-a, which
-        // found the lock and failed, and the rerun alone, which passed.
-        code: `const fs = require("node:fs"); setTimeout(() => { fs.appendFileSync("pkgs/b/counter-b.txt", "ran\\n"); if (fs.existsSync("pkgs/a/lock")) process.exit(1); process.exit(0); }, 200)`,
+        // Polls for the lock — a single timed check races under load (it
+        // could fire before verify-a wrote the lock, or after it removed
+        // it, and then verify-b would pass and never be rerun). The batch
+        // execution finds the lock while verify-a holds it and fails; the
+        // rerun runs after the batch, finds no lock within its window and
+        // passes. Both executions write their own line.
+        code: `const fs = require("node:fs"); const deadline = Date.now() + 5000; (function poll() { if (fs.existsSync("pkgs/a/lock")) { fs.appendFileSync("pkgs/b/counter-b.txt", "ran\\n"); process.exit(1); } if (Date.now() > deadline) { fs.appendFileSync("pkgs/b/counter-b.txt", "ran\\n"); process.exit(0); } setTimeout(poll, 25); })();`,
         cwd: ".",
       },
     ],

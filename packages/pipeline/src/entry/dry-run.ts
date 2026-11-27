@@ -18,6 +18,17 @@ import { runPreflight, type PreflightResult } from "../executor/preflight.ts";
 import type { PreconditionCheckRegistry, EvaluationContext } from "../kinds/registry.ts";
 import { decideSetupStage } from "../kinds/setup.ts";
 import { redactAction, digestLine } from "../output/lines.ts";
+// Feature 154, T031 — the ONE renderer of the parallel plan (F154-SC-002),
+// shared with the doctor. The plan types are the layer's own (the plan the
+// renderer reads is ONE record, `specstride.parallel-plan/1`), so the derived
+// plan and the stored plan are the same type.
+import { printThePlan, UNITS_FORCED_ON } from "../../../layer-parallel/src/plan.ts";
+import type {
+  ParallelPlan,
+  PlannedGroup,
+  SerialTask,
+  CandidateTask,
+} from "../../../layer-parallel/src/types.ts";
 
 /** The lines of the plan, in the order they are printed. */
 export type DryRunLine = {
@@ -105,6 +116,8 @@ export async function planDryRun(input: {
   shell: Readonly<Record<string, string | undefined>>;
   /** The parallel-units option of F123-FR-006; absent means the option is off. */
   parallel?: ParallelPlanInput;
+  /** The verbose flag (feature 154, CQ-154-19 A): with the option off, the plan the option would produce is printed only behind it. */
+  verbose?: boolean;
 }): Promise<{ lines: DryRunLine[]; preflight: PreflightResult }> {
   const lines: DryRunLine[] = [];
   lines.push({
@@ -145,19 +158,31 @@ export async function planDryRun(input: {
     );
   }
 
-  // The parallel plan (F123-FR-006): with the option on, the plan — the
-  // stored one, or the one the same pure derivation gives — is part of the
-  // dry-run plan; with the option off, and under the `parity` profile, no
-  // line about it is printed at all.
-  if (input.parallel !== undefined && parallelUnitsOn(input.parallel)) {
+  // The parallel plan (F123-FR-006), printed through `printThePlan` — the
+  // ONE renderer the doctor uses, so the bytes are the same (feature 154,
+  // T031, F154-SC-002). The flag rule is CQ-154-19 A: with the option on the
+  // plan is printed (terse unless verbose); with the option off, and under
+  // the `parity` profile, no line about it at all — except that with the
+  // option off (never under `parity`) and the verbose flag on, the plan the
+  // option WOULD produce is printed behind the one-line label.
+  const verbose = input.verbose === true;
+  const profile = input.parallel?.profile;
+  const unitsOn = input.parallel !== undefined && parallelUnitsOn(input.parallel);
+  if (profile !== "parity" && (unitsOn || verbose)) {
     const plan =
-      readStoredParallelPlan(input.parallel.storedPlan) ??
+      readStoredParallelPlan(input.parallel?.storedPlan) ??
       deriveParallelPlan({
-        runId: input.parallel.runId ?? input.contractId,
+        runId: input.parallel?.runId ?? input.contractId,
         stages: input.stages,
-        workers: input.parallel.workers,
+        workers: input.parallel?.workers,
       });
-    for (const text of parallelPlanLines(plan)) {
+    if (!unitsOn) {
+      lines.push({ label: "[PLAN]", text: "plan the option would produce", hue: "cyan" });
+    }
+    const planLines = unitsOn
+      ? printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose })
+      : printThePlan(plan, UNITS_FORCED_ON, undefined, { verbose: true });
+    for (const text of planLines) {
       lines.push({ label: "[PLAN]", text, hue: "cyan" });
     }
   }
@@ -188,7 +213,7 @@ export async function planDryRun(input: {
  *  - **read from the stored plan**: the composition root injects the record
  *    the engine stored under `run:<runId>:parallel-plan`
  *    (`specstride.parallel-plan/1`, feature 100 annex D §D.3) and
- *    `readStoredParallelPlan` takes it as it stands;
+ *    `readStoredParallelPlan` takes it stands;
  *  - **derived by the same pure function**: where nothing was stored, the
  *    pure derivation `deriveParallelPlan` computes the plan over the stages
  *    of the launch contract with the rules annex D §D.3 states — groups of
@@ -220,38 +245,9 @@ export const WORKERS_DEFAULT = 2 as const;
 /** Why a task is serial where its run of consecutive tasks was too short. */
 export const ALONE_IN_ITS_RUN = "alone-in-its-run-of-admitted-tasks" as const;
 
-/** One group of the plan. */
-export type PlannedGroup = {
-  readonly ordinal: number;
-  readonly phase: number;
-  readonly tasks: readonly string[];
-};
-
-/** One task made serial, with its reason. */
-export type SerialTask = {
-  readonly id: string;
-  readonly reason: string;
-};
-
-/** One phase of the plan (annex D §D.3). */
-export type PhasePlan = {
-  readonly phase: number;
-  readonly groups: readonly PlannedGroup[];
-  readonly serial: readonly SerialTask[];
-  /** The ceiling of the speed-up of the phase under equal task cost. */
-  readonly ceiling: number;
-};
-
-/** The parallel plan (annex D §D.3, `specstride.parallel-plan/1`). */
-export type ParallelPlan = {
-  readonly schema: typeof PARALLEL_PLAN_SCHEMA;
-  readonly runId: string;
-  /** The canonical hash of the stored plan; empty where the plan is derived. */
-  readonly hash: string;
-  readonly workers: number;
-  readonly phases: readonly PhasePlan[];
-  readonly fallback: string | null;
-};
+// The plan types are the layer's own (`PlannedGroup`, `SerialTask`,
+// `PhasePlan`, `ParallelPlan` of layer-parallel): the renderer reads one
+// record, and a derived plan and a stored plan are the same type.
 
 /** What the dry run is given about the parallel-units option. */
 export type ParallelPlanInput = {
@@ -342,11 +338,21 @@ export function deriveParallelPlan(input: {
       index = ids.length;
     }
   }
-  const tasks = Object.freeze(ids.map((id) => ({ id })));
-  const phase: PhasePlan = Object.freeze({
+  const tasks: readonly CandidateTask[] = Object.freeze(
+    ids.map((id): CandidateTask => ({
+      id,
+      // The derivation at the dry run computes no admission and reads no
+      // scope source: the empty scope and no verdicts are the derived
+      // values (the layer's own derivation fills them at launch).
+      scope: Object.freeze({ prefixes: Object.freeze([]), source: "consumer" }),
+      checks: Object.freeze([]),
+    })),
+  );
+  const phase = Object.freeze({
     phase: 1,
     groups: Object.freeze(groups),
     serial: Object.freeze(serial),
+    tasks,
     ceiling: ceilingOfTheSpeedUp({ tasks, groups }),
   });
   return Object.freeze({

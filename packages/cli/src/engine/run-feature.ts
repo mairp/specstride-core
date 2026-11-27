@@ -155,13 +155,14 @@ import {
   parallelLoopLineField,
   parallelWiringOfTheAttempt,
   theEmptyRunTotals,
-  totalsAfterTheGroup,
 } from "./parallel-wiring.ts";
 import { writeWorkerGuardScript } from "./worker-supervisor.ts";
 import { dshCapabilities } from "../../../adapter-dsh/src/descriptor/index.ts";
 import { RUN_REFUSED_EXIT } from "../commands/launch-roles.ts";
 import type { CapabilityProvenance, ContainmentLevel } from "@specstride/contracts/ep/harness";
-import type { HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
+// F154-FR-021…-024 (T021) — the group gate of one admission, wired through
+// its seam; the engine passes the same gate the layer computes, unstubbed.
+import { type HarnessRegistryEntry } from "../../../layer-parallel/src/index.ts";
 import {
   afterApprovedPhase,
   compatibilityFeedOf,
@@ -171,6 +172,30 @@ import {
 } from "./learning-loop.ts";
 import { phaseShapesOfSpec } from "../learn.ts";
 import { pathsNamedByTheTextOfATask } from "../../../layer-parallel/src/scope.ts";
+// F154-FR-025 (T021) — the count of failed groups, read from the closed
+// groups of the phase attempt, never from a constant.
+import { type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+// F154-FR-043 (T024) — the temporary root of the run: made, exported and
+// removed through the small helper module next to this file.
+import {
+  cleanupRunTempRoot,
+  exportRunTempRoot,
+  hostLimitsInForceOfTheStart,
+  makeRunTempRoot,
+} from "./run-feature.temp-root.ts";
+// F154-FR-039…-044 (T095, T097) — the host slot seam of the engine start.
+import { makeRunHostSlots, type HostSlotRelease } from "./host-slots.ts";
+// T105 (F154-FR-045, CQ-154-09) — the slot wait enters `paused-quota` through
+// the pause and leaves it through the resume of feature 127 (EP-12).
+import { pause as quotaPause, resume as quotaResume } from "@specstride/policy/quota";
+import type { PolicyEvent } from "@specstride/policy/quota";
+// T108 (F154-FR-041, F154-FR-044) — the atomic hold record of one account.
+import { readHold, writeHold } from "../../../runtime/src/limits/hold-record.ts";
+import { userStateRoot } from "@specstride/contracts/ids/roots";
+// F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`.
+import { parallelWiringInputOf } from "./run-feature.parallel-call.ts";
+import { speculationCoordinatorOf, SPECULATION_INTEGRATED_EVENT } from "./speculation.ts";
+import { integrateGroup, type WorkerForIntegration } from "../../../core/src/parallel/integrate.ts";
 import { nodeFileReader } from "../../../runtime/src/ports/critic-input-files.ts";
 import {
   clearPins,
@@ -390,6 +415,7 @@ import { readStopRequestFromFile } from "../run-control/records.ts";
 import { COMMIT_BLOCKED_EVENT_TYPE } from "../../../kernel/src/redactor/scan.ts";
 import type { EngineLaunch } from "../router/engine-args.ts";
 import { loopConfigurationOf } from "./loop-config.ts";
+import { coordinatorOf, type PhaseDeclaration } from "./phase-trees.ts";
 import {
   createMicroAttempt,
   factBlockBuilder,
@@ -2283,6 +2309,29 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     : `run-${randomUUID()}`;
   const engineStartId = "e1";
 
+  // T136 (feature 154, US6; F154-FR-056, -057) — the coordinator of the
+  // phase trees and the validation queue, read through the canonical model
+  // the launch parsed the tasks with (`phases`, above, carries the
+  // specstride dependency line of F154-FR-056). With `loop.phases.parallel`
+  // OFF — the default, and forced off under `parity` — or with no candidate
+  // phase (no pairwise-disjoint declared scopes, or a declared dependency
+  // between two of them), the coordinator is NULL and the run is exactly
+  // what it was before US6: no tree, no queue entry, nothing written
+  // (F154-FR-001, -002).
+  const phaseTrees = coordinatorOf({
+    on: loopConfig.phasesParallel,
+    declarations: phases.map((one): PhaseDeclaration => ({
+      phase: one.number,
+      dependsOn: one.dependsOn ?? [],
+      ...(one.writeScope === undefined ? {} : { writeScope: one.writeScope }),
+    })),
+    feature: slug,
+    runId,
+    controlRoot,
+    workspace: workdir,
+    taskListPath: relative(workdir, tasksPath),
+  });
+
   const inControl = (path: string): string => join(controlRoot, path);
   const write = (path: string, text: string): void => {
     mkdirSync(dirname(path), { recursive: true });
@@ -2445,6 +2494,26 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       /* a failed write is counted and ignored by the projection (F144-FR-008) */
     }
   };
+
+  // T145 (feature 154, US7; F154-FR-061…-067) — the coordinator of the
+  // SPECULATIVE unit, wired AFTER `emit` and `events` exist (the admission
+  // event and the ledger counts go through them). With `loop.speculate`
+  // OFF — the default, and forced off under `parity` — the coordinator is
+  // NULL and the run is exactly what it was before US7: no tree, no
+  // admission event, no record (F154-FR-001, -002).
+  const speculation = speculationCoordinatorOf({
+    on: loopConfig.speculate.on,
+    depth: loopConfig.speculate.depth,
+    window: loopConfig.speculate.window,
+    minRatePerCent: loopConfig.speculate.minRatePerCent,
+    feature: slug,
+    runId,
+    controlRoot,
+    workspace: workdir,
+    taskListPath: relative(workdir, tasksPath),
+    eventsPath: events,
+    emit,
+  });
 
   /* --- the closers the next writer writes (T111; F111-FR-004) -------- *
    *
@@ -2862,6 +2931,10 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     const find = (id: string) => statement.capabilities.find((row) => row.id === id);
     const concurrent = find("concurrentSessions");
     const ceiling = find("containment.ceiling");
+    // F154-FR-030 — the descriptor's `concurrentSessions.testedUnder` fact,
+    // the three proofs the capability rests on, carried into the registry
+    // entry the layer's `concurrentSessionsOf` reads (F154-FR-029).
+    const testedUnder = find("concurrentSessions.testedUnder");
     return {
       state: concurrent?.status === "verified" ? "tested" : "declared",
       ...(concurrent !== undefined && concurrent.status === "verified"
@@ -2871,6 +2944,9 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               provenance: concurrent.provenance as CapabilityProvenance | null,
             },
           }
+        : {}),
+      ...(testedUnder !== undefined && testedUnder.status === "verified"
+        ? { testedUnder: testedUnder.value as readonly string[] }
         : {}),
       ...(typeof ceiling?.value === "string"
         ? { containmentCeiling: ceiling.value as ContainmentLevel }
@@ -2885,6 +2961,25 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     return read === null ? undefined : { major: Number(read[1]), minor: Number(read[2]) };
   };
   const parallelPlanPath = inControl(join("runs", runId, "parallel-plan.json"));
+  // F154-FR-031 (T076) — where `loop.parallel.groupUnits` is on, the frozen
+  // task groups of the launch record are the planner's candidates for their
+  // phases, one worker per group. Where the switch is off, or the record
+  // carries no groups (rule TG-1's stated fallback), the `[P]` tasks stay
+  // the unit and nothing of this reaches the layer.
+  const groupCandidatesOfThePhases = loopConfig.parallelGroupUnits
+    ? Object.freeze(
+        frozenTaskGroupsOfTheLaunchRecord(controlRoot).reduce<Record<number, readonly TaskGroup[]>>(
+          (map, group) => {
+            map[group.phase] = [
+              ...(map[group.phase] ?? []),
+              withResolvedCheckExecutableOf(group, searchPathAtLaunch),
+            ];
+            return map;
+          },
+          {},
+        ),
+      )
+    : undefined;
   const parallelLaunch = launchTheParallelLayer({
     runId,
     units: loopConfig.parallel.units,
@@ -2918,6 +3013,7 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     planPath: parallelPlanPath,
     store: write,
     emit: (type, data) => emit(type, data),
+    ...(groupCandidatesOfThePhases !== undefined ? { groupCandidatesOfThePhases } : {}),
   });
   if (isParallelConfigurationError(parallelLaunch)) {
     // A configured worker count over its ceiling is an error of the launch,
@@ -2963,6 +3059,363 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     parallelLaunch.units === "on" ? "on" : "off",
     parallelLaunch.plan?.workers ?? 2,
   );
+  // THE TEMPORARY ROOT OF THE RUN (F154-FR-043, T024): with `host.limits`
+  // on, the run makes ONE temporary root — a `mkdtemp` directory under the
+  // system temporary area, prefix `specstride-run-` — and every temporary
+  // file of the run stands under it. The root is exported as `TMPDIR` (the
+  // variable the gate's checks read) and as `SPECSTRIDE_WORKER_TMPDIR` (the
+  // variable the parallel workers read), and it is removed where the run
+  // ends, for any cause. Off, the run makes no root and the checks keep
+  // their own temporary directories, as before. A failure to make the root
+  // is a fallback, never an error (F154-FR-004): the run carries on with
+  // `runTempRoot` null and says the fact.
+  const runTempRoot: string | null = makeRunTempRoot({
+    home: homedir(),
+    workdir,
+    parityProfile,
+    env: process.env,
+  });
+  if (runTempRoot !== null) {
+    // The export to the gate's checks (:1273 reads `TMPDIR` for the batch
+    // runner's temporary root) and to the parallel workers.
+    exportRunTempRoot(runTempRoot, process.env, say, slug);
+  }
+
+  // THE HOST SLOTS OF THIS START (F154-FR-039, T095, T097): with `host.limits`
+  // on (and outside `parity`) the run takes slots of the host bounds — the
+  // gate's check set and every merge check under the `checks` rule, the
+  // proposer pass under `sessions/<account>`, the named resources under
+  // `resources/<name>`. The bounds arrive from the start's environment (the
+  // configuration catalogue carries no rows for them, so a configuration
+  // file cannot hold them); an unreadable store answers `unbounded` and the
+  // run proceeds without the bound (F154-FR-004), exactly as with the
+  // limits off.
+  const runHostSlots = makeRunHostSlots({
+    home: homedir(),
+    workdir,
+    env: process.env as Readonly<Record<string, string | undefined>>,
+    limitsOn: hostLimitsInForceOfTheStart({
+      home: homedir(),
+      workdir,
+      parityProfile,
+      env: process.env,
+    }),
+  });
+  for (const refusal of runHostSlots.refusals) say(`[LOOP] host limits: ${refusal}`);
+
+  // T105 (F154-FR-045, CQ-154-09) — THE SLOT WAIT AS A PAUSE. With
+  // `host.limits` on, a take that must WAIT for a slot does not spin past the
+  // run: the wait enters the state `paused-quota` with the class `host_slot`
+  // (T103's proposed class) through `enterPause` of feature 127, emits
+  // `run.paused` once on entering and `run.resumed` once on leaving
+  // (F127-FR-010), spends NOTHING of the six counts (F127-FR-011 — the pause
+  // is the identity on the counts), and stands OUTSIDE the attempt's time
+  // cap: the cap of a pass is the ceiling the harness call of the pass runs
+  // under, and the wait is over before the pass loop starts. The wait touches
+  // no model: no prompt is composed and no harness call is made while the run
+  // waits (F154-FR-047, T110).
+  const slotPauseRecordPath = inControl(join("features", slug, "runs", runId, "pause.record"));
+  const slotPauseClock = {
+    nowMs: () => Date.now(),
+    nowIso: () => new Date().toISOString(),
+    monotonicMs: () => performance.now(),
+  };
+  const slotPauseFileWriter = {
+    write: (path: string, content: string): void => {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, content);
+    },
+    read: (path: string): string => readFileSync(path, "utf8"),
+    exists: (path: string): boolean => existsSync(path),
+    remove: (path: string): void => rmSync(path, { force: true }),
+  };
+  const slotsLimitsOn = runHostSlots.store !== null;
+  const holdsRootOfTheRun = userStateRoot({
+    home: homedir(),
+    ...(process.env.XDG_STATE_HOME === undefined
+      ? {}
+      : { xdgStateHome: process.env.XDG_STATE_HOME }),
+    workspaceRealPath: workdir,
+    workspaceId: "",
+  });
+  const slotPausePorts = (): Parameters<typeof quotaPause.enterPause>[0] => ({
+    fileWriter: slotPauseFileWriter,
+    eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+    // T109 (F154-FR-041) — the hold ports of the runtime's atomic hold
+    // record, bound while `host.limits` is on: `enterPause` writes the hold
+    // of the account on a `quota_window` with a known reset, and the wait for
+    // the hold reads the same records through `holdOfTheAccount`.
+    ...(slotsLimitsOn
+      ? {
+          holds: {
+            writeHold: (account: string, resetAt: string, owner: quotaPause.HoldOwnerOfThePause) =>
+              writeHold(holdsRootOfTheRun, account, resetAt, {
+                pid: owner.pid === undefined ? process.pid : owner.pid,
+                runId: owner.runId,
+                launchId: owner.launchId,
+                runTokenHash: owner.runTokenHash,
+              }),
+            readHold: (account: string) => readHold(holdsRootOfTheRun, account),
+          },
+        }
+      : {}),
+  });
+  /** The classification of a host slot wait: the proposed class, host-said. */
+  const hostSlotClassification = (resetsAt: string | null) => ({
+    quotaClass: quotaPause.PAUSE_CLASS_OF_THE_HOST_SLOT,
+    confidence: "host" as const,
+    resetsAt,
+    retryable: true,
+    resetsAtSource: null,
+    rateLimitType: null,
+    utilization: null,
+    evidence: null,
+    evidenceDropped: "host-slot-wait" as const,
+    ruleId: "host-slot-wait-154",
+    tableVersion: "154-host",
+    signals: {},
+    failed: false,
+    notes: [],
+  });
+  /**
+   * ONE `host.slot.admission` event per take (CQ-154-09): the deduping
+   * emitter keeps the last admission of the take and emits it ONCE, with the
+   * verdict of the RESOLUTION (`admitted` where a slot was taken or
+   * reclaimed, `queued` where the take ended still waiting, `rejected` where
+   * the bound answers unbounded), the reason, the run and the attempt and the
+   * account, and the instant of the resolution.
+   */
+  const admissionEmitterFor = (attemptId: string, account: string) => {
+    let last: Record<string, unknown> | null = null;
+    let emitted = false;
+    return {
+      push: (admission: Record<string, unknown>): void => {
+        last = { ...admission };
+      },
+      flush: (): void => {
+        if (emitted || last === null) return;
+        emitted = true;
+        const verdict = String(last["verdict"]);
+        emit("host.slot.admission", {
+          runId,
+          attemptId,
+          account,
+          rule: last["rule"],
+          bound: last["bound"],
+          slot: last["slot"],
+          verdict:
+            verdict === "take" || verdict === "reclaim"
+              ? "admitted"
+              : verdict === "wait"
+                ? "queued"
+                : "rejected",
+          slotVerdict: verdict,
+          reason:
+            verdict === "take" || verdict === "reclaim"
+              ? `a slot of \`${String(last["rule"])}\` was admitted after the wait`
+              : verdict === "wait"
+                ? String(last["reason"] ?? "every slot of the bound is held")
+                : String(last["reason"] ?? "the bound answers unbounded"),
+          at: new Date().toISOString(),
+        });
+      },
+    };
+  };
+  /**
+   * THE TAKE OF ONE SLOT THROUGH THE PAUSE (T105). Waits enter
+   * `paused-quota (host_slot)`; the grant resumes. Where nothing is gated the
+   * take is the plain one, byte for byte the path T095 left behind.
+   */
+  const takeSlotThroughThePause = async (
+    bound: string,
+    attemptId: string,
+    account: string,
+    harness: string,
+  ): Promise<HostSlotRelease> => {
+    if (!slotsLimitsOn) {
+      const plain = await runHostSlots.take(bound, (admission) =>
+        emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+      );
+      return plain;
+    }
+    const admissions = admissionEmitterFor(attemptId, account);
+    let paused: quotaPause.PauseRecord | null = null;
+    let sinceMs = 0;
+    const release = await runHostSlots.take(bound, (admission) => {
+      admissions.push(admission as unknown as Record<string, unknown>);
+      if (admission.verdict === "wait" && paused === null) {
+        // The wait begins: one `run.paused`, one record, no count moves.
+        const nowIso = new Date().toISOString();
+        sinceMs = Date.now();
+        try {
+          const entry = quotaPause.enterPause(slotPausePorts(), {
+            runId,
+            attemptId,
+            role: "proposer",
+            harness,
+            account,
+            classification: hostSlotClassification(null),
+            since: nowIso,
+            resumeAt: null,
+            ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            probeIndex: 0,
+            recordPath: slotPauseRecordPath,
+          });
+          paused = entry.record;
+        } catch {
+          paused = null; // the pause is best effort; the run still waits
+        }
+      } else if (admission.verdict !== "wait" && paused !== null) {
+        // The wait is over: one `run.resumed`, the record removed, the pass
+        // given back. The paused milliseconds stand in the event; the pass's
+        // own cap starts later, so the wait never cuts the attempt short.
+        const pausedMs = Math.max(0, Date.now() - sinceMs);
+        try {
+          quotaResume.resume(
+            {
+              clock: slotPauseClock,
+              fileWriter: slotPauseFileWriter,
+              eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+            },
+            {
+              record: paused,
+              recordPath: slotPauseRecordPath,
+              resumedBy: "probe-succeeded",
+              pausedMs,
+              pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+            },
+            { open: true },
+          );
+        } catch {
+          /* the resume is best effort; the run proceeds either way */
+        }
+        paused = null;
+      }
+    });
+    admissions.flush();
+    if (paused !== null) {
+      const pausedMs = Math.max(0, Date.now() - sinceMs);
+      try {
+        quotaResume.resume(
+          {
+            clock: slotPauseClock,
+            fileWriter: slotPauseFileWriter,
+            eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+          },
+          {
+            record: paused,
+            recordPath: slotPauseRecordPath,
+            resumedBy: "probe-succeeded",
+            pausedMs,
+            pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+          },
+          { open: true },
+        );
+      } catch {
+        /* the resume is best effort; the run proceeds either way */
+      }
+      paused = null;
+    }
+    return release;
+  };
+  /**
+   * T109 (F154-FR-041) — THE HOLD WAIT BEFORE A PASS. With `host.limits` on,
+   * before the pass loop starts, the run reads the hold of its account: a
+   * hold that still blocks (now < resetAt) is a wait through the SAME pause,
+   * the class `host_slot`, until the hold's reset — no count moves and no
+   * model is asked. An expired hold (now >= resetAt) is ignored, never
+   * reclaimed early: only its expiry lets the run proceed, whether its writer
+   * lives or died. A hold read as `null` blocks nobody.
+   */
+  const waitForTheHoldOfTheAccount = async (
+    account: string,
+    attemptId: string,
+    harness: string,
+  ): Promise<void> => {
+    if (!slotsLimitsOn || account === "") return;
+    for (;;) {
+      let hold: quotaPause.HoldOfTheAccount | null = null;
+      try {
+        hold = quotaPause.holdOfTheAccount(
+          { readHold: (one: string) => readHold(holdsRootOfTheRun, one) },
+          account,
+        );
+      } catch {
+        hold = null;
+      }
+      const nowIso = new Date().toISOString();
+      if (hold === null || !quotaPause.holdStillBlocks(hold, nowIso)) return;
+      const sinceMs = Date.now();
+      let paused: quotaPause.PauseRecord | null = null;
+      try {
+        const entry = quotaPause.enterPause(slotPausePorts(), {
+          runId,
+          attemptId,
+          role: "proposer",
+          harness,
+          account,
+          classification: hostSlotClassification(hold.resetAt),
+          since: nowIso,
+          resumeAt: hold.resetAt,
+          ceilingAt: hold.resetAt,
+          probeIndex: 0,
+          recordPath: slotPauseRecordPath,
+        });
+        paused = entry.record;
+      } catch {
+        paused = null;
+      }
+      // The wait itself: the engine sleeps until the hold's reset and reads
+      // no model while it waits (F154-FR-047). The hold ends the wait at its
+      // reset, whatever became of the process that wrote it.
+      while (quotaPause.holdStillBlocks(hold, new Date().toISOString())) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (paused !== null) {
+        const pausedMs = Math.max(0, Date.now() - sinceMs);
+        try {
+          quotaResume.resume(
+            {
+              clock: slotPauseClock,
+              fileWriter: slotPauseFileWriter,
+              eventWriter: { emit: (event: PolicyEvent) => emit(event.type, event.payload) },
+            },
+            {
+              record: paused,
+              recordPath: slotPauseRecordPath,
+              resumedBy: "resume-time",
+              pausedMs,
+              pausedTime: { attemptPausedMs: pausedMs, runPausedMs: pausedMs },
+            },
+            { open: true },
+          );
+        } catch {
+          /* the resume is best effort; the run proceeds either way */
+        }
+      }
+      // A SECOND hold written while this one waited starts the wait again.
+      const next = readHold(holdsRootOfTheRun, account);
+      if (next === null || !quotaPause.holdStillBlocks(next, new Date().toISOString())) return;
+    }
+  };
+
+  /**
+   * THE `checks` SLOT OF ONE GATE OR MERGE CHECK (T095): take it before any
+   * command of the check set starts, release it after the last one ends.
+   * The release answers `null` where nothing is gated (`host.limits` off,
+   * store unreadable), and the caller carries on unbounded.
+   */
+  const takeChecksSlotOfTheRun = (): Promise<HostSlotRelease> =>
+    slotsLimitsOn
+      ? takeSlotThroughThePause("checks", "gate", "", "claude")
+      : runHostSlots.take("checks", (admission) =>
+          emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+        );
+
+  // The closed groups of THIS phase attempt (F154-FR-025, T021): the ledger
+  // the count of failed groups is read from at every wiring of the attempt,
+  // in place of the constant 0 the wiring was passed before.
+  const closedGroupsOfTheAttempt: ClosedGroup[] = [];
 
   // The directory of the gate files. As the engine holds it, the gate files
   // stand in the feature's `evidence/` directory; under the `parity` profile
@@ -4459,6 +4912,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
         // F153-FR-054 (T379) — the frozen groups of the phase; empty unless
         // `loop.taskGroups` is on, so the unit stays the checkpoint claim.
         taskGroups: frozenGroupsOfThePhase(phase),
+        // F154-FR-034 (T078) — `loop.parallel.groupCheck` (row 149, OFF by
+        // default and OFF under `parity`): with it on the group's acceptance
+        // check runs in the worker tree, and the workspace run here stands
+        // down; with it off the check runs here as feature 153 ran it, with
+        // the declared limit where the record froze one.
+        parallelGroupCheck: loopConfig.parallelGroupCheck,
         caps: loopConfig.caps,
         closingCheckOn: loopConfig.closingCheck,
         // F153-FR-012 (feature 153, T249) — the equality test of the
@@ -4668,92 +5127,80 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
      */
     const parallelWiring =
       parallelLaunch.units === "on" && parallelLaunch.plan !== null && implementerOfTheRun !== null
-        ? parallelWiringOfTheAttempt({
-            plan: parallelLaunch.plan,
-            phase,
-            ...(resetCounts ? { resetCounts: true } : {}),
-            evidencePresent: () => existsSync(evidencePath),
-            // The kept units of the ledger of the phase (F115's own file):
-            // the tasks its kept units of work name are the boundary's last
-            // input. A file that fails to read names nothing.
-            keptUnitsOf: () => {
-              const path = inControl(join("features", slug, "micro", `phase${String(phase)}.json`));
-              try {
-                if (!existsSync(path)) return [];
-                const state = JSON.parse(readFileSync(path, "utf8")) as {
-                  units?: readonly { outcome?: string; tasks?: readonly string[] }[];
-                };
-                return (state.units ?? [])
-                  .filter((unit) => unit.outcome === "kept")
-                  .flatMap((unit) => unit.tasks ?? []);
-              } catch {
-                return [];
-              }
-            },
-            failedGroupsBefore: 0,
-            controlRoot,
-            home: parallelHome,
-            runId,
-            workspace: workdir,
-            slug,
-            taskListPath: relative(workdir, tasksPath),
-            taskTextAtLaunch: tasksText,
-            taskTextOf: (taskId) =>
-              phases.flatMap((held) => held.tasks).find((task) => task.id === taskId)?.text ??
-              taskId,
-            // The parallel worker carries a NAMED model only; the bare `dsh`
-            // alias selects the harness alone, so the worker takes the run's
-            // default model, as `modelsThatProducedPasses` does.
-            model: implementerOfTheRun ?? model,
-            // The base tier of the proposer, as resolved at launch; the
-            // engine resolves no tier today, so the worker runs the default
-            // tier unless a host sets the escape.
-            modelTierOrEffort: process.env.SPECSTRIDE_WORKER_TIER ?? "default",
-            containment: entryOfTheRun.containmentCeiling ?? "C0",
-            runToken: runId,
-            timeLimitMs: ceiling.seconds * 1000,
-            enginePid: process.pid,
-            engineStartedAtMs,
-            registry,
-            guardScriptPath: workerGuardScriptPath,
-            hash: (text) => createHash("sha256").update(text).digest("hex"),
-            innerCheckSet:
-              checkCommandOf(workdir) !== undefined && npmPath !== undefined
-                ? [
-                    {
-                      id: "check",
-                      kind: "command",
-                      argv: [npmPath, "test"],
-                      phase,
-                      timeLimitMs: loopConfig.checkMin * 60_000,
-                    },
-                  ]
-                : [],
-            emit: (type, data) => emit(type, data),
-            say,
-            // THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request the
-            // `stop` command writes into the inbox, resolved through the
-            // layout table from the same control root the run writes; bound
-            // to THIS run's token so a stale request for a run
-            // that ended cannot stop the group of the run that follows.
-            stopRequestPath: resolveLogicalName(
-              "inbox:stop",
-              {},
-              rootPathsOf({
-                home: homedir(),
-                workspaceRealPath: workdir,
-                workspaceId,
-                controlRoot,
-                workerRoot: "",
-              }),
-            ),
-            runTokenHash,
-            onClosed: (closed, counts) => totalsAfterTheGroup(parallelTotals, closed, counts),
-            // The callback of the PARALLEL units' own handoff (feature 143's
-            // wiring), NOT the pass handoff of F103-FR-041, which `runPass`
-            // writes above.
-            onHandoff: () => {},
-          })
+        ? parallelWiringOfTheAttempt(
+            // F154-FR-020 to -067 (T021) — the argument object is assembled
+            // by the small helper module next to this file
+            // (`run-feature.parallel-call.ts`), which passes EVERY seam of
+            // T020 from its default reader, reads the failed groups from the
+            // LEDGER OF THE ATTEMPT through `countFailedGroups`
+            // (`decide.ts:1640`) instead of the constant 0, and pushes each
+            // closed group into `closedGroupsOfTheAttempt` in `onClosed`
+            // before the totals are updated.
+            parallelWiringInputOf({
+              plan: parallelLaunch.plan,
+              phase,
+              resetCounts,
+              evidencePresent: () => existsSync(evidencePath),
+              keptUnitsPathOf: (rel) => inControl(rel),
+              closedGroupsOfTheAttempt,
+              runTempRoot,
+              // T095 (F154-FR-039) — the `checks` slot taker of this start.
+              takeChecksSlotOfTheRun: takeChecksSlotOfTheRun,
+              controlRoot,
+              home: parallelHome,
+              runId,
+              workspace: workdir,
+              slug,
+              taskListPath: relative(workdir, tasksPath),
+              // T136 — the coordinator of the phase trees and the queue.
+              phaseTrees,
+              // T145 (F154-FR-061…-067) — the coordinator of the speculative
+              // unit; `null` with `loop.speculate` off or under `parity`.
+              speculation,
+              taskTextAtLaunch: tasksText,
+              implementerOfTheRun,
+              model,
+              containmentCeiling: entryOfTheRun.containmentCeiling ?? "C0",
+              ceilingSeconds: ceiling.seconds,
+              enginePid: process.pid,
+              engineStartedAtMs,
+              registry,
+              guardScriptPath: workerGuardScriptPath,
+              stopRequestPath: resolveLogicalName(
+                "inbox:stop",
+                {},
+                rootPathsOf({
+                  home: homedir(),
+                  workspaceRealPath: workdir,
+                  workspaceId,
+                  controlRoot,
+                  workerRoot: "",
+                }),
+              ),
+              runTokenHash,
+              npmPath,
+              checkCommandOfTheWorkspace: checkCommandOf,
+              checkMin: loopConfig.checkMin,
+              // F154-FR-021 (T052) — `loop.parallel.quota_headroom`, where
+              // configuration set it; the window facts themselves have no
+              // observer in the engine yet, so the seam answers `null` and
+              // the admission reads no observation, as before.
+              ...(loopConfig.parallel.quotaHeadroomPerCent !== undefined
+                ? { quotaHeadroomPerCent: loopConfig.parallel.quotaHeadroomPerCent }
+                : {}),
+              // F154-FR-031, -032 (T076) — `loop.parallel.groupUnits` on:
+              // the frozen groups of the phase are the planner's candidates,
+              // one worker per group, and the pair decisions read the
+              // independence table with the declarations the record froze.
+              ...(loopConfig.parallelGroupUnits
+                ? { groupUnitsOn: true, frozenGroupsOfThePhase }
+                : {}),
+              phases,
+              parallelTotals,
+              emit: (type, data) => emit(type, data),
+              say,
+            }),
+          )
         : undefined;
     // THE STOP OF THE SEQUENTIAL LOOP (F102-FR-003/-004): the request the
     // `stop` command writes was read by the parallel group only, so a
@@ -5288,7 +5735,46 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
     // The pass loop of THIS attempt, as a function of its standing prompt: the
     // plain prompt of the phase, or the narrowed prompt of the accelerator.
+    // T097 (F154-FR-040) — the `sessions/<account>` slot of THIS proposer
+    // pass: taken before the pass loop runs, released when it ends (either
+    // path), so the pass never overlaps more sessions of this host than the
+    // bound allows. Where nothing is gated, the release is `null` and the
+    // pass runs unbounded, exactly as before the seam existed.
+    const accountOfTheRun = (
+      process.env.SPECSTRIDE_HOST_ACCOUNT === undefined ||
+      process.env.SPECSTRIDE_HOST_ACCOUNT === ""
+        ? "default"
+        : process.env.SPECSTRIDE_HOST_ACCOUNT
+    ).toLowerCase();
     const runThePassLoopWith = async (
+      standingPrompt: string,
+    ): Promise<ReturnType<typeof runPassLoop>> => {
+      // T109 (F154-FR-041) — the hold of the account is read BEFORE the pass:
+      // a hold that still blocks waits through the pause (class `host_slot`)
+      // until its reset, spending nothing and asking no model; an expired
+      // hold is ignored and the pass proceeds.
+      await waitForTheHoldOfTheAccount(
+        accountOfTheRun,
+        `attempt:${String(phase)}:${String(ordinal)}:1`,
+        implementer === null ? "claude" : "dsh",
+      );
+      // T105 (F154-FR-045) — the `sessions/<account>` slot wait goes through
+      // the pause: the wait enters `paused-quota (host_slot)`, and the pass
+      // starts only once the slot is granted, so the wait never sits inside
+      // the attempt's time cap.
+      const releaseSessionsSlot = await takeSlotThroughThePause(
+        `sessions/${accountOfTheRun}`,
+        `attempt:${String(phase)}:${String(ordinal)}:1`,
+        accountOfTheRun,
+        implementer === null ? "claude" : "dsh",
+      );
+      try {
+        return await runThePassLoopBody(standingPrompt);
+      } finally {
+        if (releaseSessionsSlot !== null) await releaseSessionsSlot();
+      }
+    };
+    const runThePassLoopBody = async (
       standingPrompt: string,
     ): Promise<ReturnType<typeof runPassLoop>> => {
       const normalized = normalizeRequest(
@@ -5800,6 +6286,17 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
 
     const verdictId = `v-${String(phase)}-${String(ordinal)}`;
     const attemptId = `${engineStartId}-a${String(ordinal)}`;
+    // T136/T137 (F154-FR-057, -058) — at the adjudication of a candidate
+    // phase's attempt the ready trees materialize (ONE snapshot, all the
+    // ready candidates at once) and the attempt is recorded on the queue
+    // entry, so a replayed or resumed attempt of the same number is
+    // refused. With the switch off this is nothing (the coordinator is
+    // null); with the verification gate off the adjudication is the critic
+    // step, so the hook stands HERE, not inside the gate branch.
+    if (phaseTrees !== null && !phaseTrees.gateRanFor(phase, ordinal)) {
+      await phaseTrees.materializeReadyCandidatesOf(phase);
+      phaseTrees.markGated(phase, ordinal);
+    }
     // THE GATE OVER THE DECLARED COMMANDS (feature 153, phase 17,
     // F153-FR-010/-011): the gate of the phase is the one of feature 105,
     // run over the check runner of feature 148, on the commands the
@@ -5832,6 +6329,18 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
     // into it, captured where the call is assembled and spent after the reply.
     let criticPromptOfTheCall = "";
     let criticNonceOfTheCall = "";
+
+    // T145 (F154-FR-061, -062, -066, -067) — THE GATE-START DECISION. At the
+    // gate of phase n, BEFORE any critic-class call is scheduled, the pure
+    // table decides whether phase n+1 is worked ahead in a tree of its own,
+    // branched from the FROZEN SNAPSHOT of this phase's evidence; the
+    // workspace itself does not change (F154-FR-061). One
+    // `loop.speculation.admission` event records the decision with its
+    // reason (`rate`, `depth`, `sweep`) and the metrics (F154-FR-003, -066,
+    // -067). With `loop.speculate` off nothing runs and nothing is emitted.
+    const speculationVerdict =
+      speculation !== null ? await speculation.verdictAtTheGate(phase) : { start: false as const };
+    void speculationVerdict;
 
     const outcome = await runPhaseGate(
       {
@@ -5868,6 +6377,28 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
             ? () => preCriticScanOfTheCandidate(phase, ordinal, verdictId)
             : undefined,
         runVerificationGate: async () => {
+          // T095 (F154-FR-039) — the `checks` slot of THIS verification: taken
+          // BEFORE the timed pair opens, released when the pair closes (in the
+          // `finally` below), so two starts of this host never run their check
+          // sets over each other, and the events never overlap either. Where
+          // nothing is gated (`host.limits` off, store unreadable) the release
+          // is `null` and the gate runs unbounded, as before.
+          const releaseGateChecksSlot = await takeChecksSlotOfTheRun();
+          // T098 (F154-FR-042) — every DECLARED resource of this host is held
+          // for the same verification window: the bounded rules of the start
+          // that name a `resources/<name>` slot are taken here, so two runs
+          // of one host never use a shared resource of the account past its
+          // capacity. Unbounded rules are skipped: nothing to hold.
+          const releaseGateResourceSlots: HostSlotRelease[] = [];
+          for (const rule of Object.keys(runHostSlots.bounds).filter((bound) =>
+            bound.startsWith("resources/"),
+          )) {
+            releaseGateResourceSlots.push(
+              await runHostSlots.take(rule, (admission) =>
+                emit("host.slot.admission", admission as unknown as Record<string, unknown>),
+              ),
+            );
+          }
           // F153-FR-034 — the timed pair of the gate opens first: the run of
           // the verification gate is on the record from its first statement.
           emit("verification.started", {
@@ -5978,6 +6509,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               say(
                 `----- verification: phase ${String(phase)} attempt ${String(ordinal)} (fixed argv) -----`,
               );
+            }
+            // T137 (F154-FR-058) — the gate of this attempt is about to
+            // run: record the attempt on the queue entry, so the gate runs
+            // EXACTLY ONCE per attempt of a candidate phase; a replayed or
+            // resumed gate of the same attempt is refused. With the switch
+            // off this is nothing (the coordinator is null).
+            if (phaseTrees !== null && !phaseTrees.gateRanFor(phase, ordinal)) {
+              await phaseTrees.materializeReadyCandidatesOf(phase);
+              phaseTrees.markGated(phase, ordinal);
             }
             const gateOutcome = await runGateOrCode3(async () => ({
               // THE PLAN AT ITS RECORD (F153-FR-013): loaded from the place
@@ -6302,6 +6842,15 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
               synthesized: false,
             });
             throw error;
+          } finally {
+            // T095 — the `checks` slot is released only when the pair is
+            // closed (either path), so the held interval covers the whole
+            // verification window of this start.
+            if (releaseGateChecksSlot !== null) await releaseGateChecksSlot();
+            // T098 — every held resource slot is released with the window.
+            for (const releaseResource of releaseGateResourceSlots) {
+              if (releaseResource !== null) await releaseResource();
+            }
           }
         },
         callTheCritic: async () => {
@@ -6504,6 +7053,106 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
                         sleep: (ms) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
                         say: (line: string) => say(`[${slug}] ${line}`),
                         maxWaits: 3,
+                        // T107 (F154-FR-041) — the wait for the window's
+                        // reset is the pause: on a `quota_window` with a
+                        // non-null reset, `enterPause` writes the hold of
+                        // the account (once, with that reset) while
+                        // `host.limits` is on, and the resume closes the
+                        // pause after the wait. No model is asked whether to
+                        // wait (F154-FR-047).
+                        onWaitStart: (window) => {
+                          if (!slotsLimitsOn) return;
+                          try {
+                            quotaPause.enterPause(slotPausePorts(), {
+                              runId,
+                              attemptId: `attempt:${String(phase)}:${String(ordinal)}:1`,
+                              role: "critic",
+                              harness: criticHarness,
+                              account: accountOfTheRun ?? "default",
+                              holdOwner: { pid: process.pid, runId },
+                              classification: {
+                                quotaClass:
+                                  window.quotaClass === "quota_window"
+                                    ? "quota_window"
+                                    : (window.quotaClass as "quota_window"),
+                                confidence: "text",
+                                resetsAt:
+                                  window.resetsAt === null
+                                    ? null
+                                    : new Date(window.resetsAt).toISOString(),
+                                retryable: true,
+                                resetsAtSource: window.resetsAt === null ? null : "parsed_text",
+                                rateLimitType: null,
+                                utilization: null,
+                                evidence: null,
+                                evidenceDropped: "critic-quota-wait",
+                                ruleId: "critic-quota-wait-154",
+                                tableVersion: "154-host",
+                                signals: {},
+                                failed: false,
+                                notes: [],
+                              },
+                              since: new Date().toISOString(),
+                              resumeAt:
+                                window.resetsAt === null
+                                  ? null
+                                  : new Date(window.resetsAt).toISOString(),
+                              ceilingAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                              probeIndex: 0,
+                              recordPath: slotPauseRecordPath,
+                            });
+                          } catch {
+                            /* the pause is best effort; the wait stands */
+                          }
+                        },
+                        onWaitEnd: (window) => {
+                          if (!slotsLimitsOn) return;
+                          try {
+                            quotaResume.resume(
+                              {
+                                clock: slotPauseClock,
+                                fileWriter: slotPauseFileWriter,
+                                eventWriter: {
+                                  emit: (event: PolicyEvent) => emit(event.type, event.payload),
+                                },
+                              },
+                              {
+                                record: {
+                                  schema: quotaPause.PAUSE_SCHEMA_ID,
+                                  runId,
+                                  attemptId: `attempt:${String(phase)}:${String(ordinal)}:1`,
+                                  role: "critic",
+                                  harness: criticHarness,
+                                  class: window.quotaClass,
+                                  confidence: "text",
+                                  since: new Date(Date.now() - window.waitMs).toISOString(),
+                                  resetsAt:
+                                    window.resetsAt === null
+                                      ? null
+                                      : new Date(window.resetsAt).toISOString(),
+                                  resumeAt:
+                                    window.resetsAt === null
+                                      ? null
+                                      : new Date(window.resetsAt).toISOString(),
+                                  probeIndex: 0,
+                                  ceilingAt: new Date(
+                                    Date.now() + 24 * 60 * 60 * 1000,
+                                  ).toISOString(),
+                                },
+                                recordPath: slotPauseRecordPath,
+                                resumedBy: "resume-time",
+                                pausedMs: window.waitMs,
+                                pausedTime: {
+                                  attemptPausedMs: window.waitMs,
+                                  runPausedMs: window.waitMs,
+                                },
+                              },
+                              { open: true },
+                            );
+                          } catch {
+                            /* the resume is best effort; the run proceeds */
+                          }
+                        },
                       },
                     ),
                   assemble: ({
@@ -6932,6 +7581,55 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       );
       clearPins(pinsOfThePhase, phase);
       rmSync(pinsOfThePhase, { force: true, recursive: true });
+      // T137 (F154-FR-058) — the validation of the phase approved: its queue
+      // entry records the approval, which is what ADVANCES THE WORKSPACE
+      // MARKER of the run — the dependents of the phase become workable and
+      // the head of the queue moves past it. With the switch off this is
+      // nothing.
+      phaseTrees?.approved(phase);
+      // T147 (F154-FR-063, -065) — the verdict of phase n approved: the
+      // speculative unit of phase n+1 INTEGRATES LIKE A GROUP (SP-5) —
+      // through `integrateGroup` of core (`integrate.ts`), the SAME entry
+      // point a group uses, called HERE, before phase n+1's own gate, so no
+      // validation of the next gate sees a stale workspace. The coordinator
+      // stops at producing the integration inputs; the composition and the
+      // application (the store's `apply`, the one operation that may write
+      // the workspace) belong to `integrateGroup`. On the integrated result
+      // ONE `loop.speculation.integrated` event goes out with the recorded
+      // rule id, and no counter moves. The grain is the phase; no group
+      // approval exists.
+      if (speculation !== null) {
+        const speculativeInputs = await speculation.integrationInputsOf(phase);
+        if (speculativeInputs !== null) {
+          const speculativeWorkers: readonly WorkerForIntegration[] = [
+            {
+              workerId: speculativeInputs.workerId,
+              task: `phase ${String(speculativeInputs.unitPhase)}`,
+              finalTreeId: speculativeInputs.finalTreeId,
+              paths: speculativeInputs.paths,
+              outcome: {
+                workerId: speculativeInputs.workerId,
+                outcome: "integrated",
+                chargesItsTask: false,
+                taskReturnsToTheMainLine: false,
+              },
+            },
+          ];
+          const speculativeIntegration = await integrateGroup(speculation.integrationPortsOf(), {
+            baseTreeId: speculativeInputs.baseTreeId,
+            workspace: workdir,
+            workers: speculativeWorkers,
+          });
+          if (speculativeIntegration.integrated) {
+            emit(SPECULATION_INTEGRATED_EVENT, {
+              phase: speculativeInputs.phase,
+              unitPhase: speculativeInputs.unitPhase,
+              ruleId: speculativeInputs.ruleId,
+            });
+          }
+          await speculation.releaseIntegrated();
+        }
+      }
       // T075 — the change set the approval commit would hold, computed at the
       // top of the approved branch, BEFORE any record of the approval is
       // written, so the commit gate can run in front of it (F152-FR-001).
@@ -7472,12 +8170,36 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
           outcome.outcome === "no-evidence" ? ("no-evidence" as const) : ("error" as const),
       };
     }
-    if (outcome.outcome === "gate-failed") return "gate-failed" as const;
+    if (outcome.outcome === "gate-failed") {
+      // T138 (F154-FR-059) — the validation of the phase REJECTED: its queue
+      // entry keeps the phase AT THE HEAD for the repair (the attempt number
+      // on the entry advances, so the once-per-attempt gate guard opens for
+      // the next attempt), and the phases that depend on it stay HELD —
+      // their verdict is PQ-2 (a dependency rejected -> wait) until the
+      // repair is approved, and their trees, once a dependency approves,
+      // are materialized FROM THE REBASED WORKSPACE. With the switch off
+      // this is nothing.
+      if (phaseTrees !== null && phaseTrees.candidates.includes(phase)) {
+        phaseTrees.rejected(phase);
+      }
+      // T147 (F154-FR-064, -065) — the verdict REJECTED: the speculative
+      // unit started at this phase's gate is SET ASIDE (SP-6) — its tree is
+      // discarded, NO outer counter and NO count moves, and its cost lands
+      // in the `specstride.set-aside/1` record (F154-FR-002).
+      if (speculation !== null) await speculation.resolveOnRejection(phase);
+      return "gate-failed" as const;
+    }
     // T356 — F153-FR-024: a candidate the pre-critic scan held back ends the
     // attempt as a `commit-blocked` kind, the kind feature 152 gave a blocked
     // approval commit; the order after a rejection re-enters the loop through
     // it, and the end cause table gives it `rejected` (EC-4).
     if (outcome.outcome === "commit-blocked") return "commit-blocked" as const;
+    // T147 (F154-FR-064) — everything that reaches this line is a judged
+    // verdict that is NOT an approval (`malformed`, or rejected): the
+    // speculative unit started at this phase's gate is SET ASIDE (SP-6) —
+    // its tree is discarded, NO outer counter and NO count moves, and its
+    // cost lands in the `specstride.set-aside/1` record (F154-FR-002).
+    if (speculation !== null) await speculation.resolveOnRejection(phase);
     return outcome.verdict === "MALFORMED" ? ("malformed" as const) : ("rejected" as const);
   };
 
@@ -8700,6 +9422,12 @@ export async function runFeature(launch: EngineLaunch): Promise<number> {
       /* best effort: the parity tree never fails the run */
     }
   }
+  // THE TEMPORARY ROOT ENDS WITH THE RUN (F154-FR-043, T024): this is where
+  // the run ends, for any cause that reaches its exit — a normal end, a
+  // stop, a fallback, a digest — so the root is removed here and the two
+  // exports are lifted. The removal never throws (T023), and a run that
+  // ends without a root (the switch off) removes nothing.
+  cleanupRunTempRoot(runTempRoot, process.env);
   return exitCode;
 }
 

@@ -64,6 +64,14 @@ export type CoverageEntry = {
   readonly stage_ids: readonly string[];
   readonly verification_ids: readonly string[];
   readonly evidence: readonly string[];
+  /**
+   * The declared dependencies of the phase the task belongs to (feature 154,
+   * F154-FR-056, T132), copied from the canonical model's phase; absent when
+   * the task is unclassified (`unclassified` timing).
+   */
+  readonly phase_depends_on?: readonly number[];
+  /** The declared write scope of that phase, as path prefixes; absent likewise. */
+  readonly phase_write_scope?: readonly string[];
 };
 
 /** One finding, with the baseline member names (data-model.md). */
@@ -120,7 +128,19 @@ export type ContractConfiguration = {
     readonly schema: "specstride.task-groups-frozen/1";
     /** The slicing hash per phase (`phase<N>` → the hash of that phase's groups). */
     readonly hashes: Readonly<Record<string, string>>;
-    /** The frozen groups, in task order, as the slicer produced them. */
+    /**
+     * The frozen groups, in task order, as the slicer produced them. Each
+     * entry is one group of `specstride.task-groups-frozen/1`; F154-FR-032
+     * (feature 154, phase 9, T075; CQ-154-02, -09) adds two OPTIONAL fields
+     * a group may carry, frozen by derive from `taskGroupDeclarations`:
+     * `dependsOn` — the group ids a group declares a dependency on — and
+     * `independentWith` — the group ids a group declares independence with.
+     * A group with neither field is absent both, exactly as feature 153
+     * froze it; the run-time independence decision
+     * (`layer-parallel/src/independence.ts`) reads them and lets the
+     * declaration override the `[P]` marker rule, never the scope
+     * disjointness of F142-FR-009.
+     */
     readonly groups: readonly unknown[];
   };
 };
@@ -188,6 +208,10 @@ export type ModelTask = {
   readonly task: SpecTask;
   readonly phase: number | null;
   readonly file: string;
+  /** The declared dependencies of the phase (feature 154, T132); absent when unclassified. */
+  readonly phaseDependsOn?: readonly number[];
+  /** The declared write scope of the phase, as path prefixes; absent when unclassified. */
+  readonly phaseWriteScope?: readonly string[];
 };
 
 /** The projection of a task into the inventory, with the baseline members. */
@@ -229,6 +253,11 @@ export function coverageOfTasks(tasks: readonly ModelTask[]): readonly CoverageE
     stage_ids: [],
     verification_ids: [],
     evidence: [],
+    // T132 (F154-FR-056) — the phase's declared fields travel with the task's
+    // coverage entry, so the launch contract is the one place the engine reads
+    // them from; an unclassified task carries neither.
+    ...(one.phaseDependsOn === undefined ? {} : { phase_depends_on: one.phaseDependsOn }),
+    ...(one.phaseWriteScope === undefined ? {} : { phase_write_scope: one.phaseWriteScope }),
   }));
 }
 

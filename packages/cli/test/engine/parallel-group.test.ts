@@ -296,7 +296,7 @@ async function prepareOf(fixture: RunFixture): Promise<PreparedGroup> {
   return prepareTheGroupTrees({
     store: fixture.store,
     workspace: fixture.workspace,
-    members: membersOfTheGroup(planOfThree(), 1),
+    members: membersOfTheGroup(planOfThree(), 1, 1),
     slug: SLUG,
     baseFingerprint: "fp-base",
   });
@@ -322,7 +322,7 @@ test("the places of the store keep the worker root outside the workspace and the
 });
 
 test("the members of a group come from the plan in the order of the tasks at launch", () => {
-  const members = membersOfTheGroup(planOfThree(), 1);
+  const members = membersOfTheGroup(planOfThree(), 1, 1);
   assert.deepEqual(
     members.map((member) => member.taskId),
     ["1-a", "1-b", "1-c"],
@@ -333,12 +333,12 @@ test("the members of a group come from the plan in the order of the tasks at lau
 
 test("an unknown phase, or a phase whose tasks are all serial, has no members", () => {
   const plan = planOfThree();
-  assert.deepEqual(membersOfTheGroup(plan, 7), []);
+  assert.deepEqual(membersOfTheGroup(plan, 7, 1), []);
   const serialOnly: ParallelPlan = {
     ...plan,
     phases: [{ ...(plan.phases[0] as (typeof plan.phases)[0]), groups: [] }],
   };
-  assert.deepEqual(membersOfTheGroup(serialOnly, 1), []);
+  assert.deepEqual(membersOfTheGroup(serialOnly, 1, 1), []);
 });
 
 /* ------------------------------------------------------------------ *

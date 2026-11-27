@@ -66,7 +66,8 @@ import type {
 import type { BarrierResult } from "../../../core/src/parallel/barrier.ts";
 import { passOrdinalOf } from "../../../core/src/parallel/group-executor.ts";
 import type { IntegrationResult, TickOutcome } from "../../../core/src/parallel/integrate.ts";
-import { releaseTheWriter } from "../../../core/src/parallel/integrate.ts";
+import { releaseTheWriterOfTheGroup } from "../../../core/src/parallel/integrate.ts";
+import { releaseTheLedgerQueueOf } from "./parallel-drive.ts";
 import { initStore, treeStore, type StorePlaces } from "../../../tree-store/src/index.ts";
 import {
   groupEndedEvent,
@@ -94,7 +95,11 @@ import {
   type PreparedGroup,
   type PreparedWorker,
   type StartedWorkerPass,
+  type WorkerCheckRecord,
 } from "./parallel-group.ts";
+import type { GroupCheckRepairCharge } from "../../../core/src/parallel/counters.ts";
+import { repairsChargedByTheGroupCheckRefusal } from "../../../core/src/parallel/counters.ts";
+import type { GroupAcceptanceCheck } from "../../../core/src/spec-groups/slicer.ts";
 import {
   auditTheGroupThroughTheStore,
   closeTheGroupRun,
@@ -110,6 +115,8 @@ import {
   type GroupAudit,
   type TheMergeCheck,
 } from "./parallel-drive.ts";
+import { MERGE_BASELINE_RECORD } from "../../../core/src/parallel/merge-baseline.ts";
+import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 
 /** The opaque id of the group of one phase attempt (F142-FR-025). */
 export function groupIdOfTheAttempt(phase: number, groupOrdinal: number): string {
@@ -170,6 +177,12 @@ export type TheGroupAttempt = {
    * effect now, after `group_closed`, at the boundary that follows.
    */
   readonly stopAfterTheGroup?: true | undefined;
+  /**
+   * F154-FR-036 (T082; CQ-154-04 A) — the repairs a `group-check` refusal
+   * charged: ONE per task of the refused group, per refusal. Present only
+   * where the group's acceptance check refused the group.
+   */
+  readonly repairsCharged?: readonly GroupCheckRepairCharge[] | undefined;
 };
 
 /** A start refusal: the group never started whole. */
@@ -271,6 +284,11 @@ export async function runTheGroupOfTheAttempt(input: {
   /* The live events, as the engine emits them (F142-FR-025). */
   readonly emit: (event: EventRequest) => void;
   /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check. Left out, the merge check runs unbounded.
+   */
+  readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
+  /**
    * THE PATH OF THE STOP REQUEST (`inbox:stop`, annex B §B.5), which the
    * group's wait polls at its boundaries (F143-FR-026). Left out, no poll
    * runs — the behaviour with the join off is the single-pass behaviour.
@@ -282,6 +300,37 @@ export async function runTheGroupOfTheAttempt(input: {
    */
   readonly runTokenHash?: string | undefined;
   readonly say?: ((line: string) => void) | undefined;
+  /**
+   * T056 — the charge of one cycle per admitted task at its first start
+   * (F142-FR-021, F154-FR-023), handed to the runner of the workers as it
+   * stands. Left out, nothing is charged, exactly as before the field
+   * existed.
+   */
+  readonly chargeCyclesOfTheAdmittedTasks?:
+    ((workerId: string, taskId: string) => void) | undefined;
+  /**
+   * T062/T063 (F154-FR-027) — the paths the group's application changed, as
+   * the composition root's seam reads them. Default: the paths the
+   * integration applied. Zero: no merge check runs at all.
+   */
+  readonly appliedPathCountOfTheGroup?: (() => number | undefined) | undefined;
+  /**
+   * T066 (F154-FR-028) — the latest inner-set result whose recorded tree
+   * fingerprint equals the given snapshot's, where one exists. The wiring
+   * hands this seam through from the composition root; the attempt passes it
+   * to the merge check with the group's base snapshot fingerprint, so the
+   * merge baseline comparison reads the result the base was red on.
+   */
+  readonly baseResultOfTheInnerSet?:
+    ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null) | undefined;
+  /**
+   * F154-FR-034/-035 (T080, T081) — the group's acceptance check run in its
+   * worker tree under `loop.parallel.groupCheck`. Left out or `on: false`,
+   * NOTHING of the worker check runs: the workspace behaviour stands
+   * unchanged (T078), and under `parity` the switch reads off.
+   */
+  readonly workerCheck?:
+    { readonly on: boolean; readonly acceptanceCheck: GroupAcceptanceCheck } | undefined;
 }): Promise<TheGroupAttempt | TheGroupAttemptRefused | TheGroupAttemptStoppedNow> {
   const groupId = groupIdOfTheAttempt(input.phase, input.groupOrdinal);
   const startedAtMs = Date.now();
@@ -419,6 +468,9 @@ export async function runTheGroupOfTheAttempt(input: {
             },
           }),
       say: input.say,
+      ...(input.chargeCyclesOfTheAdmittedTasks === undefined
+        ? {}
+        : { chargeCyclesOfTheAdmittedTasks: input.chargeCyclesOfTheAdmittedTasks }),
     });
     if (!run.ok) {
       /* ---- THE ANSWER TO A START REFUSAL (F143-FR-018): the survivor
@@ -468,6 +520,7 @@ export async function runTheGroupOfTheAttempt(input: {
     }
 
     /* ---- THE BARRIER (F143-FR-017), and the one `worker_ended` per worker. ---- */
+    let workerCheckRecord: WorkerCheckRecord | undefined;
     const barrier = await closeTheGroup({
       store,
       workspace: input.workspace,
@@ -483,6 +536,22 @@ export async function runTheGroupOfTheAttempt(input: {
         // reach the worker events emitted just below.
       },
       checkpointLeftByAKilledPass: run.checkpointLeftByAKilledPass,
+      ...(input.workerCheck !== undefined && input.workerCheck.on === true
+        ? {
+            workerCheck: {
+              on: true,
+              acceptanceCheck: input.workerCheck.acceptanceCheck,
+              controlRoot: input.controlRoot,
+              runId: input.runId,
+              slug: input.slug,
+              phase: input.phase,
+              groupId,
+            },
+            onWorkerCheck: (record: WorkerCheckRecord) => {
+              workerCheckRecord = record;
+            },
+          }
+        : {}),
     });
     for (const row of barrier.perWorker) {
       const outcome: WorkerOutcome = row.outcome.outcome;
@@ -526,6 +595,14 @@ export async function runTheGroupOfTheAttempt(input: {
       },
       singleWriter: input.singleWriter,
       ...(input.workspaceChanged === undefined ? {} : { workspaceChanged: input.workspaceChanged }),
+      // F154-FR-036 (T081) — where the group's acceptance check in its worker
+      // tree read `failed` or `tainted`, EVERY delta of the group is refused
+      // with `group-check`: nothing of the group merges (T085's serial
+      // equality rests on this — the withheld group leaves the workspace the
+      // other groups only).
+      ...(workerCheckRecord?.result === "failed" || workerCheckRecord?.result === "tainted"
+        ? { groupCheckRefusalOf: () => true as const }
+        : {}),
     });
     emit(
       integrationEvent({
@@ -550,6 +627,8 @@ export async function runTheGroupOfTheAttempt(input: {
     const integrated = workersForIntegration.filter(
       (worker) => worker.outcome.outcome === "integrated",
     );
+    const groupCheckRefused =
+      workerCheckRecord?.result === "failed" || workerCheckRecord?.result === "tainted";
     const failedWith = async (
       reason: string,
       theIntegration?: IntegrationResult,
@@ -580,6 +659,14 @@ export async function runTheGroupOfTheAttempt(input: {
         ...(theIntegration === undefined ? {} : { integration: theIntegration }),
         closed,
         ...(run.stop !== undefined && run.stop.now === false ? { stopAfterTheGroup: true } : {}),
+        // F154-FR-036 (T082; CQ-154-04 A) — the exception to F143-FR-012: a
+        // `group-check` refusal charges ONE repair to EVERY task of the
+        // group, and moves NO outer counter.
+        ...(groupCheckRefused
+          ? {
+              repairsCharged: repairsChargedByTheGroupCheckRefusal(groupId, tasksOfTheGroup),
+            }
+          : {}),
         counts: {
           refused: audit.refused.length,
           wallMs: Date.now() - startedAtMs,
@@ -626,6 +713,7 @@ export async function runTheGroupOfTheAttempt(input: {
 
     /* ---- THE MERGE CHECK (F142-FR-059 to F142-FR-061), in the workspace. ---- */
     const merge = await theMergeCheckOfTheGroup({
+      ...(input.takeChecksSlot === undefined ? {} : { takeChecksSlot: input.takeChecksSlot }),
       store,
       writer: ledger.writer,
       runner: input.runner,
@@ -637,8 +725,36 @@ export async function runTheGroupOfTheAttempt(input: {
         : { environmentAllowList: input.environmentAllowList }),
       tasks: integration.ticked,
       hash: input.hash,
+      // T063 (F154-FR-027) — the paths the application changed, the seam's
+      // reading where the wiring gives one, else the integration's own count.
+      appliedPathCountOfTheGroup:
+        input.appliedPathCountOfTheGroup ?? (() => integration.paths.length),
+      // T066 (F154-FR-028) — the base result seam, handed through with the
+      // group's base snapshot fingerprint, where the composition root wires it.
+      ...(input.baseResultOfTheInnerSet === undefined
+        ? {}
+        : {
+            baseResultOfTheInnerSet: input.baseResultOfTheInnerSet,
+            baseSnapshotFingerprint: prepared.baseTreeId,
+          }),
     });
     emit(integrationEvent({ groupId, step: "merge-check", pathCount: merge.run.commands.length }));
+    // T066 (F154-FR-028) — THE COMPARISON IS RECORDED with its rule id, the
+    // record `specstride.merge-baseline/1`, wherever an outcome of this
+    // feature's rules carries one (MG-1 on the empty application, MG-2 on the
+    // baseline match). The event is a `parallel.integration` event (row 74
+    // stays closed), whose data names the record, the rule and the detail.
+    if ("ruleId" in merge.outcome) {
+      emit({
+        type: "parallel.integration",
+        data: Object.freeze({
+          groupId,
+          record: MERGE_BASELINE_RECORD,
+          ruleId: merge.outcome.ruleId,
+          detail: merge.outcome.because,
+        }),
+      });
+    }
 
     /* ---- THE CLOSE (F143-FR-027), and the group's outcome. ---- */
     const integratedTasks = [...integration.ticked];
@@ -654,6 +770,15 @@ export async function runTheGroupOfTheAttempt(input: {
     } else if (merge.outcome.directive === "repair") {
       outcome = "repair";
       directive = "repair";
+    } else if (merge.outcome.directive === "not-run" || merge.outcome.directive === "no-charge") {
+      // T062/T063 and T066 (F154-FR-027, -028; rules MG-1, MG-2): the unit is
+      // neither kept nor repaired nor failed. No repair is charged (the
+      // outcome's `repairsCharged` is empty), the group is NOT counted as a
+      // failed group (the close below says `closed`), and `keptUnits` stays
+      // EMPTY — the unit is not kept, whatever the group's own end says.
+      outcome = "kept";
+      directive = "keep";
+      keptUnits = [];
     } else {
       // `layerOffForAttempt` — the inner check set was empty when the merge
       // check was due (reason `unchecked`, row 185): the layer is off for
@@ -725,7 +850,11 @@ export async function runTheGroupOfTheAttempt(input: {
     }
     throw error;
   } finally {
-    releaseTheWriter(ledgerName);
+    // F154-FR-032 (T076) — THIS group's writer and this holder's share of
+    // the ledger file's queue: the other groups of the attempt that hold
+    // the ledger at once keep theirs.
+    releaseTheWriterOfTheGroup(ledgerName, groupId);
+    releaseTheLedgerQueueOf(parallelLedgerPathOf(input.controlRoot, input.runId));
   }
 }
 

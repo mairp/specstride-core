@@ -32,7 +32,11 @@
  * `./ceiling.ts` possible.
  */
 import { validate } from "@specstride/contracts/records/compile";
-import { A_QUOTA_CLASS_SPENDS } from "@specstride/contracts/ep/quota-classifier";
+import {
+  A_QUOTA_CLASS_SPENDS,
+  PROPOSED_QUOTA_CLASS_154,
+  type ProposedQuotaClass154,
+} from "@specstride/contracts/ep/quota-classifier";
 import type { Confidence, QuotaClass } from "@specstride/contracts/ep/quota-classifier";
 import type { EventWriter, PauseStore, PolicyEvent } from "./ports.ts";
 import { type PairState, PAIR_CLOSED, quotaSignal, runPaused, type EmitOptions } from "./events.ts";
@@ -62,6 +66,74 @@ export const PASS_END_CAUSE = "quota_pause" as const;
 
 /** The `outcome` of a critic call that was limited (field `outcome` of `critic.call`). */
 export const CRITIC_CALL_OUTCOME = "quota_pause" as const;
+
+/* ------------------------------------------------------------------ *
+ * T109 — THE HOLD OF ONE ACCOUNT (F154-FR-041; feature 154, US4).
+ * ------------------------------------------------------------------ */
+
+/**
+ * T105/T109 — the class of the pause a run enters while it waits for a host
+ * slot or for the hold of its account (`host.limits` on): the class feature
+ * 154 proposes for §C.13. It names the pause record's `class` only while the
+ * switch is on; with the switch off no caller can act on it, because
+ * `readQuotaClass` reads it as `provider_other` (F154-FR-001).
+ */
+export const PAUSE_CLASS_OF_THE_HOST_SLOT: ProposedQuotaClass154 = PROPOSED_QUOTA_CLASS_154;
+
+/**
+ * T109 — the hold ports: the writer and the reader of the hold records of
+ * `<user-state>/holds/<account>.json`, shaped here structurally so that this
+ * package (layer L1) never imports the runtime that implements the atomic
+ * file (`packages/runtime/src/limits/hold-record.ts`, T108). The composition
+ * root (the engine) binds the two.
+ */
+export type HoldOfTheAccount = {
+  readonly account: string;
+  /** When the provider's window resets; a run of the account waits until then. */
+  readonly resetAt: string;
+};
+
+/** What the hold writer takes for the owner record (§B.9 plus the run). */
+export type HoldOwnerOfThePause = {
+  readonly pid: number;
+  readonly runId?: string | undefined;
+  readonly launchId?: string | undefined;
+  readonly runTokenHash?: string | undefined;
+};
+
+/** The hold ports a composition root binds to the runtime's hold record. */
+export type HoldPorts = {
+  /** Write (or overwrite) the hold of one account, atomically (F154-FR-044). */
+  readonly writeHold: (account: string, resetAt: string, owner: HoldOwnerOfThePause) => void;
+  /** The hold of one account, or `null` where none stands or is unreadable. */
+  readonly readHold: (account: string) => HoldOfTheAccount | null;
+};
+
+/**
+ * T109 — the hold of the account, read before a pass: the record the newest
+ * `quota_window` of the account wrote, or `null` where the reader answers
+ * none (no hold, unreadable, wrong account).
+ */
+export type HoldReader = {
+  readonly readHold: (account: string) => HoldOfTheAccount | null;
+};
+
+export function holdOfTheAccount(ports: HoldReader, account: string): HoldOfTheAccount | null {
+  return ports.readHold(account);
+}
+
+/** True where the hold still blocks: `now` is before its reset (F154-FR-041). */
+export function holdStillBlocks(hold: HoldOfTheAccount, now: string): boolean {
+  const reset = Date.parse(hold.resetAt);
+  const at = Date.parse(now);
+  if (!Number.isFinite(reset) || !Number.isFinite(at)) return false;
+  return at < reset;
+}
+
+/** True where the hold has expired: the run proceeds (F154-FR-041). */
+export function holdIsExpired(hold: HoldOfTheAccount, now: string): boolean {
+  return !holdStillBlocks(hold, now);
+}
 
 /**
  * The pause record of annex B §B.17, in the fields the annex lists. Feature
@@ -177,8 +249,22 @@ export type EnterPauseInput = {
   readonly attemptId: string;
   readonly role: string;
   readonly harness: string;
-  /** The classification that caused the pause (§Q.1 `quota_window`). */
-  readonly classification: QuotaClassification;
+  /**
+   * The classification that caused the pause (§Q.1 `quota_window`). T105 —
+   * the class may also be the proposed class of the host slot wait, which is
+   * a member of the classes in force only while `host.limits` reads on.
+   */
+  readonly classification: Omit<QuotaClassification, "quotaClass"> & {
+    readonly quotaClass: QuotaClass | ProposedQuotaClass154;
+  };
+  /**
+   * T109 — the harness account the pause is for, where the run knows one.
+   * A `quota_window` with a non-null `resetsAt` writes the hold of this
+   * account (F154-FR-041) when the hold ports are bound.
+   */
+  readonly account?: string | undefined;
+  /** T109 — the owner record the hold carries; this process where omitted. */
+  readonly holdOwner?: HoldOwnerOfThePause | undefined;
   /** The start of the pause; the caller reads its clock port. */
   readonly since: string;
   /** The resume time of `./resume.ts`, or null with no reset time known. */
@@ -197,6 +283,8 @@ export type EnterPauseInput = {
 export type PausePorts = {
   readonly fileWriter: PauseStore;
   readonly eventWriter: EventWriter;
+  /** T109 — the hold ports, bound where `host.limits` is on. */
+  readonly holds?: HoldPorts | undefined;
 };
 
 /** The end of the pass in flight (F127-FR-010). */
@@ -342,6 +430,30 @@ export function enterPause(
 
   const record = buildPauseRecord(input);
   ports.fileWriter.write(input.recordPath, serializePauseRecord(record));
+
+  // T109 (F154-FR-041) — a `quota_window` with a known reset writes the hold
+  // of the account, once, with that reset, through the hold ports the
+  // composition root bound to the runtime's atomic hold record. The write is
+  // best effort: a hold that cannot be written changes no decision of the
+  // pause, and a run that cannot hold still pauses itself.
+  if (
+    ports.holds !== undefined &&
+    input.account !== undefined &&
+    input.account !== "" &&
+    record.class === "quota_window" &&
+    record.resetsAt !== null
+  ) {
+    try {
+      ports.holds.writeHold(input.account, record.resetsAt, {
+        pid: input.holdOwner?.pid ?? 1,
+        runId: input.holdOwner?.runId ?? input.runId,
+        launchId: input.holdOwner?.launchId,
+        runTokenHash: input.holdOwner?.runTokenHash,
+      });
+    } catch {
+      /* the hold is best effort; the pause stands without it */
+    }
+  }
 
   const events: PolicyEvent[] = [];
   events.push(

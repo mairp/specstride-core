@@ -1,0 +1,29 @@
+{
+ "note": "the recorded events.jsonl of the baseline run, one line per array member, in file order",
+ "lines": [
+  "{\"type\":\"strategy.selected\",\"at\":\"2026-11-25T21:39:24.412Z\",\"data\":{\"strategy\":\"micro\",\"level\":\"L1\",\"manifestHashes\":[\"b11b234cc921eff69b9a78e3aef4d0d101efe5724fad0c29300e3ba32d73fbfd\"]}}",
+  "{\"type\":\"run.started\",\"at\":\"2026-11-25T21:39:24.458Z\",\"data\":{\"workdir\":\"/tmp/specstride-inert-154-qLalOl/work\",\"phases\":\"1\",\"feature\":\"001-one\",\"proposer\":\"claude\",\"critic\":\"claude\",\"resume\":\"1\",\"states\":\"C\",\"verification\":\"off\",\"verification_plan\":\"/tmp/specstride-inert-154-qLalOl/work/.specstride/features/001-one/runs/20261125-213921-1086691/verification/verification-plan.json\"}}",
+  "{\"type\":\"integrity.noted\",\"at\":\"2026-11-25T21:39:24.462Z\",\"data\":{\"type\":\"integrity.noted\",\"kind\":\"approval-invalid\",\"phase\":1,\"failed\":\"missing\",\"detail\":\"phase 1: missing\"}}",
+  "{\"type\":\"phase.started\",\"at\":\"2026-11-25T21:39:24.464Z\",\"data\":{\"phase\":1,\"title\":\"One\",\"total\":1,\"shape\":\"\"}}",
+  "{\"type\":\"attempt.started\",\"at\":\"2026-11-25T21:39:24.510Z\",\"data\":{\"phase\":1,\"attempt\":1,\"strategy\":\"micro\",\"kind\":\"other\",\"backend\":\"claude\"}}",
+  "{\"type\":\"proposer_cap\",\"at\":\"2026-11-25T21:39:24.511Z\",\"data\":{\"phase\":\"1\",\"attempt\":\"1\",\"role\":\"proposer\",\"seconds\":\"1800\",\"source\":\"global\",\"arm\":\"baseline\",\"yield_poll\":\"1\",\"yield_poll_source\":\"override\",\"yield_poll_arm\":\"baseline\",\"tamper_bracket\":\"\"}}",
+  "{\"type\":\"iter_start\",\"at\":\"2026-11-25T21:39:24.527Z\",\"data\":{\"iter\":1,\"max_iter\":30}}",
+  "{\"type\":\"checkpoint.accepted\",\"at\":\"2026-11-25T21:39:24.654Z\",\"data\":{\"unitId\":\"u1\",\"taskIds\":[\"T001\",\"T002\",\"T003\"],\"checkpointRef\":\"unit:u1:checkpoint\"}}",
+  "{\"type\":\"check.started\",\"at\":\"2026-11-25T21:39:24.689Z\",\"data\":{\"checkId\":\"CMD-ce39eb3bc6c22c5547c9\",\"unitId\":\"u1\",\"runner\":\"runtime\"}}",
+  "{\"type\":\"check.ended\",\"at\":\"2026-11-25T21:39:25.560Z\",\"data\":{\"checkId\":\"CMD-ce39eb3bc6c22c5547c9\",\"result\":\"pass\",\"unitId\":\"u1\",\"durationMs\":829,\"runner\":\"runtime\"}}",
+  "{\"type\":\"route.decided\",\"at\":\"2026-11-25T21:39:25.562Z\",\"data\":{\"tableId\":\"specstride.router-rules\",\"tableVersion\":\"1.0.0\",\"point\":\"loop\",\"ruleId\":\"loop.single-unit\",\"choice\":\"off:micro\"}}",
+  "{\"type\":\"microloop.unit\",\"at\":\"2026-11-25T21:39:25.562Z\",\"data\":{\"unitId\":\"u1\",\"check\":\"CMD-ce39eb3bc6c22c5547c9\",\"result\":\"kept\",\"layerOff\":\"single-unit\"}}",
+  "{\"type\":\"evidence_written\",\"at\":\"2026-11-25T21:39:25.564Z\",\"data\":{\"file\":\"GATE1-EVIDENCE.md\",\"iters\":1}}",
+  "{\"type\":\"verification.started\",\"at\":\"2026-11-25T21:39:25.569Z\",\"data\":{\"phase\":1,\"attempt\":1,\"planRef\":\"/tmp/specstride-inert-154-qLalOl/work/.specstride/features/001-one/runs/20261125-213921-1086691/verification/verification-plan.json\"}}",
+  "{\"type\":\"check.started\",\"at\":\"2026-11-25T21:39:26.068Z\",\"data\":{\"checkId\":\"CMD-ce39eb3bc6c22c5547c9\",\"commandRef\":null,\"runner\":\"runtime\",\"unitId\":null,\"batch\":null,\"slot\":null}}",
+  "{\"type\":\"check.ended\",\"at\":\"2026-11-25T21:39:26.068Z\",\"data\":{\"checkId\":\"CMD-ce39eb3bc6c22c5547c9\",\"result\":\"passed\",\"durationMs\":443,\"unitId\":null,\"condition\":null,\"batch\":null,\"slot\":null,\"concurrent\":false,\"synthesized\":false}}",
+  "{\"type\":\"verification.ended\",\"at\":\"2026-11-25T21:39:26.095Z\",\"data\":{\"phase\":1,\"attempt\":1,\"result\":\"pass\",\"rc\":0,\"evidenceRef\":\"/tmp/specstride-inert-154-qLalOl/work/.specstride/features/001-one/runs/20261125-213921-1086691/verification/phase-1-attempt-1.json\",\"synthesized\":false}}",
+  "{\"type\":\"critic.started\",\"at\":\"2026-11-25T21:39:26.096Z\",\"data\":{\"phase\":1,\"attempt\":1,\"provider\":\"claude\"}}",
+  "{\"type\":\"critic.call\",\"at\":\"2026-11-25T21:39:26.165Z\",\"data\":{\"promptRef\":\"gate:1:1:prompt\",\"form\":\"tool-less\",\"outcome\":\"APPROVED\",\"latencyMs\":69,\"synthesized\":false}}",
+  "{\"type\":\"verdict.recorded\",\"at\":\"2026-11-25T21:39:26.166Z\",\"data\":{\"phase\":1,\"attempt\":1,\"result\":\"APPROVED\",\"title\":\"One\",\"max_rejects\":3}}",
+  "{\"type\":\"phase.ended\",\"at\":\"2026-11-25T21:39:26.212Z\",\"data\":{\"outcome\":\"approved\",\"phase\":1,\"attempt\":1,\"title\":\"One\"}}",
+  "{\"type\":\"attempt.ended\",\"at\":\"2026-11-25T21:39:26.301Z\",\"data\":{\"phase\":1,\"attempt\":1,\"endCause\":\"approved\",\"synthesized\":false}}",
+  "{\"type\":\"release.verification\",\"at\":\"2026-11-25T21:39:26.301Z\",\"data\":{\"summary\":\"release verification not required\"}}",
+  "{\"type\":\"run.ended\",\"at\":\"2026-11-25T21:39:26.301Z\",\"data\":{\"outcome\":\"all_approved\",\"phases\":\"1\"}}"
+ ]
+}

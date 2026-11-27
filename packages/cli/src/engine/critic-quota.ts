@@ -106,6 +106,16 @@ export type QuotaWaitDeps = {
   readonly say: (line: string) => void;
   /** Waits at most this many times; then the last reply stands as it is. */
   readonly maxWaits: number;
+  /**
+   * T107 (F154-FR-041) — the hooks of the pause the wait is: called once per
+   * wait, before the sleep and after it. The composition root binds them to
+   * `enterPause`/`resume` of feature 127, so the wait for the window's reset
+   * is the state `paused-quota` and a `quota_window` with a non-null reset
+   * writes the hold of the account while `host.limits` is on. Absent hooks
+   * change nothing: the plain sleep stands, as before this field existed.
+   */
+  readonly onWaitStart?: (window: CriticQuotaWindow) => void;
+  readonly onWaitEnd?: (window: CriticQuotaWindow) => void;
 };
 
 /**
@@ -130,6 +140,11 @@ export async function callTheCriticThroughQuota<T>(
     deps.say(
       `critic not reached: ${window.quotaClass}; waiting ${String(Math.round(window.waitMs / 1000))}s${until} (attempt ${String(waits)}/${String(deps.maxWaits)})`,
     );
-    await deps.sleep(window.waitMs);
+    deps.onWaitStart?.(window);
+    try {
+      await deps.sleep(window.waitMs);
+    } finally {
+      deps.onWaitEnd?.(window);
+    }
   }
 }

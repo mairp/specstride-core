@@ -269,6 +269,20 @@ export function createMicroAttempt(input: {
    * through the check runner (T038, `runEngineCheck`).
    */
   readonly taskGroups?: readonly TaskGroup[];
+  /**
+   * F154-FR-034 (feature 154, phase 10, T078; CQ-154-04 A) —
+   * `loop.parallel.groupCheck` (row 149, OFF by default and OFF under
+   * `parity`): with it on, the group's frozen acceptance check runs in its
+   * WORKER TREE, run by the runtime, after the worker's pass has ended —
+   * so the WORKSPACE run of the same check below stands down entirely: no
+   * check command, no `passed`/`failed` event of the workspace run, no
+   * `completedGroup` verdict of it (the worker-tree run and its
+   * `specstride.worker-check/1` record own the verdict). With it off, the
+   * check runs here exactly as feature 153 ran it, with the check's
+   * DECLARED limit where the frozen record carries one and the fixed 300 s
+   * where it does not (R-C19).
+   */
+  readonly parallelGroupCheck?: boolean;
   readonly caps: MachineCaps;
   readonly closingCheckOn: boolean;
   /**
@@ -558,23 +572,40 @@ export function createMicroAttempt(input: {
         unitTaskIds = [...theGroup.taskIds];
         if (theGroup.taskIds.every((taskId) => taskIds.includes(taskId))) {
           if (theGroup.acceptanceCheck.kind === "declared") {
-            const result = await runEngineCheck(
-              {
-                id: theGroup.acceptanceCheck.id,
-                argv: theGroup.acceptanceCheck.argv,
-                cwd: process.cwd(),
-                timeLimitMs: 300_000,
-                phase: input.phase,
-              },
-              "default",
-            );
-            input.emit("group.checked", {
-              groupId: theGroup.groupId,
-              ruleId: theGroup.acceptanceCheck.id,
-              outcome: result.passed ? "passed" : "failed",
-              exitCode: result.exitCode,
-            });
-            completedGroup = { groupId: theGroup.groupId, checkPassed: result.passed };
+            // F154-FR-034 (T078) — with `loop.parallel.groupCheck` on, the
+            // check runs in the WORKER TREE (run by the runtime, with the
+            // check's declared limit, its record
+            // `specstride.worker-check/1`, and a verdict that can only
+            // withhold); the workspace does not run it, so no workspace
+            // verdict exists to pass the group here.
+            if (input.parallelGroupCheck !== true) {
+              const result = await runEngineCheck(
+                {
+                  id: theGroup.acceptanceCheck.id,
+                  argv: theGroup.acceptanceCheck.argv,
+                  cwd: process.cwd(),
+                  // F154-FR-034 (T078) — the check's DECLARED limit, frozen
+                  // in the record (F153-FR-055), reads where it stands; the
+                  // fixed 300 s stands only where the declaration gave none
+                  // (R-C19). It is never 0 — 0 would mean "no timer" to the
+                  // runner.
+                  timeLimitMs:
+                    typeof theGroup.acceptanceCheck.timeLimitMs === "number" &&
+                    theGroup.acceptanceCheck.timeLimitMs > 0
+                      ? theGroup.acceptanceCheck.timeLimitMs
+                      : 300_000,
+                  phase: input.phase,
+                },
+                "default",
+              );
+              input.emit("group.checked", {
+                groupId: theGroup.groupId,
+                ruleId: theGroup.acceptanceCheck.id,
+                outcome: result.passed ? "passed" : "failed",
+                exitCode: result.exitCode,
+              });
+              completedGroup = { groupId: theGroup.groupId, checkPassed: result.passed };
+            }
           } else {
             input.emit("group.checked", {
               groupId: theGroup.groupId,

@@ -32,6 +32,20 @@ export interface CanonicalSpecModel {
    */
   phases: Array<{
     /**
+     * The numbers of the phases this phase depends on (feature 154, F154-FR-056); absent means
+     * the source declares no dependency
+     *
+     * Type in words: List of numbers.
+     */
+    dependsOn?: Array<number>;
+    /**
+     * The write scope of the phase, as path prefixes (feature 154, F154-FR-056); absent means
+     * the source declares no scope
+     *
+     * Type in words: List of texts.
+     */
+    writeScope?: Array<string>;
+    /**
      * Per task: id, markers (for example `[P]` and story tags), text, whether ticked, line
      *
      * Type in words: List of records.

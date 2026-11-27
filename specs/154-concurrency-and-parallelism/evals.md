@@ -19,7 +19,7 @@ effort max, critic `dsh:compass-gpt5-high/gpt-5`.
 
 | Id | Eval | Pass mark | Result |
 |---|---|---|---|
-| E1 | Both model routes answer through the adapter's own overlay (`packages/adapter-dsh/test/probe-routes.mjs`: `buildOverlay`, the headless profile, one task) | status 0 and the answer `OK`, for the proposer and the critic | **pass, 2026-11-25**: proposer 10.9 s, critic 9.3 s |
+| E1 | Both model routes answer through the adapter's own overlay (`packages/adapter-dsh/test/probe-routes.ts`: `buildOverlay`, the headless profile, one task) | status 0 and the answer `OK`, for the proposer and the critic | **pass, 2026-11-25**: proposer 10.9 s, critic 9.3 s |
 | E2 | The recorded read of 153 reproduces the counts of the feature input (`specstride report` on the frozen events) | 336 attempts, 29 approvals, 274 of 386 in-pass checks failed, 28 groups `repair` | the row exists since PR #40; the frozen copy `recorded-153/` is a task of Phase 4 |
 | E3 | The parity oracle over the repository with every switch of this feature off (`packages/oracle` tests, serial) | 0 failures; the projection byte-identical on the oracle fixtures | **pass, 2026-11-25**: 385 of 385 |
 | E4 | The existing tests of the layer (`packages/layer-parallel/test/*.test.ts`, serial) | all pass | **pass, 2026-11-25**: 41 of 41 on Node v22.23.2 |

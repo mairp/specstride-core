@@ -1,0 +1,71 @@
+{
+  "schema": "specstride.table/1",
+  "id": "parallel.group-independence",
+  "version": "1.0.0",
+  "description": "Independence of two groups of one phase (PG-1…PG-3). A pure table of spec 154 (plan.md \"Rule-id sets fixed by this plan\"; F154-FR-032; CQ-154-02 C with (iii)). PROPOSAL until feature 154's tasks carry it into its package's data/ and pin its bytes.",
+  "points": {
+    "parallel.group-independence": {
+      "signals": {
+        "scopesDisjoint": "boolean",
+        "everyTaskMarked": "boolean",
+        "laterNamesEarlierPath": "boolean",
+        "dependsOnDeclared": "boolean",
+        "independentWithDeclared": "boolean"
+      },
+      "choices": [
+        "independent",
+        "dependent"
+      ]
+    }
+  },
+  "rows": {
+    "parallel.group-independence": [
+      {
+        "ruleId": "PG-2",
+        "when": {
+          "op": "equal",
+          "signal": "dependsOnDeclared",
+          "value": true
+        },
+        "choice": "dependent"
+      },
+      {
+        "ruleId": "PG-3",
+        "when": {
+          "op": "equal",
+          "signal": "independentWithDeclared",
+          "value": true
+        },
+        "choice": "independent"
+      },
+      {
+        "ruleId": "PG-1",
+        "when": {
+          "op": "and",
+          "of": [
+            {
+              "op": "equal",
+              "signal": "scopesDisjoint",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "everyTaskMarked",
+              "value": true
+            },
+            {
+              "op": "equal",
+              "signal": "laterNamesEarlierPath",
+              "value": false
+            }
+          ]
+        },
+        "choice": "independent"
+      },
+      {
+        "ruleId": "PG-0",
+        "choice": "dependent"
+      }
+    ]
+  }
+}

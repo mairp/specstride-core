@@ -274,6 +274,24 @@ export function dshCapabilities(input: DshCapabilitiesInput = {}): {
       provenance: "adapter",
       status: "verified",
     },
+    {
+      id: "concurrentSessions.testedUnder",
+      // F154-FR-030 — the three proofs the capability rests on, as a fact of
+      // the descriptor's own data: (1) the fake-binary test that four
+      // concurrent sessions on one configuration home leave every file of
+      // the home byte-identical (`test/concurrent-sessions-fake-binary.test.ts`,
+      // F154-SC-014); (2) the recorded live check CT-130-46, three real
+      // headless sessions at once under one home and one login
+      // (`test/concurrent-sessions.test.ts`); (3) the pin
+      // `0.1.0-rc.8` (verified-on `2026-09-29`, `data.ts` `DSH_PIN` and
+      // `DSH_VERIFIED_ON`). A capability without all three is untested for
+      // concurrent sessions, and `concurrentSessionsOf` (layer-parallel,
+      // F154-FR-029) refuses a group to it. No rule names a harness: the
+      // fact is read from the registry by id, never by the adapter's name.
+      value: ["fake-binary", "live-check", "pin"],
+      provenance: "adapter",
+      status: "verified",
+    },
     { id: "spendingLimit.process", value: null, provenance: null, status: "unverified" },
     {
       id: "tierLadder",

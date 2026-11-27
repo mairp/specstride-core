@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.host-hold/1",
+  "title": "Host hold record (F154-FR-041, F154-FR-044; data-model.md D9)",
+  "description": "One quota hold of one harness account, with the reset time (F154-FR-041). PROPOSAL of spec 154. With `host.limits` on, a run that classifies a `quota_window` writes `<user-state>/holds/<account>.json` through `enterPause` (F127-FR-010 amended); before starting a pass, every run of the same account on the host reads it and waits until the reset through the same pause, the class `host_slot` (proposed in §C.13), which spends nothing. The record is a file in user-level state (F100 annex B row proposed), written by its holder's runtime root only, atomically, with an owner record and a liveness proof as the workspace lock has (F154-FR-044). No model is asked whether to wait (F154-FR-047).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "account",
+    "harness",
+    "resetAt",
+    "writtenAt",
+    "owner"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.host-hold/1"
+    },
+    "account": {
+      "type": "string",
+      "description": "The harness account the hold is for; one record per account."
+    },
+    "harness": {
+      "type": "string",
+      "description": "The harness of the account, read from the registry; no rule names a harness."
+    },
+    "resetAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the provider's window resets; a run of the same account waits until then."
+    },
+    "writtenAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner": {
+      "$ref": "#/$defs/owner"
+    }
+  },
+  "$defs": {
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The owner record of the lock: the run whose classification wrote the hold.",
+      "required": [
+        "pid",
+        "processGroup",
+        "startTime",
+        "bootId",
+        "hostName",
+        "pidNamespace",
+        "launchId",
+        "runTokenHash",
+        "livenessEndpoint",
+        "acquiredAt",
+        "runId"
+      ],
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "processGroup": {
+          "type": "integer"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "bootId": {
+          "type": "string"
+        },
+        "hostName": {
+          "type": "string"
+        },
+        "pidNamespace": {
+          "type": "string"
+        },
+        "launchId": {
+          "type": "string"
+        },
+        "runTokenHash": {
+          "type": "string"
+        },
+        "livenessEndpoint": {
+          "type": "string"
+        },
+        "acquiredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

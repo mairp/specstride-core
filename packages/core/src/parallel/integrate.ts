@@ -502,14 +502,37 @@ export type OneWriter = {
  */
 const writersOfALedger = new Map<string, number>();
 
-/** How many writers were made for this ledger. One, or the run is wrong. */
-export function writersOf(ledgerName: string): number {
-  return writersOfALedger.get(ledgerName) ?? 0;
+/**
+ * The register key of one writer: the ledger's logical name AND the group
+ * that holds it. F143-FR-023's one writer per run is amended by F154-FR-032
+ * (feature 154, phase 9, T076): while groups as units run at once, two group
+ * attempts of one run hold the ledger at the same time — ONE WRITER PER
+ * GROUP — and a second attempt of the SAME group is still refused, exactly
+ * as before. The records interleave in the ONE file through the ONE queue
+ * the ledger file holds (`parallel-drive.ts`), so the chain of `seq` and
+ * `prev` stays one chain.
+ */
+export function writerKeyOfTheLedger(ledgerName: string, groupId: string): string {
+  return `${ledgerName}::${groupId}`;
+}
+
+/** How many writers were made for this key. One, or the run is wrong. */
+export function writersOf(key: string): number {
+  return writersOfALedger.get(key) ?? 0;
 }
 
 /** Give up the writer of a ledger, so that a later run may take it. */
 export function releaseTheWriter(ledgerName: string): void {
   writersOfALedger.delete(ledgerName);
+  for (const key of [...writersOfALedger.keys()]) {
+    if (key.startsWith(`${ledgerName}::`)) writersOfALedger.delete(key);
+  }
+}
+
+/** Give up ONE group's writer of a ledger (F154-FR-032): the other groups of
+ * the run that hold the ledger at once keep theirs. */
+export function releaseTheWriterOfTheGroup(ledgerName: string, groupId: string): void {
+  writersOfALedger.delete(writerKeyOfTheLedger(ledgerName, groupId));
 }
 
 /**
@@ -537,9 +560,10 @@ export function theOneWriter(
     ) => Readonly<Record<string, unknown>> | undefined;
   },
 ): OneWriter {
-  const already = writersOf(input.ledgerName);
+  const key = writerKeyOfTheLedger(input.ledgerName, input.groupId);
+  const already = writersOf(key);
   if (already > 0) throw new LedgerWriteRefused("a-second-writer-of-the-ledger", "<any>");
-  writersOfALedger.set(input.ledgerName, already + 1);
+  writersOfALedger.set(key, 1);
 
   const written: WrittenRecord[] = [];
 

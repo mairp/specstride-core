@@ -191,6 +191,40 @@ export const ACTION_BY_CLASS: Readonly<Record<QuotaClass, ClassAction>> = Object
 /** The nine classes of §Q.1, in the order of the table. */
 export const CLASSES_OF_Q1: readonly QuotaClass[] = Object.freeze([...CLASSES]);
 
+/**
+ * T103 — the row of §Q.1 spec 154 proposes for `host_slot` (F154-FR-045;
+ * CQ-154-09, CQ-154-14 A): the pause a run enters while it waits for a host
+ * slot or a hold. It acts as `quota_window` acts — `pause-role` — and it
+ * counts as neither, spends nothing and is retryable, because a wait for a
+ * slot is a pause (principle XVI). The row is a PROPOSAL: a member of the
+ * table in force only while `host.limits` reads on (`actionRowHostSlotOf`,
+ * below); the closed table itself never changes.
+ */
+export const ACTION_ROW_HOST_SLOT_154: Omit<ClassAction, "quotaClass"> & {
+  quotaClass: "host_slot";
+} = Object.freeze({
+  quotaClass: "host_slot",
+  action: "pause-role",
+  countsAs: "neither",
+  spends: "no",
+  retryable: true,
+  blockedReason: null,
+  bound: null,
+  pastTheBound: null,
+  meaning: "the run waits for a host slot or a hold (F154-FR-045): a pause, which spends nothing",
+});
+
+/**
+ * T103 — the row of `host_slot` where `host.limits` is on, or null where the
+ * switch is off (the default, and the whole state under `parity`), so that no
+ * caller can act on a class the annex does not hold (F154-FR-001).
+ */
+export function actionRowHostSlotOf(
+  switchIsOn: (name: string) => boolean,
+): (Omit<ClassAction, "quotaClass"> & { quotaClass: "host_slot" }) | null {
+  return switchIsOn("host.limits") ? ACTION_ROW_HOST_SLOT_154 : null;
+}
+
 /* ------------------------------------------------------------------ *
  * F127-FR-004 — the two bounds of the pass-level retries.
  * ------------------------------------------------------------------ */

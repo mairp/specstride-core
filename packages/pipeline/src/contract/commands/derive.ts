@@ -119,6 +119,26 @@ export type DeriveArgs = {
    * (the default, rule TG-1) writes nothing.
    */
   readonly loopTaskGroups?: boolean;
+  /**
+   * F154-FR-032 (feature 154, phase 9, T075; CQ-154-02, -09) — the declared
+   * relations between task groups, per group id, frozen INTO the group
+   * records of `configuration.taskGroups` at derivation: `dependsOn` (the
+   * groups a group declares a dependency on) and `independentWith` (the
+   * groups a group declares independence with). A group the map does not
+   * name carries neither field, exactly as before this input existed. The
+   * independence decision reads the frozen fields at run time
+   * (`layer-parallel/src/independence.ts`); the declaration overrides the
+   * marker rule, never F142-FR-009's scope disjointness.
+   */
+  readonly taskGroupDeclarations?: Readonly<
+    Record<
+      string,
+      {
+        readonly dependsOn?: readonly string[];
+        readonly independentWith?: readonly string[];
+      }
+    >
+  >;
 };
 
 /** The result of a derive call: the exit code and what it printed. */
@@ -151,7 +171,21 @@ function tasksOfFeature(root: string, featureDir: string): readonly ModelTask[] 
     // tasks of such a section are derived with `phase: null`.
     const counted = countingPhaseNumberOf(heading);
     for (const task of phase.tasks) {
-      tasks.push({ task, phase: counted ?? null, file: filePath });
+      // T132 (F154-FR-056) — the phase's declared dependencies and write
+      // scope (the specstride line of F154-FR-056, read through the
+      // canonical model only) travel with each of the phase's tasks; an
+      // uncountable heading derives with `phase: null` and carries neither.
+      tasks.push({
+        task,
+        phase: counted ?? null,
+        file: filePath,
+        ...(counted === undefined
+          ? {}
+          : {
+              phaseDependsOn: phase.dependsOn ?? [],
+              ...(phase.writeScope === undefined ? {} : { phaseWriteScope: phase.writeScope }),
+            }),
+      });
     }
   }
   return tasks;
@@ -623,10 +657,41 @@ export function derive(input: DeriveArgs, learning?: LearningBindingRulesPort): 
         },
         declaredCommands: discoveries
           .filter((command) => command.phase === phase)
-          .map((command) => ({ id: command.id, argv: command.argv, forTaskIds: taskIds })),
+          .map((command) => ({
+            id: command.id,
+            argv: command.argv,
+            forTaskIds: taskIds,
+            // F154-FR-034 (T078) — the declared time limit freezes WITH the
+            // check (the worker-tree run reads it, never a fixed 300 s); a
+            // declaration the discovery gave no limit for freezes the field
+            // absent, so records frozen before the field existed stay
+            // byte-identical (F153-FR-054).
+            ...(typeof command.timeLimitMs === "number" && command.timeLimitMs > 0
+              ? { timeLimitMs: command.timeLimitMs }
+              : {}),
+          })),
       });
       hashes[`phase${String(phase)}`] = sliced.hash;
-      groups.push(...sliced.groups);
+      // F154-FR-032 (T075) — the declared `dependsOn` and `independentWith`
+      // of a group, read from `taskGroupDeclarations` per group id, frozen
+      // INTO the group record. A group with no declaration is frozen exactly
+      // as the slicer produced it, so the record of this derivation is
+      // byte-identical to the one before this field existed.
+      groups.push(
+        ...sliced.groups.map((group) => {
+          const declaration = input.taskGroupDeclarations?.[group.groupId];
+          if (declaration === undefined) return group;
+          return {
+            ...group,
+            ...(declaration.dependsOn !== undefined
+              ? { dependsOn: Object.freeze([...declaration.dependsOn]) }
+              : {}),
+            ...(declaration.independentWith !== undefined
+              ? { independentWith: Object.freeze([...declaration.independentWith]) }
+              : {}),
+          };
+        }),
+      );
     }
     return {
       schema: "specstride.task-groups-frozen/1" as const,

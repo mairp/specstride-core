@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "loop": {
+    "parallel": {
+      "units": false
+    }
+  },
+  "host": {
+    "limits": false
+  },
+  "pipeline": {
+    "stageGroups": false
+  }
+}

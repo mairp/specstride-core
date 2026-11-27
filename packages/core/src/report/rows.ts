@@ -127,6 +127,294 @@ export function median(values: readonly number[]): number | null {
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
 }
 
+/**
+ * Feature 154, T039 (F154-FR-012, -014, -015) — the window shares, the
+ * in-pass check time that ran while no proposer pass ran, and the per-group
+ * rows. All pure: events in, values out; a share is computed only from timed
+ * events and a category the events cannot hold is marked, never estimated
+ * (Principle XI). The three categories are computed as a union, so no time
+ * counts twice: an elementary slice of the window belongs to the covering
+ * category that started earliest, ties resolved in the fixed order pass,
+ * check, gate/critic.
+ */
+import { type GroupReportRow, type ReportRows154, type ShareOrMissing } from "./rows-154.ts";
+
+/** The 154 marking of a row the events cannot hold (F154-FR-012). */
+export const NOT_IN_EVENTS_154 = "not in the events" as const;
+
+/** One timed interval of the window, tagged with its category. */
+export type TaggedInterval = {
+  readonly startMs: number;
+  readonly endMs: number;
+  readonly kind: "pass" | "check" | "gate";
+};
+
+/** The precedence of the categories when two intervals start at the same ms. */
+const KIND_PRECEDENCE: Readonly<Record<TaggedInterval["kind"], number>> = Object.freeze({
+  pass: 0,
+  check: 1,
+  gate: 2,
+});
+
+/** The per cent of a span, rounded to two decimals so floats stay stable. */
+function sharePerCent(partMs: number, windowMs: number): number {
+  if (windowMs <= 0) return 0;
+  return Math.round((partMs / windowMs) * 100 * 100) / 100;
+}
+
+/** A key that keeps the open/close pairs of one family apart. */
+function pairKeyOf(data: Record<string, unknown>): string {
+  return (
+    `${str(data.run)}|${str(data.phase)}|${str(data.attempt)}|${str(data.step)}` +
+    `|${str(data.checkId)}|${str(data.workerId)}|${str(data.groupId)}`
+  );
+}
+
+/** Pair one open/close event family; a closer may carry its own duration. */
+function intervalsOf(
+  events: readonly ReportEvent[],
+  kind: TaggedInterval["kind"],
+  openType: string,
+  closeType: string,
+  durationField: string | null,
+): TaggedInterval[] {
+  const out: TaggedInterval[] = [];
+  const open = new Map<string, number>();
+  for (const event of events) {
+    if (event.type === openType) {
+      open.set(pairKeyOf(event.data), event.at);
+    } else if (event.type === closeType) {
+      const startedAt = open.get(pairKeyOf(event.data));
+      open.delete(pairKeyOf(event.data));
+      const carried = durationField === null ? null : num(event.data[durationField]);
+      let start: number | null = null;
+      let end: number | null = null;
+      if (startedAt !== undefined) {
+        start = startedAt;
+        end = Math.max(startedAt, event.at);
+      } else if (carried !== null) {
+        start = event.at - carried;
+        end = event.at;
+      }
+      if (start === null || end === null) continue;
+      out.push({ startMs: start, endMs: end, kind });
+    }
+  }
+  return out;
+}
+
+/** Every timed interval of the three categories, in collection order. */
+export function timedIntervalsOf(events: readonly ReportEvent[]): readonly TaggedInterval[] {
+  return [
+    ...intervalsOf(events, "pass", "pass.started", "pass.ended", null),
+    ...intervalsOf(events, "check", "check.started", "check.ended", "durationMs"),
+    ...intervalsOf(events, "gate", "verification.started", "verification.ended", null),
+    ...intervalsOf(events, "gate", "critic.started", "critic.call", "latencyMs"),
+  ];
+}
+
+/** The union length of a set of intervals, in ms. */
+function unionLengthMs(intervals: readonly TaggedInterval[]): number {
+  if (intervals.length === 0) return 0;
+  const sorted = [...intervals].sort((a, b) => a.startMs - b.startMs);
+  let total = 0;
+  let current: TaggedInterval = { ...sorted[0]! };
+  for (const interval of sorted.slice(1)) {
+    if (interval.startMs > current.endMs) {
+      total += current.endMs - current.startMs;
+      current = { ...interval };
+    } else {
+      current = { ...current, endMs: Math.max(current.endMs, interval.endMs) };
+    }
+  }
+  return total + (current.endMs - current.startMs);
+}
+
+/** Elementary slices: every boundary, credited to the covering category that started earliest. */
+function assignedSlices(events: readonly ReportEvent[]): {
+  windowMs: number;
+  perKind: Record<TaggedInterval["kind"], number>;
+} {
+  const intervals = timedIntervalsOf(events);
+  const windowStart = Math.min(...events.map((event) => event.at));
+  const windowEnd = Math.max(...events.map((event) => event.at));
+  const windowMs = Math.max(0, windowEnd - windowStart);
+  const boundaries = new Set<number>([windowStart, windowEnd]);
+  for (const interval of intervals) {
+    boundaries.add(Math.max(windowStart, interval.startMs));
+    boundaries.add(Math.min(windowEnd, interval.endMs));
+  }
+  const points = [...boundaries].sort((a, b) => a - b);
+  const perKind: Record<TaggedInterval["kind"], number> = { pass: 0, check: 0, gate: 0 };
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const start = points[index]!;
+    const end = points[index + 1]!;
+    const covering = intervals.filter(
+      (interval) => interval.startMs <= start && interval.endMs >= end,
+    );
+    if (covering.length === 0) continue;
+    // Deterministic: earliest start wins, ties by the fixed precedence.
+    covering.sort(
+      (a, b) => a.startMs - b.startMs || KIND_PRECEDENCE[a.kind] - KIND_PRECEDENCE[b.kind],
+    );
+    perKind[covering[0]!.kind] += end - start;
+  }
+  return { windowMs, perKind };
+}
+
+/**
+ * T038/T039 — the four shares of the window (F154-FR-012): proposer passes,
+ * in-pass checks, gate and critic outside checks, the rest. A share whose
+ * category holds no timed event is `not in the events`; with no events at
+ * all all four are.
+ */
+export function windowSharesOf(events: readonly ReportEvent[]): {
+  proposerPasses: ShareOrMissing;
+  inPassChecks: ShareOrMissing;
+  gateAndCriticOutsideChecks: ShareOrMissing;
+  rest: ShareOrMissing;
+} {
+  if (events.length === 0) {
+    return {
+      proposerPasses: NOT_IN_EVENTS_154,
+      inPassChecks: NOT_IN_EVENTS_154,
+      gateAndCriticOutsideChecks: NOT_IN_EVENTS_154,
+      rest: NOT_IN_EVENTS_154,
+    };
+  }
+  const { windowMs, perKind } = assignedSlices(events);
+  const intervals = timedIntervalsOf(events);
+  const has = (kind: TaggedInterval["kind"]): boolean =>
+    intervals.some((interval) => interval.kind === kind);
+  const assignedTotal = perKind.pass + perKind.check + perKind.gate;
+  return {
+    proposerPasses: has("pass") ? sharePerCent(perKind.pass, windowMs) : NOT_IN_EVENTS_154,
+    inPassChecks: has("check") ? sharePerCent(perKind.check, windowMs) : NOT_IN_EVENTS_154,
+    gateAndCriticOutsideChecks: has("gate")
+      ? sharePerCent(perKind.gate, windowMs)
+      : NOT_IN_EVENTS_154,
+    rest: sharePerCent(windowMs - assignedTotal, windowMs),
+  };
+}
+
+/**
+ * T039 (F154-FR-014, ledger M10) — the total time of in-pass checks that ran
+ * while no proposer pass of the run ran: the union of the check time minus
+ * its overlap with the union of the pass time, in ms; `not in the events`
+ * where no timed check exists.
+ */
+export function inPassCheckTimeOutsidePasses(
+  events: readonly ReportEvent[],
+): number | typeof NOT_IN_EVENTS_154 {
+  const intervals = timedIntervalsOf(events);
+  const checks = intervals.filter((interval) => interval.kind === "check");
+  if (checks.length === 0) return NOT_IN_EVENTS_154;
+  const passUnionMs = unionLengthMs(intervals.filter((interval) => interval.kind === "pass"));
+  if (passUnionMs === 0) return unionLengthMs(checks);
+  // The overlap: the union of the pass time against the union of the check time.
+  const sortedChecks = [...checks].sort((a, b) => a.startMs - b.startMs);
+  const sortedPasses = [...intervals.filter((i) => i.kind === "pass")].sort(
+    (a, b) => a.startMs - b.startMs,
+  );
+  let overlap = 0;
+  let cursor = 0;
+  for (const check of sortedChecks) {
+    for (let index = cursor; index < sortedPasses.length; index += 1) {
+      const pass = sortedPasses[index]!;
+      if (pass.endMs < check.startMs) {
+        if (index === cursor) cursor += 1;
+        continue;
+      }
+      if (pass.startMs > check.endMs) break;
+      overlap += Math.min(check.endMs, pass.endMs) - Math.max(check.startMs, pass.startMs);
+    }
+  }
+  return Math.max(0, unionLengthMs(checks) - overlap);
+}
+
+/**
+ * T039 (F154-FR-015) — one row per group the run used: its phase, its
+ * outcome, the path count of its application, the result of its merge check
+ * and its wall time. Paired on `groupId`; the applied path count is the sum
+ * of the group's `parallel.integration` path counts.
+ */
+export function groupRowsOf(events: readonly ReportEvent[]): readonly GroupReportRow[] {
+  const started = new Map<string, { at: number; phase: number }>();
+  const applied = new Map<string, number>();
+  const rows: GroupReportRow[] = [];
+  for (const event of events) {
+    if (event.type === "parallel.group.started") {
+      started.set(str(event.data.groupId), {
+        at: event.at,
+        phase: num(event.data.phase) ?? 0,
+      });
+    } else if (event.type === "parallel.integration") {
+      const id = str(event.data.groupId);
+      applied.set(id, (applied.get(id) ?? 0) + (num(event.data.pathCount) ?? 0));
+    } else if (event.type === "parallel.group.ended") {
+      const id = str(event.data.groupId);
+      const open = started.get(id);
+      rows.push({
+        phase: open?.phase ?? num(event.data.phase) ?? 0,
+        outcome: str(event.data.outcome),
+        appliedPathCount: applied.get(id) ?? 0,
+        mergeCheckResult:
+          event.data.mergeCheck === undefined
+            ? null
+            : (String(event.data.mergeCheck) as GroupReportRow["mergeCheckResult"]),
+        wallTimeMs: open === undefined ? 0 : Math.max(0, event.at - open.at),
+      });
+    }
+  }
+  return rows;
+}
+
+/** The counts over the groups and workers of a run (F154-FR-015). */
+export function groupSummaryOf(events: readonly ReportEvent[]): {
+  groupsByOutcome: Readonly<Record<string, number>>;
+  workersByOutcome: Readonly<Record<string, number>>;
+  workerRefusalsByReason: Readonly<Record<string, number>>;
+  concurrentCheckTimeMs: number;
+} {
+  const countByOutcome = (type: string): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const event of events) {
+      if (event.type !== type) continue;
+      const key = str(event.data.outcome);
+      if (key === "null") continue;
+      out[key] = (out[key] ?? 0) + 1;
+    }
+    return out;
+  };
+  const refusals: Record<string, number> = {};
+  for (const event of events) {
+    if (event.type !== "parallel.worker.ended") continue;
+    if (event.data.outcome !== "refused") continue;
+    const reason = str(event.data.reason);
+    refusals[reason] = (refusals[reason] ?? 0) + 1;
+  }
+  const concurrentCheckTimeMs = events
+    .filter((event) => event.type === "check.ended" && event.data.concurrent === true)
+    .reduce((sum, event) => sum + (num(event.data.durationMs) ?? 0), 0);
+  return {
+    groupsByOutcome: countByOutcome("parallel.group.ended"),
+    workersByOutcome: countByOutcome("parallel.worker.ended"),
+    workerRefusalsByReason: refusals,
+    concurrentCheckTimeMs,
+  };
+}
+
+/** The whole feature-154 row set of the report (F154-FR-012, -014, -015). */
+export function reportRows154Of(events: readonly ReportEvent[], feature: string): ReportRows154 {
+  return {
+    schema: "specstride.report-rows-154/1",
+    feature,
+    windowShares: windowSharesOf(events),
+    inPassCheckTimeOutsidePasses: inPassCheckTimeOutsidePasses(events),
+    groups: groupRowsOf(events),
+  };
+}
+
 function str(value: unknown): string {
   return value === undefined || value === null ? "null" : String(value);
 }
@@ -442,5 +730,73 @@ export function reportRowsOf(events: readonly ReportEvent[], runId: string | nul
   // Dropped events (T134): the gap the stream itself reports (F111-FR-019).
   rows.push({ row: "events dropped", value: sumOf(events, "event.dropped", "count") });
 
+  // The speculation rows (T148; F154-FR-064, -066), from the events only.
+  const speculation = speculationRowsOf(events);
+  rows.push({ row: "speculation units started", value: speculation.started });
+  rows.push({ row: "speculation units by refusal", value: speculation.refusalsByReason });
+  rows.push({ row: "speculation units integrated", value: speculation.integrated });
+  rows.push({ row: "speculation units set aside", value: speculation.setAside });
+  rows.push({ row: "speculation set-aside cost", value: speculation.setAsideCost });
+
   return { schema: "specstride.report-rows/1", runId, rows };
+}
+
+/**
+ * T148 — THE SPECULATION ROWS (feature 154, US7; F154-FR-064, -066): a PURE
+ * projection from the events, like every other row. The starts are the
+ * `loop.speculation.admission` events whose decision is `start`, the
+ * refusals are the `skip` decisions grouped by their closed-set reason
+ * (`rate`, `depth`, `sweep`), the integrations are the
+ * `loop.speculation.integrated` events, and the set-asides and their cost
+ * come from the `loop.speculation.set-aside` events (the cost is the
+ * record's {tokens, wallTimeMs, cycles}, never an estimate — F154-FR-008,
+ * F154-FR-064). Where no admission event exists at all the marks are the
+ * NOT_IN_EVENTS marking, never zeros: with `loop.speculate` off nothing
+ * ran (F154-FR-001).
+ */
+export function speculationRowsOf(events: readonly ReportEvent[]): {
+  readonly started: string | number;
+  readonly refusalsByReason: string | Record<string, number>;
+  readonly integrated: string | number;
+  readonly setAside: string | number;
+  readonly setAsideCost: string | Record<string, number>;
+} {
+  const admissions = events.filter((event) => event.type === "loop.speculation.admission");
+  if (admissions.length === 0) {
+    return {
+      started: NOT_IN_EVENTS,
+      refusalsByReason: NOT_IN_EVENTS,
+      integrated: NOT_IN_EVENTS,
+      setAside: NOT_IN_EVENTS,
+      setAsideCost: NOT_IN_EVENTS,
+    };
+  }
+  const refusalsByReason: Record<string, number> = {};
+  let started = 0;
+  for (const event of admissions) {
+    const data = event.data as Record<string, unknown>;
+    if (data["decision"] === "start") started += 1;
+    else {
+      const reason = str(data["reason"]);
+      if (reason !== "null") refusalsByReason[reason] = (refusalsByReason[reason] ?? 0) + 1;
+    }
+  }
+  const cost: Record<string, number> = { tokens: 0, wallTimeMs: 0, cycles: 0 };
+  let setAside = 0;
+  for (const event of events) {
+    if (event.type !== "loop.speculation.set-aside") continue;
+    setAside += 1;
+    const data = event.data as Record<string, unknown>;
+    for (const member of ["tokens", "wallTimeMs", "cycles"] as const) {
+      const value = num(data[member]);
+      if (value !== null) cost[member] += value;
+    }
+  }
+  return {
+    started,
+    refusalsByReason,
+    integrated: events.filter((event) => event.type === "loop.speculation.integrated").length,
+    setAside,
+    setAsideCost: setAside === 0 ? NOT_IN_EVENTS : cost,
+  };
 }

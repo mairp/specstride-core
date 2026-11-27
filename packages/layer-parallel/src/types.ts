@@ -97,6 +97,36 @@ export const ADMISSION_CHECKS = Object.freeze([
 export type AdmissionCheck = (typeof ADMISSION_CHECKS)[number];
 
 /**
+ * T018 — the two admission checks spec 154 PROPOSES for row 61
+ * (F154-FR-011; CQ-154-09): `repeat` (no run of the same task twice,
+ * `loop.parallel.noRepeat`) beside `marker`, and `dependency` (the phase
+ * dependencies of F154-FR-056, `loop.parallel.groupUnits`) beside `scope`.
+ * A PROPOSAL is a member of row 61 only when the owner copies it into the
+ * annex, so neither is in `ADMISSION_CHECKS` and `isAdmissionCheck` refuses
+ * both (`test/types.test.ts` pins row 61; `test/inertness-154.test.ts`
+ * guards the proposal): a reader of the two switches adds them only while a
+ * switch is on, and the closed set itself never changes.
+ */
+export const PROPOSED_ADMISSION_CHECKS_154 = Object.freeze([
+  { check: "repeat", switch: "loop.parallel.noRepeat" },
+  { check: "dependency", switch: "loop.parallel.groupUnits" },
+] as const);
+
+/**
+ * The admission checks in force: the eight of row 61, plus the proposed
+ * checks whose switch reads on. With every switch off — the default, and
+ * the whole state under the `parity` profile — the list is exactly row 61.
+ */
+export function admissionChecksOf(
+  switchIsOn: (name: string) => boolean,
+): readonly AdmissionCheck[] {
+  const extra = PROPOSED_ADMISSION_CHECKS_154.filter((entry) => switchIsOn(entry.switch)).map(
+    (entry) => entry.check as AdmissionCheck,
+  );
+  return extra.length === 0 ? ADMISSION_CHECKS : [...ADMISSION_CHECKS, ...extra];
+}
+
+/**
  * Row 63 — the refusal reasons of a delta (F142-FR-058). One reason per
  * refused delta; the reason never reaches a critic-class call. Unknown value:
  * the delta is refused.

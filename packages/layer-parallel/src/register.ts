@@ -637,3 +637,262 @@ export function breachesOfF142FR006(layer: LoopLayer): readonly string[] {
   }
   return Object.freeze(breaches);
 }
+
+/* ================================================================== *
+ * 7. THE HOST LIMITS IN FORCE (feature 154, US4 — T099, T100).
+ * ================================================================== */
+
+/** The bound keys a configuration may carry, with the slot rule each names. */
+export const HOST_BOUND_KEYS = Object.freeze([
+  "host.checks.concurrent",
+  "host.sessions.<account>",
+  "host.resources.<name>.capacity",
+] as const);
+export type HostBoundKey = (typeof HOST_BOUND_KEYS)[number];
+
+/** One source's host limits: the switch and the bounds it names. */
+export type HostLimitsSource = {
+  /** The `host.limits` switch as the source holds it. */
+  readonly limits?: "on" | "off" | undefined;
+  /** The bounds the source names, keyed as the configuration declares them. */
+  readonly bounds?: Readonly<Record<string, number>> | undefined;
+};
+
+/** The host limits in force, and what was refused of what a source held. */
+export type HostLimitsInForce = {
+  /** The switch in force: a project can never turn it off (T100). */
+  readonly on: boolean;
+  /** The bounds in force, keyed by slot rule (`checks`, `sessions/<a>`, `resources/<n>`). */
+  readonly bounds: Readonly<Record<string, number>>;
+  /** One line per refused value: never a throw, a refusal carries its reason. */
+  readonly refusals: readonly string[];
+};
+
+/** True where the value is a usable bound width. */
+function isBoundWidth(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+/** The slot rule a configuration key names, or `null` where it names none. */
+export function hostBoundRuleOf(key: string): string | null {
+  if (key === "host.checks.concurrent") return "checks";
+  const sessions = /^host\.sessions\.([a-z0-9-]+)$/.exec(key);
+  if (sessions !== null) return `sessions/${sessions[1]!}`;
+  const resources = /^host\.resources\.([a-z0-9-]+)\.capacity$/.exec(key);
+  if (resources !== null) return `resources/${resources[1]!}`;
+  return null;
+}
+
+/**
+ * T099 — the bounds ONE source names: only the three declared key shapes,
+ * only positive integers, keyed by slot rule. A key that names no bound, or
+ * a value that is not a positive integer, is REFUSED with its reason —
+ * never an error, never silently narrowed away (F154-FR-046).
+ */
+export function hostBoundsOfASource(
+  source: Readonly<Record<string, number>> | undefined,
+  origin: string,
+): { bounds: Record<string, number>; refusals: readonly string[] } {
+  const bounds: Record<string, number> = {};
+  const refusals: string[] = [];
+  if (source === undefined) return { bounds, refusals };
+  for (const [key, value] of Object.entries(source)) {
+    const rule = hostBoundRuleOf(key);
+    if (rule === null) {
+      refusals.push(`${origin}: the key \`${key}\` names no host bound`);
+      continue;
+    }
+    if (!isBoundWidth(value)) {
+      refusals.push(`${origin}: the bound \`${key}=${String(value)}\` is not a positive integer`);
+      continue;
+    }
+    bounds[rule] = value;
+  }
+  return { bounds, refusals };
+}
+
+/**
+ * T100 (F154-FR-046, principle III) — the host limits in force:
+ *
+ * - the `parity` profile turns the limits OFF whatever any source held;
+ * - the switch of the user configuration decides whether the limits are on
+ *   at all; the project configuration can NEVER turn them off — it may only
+ *   NARROW, and a project switch of `off` is refused with its reason;
+ * - a project bound may only LOWER a user bound of the same rule. A project
+ *   bound that raises, or names a rule the user did not bound, is refused.
+ */
+export function hostLimitsInForce(input: {
+  readonly userConfiguration?: HostLimitsSource | undefined;
+  readonly projectConfiguration?: HostLimitsSource | undefined;
+  readonly profile?: string | undefined;
+}): HostLimitsInForce {
+  const refusals: string[] = [];
+  const user = hostBoundsOfASource(input.userConfiguration?.bounds, "user");
+  refusals.push(...user.refusals);
+  const project = hostBoundsOfASource(input.projectConfiguration?.bounds, "project");
+  refusals.push(...project.refusals);
+  const bounds: Record<string, number> = { ...user.bounds };
+  for (const [rule, width] of Object.entries(project.bounds)) {
+    const held = bounds[rule];
+    if (held === undefined) {
+      refusals.push(
+        `project: the bound of the rule \`${rule}\` is refused: the user configuration names no bound for the rule, and a project may only lower`,
+      );
+      continue;
+    }
+    if (width > held) {
+      refusals.push(
+        `project: the bound of the rule \`${rule}\` may not RISE from ${String(held)} to ${String(width)} — a project may only lower (F154-FR-046)`,
+      );
+      continue;
+    }
+    bounds[rule] = width;
+  }
+  if (input.profile === PARITY_PROFILE) {
+    return Object.freeze({
+      on: false,
+      bounds: Object.freeze({}),
+      refusals: Object.freeze(refusals),
+    });
+  }
+  const projectTurnsItOff = input.projectConfiguration?.limits === "off";
+  if (projectTurnsItOff) {
+    refusals.push(
+      "project: `host.limits: off` is refused — a project may never turn the host limits off, only lower a bound (F154-FR-046)",
+    );
+  }
+  // The switch in force is the USER's: a project's `off` is refused above
+  // and cannot turn the limits off, and it cannot turn them on either.
+  const on = input.userConfiguration?.limits === "on";
+  return Object.freeze({
+    on,
+    bounds: Object.freeze({ ...bounds }),
+    refusals: Object.freeze(refusals),
+  });
+}
+
+/* ================================================================== *
+ * 8. THE SPECULATION KEYS OF THE LAYER (feature 154, US7 — T143;
+ *    CQ-154-18 A; F154-FR-062, -066).
+ * ================================================================== */
+
+/**
+ * T143 — the layer reads the three speculation keys `loop.speculate.depth`,
+ * `loop.speculate.window` and `loop.speculate.minRate`, with the defaults
+ * 1, 20 and 50 that the core's rule module exports
+ * (`SPECULATE_DEPTH_DEFAULT`, `SPECULATE_WINDOW_DEFAULT`,
+ * `SPECULATE_MIN_RATE_DEFAULT`) — the layer, not the composition root's
+ * loop configuration, owns the read. The RULE of the speculation table
+ * (SP-1…SP-6) is the same under any values (CQ-154-18 A): this is a
+ * reading, never a change of behaviour.
+ */
+
+/** The key of the depth bound (F154-FR-062; default 1, CQ-154-18 A). */
+export const SPECULATE_DEPTH_KEY = "loop.speculate.depth" as const;
+/** The key of the window the rate reads over, in attempts (F154-FR-066; default 20). */
+export const SPECULATE_WINDOW_KEY = "loop.speculate.window" as const;
+/** The key of the rate threshold, in per cent (F154-FR-066; default 50). */
+export const SPECULATE_MIN_RATE_KEY = "loop.speculate.minRate" as const;
+
+/** The keys of the layer's speculation reading, surfaced as the others are. */
+export const SPECULATE_KEYS = Object.freeze([
+  SPECULATE_DEPTH_KEY,
+  SPECULATE_WINDOW_KEY,
+  SPECULATE_MIN_RATE_KEY,
+] as const);
+
+/** The raw values the configuration held for the three speculation keys. */
+export type SpeculateKeysRaw = {
+  readonly depth?: unknown;
+  readonly window?: unknown;
+  readonly minRate?: unknown;
+};
+
+/**
+ * The defaults of the three keys, handed in by the caller. The literals live
+ * ONCE, in the core's rule module (`SPECULATE_DEPTH_DEFAULT`,
+ * `SPECULATE_WINDOW_DEFAULT` and `SPECULATE_MIN_RATE_DEFAULT` of
+ * `@specstride/core/src/speculation/speculation-rule.ts`, all CQ-154-18 A);
+ * the composition root passes them here, because the package rule PU-06
+ * pins this package's module graph to `contracts` and `kernel` and a
+ * duplicate literal is the one thing the reading must not hold.
+ */
+export type SpeculateDefaults = {
+  readonly depth: number;
+  readonly window: number;
+  readonly minRatePerCent: number;
+};
+
+/** The speculation keys in force, as the layer reads them (T143). */
+export type SpeculateKeysInForce = {
+  /** `loop.speculate.depth` (default 1, CQ-154-18 A). */
+  readonly depth: number;
+  /** `loop.speculate.window`, in attempts (default 20, CQ-154-18 A). */
+  readonly window: number;
+  /** `loop.speculate.minRate`, in per cent (default 50, CQ-154-18 A). */
+  readonly minRatePerCent: number;
+};
+
+/**
+ * The default of one whole-number speculation key, refusing a foreign value
+ * (F154-FR-004): a foreign value falls back to the default with the reason
+ * on record, never an error that stops a run.
+ */
+function speculateNumberOr(
+  value: unknown,
+  fallback: number,
+  key: string,
+  maximum?: number,
+): number {
+  if (value === undefined) return fallback;
+  const number = Number(value);
+  const inRange =
+    Number.isSafeInteger(number) && number >= 1 && (maximum === undefined || number <= maximum);
+  if (!inRange) {
+    console.warn(
+      `configuration: ${key} must be a whole number` +
+        (maximum === undefined ? " of at least 1" : ` from 1 to ${maximum}`) +
+        ` — falling back to the default ${fallback} (F154-FR-004)`,
+    );
+    return fallback;
+  }
+  return number;
+}
+
+/**
+ * T143 — the speculation keys in force, read HERE, in the layer (F154-FR-062,
+ * -066; CQ-154-18 A): `defaults` carries the core's exported defaults, a
+ * foreign value falls back to its default (F154-FR-004), and the rule of the
+ * table is the same under any values.
+ */
+export function speculateKeysInForce(
+  raw: SpeculateKeysRaw,
+  defaults: SpeculateDefaults,
+): SpeculateKeysInForce {
+  return Object.freeze({
+    depth: speculateNumberOr(raw.depth, defaults.depth, SPECULATE_DEPTH_KEY),
+    window: speculateNumberOr(raw.window, defaults.window, SPECULATE_WINDOW_KEY),
+    minRatePerCent: speculateNumberOr(
+      raw.minRate,
+      defaults.minRatePerCent,
+      SPECULATE_MIN_RATE_KEY,
+      100,
+    ),
+  });
+}
+
+/**
+ * The run-record fields of the speculation keys, surfaced the way the other
+ * loop-layer keys are (`runRecordFields` above): one field per key, written
+ * whatever the value is, so a reader of the run record can always tell which
+ * way the key stood.
+ */
+export function speculateRecordFields(
+  keys: SpeculateKeysInForce,
+): Readonly<Record<string, string>> {
+  return Object.freeze({
+    [SPECULATE_DEPTH_KEY]: String(keys.depth),
+    [SPECULATE_WINDOW_KEY]: String(keys.window),
+    [SPECULATE_MIN_RATE_KEY]: String(keys.minRatePerCent),
+  });
+}

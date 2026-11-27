@@ -18,7 +18,8 @@
     "./inbox": "./src/inbox/index.ts",
     "./state": "./src/state/index.ts",
     "./doctor": "./src/doctor/index.ts",
-    "./data/*": "./src/data/*"
+    "./data/*": "./src/data/*",
+    "./limits/*": "./src/limits/*"
   },
   "scripts": {
     "test": "node test/isolate.ts node --test \"test/unit/**/*.test.ts\" \"test/characterization/**/*.test.ts\"",

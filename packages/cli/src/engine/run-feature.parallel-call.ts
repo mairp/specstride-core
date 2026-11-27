@@ -1,0 +1,337 @@
+// F154-FR-020 to -067 (T021) — the call assembly of `parallelWiringOfTheAttempt`,
+// extracted from `run-feature.ts` so the change stays small and reviewable.
+// The builder returns EXACTLY the argument object the engine assembled inline
+// before: every seam of T020 passed explicitly from its default reader, the
+// failed groups read from the LEDGER OF THE ATTEMPT through
+// `countFailedGroups` (`decide.ts:1640`) — never from the constant 0 — and
+// the closed group pushed into that ledger in `onClosed` before the totals
+// are updated. Behaviour is identical to the inline assembly; internal to
+// the CLI, nothing is exported publicly.
+import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { groupGate } from "../../../layer-parallel/src/index.ts";
+import { countFailedGroups, type ClosedGroup } from "../../../layer-parallel/src/decide.ts";
+import type { TaskGroup } from "../../../core/src/spec-groups/slicer.ts";
+import type { GroupIndependenceDeclaration } from "../../../layer-parallel/src/independence.ts";
+import type { FrozenTaskGroupShape } from "../../../layer-parallel/src/groups.ts";
+import { quotaObservationOfTheWindows } from "./parallel-launch.ts";
+import type { PhaseTreeCoordinator } from "./phase-trees.ts";
+import type { SpeculationCoordinator } from "./speculation.ts";
+import { windows as quotaWindowsModule } from "@specstride/policy/quota";
+import {
+  totalsAfterTheGroup,
+  type ParallelRunTotals,
+  type ParallelWiringInput,
+} from "./parallel-wiring.ts";
+
+/** The facts of the run the call assembly reads, as the composition root holds them. */
+export type TheParallelCallContext = {
+  readonly plan: ParallelWiringInput["plan"];
+  readonly phase: number;
+  readonly resetCounts: boolean;
+  readonly evidencePresent: () => boolean;
+  readonly keptUnitsPathOf: (relative: string) => string;
+  readonly closedGroupsOfTheAttempt: ClosedGroup[];
+  readonly runTempRoot: string | null;
+  /** T095 (F154-FR-039) — the `checks` slot taker of this engine start. */
+  readonly takeChecksSlotOfTheRun: (() => Promise<(() => Promise<void>) | null>) | null;
+  readonly controlRoot: string;
+  readonly home: string;
+  readonly runId: string;
+  readonly workspace: string;
+  readonly slug: string;
+  readonly taskListPath: string;
+  /**
+   * T136 (F154-FR-056, -057) — the coordinator of the phase trees and the
+   * validation queue (`phase-trees.ts`), `null` when `loop.phases.parallel`
+   * is off or no candidate phase exists; the wiring reads its declared
+   * dependencies and its queue port and nothing else.
+   */
+  readonly phaseTrees?: PhaseTreeCoordinator | null | undefined;
+  /**
+   * T145 (F154-FR-061…-067) — the coordinator of the speculative unit
+   * (`speculation.ts`), `null` when `loop.speculate` is off or under
+   * `parity`; the wiring reads only its gate-start verdict.
+   */
+  readonly speculation?: SpeculationCoordinator | null | undefined;
+  readonly taskTextAtLaunch: string;
+  readonly implementerOfTheRun: string | null | undefined;
+  readonly model: string;
+  readonly containmentCeiling: "C0" | "C1" | "C2" | "C3";
+  readonly ceilingSeconds: number;
+  readonly enginePid: number;
+  readonly engineStartedAtMs: number;
+  readonly registry: ParallelWiringInput["registry"];
+  readonly guardScriptPath: string;
+  readonly stopRequestPath: string;
+  readonly runTokenHash: string | undefined;
+  readonly npmPath: string | undefined;
+  readonly checkCommandOfTheWorkspace: (workdir: string) => string | undefined;
+  readonly checkMin: number;
+  readonly phases: readonly { tasks: readonly { id: string; text?: string }[] }[];
+  readonly parallelTotals: ParallelRunTotals;
+  readonly emit: ParallelWiringInput["emit"];
+  readonly say: ParallelWiringInput["say"];
+  /**
+   * F154-FR-021 (T052) — the last limit-window facts the run observed of the
+   * proposer's account (F127-FR-009). Left out, the run observes no window:
+   * the seam answers `null` and the admission reads no observation, exactly
+   * as before this field existed.
+   */
+  readonly quotaWindowsOfTheRun?: (() => quotaWindowsModule.LimitWindowState) | undefined;
+  /** `loop.parallel.quota_headroom`, in per cent, where configuration set it. */
+  readonly quotaHeadroomPerCent?: number | undefined;
+  /**
+   * F154-FR-031 (T076) — `loop.parallel.groupUnits` is on: the frozen task
+   * groups of the launch record are the planner's candidates, one worker per
+   * group, and pairs are decided over the independence table. Left out (the
+   * default), the `[P]` tasks stay the unit and nothing of this runs.
+   */
+  readonly groupUnitsOn?: boolean | undefined;
+  /**
+   * F154-FR-031 (T076) — the frozen task groups of the launch record per
+   * phase, as `frozenGroupsOfThePhase` reads them (`run-feature.ts`), each
+   * carrying the optional `dependsOn`/`independentWith` the derivation froze
+   * into it (F154-FR-032). Left out, the reader answers no groups (rule
+   * TG-1's stated fallback).
+   */
+  readonly frozenGroupsOfThePhase?:
+    | ((phase: number) => readonly (TaskGroup & {
+        readonly dependsOn?: readonly string[];
+        readonly independentWith?: readonly string[];
+      })[])
+    | undefined;
+};
+
+/** Build the argument object of `parallelWiringOfTheAttempt` for one attempt. */
+export function parallelWiringInputOf(ctx: TheParallelCallContext): ParallelWiringInput {
+  return {
+    plan: ctx.plan,
+    phase: ctx.phase,
+    ...(ctx.resetCounts ? { resetCounts: true } : {}),
+    evidencePresent: ctx.evidencePresent,
+    // The kept units of the ledger of the phase (F115's own file): the tasks
+    // its kept units of work name are the boundary's last input. A file that
+    // fails to read names nothing.
+    keptUnitsOf: () => {
+      const path = ctx.keptUnitsPathOf(`features/${ctx.slug}/micro/phase${String(ctx.phase)}.json`);
+      try {
+        if (!existsSync(path)) return [];
+        const state = JSON.parse(readFileSync(path, "utf8")) as {
+          units?: readonly { outcome?: string; tasks?: readonly string[] }[];
+        };
+        return (state.units ?? [])
+          .filter((unit) => unit.outcome === "kept")
+          .flatMap((unit) => unit.tasks ?? []);
+      } catch {
+        return [];
+      }
+    },
+    /* ---------------------------------------------------------- *
+     * F154-FR-020 to -067 (T021) — EVERY seam of T020, passed
+     * explicitly from its default reader, so that each later phase
+     * changes one seam. Each binding below is the behaviour the
+     * engine had before the seams existed: nothing new runs, no
+     * decision changes (F154-FR-001). The wiring reads none of them
+     * until its own phase turns its switch on.
+     * ---------------------------------------------------------- */
+    // F154-FR-020 — every group of the stored plan for this phase, in plan
+    // order; today the wiring still reads only the first.
+    groupsOfThePhase: () =>
+      ctx.plan?.phases.find((entry) => entry.phase === ctx.phase)?.groups ?? [],
+    // F154-FR-021…-024, -033 — the group gate of one admission, the same
+    // pure table the layer computes; no stub.
+    groupGateOfTheAttempt: (inputs) => groupGate(inputs),
+    // F154-FR-021 (T052) — the last observed utilisation of the proposer
+    // account's quota windows, read through `quotaObservationOfTheWindows`
+    // (`parallel-launch.ts`), which reads the facts through `readLimitWindow`
+    // and `headroomOf` of feature 127. With no headroom configured or no
+    // window observed in the run the seam answers `null` and the admission
+    // reads no observation — the neutral default this seam held before.
+    quotaObservationOf: () => {
+      const headroomPerCent = ctx.quotaHeadroomPerCent;
+      const state = ctx.quotaWindowsOfTheRun?.();
+      if (headroomPerCent === undefined || state === undefined) return null;
+      return quotaObservationOfTheWindows({
+        state,
+        headroomPerCent,
+        nowMs: Date.now(),
+      });
+    },
+    // F154-FR-025 (T021) — the count of the phase's failed groups comes from
+    // the LEDGER OF THE ATTEMPT, through the seam, never from a constant:
+    // the groups this attempt has already closed, counted by
+    // `countFailedGroups` (`decide.ts:1640`). The required field stays the
+    // seam's default reading of the same count, so the wiring sees one
+    // number either way.
+    failedGroupsBeforeOfTheLedger: (ledgerPhase) =>
+      ledgerPhase === ctx.phase ? countFailedGroups(ctx.closedGroupsOfTheAttempt) : 0,
+    failedGroupsBefore: countFailedGroups(ctx.closedGroupsOfTheAttempt),
+    // F154-FR-026 — with `loop.parallel.noRepeat` off (today's
+    // configuration), no repeat check runs and the group is admitted.
+    repeatVerdictOf: (group) => {
+      void group;
+      return {
+        check: "marker",
+        passed: true,
+        detail: "loop.parallel.noRepeat off: no repeat check ran",
+      };
+    },
+    // F154-FR-027 — the applied path count of the group is not read in this
+    // scope yet; the neutral default preserves behaviour.
+    appliedPathCountOf: () => 0,
+    // F154-FR-028 — with `loop.parallel.mergeBaseline` off, no base result
+    // is compared and F142-FR-061 applies unchanged.
+    baseResultOfTheInnerSet: () => null,
+    // F154-FR-034, -035 — with `loop.parallel.groupCheck` off, no acceptance
+    // check runs in the worker tree; the delta goes on to the merge check,
+    // `unchecked`, as today (the check runs on the workspace,
+    // `micro-layer.ts:552-575`).
+    acceptanceCheckOfTheGroup: async (worker) => {
+      void worker;
+      return { outcome: "unchecked", ruleId: "WC-4" };
+    },
+    // F154-FR-031 (T076) — with `loop.parallel.groupUnits` off, the frozen
+    // task groups are no candidates; the `[P]` task stays the unit. On, the
+    // frozen groups of the phase ARE the candidates, one worker per group.
+    groupCandidatesOfThePhase: () =>
+      ctx.groupUnitsOn === true
+        ? (ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []).map((group): FrozenTaskGroupShape => ({
+            groupId: group.groupId,
+            phase: group.phase,
+            taskIds: [...group.taskIds],
+            writeScope: {
+              prefixes: [...group.writeScope.prefixes],
+              ...(group.writeScope.caseFolded === true ? { caseFolded: true } : {}),
+            },
+          }))
+        : [],
+    // F154-FR-032 (T076) — the declarations the frozen record carries per
+    // group (`dependsOn`, `independentWith`), as the independence decision
+    // of a pair reads them. Off, no group declares anything.
+    groupUnitsOn: ctx.groupUnitsOn === true,
+    groupDeclarationOf: (): GroupIndependenceDeclaration => {
+      if (ctx.groupUnitsOn !== true) return {};
+      /* F154-FR-004 — THE TEST FAULT (`SPECSTRIDE_FAULT_DEPENDENCY_LINE=1`):
+       * an UNREADABLE dependency line, as a malformed specstride comment
+       * raises (`SpecstrideLineError`), only where a test set the variable.
+       * The wiring reads the declaration behind a guard, so the pair
+       * degrades to serial with the reason recorded, never an error that
+       * stops the run. No production path reads this variable. */
+      if (process.env.SPECSTRIDE_FAULT_DEPENDENCY_LINE === "1") {
+        throw new Error(
+          "the specstride comment line is malformed (line 4, column 31): the dependency declaration could not be read",
+        );
+      }
+      const dependsOn: Record<string, readonly string[]> = {};
+      const independentWith: Record<string, readonly string[]> = {};
+      for (const group of ctx.frozenGroupsOfThePhase?.(ctx.phase) ?? []) {
+        if (group.dependsOn !== undefined && group.dependsOn.length > 0) {
+          dependsOn[group.groupId] = group.dependsOn;
+        }
+        if (group.independentWith !== undefined && group.independentWith.length > 0) {
+          independentWith[group.groupId] = group.independentWith;
+        }
+      }
+      return { dependsOn, independentWith };
+    },
+    // F154-FR-039…-044 — with `host.limits` off, the host is unbounded: no
+    // slot is taken.
+    hostSlots: null,
+    // T095 (F154-FR-039) — the `checks` slot of this start: handed to the
+    // group's merge check so its window never overlaps a gate or merge
+    // check of another start on this host (`null` take: unbounded).
+    ...(ctx.takeChecksSlotOfTheRun === null
+      ? {}
+      : { takeChecksSlotOfTheRun: ctx.takeChecksSlotOfTheRun }),
+    // F154-FR-041 — no hold record exists while `host.limits` is off.
+    holdOfTheAccount: () => null,
+    // F154-FR-043 (T024) — the run's temporary root, where `host.limits`
+    // made one; `null` (the seam's default) keeps the checks' own temporary
+    // directories, as before.
+    tempRootOfTheRun: () => ctx.runTempRoot,
+    controlRoot: ctx.controlRoot,
+    home: ctx.home,
+    runId: ctx.runId,
+    workspace: ctx.workspace,
+    slug: ctx.slug,
+    taskListPath: ctx.taskListPath,
+    taskTextAtLaunch: ctx.taskTextAtLaunch,
+    taskTextOf: (taskId) =>
+      ctx.phases.flatMap((held) => held.tasks).find((task) => task.id === taskId)?.text ?? taskId,
+    // The parallel worker carries a NAMED model only; the bare `dsh` alias
+    // selects the harness alone, so the worker takes the run's default
+    // model, as `modelsThatProducedPasses` does.
+    model: ctx.implementerOfTheRun ?? ctx.model,
+    // The base tier of the proposer, as resolved at launch; the engine
+    // resolves no tier today, so the worker runs the default tier unless a
+    // host sets the escape.
+    modelTierOrEffort: process.env.SPECSTRIDE_WORKER_TIER ?? "default",
+    containment: ctx.containmentCeiling,
+    runToken: ctx.runId,
+    timeLimitMs: ctx.ceilingSeconds * 1000,
+    enginePid: ctx.enginePid,
+    engineStartedAtMs: ctx.engineStartedAtMs,
+    registry: ctx.registry,
+    guardScriptPath: ctx.guardScriptPath,
+    hash: (text) => createHash("sha256").update(text).digest("hex"),
+    innerCheckSet:
+      ctx.checkCommandOfTheWorkspace(ctx.workspace) !== undefined && ctx.npmPath !== undefined
+        ? [
+            {
+              id: "check",
+              kind: "command",
+              argv: [ctx.npmPath, "test"],
+              phase: ctx.phase,
+              timeLimitMs: ctx.checkMin * 60_000,
+            },
+          ]
+        : [],
+    emit: ctx.emit,
+    say: ctx.say,
+    // THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request the `stop`
+    // command writes into the inbox, resolved through the layout table from
+    // the same control root the run writes; bound to THIS run's token so a
+    // stale request for a run that ended cannot stop the group of the run
+    // that follows.
+    stopRequestPath: ctx.stopRequestPath,
+    runTokenHash: ctx.runTokenHash,
+    // F154-FR-056 — with the canonical model holding no declared dependency,
+    // the default holds: a phase depends on the phase before it, and phase 1
+    // depends on nothing. A coordinator (T136) carries the DECLARED fields
+    // the launch contract's coverage holds; the declared list wins when the
+    // source gave a non-empty one (PQ-3).
+    phaseDependenciesOf: (queuedPhase) => {
+      const declared = ctx.phaseTrees?.entryOf(queuedPhase)?.dependsOn ?? [];
+      return declared.length > 0
+        ? declared.map((one) => String(one))
+        : queuedPhase > 1
+          ? [String(queuedPhase - 1)]
+          : [];
+    },
+    // F154-FR-058, -059 — the validation queue of the run, when the
+    // coordinator built one (`loop.phases.parallel` on and candidate phases
+    // exist); with the switch off, no queue exists and validation stays on
+    // the workspace.
+    validationQueue: ctx.phaseTrees?.validationQueue ?? null,
+    // F154-FR-062, -066, -067 — with `loop.speculate` off (or under
+    // parity) the coordinator is `null` and no speculative unit starts,
+    // for no recorded reason. With it ON (T145) the coordinator's gate
+    // start decides, emits the one admission event, and materializes the
+    // tree from the frozen snapshot on SP-1.
+    speculationVerdictAt: () =>
+      ctx.speculation !== null && ctx.speculation !== undefined
+        ? ctx.speculation.verdictAtTheGate(ctx.phase)
+        : { start: false },
+    onClosed: (closed, counts) => {
+      // F154-FR-025 (T021) — the closed group enters the ledger of the
+      // attempt, which the next wiring of this attempt reads.
+      ctx.closedGroupsOfTheAttempt.push(closed);
+      totalsAfterTheGroup(ctx.parallelTotals, closed, counts);
+    },
+    // The callback of the PARALLEL units' own handoff (feature 143's
+    // wiring), NOT the pass handoff of F103-FR-041, which `runPass` writes
+    // above.
+    onHandoff: () => {},
+  };
+}

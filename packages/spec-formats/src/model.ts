@@ -248,6 +248,15 @@ export type SpecPhase = {
   readonly section: string;
   /** The acceptance criteria: the TEXT of the checkbox lines, with no mark. */
   readonly criteria: readonly string[];
+  /**
+   * The phases this phase depends on, as the source declares them (feature
+   * 154, F154-FR-056): the EMPTY list when the source declares none, so
+   * every phase answers one shape. The implicit dependency on the phase
+   * before it is the queue's (PQ-3), never this field's.
+   */
+  readonly dependsOn?: readonly number[];
+  /** The write scope of the phase, as path prefixes, when the source declares one (F154-FR-056). */
+  readonly writeScope?: readonly string[];
   /** Required; it may be empty. */
   readonly tasks: readonly SpecTask[];
 };

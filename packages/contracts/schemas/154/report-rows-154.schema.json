@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.report-rows-154/1",
+  "title": "The report rows spec 154 adds (F154-FR-012, -014, -015, -017)",
+  "description": "PROPOSAL of spec 154 (F154-FR-012, -014, -015, -017; data-model.md D2). Each share is computed only from timed events, as a union so no time counts twice; a row whose events are missing prints `not in the events`. No forecast, no file written.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "feature",
+    "windowShares",
+    "inPassCheckTimeOutsidePasses",
+    "groups"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.report-rows-154/1"
+    },
+    "feature": {
+      "type": "string"
+    },
+    "windowShares": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposerPasses",
+        "inPassChecks",
+        "gateAndCriticOutsideChecks",
+        "rest"
+      ],
+      "properties": {
+        "proposerPasses": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "enum": [
+            null,
+            "not in the events"
+          ],
+          "description": "A share in per cent, or \"not in the events\".",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "inPassChecks": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "enum": [
+            null,
+            "not in the events"
+          ],
+          "description": "A share in per cent, or \"not in the events\".",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "gateAndCriticOutsideChecks": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "enum": [
+            null,
+            "not in the events"
+          ],
+          "description": "A share in per cent, or \"not in the events\".",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "rest": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "enum": [
+            null,
+            "not in the events"
+          ],
+          "description": "A share in per cent, or \"not in the events\".",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "inPassCheckTimeOutsidePasses": {
+      "type": [
+        "integer",
+        "string"
+      ],
+      "enum": [
+        null,
+        "not in the events"
+      ],
+      "description": "Milliseconds (M10), or \"not in the events\"."
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "outcome",
+          "appliedPathCount",
+          "mergeCheckResult",
+          "wallTimeMs"
+        ],
+        "properties": {
+          "phase": {
+            "type": "integer"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "appliedPathCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mergeCheckResult": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              null,
+              "pass",
+              "fail",
+              "unchecked",
+              "not-run"
+            ]
+          },
+          "wallTimeMs": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

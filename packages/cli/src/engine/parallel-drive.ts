@@ -102,11 +102,13 @@ import {
   type OneQueue,
 } from "../../../core/src/parallel/queue.ts";
 import {
+  notRunOutcomeOfTheMergeCheck,
   outcomeOfTheMergeCheck,
   runMergeCheck,
   type MergeCheckOutcome,
   type MergeCheckRun,
 } from "../../../core/src/parallel/merge-check.ts";
+import type { BaseResultOfTheInnerSet } from "../../../core/src/parallel/merge-baseline.ts";
 import { outcomeOfWorker } from "../../../core/src/parallel/barrier.ts";
 import type { PreparedGroup } from "./parallel-group.ts";
 import { removeTheTemporaryDirectories } from "./parallel-group.ts";
@@ -145,6 +147,23 @@ export type TheLedgerOfARun = {
  * writer is THE ONE WRITER of core: a second opening over the same ledger
  * name in the same process is refused, not interleaved.
  */
+/**
+ * The live queues of the ledger files, one per file while any group attempt
+ * of the run holds it (F154-FR-032). `releaseTheLedgerQueueOf` gives it up.
+ */
+const queuesOfTheLedgerFiles = new Map<
+  string,
+  { readonly queue: ReturnType<typeof oneQueue>; holders: number }
+>();
+
+/** Give up ONE holder's share of the ledger file's queue (F154-FR-032). */
+export function releaseTheLedgerQueueOf(ledgerFile: string): void {
+  const live = queuesOfTheLedgerFiles.get(ledgerFile);
+  if (live === undefined) return;
+  if (live.holders <= 1) queuesOfTheLedgerFiles.delete(ledgerFile);
+  else queuesOfTheLedgerFiles.set(ledgerFile, { ...live, holders: live.holders - 1 });
+}
+
 export function openTheLedgerOfTheRun(input: {
   readonly controlRoot: string;
   readonly runId: string;
@@ -158,19 +177,29 @@ export function openTheLedgerOfTheRun(input: {
 }): TheLedgerOfARun {
   const ledgerFile = parallelLedgerPathOf(input.controlRoot, input.runId);
   mkdirSync(dirname(ledgerFile), { recursive: true, mode: 0o700 });
+  const hashOf = (line: string): string => createHash("sha256").update(line).digest("hex");
+  /* F154-FR-032 (feature 154, phase 9, T076) — while groups as units run at
+   * once, TWO group attempts of one run hold the ledger at the same time.
+   * The ONE ledger file keeps ONE queue while any holder stands: the chain
+   * of `seq` and `prev` stays one chain, and the appends of the two groups
+   * interleave whole line at a time. The writers are distinct per group
+   * (`integrate.ts` `writerKeyOfTheLedger`); the queue is the file's. */
+  const live = queuesOfTheLedgerFiles.get(ledgerFile);
   const before = readAppendedRecords(
     existsSync(ledgerFile) ? readFileSync(ledgerFile, "utf8") : "",
   );
-  const hashOf = (line: string): string => createHash("sha256").update(line).digest("hex");
-  const queue = oneQueue(
-    {
-      // ONE WHOLE LINE, ONE call — the contract that makes a torn line a
-      // property of a crash and never of the queue.
-      appendLine: (line) => appendFileSync(ledgerFile, line),
-      hashOf,
-    },
-    continuationOf(before, hashOf),
-  );
+  const queue =
+    live?.queue ??
+    oneQueue(
+      {
+        // ONE WHOLE LINE, ONE call — the contract that makes a torn line a
+        // property of a crash and never of the queue.
+        appendLine: (line) => appendFileSync(ledgerFile, line),
+        hashOf,
+      },
+      continuationOf(before, hashOf),
+    );
+  queuesOfTheLedgerFiles.set(ledgerFile, { queue, holders: (live?.holders ?? 0) + 1 });
   const ports: OneWriterPorts = {
     append: (record) => {
       queue.appendNow(record);
@@ -388,6 +417,14 @@ export async function auditTheGroupThroughTheStore(input: {
   readonly endRefusalOf?: ((workerId: string) => EndThatRefuses | undefined) | undefined;
   /** Set where the workspace at the barrier differs from the workspace at group start. */
   readonly workspaceChanged?: boolean | undefined;
+  /**
+   * F154-FR-036 (T081) — set where the group's acceptance check in its worker
+   * tree read `failed` or `tainted` (the record `specstride.worker-check/1`):
+   * the delta of EVERY worker of the group is refused with `group-check` and
+   * nothing of the group merges. Set only while `loop.parallel.groupCheck`
+   * reads on.
+   */
+  readonly groupCheckRefusalOf?: ((workerId: string) => true | undefined) | undefined;
   readonly caseFolds?: boolean | undefined;
 }): Promise<GroupAudit> {
   const audits: AuditInput[] = input.deltas.map((delta) => ({
@@ -401,6 +438,7 @@ export async function auditTheGroupThroughTheStore(input: {
       ? { endRefuses: input.endRefusalOf?.(delta.workerId) }
       : {}),
     ...(input.workspaceChanged === true ? { workspaceChanged: true } : {}),
+    ...(input.groupCheckRefusalOf?.(delta.workerId) === true ? { groupCheckRefuses: true } : {}),
     ...(input.caseFolds === undefined ? {} : { caseFolds: input.caseFolds }),
   }));
   const verdicts = auditTheGroup(audits);
@@ -556,6 +594,19 @@ export type TheMergeCheck = {
  * worker tree, none skipped at a failure; `merge_check_finished` records the
  * result per command and the conditions; the outcome decides keep, repair or
  * `layerOffForAttempt`.
+ *
+ * T063 (F154-FR-027, rule MG-1) — where the group's application changed 0
+ * paths, NO merge check runs: the function returns the `not-run` outcome
+ * before any record is written, any command starts or any repair bookkeeping
+ * happens. The count arrives through `appliedPathCountOfTheGroup` (the seam
+ * the wiring fills from `appliedPathCountOf`; the attempt's own default reads
+ * the paths the integration applied). Not read: the check runs, as before.
+ *
+ * T066 (F154-FR-028) — `baseResultOfTheInnerSet`, with
+ * `baseSnapshotFingerprint` naming the group's base snapshot, is handed to
+ * the outcome, which compares the merge check against that base result and
+ * answers MG-2 where every failing command was already red on it with the
+ * same failure signature (F115-FR-019). Absent: F142-FR-061 unchanged.
  */
 export async function theMergeCheckOfTheGroup(input: {
   readonly store: TreeStoreService;
@@ -570,7 +621,53 @@ export async function theMergeCheckOfTheGroup(input: {
   readonly tasks: readonly string[];
   /** The canonical hash of annex X §X.5, which names the unit. */
   readonly hash: (text: string) => string;
+  /** The paths the group's application changed, where the seam reads them. */
+  readonly appliedPathCountOfTheGroup?: (() => number | undefined) | undefined;
+  /** The fingerprint of the group's base snapshot, where the caller holds one. */
+  readonly baseSnapshotFingerprint?: string | undefined;
+  /** The base-result seam (F154-FR-028), where the composition root wires it. */
+  readonly baseResultOfTheInnerSet?:
+    ((snapshotFingerprint: string) => BaseResultOfTheInnerSet | null) | undefined;
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host: taken before
+   * `merge_check_started` is written and released after the outcome stands,
+   * so a merge check of one start never overlaps a gate or merge check of
+   * another on this host. Absent, or answering `null` (`host.limits` off,
+   * store unreadable): the merge check runs unbounded, exactly as before
+   * this seam existed.
+   */
+  readonly takeChecksSlot?: (() => Promise<(() => Promise<void>) | null>) | undefined;
 }): Promise<TheMergeCheck> {
+  const releaseChecksSlot =
+    input.takeChecksSlot === undefined ? null : await input.takeChecksSlot();
+  try {
+    return await theMergeCheckOfTheGroupHeld(input);
+  } finally {
+    if (releaseChecksSlot !== null) await releaseChecksSlot();
+  }
+}
+
+/** The merge check itself, under whatever slot the wrapper holds. */
+async function theMergeCheckOfTheGroupHeld(
+  input: Parameters<typeof theMergeCheckOfTheGroup>[0],
+): Promise<TheMergeCheck> {
+  const appliedPathCount = input.appliedPathCountOfTheGroup?.();
+  if (appliedPathCount === 0) {
+    const fingerprintBefore = await input.store.snapshot(input.workspace);
+    const run: MergeCheckRun = {
+      commands: [],
+      passed: false,
+      condition: null,
+      fingerprintBefore,
+      fingerprintAfter: fingerprintBefore,
+      ranOn: input.workspace,
+      unchecked: false,
+    };
+    return {
+      run,
+      outcome: notRunOutcomeOfTheMergeCheck({ tasks: input.tasks, hash: input.hash }),
+    };
+  }
   const fingerprintBefore = await input.store.snapshot(input.workspace);
   const manifestHash = input.hash(JSON.stringify(input.innerCheckSet.map((entry) => entry.id)));
   const run = await input.writer.ahead(
@@ -609,9 +706,19 @@ export async function theMergeCheckOfTheGroup(input: {
         .map((command) => command.condition),
     }),
   );
+  const baseResult =
+    input.baseResultOfTheInnerSet === undefined || input.baseSnapshotFingerprint === undefined
+      ? undefined
+      : input.baseResultOfTheInnerSet(input.baseSnapshotFingerprint);
   return {
     run,
-    outcome: outcomeOfTheMergeCheck({ run, tasks: input.tasks, hash: input.hash }),
+    outcome: outcomeOfTheMergeCheck({
+      run,
+      tasks: input.tasks,
+      hash: input.hash,
+      ...(appliedPathCount === undefined ? {} : { appliedPathCount }),
+      ...(baseResult === undefined ? {} : { baseResult }),
+    }),
   };
 }
 

@@ -311,6 +311,7 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
       "relaunch",
       "scopes",
       "specstride_live",
+      "stageGroups",
       "telemetry",
       "verification",
     ].sort(),
@@ -323,6 +324,10 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
       "evidence",
       "id",
       "kind",
+      // Feature 154, F154-FR-056 (T132): the phase's declared dependencies and
+      // write scope travel with the obligation's coverage entry.
+      "phase_depends_on",
+      "phase_write_scope",
       "producer",
       "rationale",
       "source",
@@ -364,7 +369,7 @@ test("CT-107-schemas: the member names of data-model.md stand in the schemas", (
   ] as Record<string, unknown>;
   assert.deepEqual(
     Object.keys((recordConfiguration.properties as Record<string, unknown>) ?? {}).sort(),
-    ["comment", "learning", "relaunch", "scopes", "verification"].sort(),
+    ["comment", "learning", "relaunch", "scopes", "stageGroups", "verification"].sort(),
     "the record schema of @specstride/contracts names no such configuration members",
   );
   assert.deepEqual(

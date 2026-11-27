@@ -2133,6 +2133,135 @@
       "parity": "off: the projection drops the new types",
       "owner": "153",
       "registerRows": []
+    },
+    {
+      "number": 145,
+      "switch": "Parallel units (feature 142), delivered in the engine path by spec 154",
+      "key": "loop.parallel.units",
+      "keys": [
+        "loop.parallel.units"
+      ],
+      "keyNote": "`loop.parallel.units` — Row 20 stands for 142; this row records what spec 154 adds to it (F154-FR-009…-011, -020…-025, -029). Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the plan lines, the `parallel.admission` event, the `[LOOP]` parallel field"
+    },
+    {
+      "number": 146,
+      "switch": "No restart of a group that failed over unchanged paths (F154-FR-026)",
+      "key": "loop.parallel.noRepeat",
+      "keys": [
+        "loop.parallel.noRepeat"
+      ],
+      "keyNote": "`loop.parallel.noRepeat` — Amends F142-FR-023's scope; rides the layer switch. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "on with `loop.parallel.units`",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the admission reason `repeat`, the merge-check skip"
+    },
+    {
+      "number": 147,
+      "switch": "The merge check compared with a baseline result (F154-FR-028)",
+      "key": "loop.parallel.mergeBaseline",
+      "keys": [
+        "loop.parallel.mergeBaseline"
+      ],
+      "keyNote": "`loop.parallel.mergeBaseline` — Amends F142-FR-061 (CQ-154-17 A). Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the baseline comparison record `specstride.merge-baseline/1`"
+    },
+    {
+      "number": 148,
+      "switch": "Frozen task groups as the parallel unit (F154-FR-031, -032)",
+      "key": "loop.parallel.groupUnits",
+      "keys": [
+        "loop.parallel.groupUnits"
+      ],
+      "keyNote": "`loop.parallel.groupUnits` — CQ-154-02 C with (iii). Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the admission reason `dependency`, the group plan record"
+    },
+    {
+      "number": 149,
+      "switch": "The acceptance check of a group run in its worker tree (F154-FR-034…-036)",
+      "key": "loop.parallel.groupCheck",
+      "keys": [
+        "loop.parallel.groupCheck"
+      ],
+      "keyNote": "`loop.parallel.groupCheck` — CQ-154-04 A; amends F142-FR-059, F143-FR-011, F143-FR-012. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the refusal reason `group-check`, the worker check record `specstride.worker-check/1`"
+    },
+    {
+      "number": 150,
+      "switch": "Shared limits across the runs of one host (F154-FR-039…-047)",
+      "key": "host.limits",
+      "keys": [
+        "host.limits"
+      ],
+      "keyNote": "`host.limits` — CQ-154-14 A; files in user-level state, a wait is a pause. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the slot and hold records, the slot-wait events, the pause class `host_slot`"
+    },
+    {
+      "number": 151,
+      "switch": "Stage groups wider than one stage, and landing (F154-FR-048…-055)",
+      "key": "pipeline.stageGroups",
+      "keys": [
+        "pipeline.stageGroups"
+      ],
+      "keyNote": "`pipeline.stageGroups` — CQ-154-05 A; amends F123-FR-019 and F107. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the stage-group declaration, the landing record and events, the approval rewrite note"
+    },
+    {
+      "number": 152,
+      "switch": "Phases side by side behind one validation queue (F154-FR-056…-060)",
+      "key": "loop.phases.parallel",
+      "keys": [
+        "loop.phases.parallel"
+      ],
+      "keyNote": "`loop.phases.parallel` — CQ-154-07 A; the dependency field of the canonical model. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the phase-dependency declaration, the queue entry `specstride.phase-queue/1`"
+    },
+    {
+      "number": 153,
+      "switch": "Work past an open verdict (F154-FR-061…-067)",
+      "key": "loop.speculate",
+      "keys": [
+        "loop.speculate",
+        "loop.speculate.depth",
+        "loop.speculate.window",
+        "loop.speculate.minRate"
+      ],
+      "keyNote": "`loop.speculate` (with `loop.speculate.depth`, `loop.speculate.window` and `loop.speculate.minRate`, which stand at profile row 153; under `parity` the depth, the window and the rate are not used) — CQ-154-08 A and CQ-154-18 A: depth 1, window 20 attempts, threshold 50 %. Register row to come: the register ends at DV-120 (its map at DV-122); the owner assigns the id.",
+      "default": "off",
+      "parity": "off",
+      "owner": "154",
+      "registerRows": [],
+      "outputFields154": "the set-aside record and event, the admission event, the set-aside cost row of the report"
     }
   ]
 }

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.phase-queue/1",
+  "title": "Validation queue entry (F154-FR-056…-060; data-model.md D12)",
+  "description": "PROPOSAL of spec 154 (F154-FR-056…-060; data-model.md D12). One finished phase waiting for its gate, in phase order. One ordered list per run; the head is the first phase whose dependencies are all approved (PQ-1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "phase",
+    "dependsOn",
+    "tree",
+    "state"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.phase-queue/1"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Empty when the phase declares none; it then depends on the phase before it (PQ-3)."
+    },
+    "tree": {
+      "type": "string",
+      "description": "The tree id of the phase tree, materialized from a snapshot."
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "head",
+        "approved",
+        "rejected"
+      ]
+    }
+  }
+}

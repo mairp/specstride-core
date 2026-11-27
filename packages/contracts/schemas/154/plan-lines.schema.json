@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.plan-lines/1",
+  "title": "Printed plan lines (F154-FR-009 to F154-FR-011; data-model.md D1)",
+  "description": "The output of the one renderer `printThePlan`, printed by `specstride doctor` and by `launch --dry-run` as the same bytes (F154-FR-010). PROPOSAL of spec 154. Per phase: the groups, every task made serial with the failed check as its reason, and the ceiling of the speed-up under equal task cost (F154-FR-009). The ceiling is printed with the statement of `expectedSavingStatement` that it is a ceiling and not an expectation (F154-FR-011); nothing here promises a saving (F154-FR-008). Printing takes no slot, writes no record and starts no worker. The lines are the terse form; the serial list is present only behind the verbose flag. Under `parity` nothing is printed. With the option off the plan may be printed, labelled (CQ-154-19 A). The stored plan is `specstride.parallel-plan/1` of feature 142.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "planHash",
+    "labelled",
+    "verbose",
+    "lines",
+    "phases",
+    "ceilingStatement"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.plan-lines/1"
+    },
+    "planHash": {
+      "type": "string",
+      "description": "The hash of the `specstride.parallel-plan/1` record the lines are rendered from; the same inputs give the same hash and the same bytes (F154-SC-002)."
+    },
+    "labelled": {
+      "type": "boolean",
+      "description": "True when the plan is printed with `loop.parallel.units` off, as the plan the option would produce (CQ-154-19 A; F154-FR-009)."
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "True when the serial list is printed (F154-FR-010)."
+    },
+    "lines": {
+      "type": "array",
+      "description": "The printed lines, in print order, without the line terminator. Terse by default.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "phases": {
+      "type": "array",
+      "description": "The plan's phases in phase order, as the lines render them.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "groups",
+          "serial",
+          "ceiling"
+        ],
+        "properties": {
+          "phase": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "groups": {
+            "type": "array",
+            "description": "The groups of the phase in plan order, each with its ordinal and its task ids. May be empty.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ordinal",
+                "tasks"
+              ],
+              "properties": {
+                "ordinal": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "tasks": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "serial": {
+            "type": "array",
+            "description": "Every task made serial, with the failed check as its reason. Printed only when verbose.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "task",
+                "reason"
+              ],
+              "properties": {
+                "task": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "The admission check that failed for the task, a member of the closed set of admission checks of feature 142 (row 61), with its detail where the plan holds one."
+                }
+              }
+            }
+          },
+          "ceiling": {
+            "type": "number",
+            "description": "The ceiling of the speed-up under equal task cost. A ceiling, never an expectation (F154-FR-011)."
+          }
+        }
+      }
+    },
+    "ceilingStatement": {
+      "type": "string",
+      "description": "The text of `expectedSavingStatement`: the numbers are a ceiling under equal task cost and not an expectation (F154-FR-011). The renderer ends with it."
+    }
+  }
+}

@@ -269,6 +269,11 @@ function theHeldTreeOf(
  * ------------------------------------------------------------------ */
 
 export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
+  /**
+   * T095 (F154-FR-039) — the `checks` slot of the host, handed through to
+   * the group's merge check on the resume tail. Left out, unbounded.
+   */
+  readonly takeChecksSlotOfTheRun?: (() => Promise<(() => Promise<void>) | null>) | undefined;
   readonly open: TheOpenParallelGroup;
   readonly controlRoot: string;
   /** `--reset-counts` (F100-FR-045): zeroes the counters THIS start writes. */
@@ -704,12 +709,15 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
     // group — answered as ONE group attempt of this engine start. The writer
     // of THIS opening is released first: two writers over one ledger within
     // one process are refused, not merged.
-    releaseTheWriter(`${open.runId}:ledger`);
+    releaseTheWriter(`${open.runId}:ledger`); // one writer per group (F154-FR-032): this clears every group of the ledger
     const tail = await carryOutTheTailOfTheOpenGroup({
       open,
       controlRoot: input.controlRoot,
       ...(input.resetCounts === true ? { resetCounts: true } : {}),
       drive: drive.tail,
+      ...(input.takeChecksSlotOfTheRun === undefined
+        ? {}
+        : { takeChecksSlot: input.takeChecksSlotOfTheRun }),
     });
     if (!tail.carried) {
       return refused(
@@ -730,7 +738,7 @@ export async function carryOutTheStartOrRestartOfTheOpenGroup(input: {
       ...(tail.stopped === undefined ? {} : { stopped: tail.stopped }),
     });
   } finally {
-    releaseTheWriter(`${open.runId}:ledger`);
+    releaseTheWriter(`${open.runId}:ledger`); // one writer per group (F154-FR-032): this clears every group of the ledger
     for (const directory of temporaryDirectories) {
       rmSync(directory, { recursive: true, force: true });
     }

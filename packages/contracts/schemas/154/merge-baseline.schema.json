@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specstride.merge-baseline/1",
+  "title": "Merge baseline comparison (F154-FR-028; data-model.md D7)",
+  "description": "PROPOSAL of spec 154 (F154-FR-028; data-model.md D7). The comparison a merge check was judged by: the base result of the inner check set whose fingerprint equals the group's base snapshot, the failing commands matched by the failure signature of F115-FR-019, and the rule id of the outcome. Recorded; the verification gate is not affected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "runId",
+    "phase",
+    "groupOrdinal",
+    "baseResultFingerprint",
+    "mergeCheckFingerprint",
+    "matchedCommandIds",
+    "ruleId"
+  ],
+  "properties": {
+    "schema": {
+      "const": "specstride.merge-baseline/1"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "groupOrdinal": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "baseResultFingerprint": {
+      "type": "string"
+    },
+    "mergeCheckFingerprint": {
+      "type": "string"
+    },
+    "matchedCommandIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ruleId": {
+      "enum": [
+        "MG-1",
+        "MG-2",
+        "MG-3"
+      ]
+    }
+  }
+}

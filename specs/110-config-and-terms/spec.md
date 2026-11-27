@@ -166,7 +166,18 @@ Values of `roles.proposer.timeoutSec` and the other numeric defaults are those o
 | `loop.noProgressStructured` | on, off | on | F E P U | N `on` | p | 103. Row 59; off |
 | `loop.gitCommits` | `auto`, `on`, `off` | `auto` | F E P U | - | p | 101. The reverse command forces `off` |
 | `loop.tickTasks` | true, false | true | F E P U | - | t | 104 |
-| `loop.parallel.units` | on, off | off | F E P U | N `off` | p | 142. Row 20; off |
+| `loop.parallel.units` | on, off | off | F E P U | N `off` | p | 142. Row 20; off. Row 145 records what spec 154 adds to it (F154-FR-009…-011, -020…-025, -029) |
+| `loop.parallel.noRepeat` | on, off | on | F E P U | N `on` | p | 154. Row 146; off. Amends F142-FR-023's scope; rides the layer switch |
+| `loop.parallel.mergeBaseline` | on, off | off | F E P U | N `off` | p | 154. Row 147; off. Amends F142-FR-061 (CQ-154-17 A) |
+| `loop.parallel.groupUnits` | on, off | off | F E P U | N `off` | p | 154. Row 148; off. CQ-154-02 C with (iii) |
+| `loop.parallel.groupCheck` | on, off | off | F E P U | N `off` | p | 154. Row 149; off. CQ-154-04 A; amends F142-FR-059, F143-FR-011, F143-FR-012 |
+| `host.limits` | on, off | off | F E P U | N `off` | p | 154. Row 150; off. CQ-154-14 A; files in user-level state, a wait is a pause |
+| `pipeline.stageGroups` | on, off | off | F E P U | N `off` | p | 154. Row 151; off. CQ-154-05 A; amends F123-FR-019 and F107 |
+| `loop.phases.parallel` | on, off | off | F E P U | N `off` | p | 154. Row 152; off. CQ-154-07 A; the dependency field of the canonical model |
+| `loop.speculate` | on, off | off | F E P U | N `off` | p | 154. Row 153; off. CQ-154-08 A and CQ-154-18 A: depth 1, window 20 attempts, threshold 50 % |
+| `loop.speculate.depth` | whole number, at least 1 | 1 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
+| `loop.speculate.window` | whole number, at least 1 | 20 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
+| `loop.speculate.minRate` | percent, 1 to 100 | 50 | F E P U | N `lo` | t | 154. Row 153; not used. CQ-154-18 A |
 | `loop.parallel.workers` | whole number, 1 to the value of `loop.parallel.workersMax` | 2 | F E P U | N `lo` | t | 142. Row 21; not used. A value above `loop.parallel.workersMax` is a configuration error |
 | `loop.parallel.workersMax` | whole number, at least 1 | 4 | F E U; P lowers | W; P may lower | p | 142. Row 130; not used. The project file may lower it and never raise it (F110-FR-019) |
 | `loop.parallel.quota_headroom` | percent, 1 to 100 | 70 | F E P U | N `lo` | t | 142. Row 22; not used |

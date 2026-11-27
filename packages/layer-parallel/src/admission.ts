@@ -165,6 +165,16 @@ export type AdmissionInputs = {
   /** The exclusive resources the phase names (F142-FR-015). */
   readonly exclusiveResources?: readonly ExclusiveResource[];
   readonly headroom?: Headroom;
+  /**
+   * T056 — the verdict of `cyclesSufficeForTheGroup` (`decide.ts`) for the
+   * group as it stands (F154-FR-023). Left out, the gate reads no cycles
+   * verdict and passes, exactly as before the field existed.
+   */
+  readonly cycles?: {
+    readonly sufficesForTheGroup?:
+      | { readonly admissible: boolean; readonly needed: number; readonly detail: string }
+      | undefined;
+  };
 };
 
 /* ================================================================== *
@@ -932,26 +942,106 @@ export function workersWithNoQuotaObservation(
 }
 
 /**
+ * T056 — the inner check `cycles` of the gate (F154-FR-023): the verdict
+ * `cyclesSufficeForTheGroup` (`decide.ts`) computed by the engine over the
+ * remaining cycles of the attempt and the group's tasks. A group whose
+ * verdict refuses is not admitted; with no verdict given the check passes,
+ * exactly as before the check was wired.
+ */
+export function theCyclesSufficeForTheGroup(inputs: AdmissionInputs): GroupGate {
+  const verdict = inputs.cycles?.sufficesForTheGroup;
+  if (verdict === undefined) {
+    return admits("no verdict of the remaining cycles was given");
+  }
+  return verdict.admissible
+    ? admits(verdict.detail)
+    : refuses("headroom", `cycles: ${verdict.detail}`);
+}
+
+/**
  * The gates of the phase attempt, in the order of row 61: a group is admitted
  * only where every one of them admits (F142-FR-012 to F142-FR-016). The first
  * that refuses gives the reason the plan prints and the `[LOOP]` line carries.
+ *
+ * T057 (F154-FR-024) — the same list names the check of row 61 each gate
+ * stands for, so that the admission event can carry **the verdict of every
+ * check and its detail**, not only the first refusal. The cycles verdict is
+ * carried under `headroom` (the member of row 61 the gate refuses with), with
+ * its detail prefixed `cycles:` so a reader tells the two apart.
  */
+const GATES_OF_THE_GROUP_ATTEMPT: readonly {
+  readonly check: AdmissionCheck;
+  readonly run: (inputs: AdmissionInputs, tasksOfTheGroup: number) => GroupGate;
+}[] = Object.freeze([
+  {
+    check: "resource",
+    run: (inputs) => noGroupInAPhaseNamingAnExclusiveResourceWithoutCapacity(inputs),
+  },
+  {
+    check: "headroom",
+    run: (inputs, tasksOfTheGroup) => checkQuotaBudgetDiskAndCycles(inputs, tasksOfTheGroup),
+  },
+  {
+    check: "headroom",
+    run: (inputs) => theCyclesSufficeForTheGroup(inputs),
+  },
+  {
+    check: "check",
+    run: (inputs) => admitAGroupOnlyWithANonEmptyInnerCheckSet(inputs),
+  },
+  {
+    check: "links",
+    run: (inputs) => aPhaseWithALinkThatLeavesTheTreeMayHoldAGroup(inputs),
+  },
+  {
+    check: "jobs",
+    run: (inputs) => noGroupStartsWhileAnAdoptableJobLives(inputs),
+  },
+]);
+
 export function groupGate(
   inputs: AdmissionInputs,
   tasksOfTheGroup: number = workersOf(inputs),
 ): GroupGate {
-  const gates = [
-    noGroupInAPhaseNamingAnExclusiveResourceWithoutCapacity(inputs),
-    checkQuotaBudgetDiskAndCycles(inputs, tasksOfTheGroup),
-    admitAGroupOnlyWithANonEmptyInnerCheckSet(inputs),
-    aPhaseWithALinkThatLeavesTheTreeMayHoldAGroup(inputs),
-    noGroupStartsWhileAnAdoptableJobLives(inputs),
-  ];
-  const refused = gates.find((gate) => !gate.admitted);
+  const refused = theGatesOfTheGroupAttempt(inputs, tasksOfTheGroup).find(
+    (entry) => !entry.gate.admitted,
+  );
   return (
-    refused ??
+    refused?.gate ??
     admits(
       "every check of the phase attempt admits a group: resource, headroom, check, links, jobs",
     )
+  );
+}
+
+/** One gate of the attempt carried with the check of row 61 it stands for. */
+type GateOfTheAttempt = { readonly check: AdmissionCheck; readonly gate: GroupGate };
+
+/** The gates of one admission, each carried with its check (T057). */
+function theGatesOfTheGroupAttempt(
+  inputs: AdmissionInputs,
+  tasksOfTheGroup: number,
+): readonly GateOfTheAttempt[] {
+  return GATES_OF_THE_GROUP_ATTEMPT.map((entry) => ({
+    check: entry.check,
+    gate: entry.run(inputs, tasksOfTheGroup),
+  }));
+}
+
+/**
+ * T057 — the verdict of **every** check of the group's admission, with its
+ * detail (F154-FR-024, F142-FR-011). The list follows the order of row 61's
+ * group-level checks; two of them stand under `headroom`, told apart by the
+ * `cycles:` prefix of the cycles verdict's detail. The first failed verdict is
+ * the reason `groupGate` refuses with.
+ */
+export function groupGateVerdicts(
+  inputs: AdmissionInputs,
+  tasksOfTheGroup: number = workersOf(inputs),
+): readonly AdmissionVerdict[] {
+  return Object.freeze(
+    theGatesOfTheGroupAttempt(inputs, tasksOfTheGroup).map((entry) =>
+      verdict(entry.check, entry.gate.admitted, entry.gate.detail),
+    ),
   );
 }

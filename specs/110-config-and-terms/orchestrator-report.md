@@ -10,7 +10,7 @@ Each row is read from the shipped contract data or from the annex text today, by
 
 | Id | What this feature asked for | State | Read from |
 | --- | --- | --- | --- |
-| G-1 | Row 44 onward in annex X §X.7 for the keys named under "Rows of the `parity` profile" | **supplied** | packages/contracts/data/parity-profile.json carries the rows 1 to 144 of §X.7 with no gap (144 rows), and the catalogue's `profile_row` column reaches row 144 |
+| G-1 | Row 44 onward in annex X §X.7 for the keys named under "Rows of the `parity` profile" | **supplied** | packages/contracts/data/parity-profile.json carries the rows 1 to 153 of §X.7 with no gap (153 rows), and the catalogue's `profile_row` column reaches row 153 |
 | G-2 | An alias row for `SPECSTRIDE_CONTEXT_BUDGET`, `SPECSTRIDE_DSH_PLUGIN_ALLOWLIST`, `SPECSTRIDE_DSH_PLUGIN_TIMEOUT` and the others of §K.8 | **supplied** | all three names have a row in annex X §X.8 (specs/100-specstride/annexes/X-cross-layer.md), and `packages/contracts/data/normalization.json` ships them |
 | G-3 | A closed-set row for the check points of staleness | **supplied** | annex X §X.6 row 238, "Check points of staleness", is shipped in packages/contracts/data/closed-sets.json |
 | G-4 | A statement in annex X §X.2 on where the declared per-phase value of the verification-commands document stands | **supplied** | annex X §X.2 states it: "A per-phase time limit that the verification-commands document declares is the default of the per-phase key, at rank 8 (CQ-158)" |
@@ -28,7 +28,7 @@ A switch of the schema is a key whose cell "Under `parity`" is not `as default` 
 
 ## Part A.3 — the keys this catalogue spells for every other feature
 
-The catalogue holds 271 keys and names 41 owner features. The spelling, the type, the class and the layers of every key are decided here (§K.9); the meaning of a key belongs to its owner. A feature that reads a key not in its row below is reading a key no catalogue carries (F110-FR-009).
+The catalogue holds 282 keys and names 42 owner features. The spelling, the type, the class and the layers of every key are decided here (§K.9); the meaning of a key belongs to its owner. A feature that reads a key not in its row below is reading a key no catalogue carries (F110-FR-009).
 
 | Owner feature | Keys | Spellings |
 | --- | --- | --- |
@@ -73,8 +73,9 @@ The catalogue holds 271 keys and names 41 owner features. The spelling, the type
 | 149 | 2 | `attempt.tier_bump`, `attempt.tier_bump_after` |
 | 152 | 1 | `commit.backpressure` |
 | 153 | 11 | `commit.gate.beforeCritic`, `commit.scan.inPass`, `critic.evidence.perTask`, `events.commitGateTiming`, `loop.micro.closingCheck.skipWhenEqualToGate`, `loop.taskGroups`, `verification.gate.reuse`, `verification.inner.scoped`, `verification.redGate.limit`, `verification.redGate.ownBudget`, `verification.timeLimit.enforce` |
+| 154 | 11 | `host.limits`, `loop.parallel.groupCheck`, `loop.parallel.groupUnits`, `loop.parallel.mergeBaseline`, `loop.parallel.noRepeat`, `loop.phases.parallel`, `loop.speculate`, `loop.speculate.depth`, `loop.speculate.minRate`, `loop.speculate.window`, `pipeline.stageGroups` |
 
-Four keys of §K.6 are **not** in the catalogue and belong to feature 107's own contract: `derive.stageTimeoutSec`, `verification.scopes.<commandId>.reads`, `verification.scopes.<commandId>.writes`, `verification.scopes.<commandId>.sideEffects`. T004's acceptance fixes the count at 271; the difference is the register rows W-ORC-01 to W-ORC-03 (R-110-02 below).
+Four keys of §K.6 are **not** in the catalogue and belong to feature 107's own contract: `derive.stageTimeoutSec`, `verification.scopes.<commandId>.reads`, `verification.scopes.<commandId>.writes`, `verification.scopes.<commandId>.sideEffects`. T004's acceptance fixes the count at 282; the difference is the register rows W-ORC-01 to W-ORC-03 (R-110-02 below).
 
 ## Part A.4 — the spellings other features must correct in their own specifications
 

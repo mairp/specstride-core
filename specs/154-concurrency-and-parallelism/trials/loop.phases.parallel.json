@@ -1,0 +1,166 @@
+{
+  "schema": "specstride.trial/1",
+  "switch": "loop.phases.parallel",
+  "fixtureSet": "7 fixtures of 154-concurrency-and-parallelism",
+  "firstCase": {
+    "name": "replay of 153's 28 groups",
+    "groupsTotal": 28,
+    "groupsKept": 0
+  },
+  "arms": [
+    {
+      "switchValue": false,
+      "seed": "154-trial-seed-1",
+      "rowsWithoutPassMark": {
+        "groupsTotal": 0,
+        "groupsKept": 0,
+        "refusalsPerReason": [],
+        "costWithEveryPassCounted": {
+          "passes": 2,
+          "tokensIn": 0,
+          "tokensOut": 0,
+          "cycles": 2
+        }
+      }
+    },
+    {
+      "switchValue": true,
+      "seed": "154-trial-seed-1",
+      "rowsWithoutPassMark": {
+        "groupsTotal": 0,
+        "groupsKept": 0,
+        "refusalsPerReason": [],
+        "costWithEveryPassCounted": {
+          "passes": 2,
+          "tokensIn": 0,
+          "tokensOut": 0,
+          "cycles": 2
+        }
+      }
+    }
+  ],
+  "ruleTests": [
+    {
+      "ruleId": "LD-1",
+      "passed": true
+    },
+    {
+      "ruleId": "LD-2",
+      "passed": true
+    },
+    {
+      "ruleId": "LD-3",
+      "passed": true
+    },
+    {
+      "ruleId": "LD-4",
+      "passed": true
+    },
+    {
+      "ruleId": "PQ-1",
+      "passed": true
+    },
+    {
+      "ruleId": "PQ-2",
+      "passed": true
+    },
+    {
+      "ruleId": "PQ-3",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-1",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-2",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-3",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-4",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-5",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-1",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-2",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-3",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-4",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-5",
+      "passed": true
+    },
+    {
+      "ruleId": "SP-6",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-1",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-2",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-3",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-4",
+      "passed": true
+    },
+    {
+      "ruleId": "SL-5",
+      "passed": true
+    },
+    {
+      "ruleId": "TRI-1",
+      "passed": true
+    },
+    {
+      "ruleId": "TRI-2",
+      "passed": true
+    },
+    {
+      "ruleId": "TRI-3",
+      "passed": true
+    }
+  ],
+  "breachInvariantsFailed": [],
+  "closedSets": {
+    "exitCodesAreSubset": true,
+    "stopReasonsAreSubset": true,
+    "runStatesAreSubset": true
+  },
+  "pass": true,
+  "rowsWithoutPassMark": {
+    "groupsTotal": 0,
+    "groupsKept": 0,
+    "refusalsPerReason": [],
+    "costWithEveryPassCounted": {
+      "passes": 2,
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "cycles": 2
+    }
+  }
+}

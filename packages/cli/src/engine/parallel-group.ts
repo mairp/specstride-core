@@ -48,8 +48,11 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+
+import type { GroupAcceptanceCheck } from "../../../core/src/spec-groups/slicer.ts";
+import { runEngineCheck } from "./check-run.ts";
 
 import type { ContainmentLevel } from "@specstride/contracts/ep/harness";
 import type { ProcessEnd } from "@specstride/contracts/ep/kernel-services";
@@ -125,19 +128,19 @@ export type PlannedMember = {
 
 /**
  * The members of ONE group of the plan of a phase, in the order of the tasks
- * at launch. The group is the one with the ordinal asked for — the first of
- * the phase where none is named. A task of the plan that no group holds is
- * serial and is no member of any group.
+ * at launch. The group is the one with the ordinal asked for — NO FALLBACK to
+ * the plan's first group: the wiring reads the ordinal from the plan's group
+ * itself, in plan order (F154-FR-020). A task of the plan that no group holds
+ * is serial and is no member of any group.
  */
 export function membersOfTheGroup(
   plan: ParallelPlan,
   phase: number,
-  groupOrdinal?: number,
+  groupOrdinal: number,
 ): readonly PlannedMember[] {
   const phasePlan = plan.phases.find((candidate) => candidate.phase === phase);
   if (phasePlan === undefined) return [];
-  const group =
-    phasePlan.groups.find((candidate) => candidate.ordinal === groupOrdinal) ?? phasePlan.groups[0];
+  const group = phasePlan.groups.find((candidate) => candidate.ordinal === groupOrdinal);
   if (group === undefined) return [];
   const scopes = new Map(phasePlan.tasks.map((task) => [task.id, task.scope.prefixes]));
   return group.tasks.map((taskId) => ({
@@ -465,6 +468,18 @@ export async function runTheGroupWorkers(input: {
    */
   readonly restartIndexOf?: ((workerId: string) => number | undefined) | undefined;
   /**
+   * T056 — THE CHARGE of one cycle per admitted task, at its FIRST start
+   * (F142-FR-021, rule PU-87; F154-FR-023). The runner calls it once per
+   * worker, at the moment the worker's first pass is about to start, before
+   * the door runs: a pass again — a restart within this call, numbered by
+   * `restartIndexOf` above 0 — charges nothing, and no worker charges twice
+   * within one call. Whether a task of an EARLIER engine start was charged
+   * already is the caller's knowledge (the per-attempt charged set of the
+   * wiring); the callback it hands in answers for that.
+   */
+  readonly chargeCyclesOfTheAdmittedTasks?:
+    ((workerId: string, taskId: string) => void) | undefined;
+  /**
    * THE STOP THE GROUP RUNS UNDER (F143-FR-026): the request `inbox:stop` is
    * read at the boundaries the wait below already runs, never by a watcher
    * and never inside a pass. Left out, no poll runs and the group is exactly
@@ -485,6 +500,9 @@ export async function runTheGroupWorkers(input: {
 > {
   const endedOf = new Map<string, Promise<WorkerEnd>>();
   const killedCheckpoints: KilledCheckpoint[] = [];
+  // T056 — the workers of THIS call whose first start has charged already,
+  // so a worker charges once whatever the runner does (F142-FR-021).
+  const chargedOfThisCall = new Set<string>();
   // The ends the door resolves are carried into the runner AFTER the runner
   // came up: the door runs while `startGroupWorkers` is still in flight, so
   // it cannot hold the group yet. The loop below applies them.
@@ -509,6 +527,17 @@ export async function runTheGroupWorkers(input: {
       start: async (workerId) => {
         const worker = input.prepared.workers.find((row) => row.workerId === workerId);
         if (worker === undefined) throw new WorkerStartRefused(workerId, "no such worker");
+        // T056 — the cycle of the admitted task is charged at its FIRST
+        // start, before the pass runs; a start again (a restart, numbered
+        // above 0) charges nothing (F142-FR-021, rule PU-87).
+        if (
+          input.chargeCyclesOfTheAdmittedTasks !== undefined &&
+          (input.restartIndexOf?.(workerId) ?? 0) === 0 &&
+          !chargedOfThisCall.has(workerId)
+        ) {
+          chargedOfThisCall.add(workerId);
+          input.chargeCyclesOfTheAdmittedTasks(workerId, worker.taskId);
+        }
         const started = await input.start(worker);
         endedOf.set(
           workerId,
@@ -673,6 +702,15 @@ export async function closeTheGroup(input: {
   }) => Promise<void>;
   /** The checkpoints a killed pass left, from `runTheGroupWorkers`. */
   readonly checkpointLeftByAKilledPass?: readonly KilledCheckpoint[] | undefined;
+  /**
+   * F154-FR-034/-035 (T080) — the group's acceptance check run in its worker
+   * tree, under `loop.parallel.groupCheck`. Left out or `on: false`, NOTHING
+   * of the worker check runs and no record is written: the workspace behaviour
+   * stands unchanged (T078), and under `parity` the switch reads off.
+   */
+  readonly workerCheck?: WorkerCheckOfTheGroup | undefined;
+  /** The record the worker check wrote, where the caller wants it back. */
+  readonly onWorkerCheck?: ((record: WorkerCheckRecord) => Promise<void> | void) | undefined;
 }): Promise<BarrierResult> {
   const workers: WorkerAtTheBarrier[] = input.prepared.workers.map((worker) => {
     const checkpoint = readTheWorkerCheckpoint(worker.outboxPath, worker.taskId);
@@ -704,7 +742,7 @@ export async function closeTheGroup(input: {
       await input.emitEvent({ ...refused.event, shownToTheCritic: true });
     }
   }
-  return closeTheBarrier(
+  const barrier = await closeTheBarrier(
     {
       endProcessesOf: async (workerId) => {
         const pid = input.pidOf(workerId);
@@ -734,4 +772,264 @@ export async function closeTheGroup(input: {
     },
     { workers, workspace: input.workspace },
   );
+  // F154-FR-034/-035 (T080) — THE ACCEPTANCE CHECK IN THE WORKER TREE. After
+  // the barrier (every process ended, every final snapshot taken and
+  // recorded), the group's acceptance check runs in the worker tree, its
+  // verdict is written as the record `specstride.worker-check/1` under the
+  // control plane, and NO EVENT is emitted for it: the record is the only
+  // surface (F142-FR-066's vocabulary is unchanged).
+  if (input.workerCheck?.on === true) {
+    const record = await theWorkerCheckOfTheGroup({
+      store: input.store,
+      prepared: input.prepared,
+      barrier,
+      groupId: input.workerCheck.groupId,
+      phase: input.workerCheck.phase,
+      runId: input.workerCheck.runId,
+      slug: input.workerCheck.slug,
+      controlRoot: input.workerCheck.controlRoot,
+      acceptanceCheck: input.workerCheck.acceptanceCheck,
+      ...(input.workerCheck.profile === undefined ? {} : { profile: input.workerCheck.profile }),
+    });
+    await input.onWorkerCheck?.(record);
+  }
+  return barrier;
+}
+
+/* ------------------------------------------------------------------ *
+ * THE WORKER CHECK (F154-FR-034, -035; T080, T086) and its record
+ * `specstride.worker-check/1`.
+ * ------------------------------------------------------------------ */
+
+/** The schema of the worker check record. */
+export const WORKER_CHECK_RECORD_SCHEMA = "specstride.worker-check/1" as const;
+
+/** The outcome of the acceptance check a worker tree ran for its group. */
+export type WorkerCheckOutcome = "passed" | "failed" | "tainted" | "unchecked";
+
+/** The record of the acceptance check of one group run in its worker tree(s). */
+export type WorkerCheckRecord = {
+  readonly schema: typeof WORKER_CHECK_RECORD_SCHEMA;
+  readonly runId: string;
+  readonly phase: number;
+  readonly groupId: string;
+  /** The base snapshot fingerprint of the group, recorded at group open. */
+  readonly baseTreeId: string;
+  /** The worker tree fingerprint taken before the check ran. */
+  readonly snapshotBefore: string;
+  /** The worker tree fingerprint taken after the check ran. */
+  readonly snapshotAfter: string;
+  /** The check as it was declared, or `unchecked` where none resolved. */
+  readonly check:
+    | {
+        readonly kind: "declared";
+        readonly id: string;
+        readonly argv: readonly string[];
+        readonly timeLimitMs?: number;
+      }
+    | { readonly kind: "unchecked" };
+  /** The outcome: `failed` and `tainted` refuse the group's delta (T081). */
+  readonly result: WorkerCheckOutcome;
+  /** Where the check was declared: the exit code and duration of the run. */
+  readonly exitCode?: number | null;
+  readonly durationMs?: number;
+  /** Per worker: the outcome, exit code and duration of THAT tree's run. */
+  readonly workers?: Readonly<
+    Record<
+      string,
+      {
+        readonly result: WorkerCheckOutcome;
+        readonly exitCode?: number | null;
+        readonly durationMs?: number;
+      }
+    >
+  >;
+};
+
+/** What `closeTheGroup` needs to run the group's acceptance check. */
+export type WorkerCheckOfTheGroup = {
+  readonly on: boolean;
+  /** The frozen acceptance check of the group (F153-FR-055). */
+  readonly acceptanceCheck: GroupAcceptanceCheck;
+  readonly controlRoot: string;
+  readonly runId: string;
+  readonly slug: string;
+  readonly phase: number;
+  readonly groupId: string;
+  /** The profile the check runner runs under. Default: `"default"`. */
+  readonly profile?: string | undefined;
+};
+
+/** The path of the worker check record of one group under the control plane. */
+export function workerCheckRecordPathOf(input: {
+  readonly controlRoot: string;
+  readonly slug: string;
+  readonly runId: string;
+  readonly phase: number;
+  readonly groupId: string;
+}): string {
+  return join(
+    input.controlRoot,
+    "features",
+    input.slug,
+    "runs",
+    input.runId,
+    "parallel",
+    `phase${input.phase}`,
+    "groups",
+    input.groupId,
+    "worker-check.json",
+  );
+}
+
+/** Read one worker check record; `undefined` where the file is absent or unreadable. */
+export function readTheWorkerCheckRecord(path: string): WorkerCheckRecord | undefined {
+  if (!existsSync(path)) return undefined;
+  try {
+    return JSON.parse(readFileSync(path, "utf8")) as WorkerCheckRecord;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The ranking of the outcomes, worst first: a tainted group refuses like a failed one. */
+const OUTCOME_RANK: Readonly<Record<WorkerCheckOutcome, number>> = Object.freeze({
+  tainted: 2,
+  failed: 1,
+  passed: 0,
+  unchecked: -1,
+});
+
+/**
+ * THE ACCEPTANCE CHECK OF ONE GROUP IN ITS WORKER TREE (F154-FR-034, -035;
+ * T080). For every worker tree of the group: the fingerprint before (the
+ * store's own snapshot, the same measurement the barrier's final
+ * fingerprints use, so the taint comparison is exact), the check run by
+ * `runEngineCheck` with `cwd` THE WORKER TREE and the check's DECLARED limit
+ * (300 000 ms where the declaration gave none; never 0, which would mean "no
+ * timer"), and the fingerprint after. The tree that moved after its final
+ * snapshot, or moved DURING the check, reads `tainted`; a failing check reads
+ * `failed`; a group whose check resolves to nothing reads `unchecked`, and
+ * the group goes on (F154-FR-036). The record is written under the control
+ * plane and no event is emitted (F142-FR-066's vocabulary is unchanged).
+ */
+export async function theWorkerCheckOfTheGroup(input: {
+  readonly store: TreeStoreService;
+  readonly prepared: PreparedGroup;
+  readonly barrier: BarrierResult;
+  readonly groupId: string;
+  readonly phase: number;
+  readonly runId: string;
+  readonly slug: string;
+  readonly controlRoot: string;
+  readonly acceptanceCheck: GroupAcceptanceCheck;
+  readonly profile?: string | undefined;
+}): Promise<WorkerCheckRecord> {
+  const baseTreeId = input.prepared.baseTreeId;
+  const perWorker: Record<
+    string,
+    { result: WorkerCheckOutcome; exitCode?: number | null; durationMs?: number }
+  > = {};
+  let representative:
+    | {
+        result: WorkerCheckOutcome;
+        exitCode?: number | null;
+        durationMs?: number;
+        snapshotBefore: string;
+        snapshotAfter: string;
+      }
+    | undefined;
+
+  if (input.acceptanceCheck.kind !== "declared") {
+    // F154-FR-036 — a group with no resolvable check is `unchecked` and goes
+    // on: no command runs, the record still binds the tree as it stands.
+    let snapshot = "";
+    const first = input.barrier.perWorker[0];
+    const firstWorker = input.prepared.workers.find((w) => w.workerId === first?.workerId);
+    if (firstWorker !== undefined) snapshot = await input.store.snapshot(firstWorker.tree);
+    representative = {
+      result: "unchecked",
+      snapshotBefore: snapshot,
+      snapshotAfter: snapshot,
+    };
+  } else {
+    const timeLimitMs =
+      typeof input.acceptanceCheck.timeLimitMs === "number" && input.acceptanceCheck.timeLimitMs > 0
+        ? input.acceptanceCheck.timeLimitMs
+        : 300_000;
+    for (const row of input.barrier.perWorker) {
+      const worker = input.prepared.workers.find((w) => w.workerId === row.workerId);
+      if (worker === undefined) continue;
+      const snapshotBefore = await input.store.snapshot(worker.tree);
+      const run = await runEngineCheck(
+        {
+          id: input.acceptanceCheck.id,
+          argv: input.acceptanceCheck.argv,
+          cwd: worker.tree,
+          timeLimitMs,
+          phase: input.phase,
+        },
+        input.profile ?? "default",
+      );
+      const snapshotAfter = await input.store.snapshot(worker.tree);
+      // F154-FR-035 — the tree that moved AFTER its final snapshot (something
+      // wrote between the barrier and the check) or DURING the check (the
+      // check itself wrote) reads `tainted`, whatever the exit code says.
+      const outcome: WorkerCheckOutcome =
+        snapshotBefore !== row.finalTreeId || snapshotAfter !== snapshotBefore
+          ? "tainted"
+          : run.exitCode === 0
+            ? "passed"
+            : "failed";
+      perWorker[worker.workerId] = {
+        result: outcome,
+        exitCode: run.exitCode,
+        durationMs: run.durationMs,
+      };
+      const candidate = {
+        result: outcome,
+        exitCode: run.exitCode,
+        durationMs: run.durationMs,
+        snapshotBefore,
+        snapshotAfter,
+      };
+      if (
+        representative === undefined ||
+        OUTCOME_RANK[representative.result] < OUTCOME_RANK[outcome]
+      ) {
+        representative = candidate;
+      }
+    }
+  }
+
+  const record: WorkerCheckRecord = Object.freeze({
+    schema: WORKER_CHECK_RECORD_SCHEMA,
+    runId: input.runId,
+    phase: input.phase,
+    groupId: input.groupId,
+    baseTreeId,
+    snapshotBefore: representative?.snapshotBefore ?? "",
+    snapshotAfter: representative?.snapshotAfter ?? "",
+    check:
+      input.acceptanceCheck.kind === "declared"
+        ? Object.freeze({
+            kind: "declared" as const,
+            id: input.acceptanceCheck.id,
+            argv: Object.freeze([...input.acceptanceCheck.argv]),
+            ...(typeof input.acceptanceCheck.timeLimitMs === "number" &&
+            input.acceptanceCheck.timeLimitMs > 0
+              ? { timeLimitMs: input.acceptanceCheck.timeLimitMs }
+              : {}),
+          })
+        : Object.freeze({ kind: "unchecked" as const }),
+    result: representative?.result ?? "unchecked",
+    ...(representative === undefined || input.acceptanceCheck.kind !== "declared"
+      ? {}
+      : { exitCode: representative.exitCode, durationMs: representative.durationMs }),
+    ...(Object.keys(perWorker).length === 0 ? {} : { workers: Object.freeze(perWorker) }),
+  });
+  const path = workerCheckRecordPathOf(input);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
+  return record;
 }

@@ -1,0 +1,72 @@
+{"type":"strategy.selected","at":"2026-11-18T21:13:45.856Z","data":{"strategy":"micro","level":"L1","manifestHashes":["c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99","c7af5f8fdc4ce2a064ec647ce29196cc53764dc7de7d84dcc262a81ecaf85e99"]}}
+{"type":"parallel.plan","at":"2026-11-18T21:13:45.945Z","data":{"hash":"79a6194278d83630c4f49827f42506d114faa17ac5ae8cd461b6073c1f608272","workers":2,"groups":25,"phases":29}}
+{"type":"integrity.noted","at":"2026-11-18T21:13:47.838Z","data":{"type":"integrity.noted","kind":"approval-invalid","phase":12,"failed":"missing","detail":"phase 12: missing"}}
+{"type":"phase.started","at":"2026-11-18T21:13:47.839Z","data":{"phase":12,"title":"US4 — the verdict pins (Priority: P4)","total":29,"shape":""}}
+{"type":"attempt.started","at":"2026-11-18T21:13:48.727Z","data":{"phase":12,"attempt":68,"strategy":"micro"}}
+{"type":"recovery.stale-diagnosis","at":"2026-11-18T21:13:49.865Z","data":{"phase":12,"attempt":68,"criteria":"T162,T163,T164,T165,T166,T167,T168,T169,T170,T171,T172,T173,T174,T175,T176"}}
+{"type":"iter_start","at":"2026-11-18T21:13:49.876Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T21:20:41.281Z","data":{"unitId":"u1","taskIds":["T162","T163","T164","T165","T166","T167","T168","T169","T170","T171","T172","T173","T174","T175","T176"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T21:20:41.282Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-18T21:26:27.447Z","data":{"checkId":"check","result":"fail","unitId":"u1","durationMs":343924,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-18T21:26:27.449Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.single-unit","choice":"off:micro"}}
+{"type":"microloop.unit","at":"2026-11-18T21:26:27.450Z","data":{"unitId":"u1","check":"check","result":"repair","layerOff":"single-unit"}}
+{"type":"evidence_written","at":"2026-11-18T21:26:27.455Z","data":{"file":"GATE12-EVIDENCE.md","iters":1}}
+{"type":"recovery.unmet-report-fallback","at":"2026-11-18T21:32:13.672Z","data":{"phase":12,"attempt":68,"criteria":"T162,T163,T164,T165,T166,T167,T168,T169,T170,T171,T172,T173,T174,T175,T176","fallback":"all-tasks"}}
+{"type":"attempt.ended","at":"2026-11-18T21:32:13.673Z","data":{"phase":12,"attempt":68}}
+{"type":"attempt.started","at":"2026-11-18T21:32:14.879Z","data":{"phase":12,"attempt":69,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-18T21:32:14.883Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T21:35:59.454Z","data":{"unitId":"u1","taskIds":["T162","T163","T164","T165","T166","T167","T168","T169","T170","T171","T172","T173","T174","T175","T176"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T21:35:59.455Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-18T21:41:48.171Z","data":{"checkId":"check","result":"fail","unitId":"u1","durationMs":346406,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-18T21:41:48.173Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.single-unit","choice":"off:micro"}}
+{"type":"microloop.unit","at":"2026-11-18T21:41:48.174Z","data":{"unitId":"u1","check":"check","result":"repair","layerOff":"single-unit"}}
+{"type":"evidence_written","at":"2026-11-18T21:41:48.181Z","data":{"file":"GATE12-EVIDENCE.md","iters":1}}
+{"type":"recovery.unmet-report-fallback","at":"2026-11-18T21:47:36.096Z","data":{"phase":12,"attempt":69,"criteria":"T162,T163,T164,T165,T166,T167,T168,T169,T170,T171,T172,T173,T174,T175,T176","fallback":"all-tasks"}}
+{"type":"attempt.ended","at":"2026-11-18T21:47:36.099Z","data":{"phase":12,"attempt":69}}
+{"type":"attempt.started","at":"2026-11-18T21:47:37.172Z","data":{"phase":12,"attempt":70,"strategy":"micro"}}
+{"type":"recovery.stale-diagnosis","at":"2026-11-18T21:47:38.268Z","data":{"phase":12,"attempt":70,"criteria":"T162,T163,T164,T165,T166,T167,T168,T169,T170,T171,T172,T173,T174,T175,T176"}}
+{"type":"iter_start","at":"2026-11-18T21:47:38.271Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T22:08:40.951Z","data":{"unitId":"u1","taskIds":["T162","T163","T164","T165","T166","T167","T168","T169","T170","T171","T172","T173","T174","T175","T176"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T22:08:40.952Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-18T22:14:28.337Z","data":{"checkId":"check","result":"fail","unitId":"u1","durationMs":345452,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-18T22:14:28.337Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.single-unit","choice":"off:micro"}}
+{"type":"microloop.unit","at":"2026-11-18T22:14:28.338Z","data":{"unitId":"u1","check":"check","result":"repair","layerOff":"single-unit"}}
+{"type":"evidence_written","at":"2026-11-18T22:14:28.342Z","data":{"file":"GATE12-EVIDENCE.md","iters":1}}
+{"type":"recovery.unmet-report-fallback","at":"2026-11-18T22:20:17.502Z","data":{"phase":12,"attempt":70,"criteria":"T162,T163,T164,T165,T166,T167,T168,T169,T170,T171,T172,T173,T174,T175,T176","fallback":"all-tasks"}}
+{"type":"attempt.ended","at":"2026-11-18T22:20:17.506Z","data":{"phase":12,"attempt":70}}
+{"type":"attempt.started","at":"2026-11-18T22:20:18.570Z","data":{"phase":12,"attempt":71,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-18T22:20:18.573Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T22:23:01.254Z","data":{"unitId":"u1","taskIds":["T176"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T22:23:01.256Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-18T22:28:47.972Z","data":{"checkId":"check","result":"pass","unitId":"u1","durationMs":344954,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-18T22:28:47.972Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.default","choice":"stay"}}
+{"type":"microloop.unit","at":"2026-11-18T22:28:47.973Z","data":{"unitId":"u1","check":"check","result":"kept"}}
+{"type":"evidence_written","at":"2026-11-18T22:28:47.975Z","data":{"file":"GATE12-EVIDENCE.md","iters":1}}
+{"type":"phase.ended","at":"2026-11-18T22:34:57.352Z","data":{"phase":12,"attempt":71,"title":"US4 — the verdict pins (Priority: P4)"}}
+{"type":"tasks.ticked","at":"2026-11-18T22:34:57.364Z","data":{"phase":12,"count":15}}
+{"type":"commit.made","at":"2026-11-18T22:34:58.118Z","data":{"phase":12}}
+{"type":"phase.started","at":"2026-11-18T22:34:58.136Z","data":{"phase":13,"title":"US4 — no check output in the critic prompt (tracked defect D-1)","total":29,"shape":""}}
+{"type":"attempt.started","at":"2026-11-18T22:34:59.370Z","data":{"phase":13,"attempt":1,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-18T22:34:59.384Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"iter_done","at":"2026-11-18T23:20:08.993Z","data":{"iter":1,"evidence":"missing"}}
+{"type":"iter_start","at":"2026-11-18T23:20:11.006Z","data":{"iter":2,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T23:40:01.511Z","data":{"unitId":"u2","taskIds":["T177","T178","T179","T180","T181","T182","T183"],"checkpointRef":"unit:u2:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T23:40:01.511Z","data":{"checkId":"check","unitId":"u2","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-18T23:45:44.252Z","data":{"checkId":"check","result":"pass","unitId":"u2","durationMs":340554,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-18T23:45:44.254Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.single-unit","choice":"off:micro"}}
+{"type":"microloop.unit","at":"2026-11-18T23:45:44.255Z","data":{"unitId":"u2","check":"check","result":"kept","layerOff":"single-unit"}}
+{"type":"evidence_written","at":"2026-11-18T23:45:44.257Z","data":{"file":"GATE13-EVIDENCE.md","iters":2}}
+{"type":"phase.ended","at":"2026-11-18T23:51:47.576Z","data":{"phase":13,"attempt":1,"title":"US4 — no check output in the critic prompt (tracked defect D-1)"}}
+{"type":"tasks.ticked","at":"2026-11-18T23:51:47.597Z","data":{"phase":13,"count":7}}
+{"type":"commit.made","at":"2026-11-18T23:51:48.445Z","data":{"phase":13}}
+{"type":"phase.started","at":"2026-11-18T23:51:48.456Z","data":{"phase":14,"title":"US4 — per-task evidence: the pure unit","total":29,"shape":""}}
+{"type":"attempt.started","at":"2026-11-18T23:51:49.495Z","data":{"phase":14,"attempt":1,"strategy":"micro"}}
+{"type":"iter_start","at":"2026-11-18T23:51:49.501Z","data":{"iter":1,"max_iter":9007199254740991}}
+{"type":"checkpoint.accepted","at":"2026-11-18T23:55:09.476Z","data":{"unitId":"u1","taskIds":["T184","T185","T193","T194","T195","T196","T198"],"checkpointRef":"unit:u1:checkpoint"}}
+{"type":"check.started","at":"2026-11-18T23:55:09.476Z","data":{"checkId":"check","unitId":"u1","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-19T00:40:09.128Z","data":{"checkId":"check","result":"fail","unitId":"u1","durationMs":2697104,"runner":"runtime"}}
+{"type":"route.decided","at":"2026-11-19T00:40:09.130Z","data":{"tableId":"specstride.router-rules","tableVersion":"1.0.0","point":"loop","ruleId":"loop.default","choice":"stay"}}
+{"type":"microloop.unit","at":"2026-11-19T00:40:09.130Z","data":{"unitId":"u1","check":"check","result":"repair"}}
+{"type":"evidence_written","at":"2026-11-19T00:40:09.139Z","data":{"file":"GATE14-EVIDENCE.md","iters":1}}
+{"type":"check.started","at":"2026-11-19T00:40:10.278Z","data":{"checkId":"check","unitId":"closing","runner":"runtime"}}
+{"type":"check.ended","at":"2026-11-19T00:53:42.708Z","data":{"checkId":"check","result":"fail","unitId":"closing","durationMs":810337,"runner":"runtime"}}
